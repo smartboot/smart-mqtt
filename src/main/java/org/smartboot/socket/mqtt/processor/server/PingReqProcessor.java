@@ -8,6 +8,8 @@ import org.smartboot.socket.mqtt.message.MqttPingReqMessage;
 import org.smartboot.socket.mqtt.message.MqttPingRespMessage;
 import org.smartboot.socket.mqtt.processor.MqttProcessor;
 
+import java.io.IOException;
+
 /**
  * 心跳请求处理
  *

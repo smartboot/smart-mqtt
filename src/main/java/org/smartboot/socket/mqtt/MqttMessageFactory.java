@@ -8,7 +8,7 @@ import org.smartboot.socket.mqtt.message.MqttInvalidMessage;
 import org.smartboot.socket.mqtt.message.MqttMessage;
 import org.smartboot.socket.mqtt.message.MqttPingReqMessage;
 import org.smartboot.socket.mqtt.message.MqttPingRespMessage;
-import org.smartboot.socket.mqtt.message.MqttPubAckAndMessageIdMessage;
+import org.smartboot.socket.mqtt.message.MqttPubAckMessage;
 import org.smartboot.socket.mqtt.message.MqttPubCompMessage;
 import org.smartboot.socket.mqtt.message.MqttPublishMessage;
 import org.smartboot.socket.mqtt.message.MqttPubrecMessage;
@@ -24,7 +24,7 @@ public final class MqttMessageFactory {
     }
 
     public static MqttMessage newMessage(MqttFixedHeader mqttFixedHeader) {
-        switch (mqttFixedHeader.messageType()) {
+        switch (mqttFixedHeader.getMessageType()) {
             case CONNECT:
                 return new MqttConnectMessage(mqttFixedHeader);
 
@@ -47,7 +47,7 @@ public final class MqttMessageFactory {
                 return new MqttPublishMessage(mqttFixedHeader);
 
             case PUBACK:
-                return new MqttPubAckAndMessageIdMessage(mqttFixedHeader);
+                return new MqttPubAckMessage(mqttFixedHeader);
             case PUBREC:
                 return new MqttPubrecMessage(mqttFixedHeader);
             case PUBREL:
@@ -63,7 +63,7 @@ public final class MqttMessageFactory {
                 return new MqttDisconnectMessage(mqttFixedHeader);
 
             default:
-                throw new IllegalArgumentException("unknown message type: " + mqttFixedHeader.messageType());
+                throw new IllegalArgumentException("unknown message type: " + mqttFixedHeader.getMessageType());
         }
     }
 

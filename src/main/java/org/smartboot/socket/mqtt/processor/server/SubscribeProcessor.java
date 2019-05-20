@@ -23,6 +23,18 @@ public class SubscribeProcessor implements MqttProcessor<MqttSubscribeMessage> {
     @Override
     public void process(MqttContext context, MqttSession session, MqttSubscribeMessage mqttSubscribeMessage) {
         LOGGER.info("receive subscribe message:{}", mqttSubscribeMessage);
+
+        final MqttQoS mqttQoS = mqttSubscribeMessage.getMqttFixedHeader().getQosLevel();
+        switch (mqttQoS) {
+            case AT_MOST_ONCE:
+                break;
+            case AT_LEAST_ONCE:
+                break;
+            case EXACTLY_ONCE:
+                break;
+            default:
+                LOGGER.error("unkonw mqttos:{}", mqttQoS);
+        }
         MqttSubAckMessage mqttSubAckMessage = new MqttSubAckMessage(new MqttFixedHeader(MqttMessageType.SUBACK, false, MqttQoS.AT_MOST_ONCE, false, 0));
         mqttSubAckMessage.setMqttMessageIdVariableHeader(MqttMessageIdVariableHeader.from(12345));
         mqttSubAckMessage.setMqttSubAckPayload(new MqttSubAckPayload(1, 2, 0));

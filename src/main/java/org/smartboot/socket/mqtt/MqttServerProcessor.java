@@ -1,5 +1,7 @@
 package org.smartboot.socket.mqtt;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartboot.socket.MessageProcessor;
 import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.mqtt.message.MqttConnectMessage;
@@ -23,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @version V1.0 , 2018/4/24
  */
 public class MqttServerProcessor implements MessageProcessor<MqttMessage> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MqttServerProcessor.class);
     private Map<Class<? extends MqttMessage>, MqttProcessor> processorMap = new HashMap<>();
     private MqttContext mqttContext = new MqttServerContext();
     private Map<String, MqttSession> sessionMap = new ConcurrentHashMap();
@@ -37,6 +40,33 @@ public class MqttServerProcessor implements MessageProcessor<MqttMessage> {
 
     @Override
     public void process(AioSession<MqttMessage> session, MqttMessage msg) {
+        LOGGER.info("process msg:{}",msg);
+//        switch (msg.getMqttFixedHeader().getMessageType()) {
+//            case CONNECT:
+//                break;
+//            case SUBSCRIBE:
+//                break;
+//            case UNSUBSCRIBE:
+//                break;
+//            case PUBLISH:
+//                break;
+//            case PUBREC:
+//                break;
+//            case PUBCOMP:
+//                break;
+//            case PUBREL:
+//                break;
+//
+//            case DISCONNECT:
+//                break;
+//            case PUBACK:
+//                break;
+//            case PINGREQ:
+//                break;
+//            default:
+//                LOGGER.error("unsupport message:{}", msg);
+//
+//        }
         MqttProcessor processor = processorMap.get(msg.getClass());
         if (processor != null) {
             processor.process(mqttContext, sessionMap.get(session.getSessionID()), msg);

@@ -30,7 +30,7 @@ public class MqttPublishMessage extends MqttMessage {
             throw new DecoderException("invalid publish topic name: " + decodedTopic + " (contains wildcards)");
         }
         int messageId = -1;
-        if (mqttFixedHeader.qosLevel().value() > 0) {
+        if (mqttFixedHeader.getQosLevel().value() > 0) {
             messageId = decodeMessageId(buffer);
         }
         mqttPublishVariableHeader =
@@ -41,5 +41,14 @@ public class MqttPublishMessage extends MqttMessage {
     public void decodePlayLoad(ByteBuffer buffer) {
         payload = ByteBuffer.allocate(buffer.remaining());
         payload.put(buffer);
+        payload.flip();
+    }
+
+    public ByteBuffer getPayload() {
+        return payload;
+    }
+
+    public MqttPublishVariableHeader getMqttPublishVariableHeader() {
+        return mqttPublishVariableHeader;
     }
 }

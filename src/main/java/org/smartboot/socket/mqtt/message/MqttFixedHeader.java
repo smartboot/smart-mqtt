@@ -18,7 +18,7 @@ public class MqttFixedHeader {
     private final boolean dup;
     private final MqttQoS qosLevel;
     /**
-     * 保留标志
+     * 保留标志，是否存储消息
      */
     private final boolean retain;
     private final int remainingLength;
@@ -36,7 +36,7 @@ public class MqttFixedHeader {
         this.remainingLength = remainingLength;
     }
 
-    public MqttMessageType messageType() {
+    public MqttMessageType getMessageType() {
         return messageType;
     }
 
@@ -44,7 +44,7 @@ public class MqttFixedHeader {
         return dup;
     }
 
-    public MqttQoS qosLevel() {
+    public MqttQoS getQosLevel() {
         return qosLevel;
     }
 

@@ -1,8 +1,10 @@
 package org.smartboot.socket.mqtt.message;
 
 import org.smartboot.socket.mqtt.enums.MqttConnectReturnCode;
+import org.smartboot.socket.transport.WriteBuffer;
 import org.smartboot.socket.util.BufferUtils;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -30,14 +32,11 @@ public class MqttConnAckMessage extends MqttMessage {
     }
 
     @Override
-    public ByteBuffer encode() {
-        ByteBuffer buffer = ByteBuffer.allocate(4);
-        buffer.put(getFixedHeaderByte1(mqttFixedHeader));
-        buffer.put((byte) 2);
-        buffer.put((byte) (mqttConnAckVariableHeader.isSessionPresent() ? 0x01 : 0x00));
-        buffer.put(mqttConnAckVariableHeader.connectReturnCode().getCode());
-        buffer.flip();
-        return buffer;
+    public void writeTo(WriteBuffer writeBuffer) throws IOException {
+        writeBuffer.writeByte(getFixedHeaderByte1(mqttFixedHeader));
+        writeBuffer.writeByte((byte) 2);
+        writeBuffer.writeByte((byte) (mqttConnAckVariableHeader.isSessionPresent() ? 0x01 : 0x00));
+        writeBuffer.writeByte(mqttConnAckVariableHeader.connectReturnCode().getCode());
     }
 
     public MqttConnAckVariableHeader getMqttConnAckVariableHeader() {

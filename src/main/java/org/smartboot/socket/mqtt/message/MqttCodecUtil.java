@@ -57,7 +57,7 @@ public final class MqttCodecUtil {
     }
 
     public static MqttFixedHeader resetUnusedFields(MqttFixedHeader mqttFixedHeader) {
-        switch (mqttFixedHeader.messageType()) {
+        switch (mqttFixedHeader.getMessageType()) {
             case CONNECT:
             case CONNACK:
             case PUBACK:
@@ -69,10 +69,10 @@ public final class MqttCodecUtil {
             case PINGRESP:
             case DISCONNECT:
                 if (mqttFixedHeader.isDup() ||
-                        mqttFixedHeader.qosLevel() != MqttQoS.AT_MOST_ONCE ||
+                        mqttFixedHeader.getQosLevel() != MqttQoS.AT_MOST_ONCE ||
                         mqttFixedHeader.isRetain()) {
                     return new MqttFixedHeader(
-                            mqttFixedHeader.messageType(),
+                            mqttFixedHeader.getMessageType(),
                             false,
                             MqttQoS.AT_MOST_ONCE,
                             false,
@@ -84,9 +84,9 @@ public final class MqttCodecUtil {
             case UNSUBSCRIBE:
                 if (mqttFixedHeader.isRetain()) {
                     return new MqttFixedHeader(
-                            mqttFixedHeader.messageType(),
+                            mqttFixedHeader.getMessageType(),
                             mqttFixedHeader.isDup(),
-                            mqttFixedHeader.qosLevel(),
+                            mqttFixedHeader.getQosLevel(),
                             false,
                             mqttFixedHeader.remainingLength());
                 }

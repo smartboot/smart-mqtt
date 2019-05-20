@@ -1,6 +1,8 @@
 package org.smartboot.socket.mqtt.message;
 
-import java.nio.ByteBuffer;
+import org.smartboot.socket.transport.WriteBuffer;
+
+import java.io.IOException;
 
 /**
  * @author 三刀
@@ -11,17 +13,17 @@ public class SingleByteFixedHeaderAndMessageIdMessage extends MessageIdVariableH
         super(mqttFixedHeader);
     }
 
+    public SingleByteFixedHeaderAndMessageIdMessage(MqttFixedHeader mqttFixedHeader, MqttMessageIdVariableHeader mqttMessageIdVariableHeader) {
+        super(mqttFixedHeader, mqttMessageIdVariableHeader);
+    }
+
     @Override
-    public ByteBuffer encode() {
+    public void writeTo(WriteBuffer writeBuffer) throws IOException {
         int msgId = mqttMessageIdVariableHeader.messageId();
 
         int variableHeaderBufferSize = 2; // variable part only has a message id
-        int fixedHeaderBufferSize = 1 + getVariableLengthInt(variableHeaderBufferSize);
-        ByteBuffer buf = ByteBuffer.allocate(fixedHeaderBufferSize + variableHeaderBufferSize);
-        buf.put(getFixedHeaderByte1(mqttFixedHeader));
-        writeVariableLengthInt(buf, variableHeaderBufferSize);
-        buf.putShort((short) msgId);
-        buf.flip();
-        return buf;
+        writeBuffer.writeByte(getFixedHeaderByte1(mqttFixedHeader));
+        writeVariableLengthInt(writeBuffer, variableHeaderBufferSize);
+        writeBuffer.writeShort((short) msgId);
     }
 }

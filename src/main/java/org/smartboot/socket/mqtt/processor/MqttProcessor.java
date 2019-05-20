@@ -10,5 +10,11 @@ import org.smartboot.socket.mqtt.message.MqttMessage;
  */
 public interface MqttProcessor<T extends MqttMessage> {
 
+    /**
+     * 处理Mqtt消息
+     * @param context
+     * @param session
+     * @param t
+     */
     void process(MqttContext context, MqttSession session, T t);
 }

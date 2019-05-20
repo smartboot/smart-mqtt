@@ -2,9 +2,11 @@ package org.smartboot.socket.mqtt.message;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
+import org.smartboot.socket.transport.WriteBuffer;
 import org.smartboot.socket.util.BufferUtils;
 import org.smartboot.socket.util.DecoderException;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
@@ -56,8 +58,7 @@ public class MqttMessage {
 
     }
 
-    public ByteBuffer encode() {
-        return null;
+    public void writeTo(WriteBuffer page) throws IOException {
     }
 
     protected final int decodeMsbLsb(ByteBuffer buffer) {
@@ -94,11 +95,11 @@ public class MqttMessage {
 
     protected final byte getFixedHeaderByte1(MqttFixedHeader header) {
         int ret = 0;
-        ret |= header.messageType().value() << 4;
+        ret |= header.getMessageType().value() << 4;
         if (header.isDup()) {
             ret |= 0x08;
         }
-        ret |= header.qosLevel().value() << 1;
+        ret |= header.getQosLevel().value() << 1;
         if (header.isRetain()) {
             ret |= 0x01;
         }
@@ -121,14 +122,14 @@ public class MqttMessage {
         return count;
     }
 
-    protected final void writeVariableLengthInt(ByteBuffer buf, int num) {
+    protected final void writeVariableLengthInt(WriteBuffer buf, int num) {
         do {
             int digit = num % 128;
             num /= 128;
             if (num > 0) {
                 digit |= 0x80;
             }
-            buf.put((byte) digit);
+            buf.writeByte((byte) digit);
         } while (num > 0);
     }
 

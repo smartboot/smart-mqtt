@@ -11,6 +11,7 @@ import java.io.IOException;
  */
 public class MqttSession {
     private String clientId;
+    private String username;
     private boolean cleanSession;
     private AioSession<MqttMessage> session;
 
@@ -25,9 +26,9 @@ public class MqttSession {
 
     public void write(MqttMessage mqttMessage) {
         try {
-            session.write(mqttMessage.encode());
+            mqttMessage.writeTo(session.writeBuffer());
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -39,4 +40,11 @@ public class MqttSession {
         return clientId;
     }
 
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
 }

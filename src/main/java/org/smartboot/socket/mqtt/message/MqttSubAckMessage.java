@@ -1,7 +1,9 @@
 package org.smartboot.socket.mqtt.message;
 
+import org.smartboot.socket.transport.WriteBuffer;
 import org.smartboot.socket.util.BufferUtils;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,20 +30,16 @@ public class MqttSubAckMessage extends MessageIdVariableHeaderMessage {
     }
 
     @Override
-    public ByteBuffer encode() {
+    public void writeTo(WriteBuffer writeBuffer) throws IOException {
         int variableHeaderBufferSize = 2;
         int payloadBufferSize = mqttSubAckPayload.grantedQoSLevels().size();
         int variablePartSize = variableHeaderBufferSize + payloadBufferSize;
-        int fixedHeaderBufferSize = 1 + getVariableLengthInt(variablePartSize);
-        ByteBuffer buf = ByteBuffer.allocate(fixedHeaderBufferSize + variablePartSize);
-        buf.put(getFixedHeaderByte1(mqttFixedHeader));
-        writeVariableLengthInt(buf, variablePartSize);
-        buf.putShort((short) mqttMessageIdVariableHeader.messageId());
+        writeBuffer.writeByte(getFixedHeaderByte1(mqttFixedHeader));
+        writeVariableLengthInt(writeBuffer, variablePartSize);
+        writeBuffer.writeShort((short) mqttMessageIdVariableHeader.messageId());
         for (int qos : mqttSubAckPayload.grantedQoSLevels()) {
-            buf.put((byte) qos);
+            writeBuffer.writeByte((byte) qos);
         }
-        buf.flip();
-        return buf;
     }
 
     public void setMqttSubAckPayload(MqttSubAckPayload mqttSubAckPayload) {

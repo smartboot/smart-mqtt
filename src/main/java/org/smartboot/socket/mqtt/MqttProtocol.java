@@ -38,7 +38,7 @@ public class MqttProtocol implements Protocol<MqttMessage> {
 
 
     @Override
-    public MqttMessage decode(ByteBuffer buffer, AioSession<MqttMessage> session, boolean eof) {
+    public MqttMessage decode(ByteBuffer buffer, AioSession<MqttMessage> session) {
         DecodeUnit unit;
         if (session.getAttachment() == null) {
             unit = new DecodeUnit();
@@ -86,12 +86,12 @@ public class MqttProtocol implements Protocol<MqttMessage> {
                     MqttFixedHeader mqttFixedHeader =
                             new MqttFixedHeader(messageType, dupFlag, MqttQoS.valueOf(qosLevel), retain, remainingLength);
                     MqttCodecUtil.resetUnusedFields(mqttFixedHeader);
-                    switch (mqttFixedHeader.messageType()) {
+                    switch (mqttFixedHeader.getMessageType()) {
                         case PUBREL:
                         case SUBSCRIBE:
                         case UNSUBSCRIBE:
-                            if (mqttFixedHeader.qosLevel() != MqttQoS.AT_LEAST_ONCE) {
-                                throw new DecoderException(mqttFixedHeader.messageType().name() + " message must have QoS 1");
+                            if (mqttFixedHeader.getQosLevel() != MqttQoS.AT_LEAST_ONCE) {
+                                throw new DecoderException(mqttFixedHeader.getMessageType().name() + " message must have QoS 1");
                             }
                     }
                     unit.mqttMessage = MqttMessageFactory.newMessage(mqttFixedHeader);
@@ -147,11 +147,6 @@ public class MqttProtocol implements Protocol<MqttMessage> {
         }
     }
 
-    @Override
-    public ByteBuffer encode(MqttMessage msg, AioSession<MqttMessage> session) {
-
-        return msg.encode();
-    }
 
     enum DecoderState {
         READ_FIXED_HEADER,

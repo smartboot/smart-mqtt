@@ -94,7 +94,7 @@ public class MqttConnectMessage extends MqttMessage {
         mqttConnectPayload = new MqttConnectPayload(decodedClientId, decodedWillTopic, decodedWillMessage, decodedUserName, decodedPassword);
     }
 
-    public MqttConnectPayload getayload() {
+    public MqttConnectPayload getPayload() {
         return mqttConnectPayload;
     }
 

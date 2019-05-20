@@ -11,7 +11,7 @@ public class OnlyFixedHeaderMessage extends MqttMessage {
         super(mqttFixedHeader);
     }
 
-    public final ByteBuffer encode() {
+    public final ByteBuffer writeTo() {
         ByteBuffer buf = ByteBuffer.allocate(2);
         buf.put(getFixedHeaderByte1(mqttFixedHeader));
         buf.put((byte) 0);
