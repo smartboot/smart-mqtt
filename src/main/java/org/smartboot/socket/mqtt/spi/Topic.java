@@ -20,13 +20,6 @@ public class Topic extends ToString {
 
     private transient boolean valid;
 
-    /**
-     * Factory method
-     * */
-    public static Topic asTopic(String s) {
-        return new Topic(s);
-    }
-
     public Topic(String topic) {
         this.topic = topic;
     }
@@ -36,6 +29,13 @@ public class Topic extends ToString {
         List<String> strTokens = tokens.stream().map(Token::toString).collect(Collectors.toList());
         this.topic = String.join("/", strTokens);
         this.valid = true;
+    }
+
+    /**
+     * Factory method
+     */
+    public static Topic asTopic(String s) {
+        return new Topic(s);
     }
 
     public List<Token> getTokens() {
@@ -114,7 +114,7 @@ public class Topic extends ToString {
 
     /**
      * @return a new Topic corresponding to this less than the head token
-     * */
+     */
     public Topic exceptHeadToken() {
         List<Token> tokens = getTokens();
         if (tokens.isEmpty()) {
@@ -126,8 +126,9 @@ public class Topic extends ToString {
     }
 
     public boolean isValid() {
-        if (tokens == null)
+        if (tokens == null) {
             getTokens();
+        }
 
         return valid;
     }
@@ -135,8 +136,7 @@ public class Topic extends ToString {
     /**
      * Verify if the 2 topics matching respecting the rules of MQTT Appendix A
      *
-     * @param subscriptionTopic
-     *            the topic filter of the subscription
+     * @param subscriptionTopic the topic filter of the subscription
      * @return true if the two topics match.
      */
     // TODO reimplement with iterators or with queues

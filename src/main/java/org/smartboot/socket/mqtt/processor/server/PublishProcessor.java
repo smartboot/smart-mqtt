@@ -17,12 +17,13 @@ import org.smartboot.socket.mqtt.spi.StoredMessage;
 import org.smartboot.socket.mqtt.spi.Topic;
 import org.smartboot.socket.mqtt.spi.impl.MemoryMessageStore;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import static org.smartboot.socket.mqtt.enums.MqttQoS.AT_MOST_ONCE;
 
 /**
+ * 发布Topic
+ *
  * @author 三刀
  * @version V1.0 , 2018/4/25
  */
@@ -115,7 +116,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
     }
 
     private void sendPubAck(int messageID, MqttSession session) {
-        LOGGER.trace("sendPubAck invoked");
+        LOGGER.info("sendPubAck invoked");
         MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBACK, false, AT_MOST_ONCE, false, 0);
         MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(fixedHeader, MqttMessageIdVariableHeader.from(messageID));
         session.write(pubAckMessage);

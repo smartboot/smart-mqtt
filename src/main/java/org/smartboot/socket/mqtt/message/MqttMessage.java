@@ -59,6 +59,7 @@ public class MqttMessage {
     }
 
     public void writeTo(WriteBuffer page) throws IOException {
+        throw new UnsupportedOperationException();
     }
 
     protected final int decodeMsbLsb(ByteBuffer buffer) {

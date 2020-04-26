@@ -23,6 +23,8 @@ import static org.smartboot.socket.mqtt.enums.MqttConnectReturnCode.CONNECTION_R
 import static org.smartboot.socket.mqtt.enums.MqttConnectReturnCode.CONNECTION_REFUSED_UNACCEPTABLE_PROTOCOL_VERSION;
 
 /**
+ * 连接处理器
+ *
  * @author 三刀
  * @version V1.0 , 2018/4/25
  */

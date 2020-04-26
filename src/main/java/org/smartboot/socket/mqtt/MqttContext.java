@@ -12,6 +12,12 @@ public interface MqttContext {
 
     boolean removeSession(MqttSession session);
 
+    /**
+     * 发送消息至所有客户端
+     *
+     * @param pubMsg
+     * @param topic
+     */
     void publish2Subscribers(StoredMessage pubMsg, Topic topic);
 
 

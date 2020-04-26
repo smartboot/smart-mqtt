@@ -1,6 +1,6 @@
 package org.smartboot.socket.mqtt.message;
 
-import java.nio.ByteBuffer;
+import org.smartboot.socket.transport.WriteBuffer;
 
 /**
  * @author 三刀
@@ -11,11 +11,8 @@ public class OnlyFixedHeaderMessage extends MqttMessage {
         super(mqttFixedHeader);
     }
 
-    public final ByteBuffer writeTo() {
-        ByteBuffer buf = ByteBuffer.allocate(2);
-        buf.put(getFixedHeaderByte1(mqttFixedHeader));
-        buf.put((byte) 0);
-        buf.flip();
-        return buf;
+    public final void writeTo(WriteBuffer writeBuffer) {
+        writeBuffer.writeByte(getFixedHeaderByte1(mqttFixedHeader));
+        writeBuffer.writeByte((byte) 0);
     }
 }
