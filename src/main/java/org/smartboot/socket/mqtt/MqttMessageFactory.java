@@ -11,8 +11,8 @@ import org.smartboot.socket.mqtt.message.MqttPingRespMessage;
 import org.smartboot.socket.mqtt.message.MqttPubAckMessage;
 import org.smartboot.socket.mqtt.message.MqttPubCompMessage;
 import org.smartboot.socket.mqtt.message.MqttPublishMessage;
-import org.smartboot.socket.mqtt.message.MqttPubrecMessage;
-import org.smartboot.socket.mqtt.message.MqttPubrelMessage;
+import org.smartboot.socket.mqtt.message.MqttPubRecMessage;
+import org.smartboot.socket.mqtt.message.MqttPubRelMessage;
 import org.smartboot.socket.mqtt.message.MqttSubAckMessage;
 import org.smartboot.socket.mqtt.message.MqttSubscribeMessage;
 import org.smartboot.socket.mqtt.message.MqttUnsubAckMessage;
@@ -49,9 +49,9 @@ public final class MqttMessageFactory {
             case PUBACK:
                 return new MqttPubAckMessage(mqttFixedHeader);
             case PUBREC:
-                return new MqttPubrecMessage(mqttFixedHeader);
+                return new MqttPubRecMessage(mqttFixedHeader);
             case PUBREL:
-                return new MqttPubrelMessage(mqttFixedHeader);
+                return new MqttPubRelMessage(mqttFixedHeader);
             case PUBCOMP:
                 return new MqttPubCompMessage(mqttFixedHeader);
 

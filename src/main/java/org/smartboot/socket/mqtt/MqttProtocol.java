@@ -38,7 +38,7 @@ public class MqttProtocol implements Protocol<MqttMessage> {
 
 
     @Override
-    public MqttMessage decode(ByteBuffer buffer, AioSession<MqttMessage> session) {
+    public MqttMessage decode(ByteBuffer buffer, AioSession session) {
         DecodeUnit unit;
         if (session.getAttachment() == null) {
             unit = new DecodeUnit();

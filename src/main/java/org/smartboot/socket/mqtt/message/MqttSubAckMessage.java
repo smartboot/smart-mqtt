@@ -45,4 +45,7 @@ public class MqttSubAckMessage extends MessageIdVariableHeaderMessage {
     public void setMqttSubAckPayload(MqttSubAckPayload mqttSubAckPayload) {
         this.mqttSubAckPayload = mqttSubAckPayload;
     }
+    public MqttSubAckPayload getMqttSubAckPayload() {
+        return this.mqttSubAckPayload;
+    }
 }

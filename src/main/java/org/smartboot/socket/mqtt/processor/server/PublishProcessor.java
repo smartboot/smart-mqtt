@@ -10,7 +10,7 @@ import org.smartboot.socket.mqtt.message.MqttFixedHeader;
 import org.smartboot.socket.mqtt.message.MqttMessageIdVariableHeader;
 import org.smartboot.socket.mqtt.message.MqttPubAckMessage;
 import org.smartboot.socket.mqtt.message.MqttPublishMessage;
-import org.smartboot.socket.mqtt.message.MqttPubrecMessage;
+import org.smartboot.socket.mqtt.message.MqttPubRecMessage;
 import org.smartboot.socket.mqtt.processor.MqttProcessor;
 import org.smartboot.socket.mqtt.spi.IMessagesStore;
 import org.smartboot.socket.mqtt.spi.StoredMessage;
@@ -98,7 +98,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
         storedMessage.setClientID(clientId);
 
         MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBREC, false, AT_MOST_ONCE, false, 0);
-        MqttPubrecMessage pubRecMessage = new MqttPubrecMessage(fixedHeader, MqttMessageIdVariableHeader.from(messageId));
+        MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(fixedHeader, MqttMessageIdVariableHeader.from(messageId));
 
         session.write(pubRecMessage);
     }
