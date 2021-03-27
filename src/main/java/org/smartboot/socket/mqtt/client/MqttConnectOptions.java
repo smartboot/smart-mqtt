@@ -1,5 +1,6 @@
 package org.smartboot.socket.mqtt.client;
 
+import org.smartboot.socket.mqtt.enums.MqttVersion;
 import org.smartboot.socket.mqtt.message.MqttMessage;
 import org.smartboot.socket.mqtt.message.MqttPublishMessage;
 
@@ -24,18 +25,6 @@ public class MqttConnectOptions {
      * The default clean session setting if one is not specified
      */
     public static final boolean CLEAN_SESSION_DEFAULT = true;
-    /**
-     * The default MqttVersion is 3.1.1 first, dropping back to 3.1 if that fails
-     */
-    public static final int MQTT_VERSION_DEFAULT = 0;
-    /**
-     * Mqtt Version 3.1
-     */
-    public static final int MQTT_VERSION_3_1 = 3;
-    /**
-     * Mqtt Version 3.1.1
-     */
-    public static final int MQTT_VERSION_3_1_1 = 4;
 
     private int keepAliveInterval = KEEP_ALIVE_INTERVAL_DEFAULT;
     private int maxInflight = MAX_INFLIGHT_DEFAULT;
@@ -50,7 +39,7 @@ public class MqttConnectOptions {
     private boolean cleanSession = CLEAN_SESSION_DEFAULT;
     private int connectionTimeout = CONNECTION_TIMEOUT_DEFAULT;
     private String[] serverURIs = null;
-    private int mqttVersion = MQTT_VERSION_DEFAULT;
+    private MqttVersion mqttVersion = MqttVersion.MQTT_3_1_1;
     private boolean automaticReconnect = false;
     private int maxReconnectDelay = 128000;
     private Properties customWebSocketHeaders = null;
@@ -202,7 +191,7 @@ public class MqttConnectOptions {
      * @see #setMqttVersion(int)
      * @return the MQTT version.
      */
-    public int getMqttVersion() {
+    public MqttVersion getMqttVersion() {
         return mqttVersion;
     }
 
@@ -563,12 +552,12 @@ public class MqttConnectOptions {
      * @throws IllegalArgumentException
      *             If the MqttVersion supplied is invalid
      */
-    public void setMqttVersion(int mqttVersion) throws IllegalArgumentException {
-        if (mqttVersion != MQTT_VERSION_DEFAULT && mqttVersion != MQTT_VERSION_3_1
-                && mqttVersion != MQTT_VERSION_3_1_1) {
+    public void setMqttVersion(MqttVersion mqttVersion) throws IllegalArgumentException {
+        if (mqttVersion != MqttVersion.MQTT_3_1
+                && mqttVersion != MqttVersion.MQTT_3_1_1) {
             throw new IllegalArgumentException(
                     "An incorrect version was used \"" + mqttVersion + "\". Acceptable version options are "
-                            + MQTT_VERSION_DEFAULT + ", " + MQTT_VERSION_3_1 + " and " + MQTT_VERSION_3_1_1 + ".");
+                            + MqttVersion.MQTT_3_1 + " and " + MqttVersion.MQTT_3_1_1 + ".");
         }
         this.mqttVersion = mqttVersion;
     }
@@ -624,7 +613,7 @@ public class MqttConnectOptions {
     public Properties getDebug() {
         final String strNull = "null";
         Properties p = new Properties();
-        p.put("MqttVersion", Integer.valueOf(getMqttVersion()));
+        p.put("MqttVersion", getMqttVersion());
         p.put("CleanSession", Boolean.valueOf(isCleanSession()));
         p.put("ConTimeout", Integer.valueOf(getConnectionTimeout()));
         p.put("KeepAliveInterval", Integer.valueOf(getKeepAliveInterval()));

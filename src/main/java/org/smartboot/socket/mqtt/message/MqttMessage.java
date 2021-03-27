@@ -9,6 +9,7 @@ import org.smartboot.socket.util.DecoderException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * @author 三刀
@@ -18,7 +19,7 @@ public class MqttMessage {
     /**
      * 8-bit UTF (UCS Transformation Format)
      */
-    public static final Charset UTF_8 = Charset.forName("UTF-8");
+    public static final Charset UTF_8 = StandardCharsets.UTF_8;
     private static final char[] TOPIC_WILDCARDS = {'#', '+'};
     protected MqttFixedHeader mqttFixedHeader = null;
 

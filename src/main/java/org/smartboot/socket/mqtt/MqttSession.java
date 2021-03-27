@@ -13,9 +13,9 @@ public class MqttSession {
     private String clientId;
     private String username;
     private boolean cleanSession;
-    private AioSession<MqttMessage> session;
+    private AioSession session;
 
-    public MqttSession(AioSession<MqttMessage> session) {
+    public MqttSession(AioSession session) {
         this.session = session;
     }
 

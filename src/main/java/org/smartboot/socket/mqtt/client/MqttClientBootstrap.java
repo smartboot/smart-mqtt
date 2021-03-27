@@ -14,11 +14,7 @@ import java.util.concurrent.ExecutionException;
  */
 public class MqttClientBootstrap {
     public static void main(String[] args) {
-        AioQuickClient client = new AioQuickClient("localhost",1883,new MqttProtocol(),new MqttClientProcessor());
-        try {
-            AioSession session = client.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        MqttClient client = new MqttClient();
+        client.connect();
     }
 }

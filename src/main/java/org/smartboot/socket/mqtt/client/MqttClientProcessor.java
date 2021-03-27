@@ -40,32 +40,6 @@ public class MqttClientProcessor implements MessageProcessor<MqttMessage> {
     @Override
     public void process(AioSession session, MqttMessage msg) {
         LOGGER.info("process msg:{}",msg);
-//        switch (msg.getMqttFixedHeader().getMessageType()) {
-//            case CONNECT:
-//                break;
-//            case SUBSCRIBE:
-//                break;
-//            case UNSUBSCRIBE:
-//                break;
-//            case PUBLISH:
-//                break;
-//            case PUBREC:
-//                break;
-//            case PUBCOMP:
-//                break;
-//            case PUBREL:
-//                break;
-//
-//            case DISCONNECT:
-//                break;
-//            case PUBACK:
-//                break;
-//            case PINGREQ:
-//                break;
-//            default:
-//                LOGGER.error("unsupport message:{}", msg);
-//
-//        }
         MqttProcessor processor = processorMap.get(msg.getClass());
         if (processor != null) {
             processor.process(mqttContext, sessionMap.get(session.getSessionID()), msg);
