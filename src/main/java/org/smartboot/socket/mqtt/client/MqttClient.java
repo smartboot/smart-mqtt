@@ -2,12 +2,12 @@ package org.smartboot.socket.mqtt.client;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.buffer.VirtualBuffer;
 import org.smartboot.socket.mqtt.MqttMessageBuilders;
 import org.smartboot.socket.mqtt.MqttProtocol;
-import org.smartboot.socket.mqtt.message.MqttConnectMessage;
-import org.smartboot.socket.mqtt.message.MqttConnectVariableHeader;
-import org.smartboot.socket.mqtt.message.MqttMessage;
+import org.smartboot.socket.mqtt.enums.MqttQoS;
+import org.smartboot.socket.mqtt.message.*;
 import org.smartboot.socket.transport.AioQuickClient;
 import org.smartboot.socket.transport.AioSession;
 import org.smartboot.socket.transport.WriteBuffer;
@@ -15,50 +15,141 @@ import org.smartboot.socket.transport.WriteBuffer;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.AsynchronousChannelGroup;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.LongAdder;
 
 public class MqttClient implements Closeable {
 
-    private Logger log = LoggerFactory.getLogger(this.getClass());
+    private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
+    private final int MAX_PACKET_ID = 65535;
 
     private AioQuickClient client;
     private AioSession aioSession;
-    private String host;
-    private int port;
+    private final String host;
+    private final int port;
+    private final String clientId;
     private MqttConnectOptions connectOptions;
+    private AsynchronousChannelGroup asynchronousChannelGroup;
+    private LongAdder longAdder = new LongAdder();
+    public MqttCallback callback;
+
+    private ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(1);
 
     public MqttClient() {
-        this("localhost", 1883);
+        this("localhost", 1883, UUID.randomUUID().toString());
     }
-    public MqttClient(String host, int port) {
+    public MqttClient(String host, int port, String clientId) {
         this.host = host;
         this.port = port;
+        this.clientId = clientId;
     }
 
     public void connect() {
-        connect(new MqttConnectOptions());
+        try {
+            asynchronousChannelGroup = AsynchronousChannelGroup.withFixedThreadPool(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
+                private AtomicInteger index = new AtomicInteger(1);
+                @Override
+                public Thread newThread(Runnable r) {
+                    return new Thread(r, "ClientGroup" + index.getAndIncrement());
+                }
+            });
+        } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+        connect(new MqttConnectOptions(),asynchronousChannelGroup);
     }
 
-    public void connect(MqttConnectOptions connectOptions) {
+    public void reconnect() {
+        connect(new MqttConnectOptions(), asynchronousChannelGroup);
+    }
+
+    public void connect(MqttConnectOptions connectOptions, AsynchronousChannelGroup asynchronousChannelGroup) {
         this.connectOptions = connectOptions;
-        client = new AioQuickClient(host, port, new MqttProtocol(), new MqttClientProcessor());
+        System.setProperty("java.nio.channels.spi.AsynchronousChannelProvider", "org.smartboot.aio.EnhanceAsynchronousChannelProvider");
+        BufferPagePool bufferPagePool = new BufferPagePool(1024 * 1024 * 2, 10, true);
+        client = new AioQuickClient(host, port, new MqttProtocol(), new MqttClientProcessor(this));
         try {
-            client.setReadBufferFactory(bufferPage -> VirtualBuffer.wrap(ByteBuffer.allocate(1024)));
-            aioSession = client.start();
+            client.setBufferPagePool(bufferPagePool);
+            client.setWriteBuffer(1024 * 1024, 10);
+//            client.setReadBufferFactory(bufferPage -> VirtualBuffer.wrap(ByteBuffer.allocate(2 * 1024 * 1024)));
+            aioSession = client.start(asynchronousChannelGroup);
             WriteBuffer writeBuffer = aioSession.writeBuffer();
-            MqttConnectMessage connectMessage = MqttMessageBuilders.connect().clientId("stw").keepAlive(60).cleanSession(true).build();
+            MqttConnectMessage connectMessage = MqttMessageBuilders.connect()
+                    .clientId(clientId).keepAlive(connectOptions.getKeepAliveInterval()).cleanSession(connectOptions.isCleanSession()).build();
             connectMessage.writeTo(writeBuffer);
-            TimeUnit.HOURS.sleep(1);
-        } catch (IOException | InterruptedException e) {
-            log.error(e.getMessage(), e);
+
+            startPing(connectOptions, writeBuffer);
+        } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
         }
     }
 
+    public void startPing(MqttConnectOptions connectOptions, WriteBuffer writeBuffer) {
+        executorService.scheduleAtFixedRate(()->{
+            MqttPingReqMessage pingReqMessage = MqttMessageBuilders.pingReq().build();
+            synchronized (writeBuffer){
+                pingReqMessage.writeTo(writeBuffer);
+            }
+        },3, connectOptions.getKeepAliveInterval(),TimeUnit.SECONDS);
+    }
+
+    public void stopPing() {
+        executorService.shutdown();
+    }
+
+    public void sub(String topic, MqttQoS qos){
+        int packetId = getPacketId();
+        MqttSubscribeMessage subMsg = MqttMessageBuilders.subscribe().packetId(packetId).addSubscription(qos, topic).build();
+        synchronized (aioSession.writeBuffer()){
+            try {
+                subMsg.writeTo(aioSession.writeBuffer());
+            } catch (IOException e) {
+                LOGGER.error(e.getMessage(), e);
+            }
+        }
+    }
+
+    public void pub(String topic, MqttQoS qos, byte[] payload){
+        MqttPublishMessage publishMessage;
+        if (qos.equals(MqttQoS.AT_MOST_ONCE)){
+            ByteBuffer byteBuffer = ByteBuffer.wrap(payload);
+            publishMessage = MqttMessageBuilders.publish().topicName(topic).qos(qos).payload(byteBuffer).build();
+        }else {
+            int packetId = getPacketId();
+            ByteBuffer byteBuffer = ByteBuffer.wrap(payload);
+            publishMessage = MqttMessageBuilders.publish().packetId(packetId).topicName(topic).qos(qos).payload(byteBuffer).build();
+        }
+        synchronized (aioSession.writeBuffer()){
+            try {
+                publishMessage.writeTo(aioSession.writeBuffer());
+            } catch (IOException e) {
+                LOGGER.error(e.getMessage(), e);
+            }
+        }
+    }
+
+    public void callBack(MqttCallback callback){
+        this.callback = callback;
+    }
+
+    private int getPacketId() {
+        longAdder.increment();
+        int packetId = longAdder.intValue();
+        if (packetId > MAX_PACKET_ID){
+            packetId = 1;
+            longAdder.reset();
+            longAdder.increment();
+        }
+        return packetId;
+    }
 
     @Override
     public void close() throws IOException {
         aioSession.close();
     }
+
+
 }

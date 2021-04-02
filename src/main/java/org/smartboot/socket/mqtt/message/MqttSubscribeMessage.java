@@ -1,8 +1,12 @@
 package org.smartboot.socket.mqtt.message;
 
 import org.smartboot.socket.mqtt.enums.MqttQoS;
+import org.smartboot.socket.transport.WriteBuffer;
 import org.smartboot.socket.util.BufferUtils;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +15,7 @@ import java.util.List;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttSubscribeMessage extends MessageIdVariableHeaderMessage {
+public class MqttSubscribeMessage extends PacketIdVariableHeaderMessage {
 
     private MqttSubscribePayload mqttSubscribePayload;
 
@@ -19,8 +23,8 @@ public class MqttSubscribeMessage extends MessageIdVariableHeaderMessage {
         super(mqttFixedHeader);
     }
 
-    public MqttSubscribeMessage(MqttFixedHeader mqttFixedHeader, MqttMessageIdVariableHeader mqttMessageIdVariableHeader, MqttSubscribePayload mqttSubscribePayload) {
-        super(mqttFixedHeader, mqttMessageIdVariableHeader);
+    public MqttSubscribeMessage(MqttFixedHeader mqttFixedHeader, MqttPacketIdVariableHeader mqttPacketIdVariableHeader, MqttSubscribePayload mqttSubscribePayload) {
+        super(mqttFixedHeader, mqttPacketIdVariableHeader);
         this.mqttSubscribePayload = mqttSubscribePayload;
     }
 
@@ -35,5 +39,24 @@ public class MqttSubscribeMessage extends MessageIdVariableHeaderMessage {
         this.mqttSubscribePayload = new MqttSubscribePayload(subscribeTopics);
     }
 
+    @Override
+    public void writeTo(WriteBuffer page) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(baos);
 
+        dos.writeShort(mqttPacketIdVariableHeader.packetId());
+        for (MqttTopicSubscription topicSubscription : mqttSubscribePayload.topicSubscriptions()) {
+            dos.writeUTF(topicSubscription.topicName());
+            dos.writeByte(topicSubscription.qualityOfService().value());
+        }
+        dos.flush();
+        byte[] varAndPayloadBytes = baos.toByteArray();
+        baos.reset();
+        dos.writeByte(getFixedHeaderByte1(mqttFixedHeader));
+        dos.write(encodeMBI(varAndPayloadBytes.length));
+        dos.write(varAndPayloadBytes);
+        dos.flush();
+        byte[] data = baos.toByteArray();
+        page.writeAndFlush(data);
+    }
 }

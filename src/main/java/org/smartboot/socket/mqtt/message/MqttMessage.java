@@ -6,6 +6,7 @@ import org.smartboot.socket.transport.WriteBuffer;
 import org.smartboot.socket.util.BufferUtils;
 import org.smartboot.socket.util.DecoderException;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -22,6 +23,8 @@ public class MqttMessage {
     public static final Charset UTF_8 = StandardCharsets.UTF_8;
     private static final char[] TOPIC_WILDCARDS = {'#', '+'};
     protected MqttFixedHeader mqttFixedHeader = null;
+    private static final int VARIABLE_BYTE_INT_MAX = 268435455;
+
 
     public MqttMessage(MqttFixedHeader mqttFixedHeader) {
         this.mqttFixedHeader = mqttFixedHeader;
@@ -122,6 +125,27 @@ public class MqttMessage {
             count++;
         } while (num > 0);
         return count;
+    }
+
+    public static byte[] encodeMBI(long number) {
+        if (number < 0 || number >= VARIABLE_BYTE_INT_MAX) {
+            throw new IllegalArgumentException("This property must be a number between 0 and " + VARIABLE_BYTE_INT_MAX);
+        }
+        int numBytes = 0;
+        long no = number;
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        // Encode the remaining length fields in the four bytes
+        do {
+            byte digit = (byte) (no % 128);
+            no = no / 128;
+            if (no > 0) {
+                digit |= 0x80;
+            }
+            bos.write(digit);
+            numBytes++;
+        } while ((no > 0) && (numBytes < 4));
+
+        return bos.toByteArray();
     }
 
     protected final void writeVariableLengthInt(WriteBuffer buf, int num) {

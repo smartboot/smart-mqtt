@@ -9,7 +9,7 @@ import org.smartboot.socket.mqtt.processor.MqttProcessor;
 public class PubRecProcessor implements MqttProcessor<MqttPubRecMessage> {
     @Override
     public void process(MqttContext context, MqttSession session, MqttPubRecMessage mqttPubrecMessage) {
-        MqttPubRelMessage mqttPubRelMessage = new MqttPubRelMessage();
+        MqttPubRelMessage mqttPubRelMessage = new MqttPubRelMessage(mqttPubrecMessage.getMqttMessageIdVariableHeader().packetId());
         session.write(mqttPubRelMessage);
     }
 }

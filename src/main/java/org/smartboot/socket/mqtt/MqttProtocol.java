@@ -86,14 +86,14 @@ public class MqttProtocol implements Protocol<MqttMessage> {
                     MqttFixedHeader mqttFixedHeader =
                             new MqttFixedHeader(messageType, dupFlag, MqttQoS.valueOf(qosLevel), retain, remainingLength);
                     MqttCodecUtil.resetUnusedFields(mqttFixedHeader);
-                    switch (mqttFixedHeader.getMessageType()) {
-                        case PUBREL:
-                        case SUBSCRIBE:
-                        case UNSUBSCRIBE:
-                            if (mqttFixedHeader.getQosLevel() != MqttQoS.AT_LEAST_ONCE) {
-                                throw new DecoderException(mqttFixedHeader.getMessageType().name() + " message must have QoS 1");
-                            }
-                    }
+//                    switch (mqttFixedHeader.getMessageType()) {
+//                        case PUBREL:
+//                        case SUBSCRIBE:
+//                        case UNSUBSCRIBE:
+//                            if (mqttFixedHeader.getQosLevel() != MqttQoS.AT_LEAST_ONCE) {
+//                                throw new DecoderException(mqttFixedHeader.getMessageType().name() + " message must have QoS 1");
+//                            }
+//                    }
                     unit.mqttMessage = MqttMessageFactory.newMessage(mqttFixedHeader);
                     unit.state = READ_VARIABLE_HEADER;
 

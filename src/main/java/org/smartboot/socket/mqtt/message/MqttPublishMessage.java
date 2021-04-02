@@ -1,7 +1,11 @@
 package org.smartboot.socket.mqtt.message;
 
+import org.smartboot.socket.transport.WriteBuffer;
 import org.smartboot.socket.util.DecoderException;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -42,6 +46,25 @@ public class MqttPublishMessage extends MqttMessage {
         payload = ByteBuffer.allocate(buffer.remaining());
         payload.put(buffer);
         payload.flip();
+    }
+
+    @Override
+    public void writeTo(WriteBuffer page) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(baos);
+
+        dos.writeUTF(mqttPublishVariableHeader.topicName());
+        dos.writeShort(mqttPublishVariableHeader.packetId());
+        dos.write(payload.array());
+        dos.flush();
+        byte[] varAndPayloadBytes = baos.toByteArray();
+        baos.reset();
+        dos.writeByte(getFixedHeaderByte1(mqttFixedHeader));
+        dos.write(encodeMBI(varAndPayloadBytes.length));
+        dos.write(varAndPayloadBytes);
+        dos.flush();
+        byte[] data = baos.toByteArray();
+        page.writeAndFlush(data);
     }
 
     public ByteBuffer getPayload() {

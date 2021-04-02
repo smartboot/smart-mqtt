@@ -19,7 +19,6 @@ public class PingRespProcessor implements MqttProcessor<MqttPingRespMessage> {
 
     @Override
     public void process(MqttContext context, MqttSession session, MqttPingRespMessage mqttPingRespMessage) {
-//        LOGGER.info("receive ping req message:{}", msg);
 //        MqttPingRespMessage mqttPingRespMessage = new MqttPingRespMessage();
 //        session.write(mqttPingRespMessage);
 //        LOGGER.info("response ping message:{}", mqttPingRespMessage);

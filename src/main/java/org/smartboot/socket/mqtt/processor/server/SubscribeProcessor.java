@@ -7,7 +7,7 @@ import org.smartboot.socket.mqtt.MqttSession;
 import org.smartboot.socket.mqtt.enums.MqttMessageType;
 import org.smartboot.socket.mqtt.enums.MqttQoS;
 import org.smartboot.socket.mqtt.message.MqttFixedHeader;
-import org.smartboot.socket.mqtt.message.MqttMessageIdVariableHeader;
+import org.smartboot.socket.mqtt.message.MqttPacketIdVariableHeader;
 import org.smartboot.socket.mqtt.message.MqttSubAckMessage;
 import org.smartboot.socket.mqtt.message.MqttSubAckPayload;
 import org.smartboot.socket.mqtt.message.MqttSubscribeMessage;
@@ -36,7 +36,7 @@ public class SubscribeProcessor implements MqttProcessor<MqttSubscribeMessage> {
                 LOGGER.error("unkonw mqttos:{}", mqttQoS);
         }
         MqttSubAckMessage mqttSubAckMessage = new MqttSubAckMessage(new MqttFixedHeader(MqttMessageType.SUBACK, false, MqttQoS.AT_MOST_ONCE, false, 0));
-        mqttSubAckMessage.setMqttMessageIdVariableHeader(MqttMessageIdVariableHeader.from(12345));
+        mqttSubAckMessage.setMqttMessageIdVariableHeader(MqttPacketIdVariableHeader.from(12345));
         mqttSubAckMessage.setMqttSubAckPayload(new MqttSubAckPayload(1, 2, 0));
         session.write(mqttSubAckMessage);
     }

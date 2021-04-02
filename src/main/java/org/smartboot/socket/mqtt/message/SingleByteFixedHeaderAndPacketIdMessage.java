@@ -8,18 +8,18 @@ import java.io.IOException;
  * @author 三刀
  * @version V1.0 , 2018/4/25
  */
-public class SingleByteFixedHeaderAndMessageIdMessage extends MessageIdVariableHeaderMessage {
-    public SingleByteFixedHeaderAndMessageIdMessage(MqttFixedHeader mqttFixedHeader) {
+public class SingleByteFixedHeaderAndPacketIdMessage extends PacketIdVariableHeaderMessage {
+    public SingleByteFixedHeaderAndPacketIdMessage(MqttFixedHeader mqttFixedHeader) {
         super(mqttFixedHeader);
     }
 
-    public SingleByteFixedHeaderAndMessageIdMessage(MqttFixedHeader mqttFixedHeader, MqttMessageIdVariableHeader mqttMessageIdVariableHeader) {
-        super(mqttFixedHeader, mqttMessageIdVariableHeader);
+    public SingleByteFixedHeaderAndPacketIdMessage(MqttFixedHeader mqttFixedHeader, MqttPacketIdVariableHeader mqttPacketIdVariableHeader) {
+        super(mqttFixedHeader, mqttPacketIdVariableHeader);
     }
 
     @Override
     public void writeTo(WriteBuffer writeBuffer) throws IOException {
-        int msgId = mqttMessageIdVariableHeader.messageId();
+        int msgId = mqttPacketIdVariableHeader.packetId();
 
         int variableHeaderBufferSize = 2; // variable part only has a message id
         writeBuffer.writeByte(getFixedHeaderByte1(mqttFixedHeader));

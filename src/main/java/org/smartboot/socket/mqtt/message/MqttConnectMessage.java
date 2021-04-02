@@ -147,12 +147,12 @@ public class MqttConnectMessage extends MqttMessage {
             dos.write(mqttConnectPayload.passwordInBytes());
         }
         dos.flush();
-        byte[] payloadBytes = baos.toByteArray();
+        byte[] varAndPayloadBytes = baos.toByteArray();
         baos.reset();
         dos.writeByte(getFixedHeaderByte1(mqttFixedHeader));
         //todo 多个字节长度失效
-        dos.writeByte(payloadBytes.length);
-        dos.write(payloadBytes);
+        dos.write(encodeMBI(varAndPayloadBytes.length));
+        dos.write(varAndPayloadBytes);
         dos.flush();
         byte[] data = baos.toByteArray();
         writeBuffer.writeAndFlush(data);

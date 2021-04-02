@@ -7,13 +7,13 @@ import org.smartboot.socket.mqtt.enums.MqttQoS;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttPubRecMessage extends SingleByteFixedHeaderAndMessageIdMessage {
+public class MqttPubRecMessage extends SingleByteFixedHeaderAndPacketIdMessage {
     public MqttPubRecMessage(MqttFixedHeader mqttFixedHeader) {
         super(mqttFixedHeader);
     }
 
-    public MqttPubRecMessage(MqttFixedHeader mqttFixedHeader, MqttMessageIdVariableHeader mqttMessageIdVariableHeader) {
-        super(mqttFixedHeader, mqttMessageIdVariableHeader);
+    public MqttPubRecMessage(MqttFixedHeader mqttFixedHeader, MqttPacketIdVariableHeader mqttPacketIdVariableHeader) {
+        super(mqttFixedHeader, mqttPacketIdVariableHeader);
     }
 
     public MqttPubRecMessage() {

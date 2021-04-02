@@ -4,20 +4,7 @@ import org.smartboot.socket.mqtt.enums.MqttConnectReturnCode;
 import org.smartboot.socket.mqtt.enums.MqttMessageType;
 import org.smartboot.socket.mqtt.enums.MqttQoS;
 import org.smartboot.socket.mqtt.enums.MqttVersion;
-import org.smartboot.socket.mqtt.message.MqttConnAckMessage;
-import org.smartboot.socket.mqtt.message.MqttConnAckVariableHeader;
-import org.smartboot.socket.mqtt.message.MqttConnectMessage;
-import org.smartboot.socket.mqtt.message.MqttConnectPayload;
-import org.smartboot.socket.mqtt.message.MqttConnectVariableHeader;
-import org.smartboot.socket.mqtt.message.MqttFixedHeader;
-import org.smartboot.socket.mqtt.message.MqttMessageIdVariableHeader;
-import org.smartboot.socket.mqtt.message.MqttPublishMessage;
-import org.smartboot.socket.mqtt.message.MqttPublishVariableHeader;
-import org.smartboot.socket.mqtt.message.MqttSubscribeMessage;
-import org.smartboot.socket.mqtt.message.MqttSubscribePayload;
-import org.smartboot.socket.mqtt.message.MqttTopicSubscription;
-import org.smartboot.socket.mqtt.message.MqttUnsubscribeMessage;
-import org.smartboot.socket.mqtt.message.MqttUnsubscribePayload;
+import org.smartboot.socket.mqtt.message.*;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -34,6 +21,10 @@ public final class MqttMessageBuilders {
 
     public static ConnAckBuilder connAck() {
         return new ConnAckBuilder();
+    }
+
+    public static PingReqBuilder pingReq() {
+        return new PingReqBuilder();
     }
 
     public static PublishBuilder publish() {
@@ -53,7 +44,7 @@ public final class MqttMessageBuilders {
         private boolean retained;
         private MqttQoS qos;
         private ByteBuffer payload;
-        private int messageId;
+        private int packetId;
 
         PublishBuilder() {
         }
@@ -78,14 +69,14 @@ public final class MqttMessageBuilders {
             return this;
         }
 
-        public PublishBuilder messageId(int messageId) {
-            this.messageId = messageId;
+        public PublishBuilder packetId(int packetId) {
+            this.packetId = packetId;
             return this;
         }
 
         public MqttPublishMessage build() {
             MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false, qos, retained, 0);
-            MqttPublishVariableHeader mqttVariableHeader = new MqttPublishVariableHeader(topic, messageId);
+            MqttPublishVariableHeader mqttVariableHeader = new MqttPublishVariableHeader(topic, packetId);
             return new MqttPublishMessage(mqttFixedHeader, mqttVariableHeader, payload);
         }
     }
@@ -201,7 +192,7 @@ public final class MqttMessageBuilders {
     public static final class SubscribeBuilder {
 
         private List<MqttTopicSubscription> subscriptions;
-        private int messageId;
+        private int packetId;
 
         SubscribeBuilder() {
         }
@@ -214,15 +205,15 @@ public final class MqttMessageBuilders {
             return this;
         }
 
-        public SubscribeBuilder messageId(int messageId) {
-            this.messageId = messageId;
+        public SubscribeBuilder packetId(int packetId) {
+            this.packetId = packetId;
             return this;
         }
 
         public MqttSubscribeMessage build() {
             MqttFixedHeader mqttFixedHeader =
                     new MqttFixedHeader(MqttMessageType.SUBSCRIBE, false, MqttQoS.AT_LEAST_ONCE, false, 0);
-            MqttMessageIdVariableHeader mqttVariableHeader = MqttMessageIdVariableHeader.from(messageId);
+            MqttPacketIdVariableHeader mqttVariableHeader = MqttPacketIdVariableHeader.from(packetId);
             MqttSubscribePayload mqttSubscribePayload = new MqttSubscribePayload(subscriptions);
             return new MqttSubscribeMessage(mqttFixedHeader, mqttVariableHeader, mqttSubscribePayload);
         }
@@ -252,7 +243,7 @@ public final class MqttMessageBuilders {
         public MqttUnsubscribeMessage build() {
             MqttFixedHeader mqttFixedHeader =
                     new MqttFixedHeader(MqttMessageType.UNSUBSCRIBE, false, MqttQoS.AT_LEAST_ONCE, false, 0);
-            MqttMessageIdVariableHeader mqttVariableHeader = MqttMessageIdVariableHeader.from(messageId);
+            MqttPacketIdVariableHeader mqttVariableHeader = MqttPacketIdVariableHeader.from(messageId);
             MqttUnsubscribePayload mqttSubscribePayload = new MqttUnsubscribePayload(topicFilters);
             return new MqttUnsubscribeMessage(mqttFixedHeader, mqttVariableHeader, mqttSubscribePayload);
         }
@@ -282,6 +273,20 @@ public final class MqttMessageBuilders {
             MqttConnAckVariableHeader mqttConnAckVariableHeader =
                     new MqttConnAckVariableHeader(returnCode, sessionPresent);
             return new MqttConnAckMessage(mqttFixedHeader, mqttConnAckVariableHeader);
+        }
+    }
+    public static final class PingReqBuilder {
+
+        private MqttConnectReturnCode returnCode;
+        private boolean sessionPresent;
+
+        PingReqBuilder() {
+        }
+
+        public MqttPingReqMessage build() {
+            MqttFixedHeader mqttFixedHeader =
+                    new MqttFixedHeader(MqttMessageType.PINGREQ, false, MqttQoS.AT_MOST_ONCE, false, 0);
+            return new MqttPingReqMessage(mqttFixedHeader);
         }
     }
 }

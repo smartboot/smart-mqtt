@@ -26,25 +26,27 @@ public class MqttClientProcessor implements MessageProcessor<MqttMessage> {
     private Map<Class<? extends MqttMessage>, MqttProcessor> processorMap = new HashMap<>();
     private MqttContext mqttContext = new MqttServerContext();
     private Map<String, MqttSession> sessionMap = new ConcurrentHashMap();
+    private MqttClient mqttClient;
 
-    {
+    public MqttClientProcessor(MqttClient mqttClient) {
+        this.mqttClient = mqttClient;
         processorMap.put(MqttPingRespMessage.class, new PingRespProcessor());
         processorMap.put(MqttConnAckMessage.class, new ConnAckProcessor());
         processorMap.put(MqttPubAckMessage.class, new PubAckProcessor());
+        processorMap.put(MqttPublishMessage.class, new PublishProcessor(mqttClient));
         processorMap.put(MqttPubRecMessage.class, new PubRecProcessor());
         processorMap.put(MqttPubCompMessage.class, new PubCompProcessor());
-        processorMap.put(MqttSubAckMessage.class, new SubscribeProcessor());
+        processorMap.put(MqttPubRelMessage.class, new PubRelProcessor());
+        processorMap.put(MqttSubAckMessage.class, new SubAckProcessor());
     }
-
 
     @Override
     public void process(AioSession session, MqttMessage msg) {
-        LOGGER.info("process msg:{}",msg);
         MqttProcessor processor = processorMap.get(msg.getClass());
         if (processor != null) {
             processor.process(mqttContext, sessionMap.get(session.getSessionID()), msg);
-        } else {
-            System.out.println(msg);
+        }else {
+            LOGGER.error("unknown msg:{}", msg);
         }
     }
 
@@ -54,6 +56,10 @@ public class MqttClientProcessor implements MessageProcessor<MqttMessage> {
             case NEW_SESSION:
                 sessionMap.put(session.getSessionID(), new MqttSession(session));
                 break;
+            case SESSION_CLOSED:
+                mqttClient.connect();
+                break;
+            default:break;
         }
         System.out.println(stateMachineEnum);
         if (throwable != null) {
