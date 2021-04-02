@@ -43,8 +43,16 @@ public class MqttPublishMessage extends MqttMessage {
 
     @Override
     public void decodePlayLoad(ByteBuffer buffer) {
-        payload = ByteBuffer.allocate(buffer.remaining());
-        payload.put(buffer);
+        int variableHeaderLength = mqttPublishVariableHeader.topicName().getBytes().length + 4;
+        int remainingLength = mqttFixedHeader.remainingLength();
+        int readLength = remainingLength - variableHeaderLength;
+        payload = ByteBuffer.allocate(readLength);
+        for (int i = 0; i < readLength; i++) {
+            payload.put(buffer.get());
+        }
+//        byte[] payloadBytes = new byte[readLength];
+//        buffer.get(payloadBytes);
+//        payload.put(payloadBytes);
         payload.flip();
     }
 

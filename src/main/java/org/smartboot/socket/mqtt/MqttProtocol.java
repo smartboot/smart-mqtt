@@ -158,5 +158,6 @@ public class MqttProtocol implements Protocol<MqttMessage> {
     class DecodeUnit {
         DecoderState state;
         MqttMessage mqttMessage;
+        int remaining;
     }
 }

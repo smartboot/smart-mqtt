@@ -31,7 +31,7 @@ public class MqttClientBootstrap {
 
             @Override
             public void messageArrived(String topic, byte[] payload) throws Exception {
-//                LOGGER.info(new String(payload));
+                LOGGER.info(new String(payload));
             }
         });
 //        while (true){
