@@ -57,7 +57,8 @@ public class MqttClientProcessor implements MessageProcessor<MqttMessage> {
                 sessionMap.put(session.getSessionID(), new MqttSession(session));
                 break;
             case SESSION_CLOSED:
-                mqttClient.connect();
+                mqttClient.stopPing();
+                mqttClient.reconnect();
                 break;
             default:break;
         }

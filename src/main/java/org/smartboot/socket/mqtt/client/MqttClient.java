@@ -33,6 +33,7 @@ public class MqttClient implements Closeable {
     private final String clientId;
     private MqttConnectOptions connectOptions;
     private AsynchronousChannelGroup asynchronousChannelGroup;
+    private BufferPagePool bufferPagePool;
     private LongAdder longAdder = new LongAdder();
     public MqttCallback callback;
 
@@ -69,12 +70,13 @@ public class MqttClient implements Closeable {
     public void connect(MqttConnectOptions connectOptions, AsynchronousChannelGroup asynchronousChannelGroup) {
         this.connectOptions = connectOptions;
         System.setProperty("java.nio.channels.spi.AsynchronousChannelProvider", "org.smartboot.aio.EnhanceAsynchronousChannelProvider");
-        BufferPagePool bufferPagePool = new BufferPagePool(1024 * 1024 * 2, 10, true);
+        if (bufferPagePool == null) {
+            bufferPagePool = new BufferPagePool(1024 * 1024 * 2, 10, true);
+        }
         client = new AioQuickClient(host, port, new MqttProtocol(), new MqttClientProcessor(this));
         try {
             client.setBufferPagePool(bufferPagePool);
             client.setWriteBuffer(1024 * 1024, 10);
-//            client.setReadBufferFactory(bufferPage -> VirtualBuffer.wrap(ByteBuffer.allocate(2 * 1024 * 1024)));
             aioSession = client.start(asynchronousChannelGroup);
             WriteBuffer writeBuffer = aioSession.writeBuffer();
             MqttConnectMessage connectMessage = MqttMessageBuilders.connect()
