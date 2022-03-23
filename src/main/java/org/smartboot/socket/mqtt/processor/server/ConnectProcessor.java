@@ -130,6 +130,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         }
         session.setClientId(clientId);
         context.addSession(session);
+        LOGGER.info("add session for client:{}", clientId);
     }
 
     private boolean login(MqttSession channel, MqttConnectMessage msg) {

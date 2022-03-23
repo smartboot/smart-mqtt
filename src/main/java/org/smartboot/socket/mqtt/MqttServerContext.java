@@ -43,7 +43,9 @@ public class MqttServerContext implements MqttContext {
     @Override
     public void removeSession(String clientId) {
         MqttSession session = grantSessions.get(clientId);
-        removeSession(session);
+        if (session != null) {
+            removeSession(session);
+        }
     }
 
     @Override
@@ -56,11 +58,7 @@ public class MqttServerContext implements MqttContext {
         topic.getSubscribes().forEach(clientId -> {
             MqttSession session = grantSessions.get(clientId);
             System.out.println("分发消息给：" + session);
-            MqttPublishMessage publishMessage = MqttMessageBuilders.publish()
-                    .payload(ByteBuffer.wrap(pubMsg.getPayload()))
-                    .qos(pubMsg.getMqttQoS())
-                    .packetId(session.getPacketIdCreator().getAndIncrement())
-                    .topicName(topic.getTopic()).build();
+            MqttPublishMessage publishMessage = MqttMessageBuilders.publish().payload(ByteBuffer.wrap(pubMsg.getPayload())).qos(pubMsg.getMqttQoS()).packetId(session.getPacketIdCreator().getAndIncrement()).topicName(topic.getTopic()).build();
             session.write(publishMessage);
         });
     }
@@ -71,11 +69,9 @@ public class MqttServerContext implements MqttContext {
 //            LOGGER.trace("Sending publish message to subscribers. ClientId={}, topic={}, messageId={}, payload={}, " +
 //                            "subscriptionTree={}", pubMsg.getClientID(), topic, messageID, DebugUtils.payload2Str(pubMsg.getPayload()),
 //                    subscriptions.dumpTree());
-            LOGGER.info("Sending publish message to subscribers. ClientId={}, topic={}, messageId={}", pubMsg.getClientID(), topic,
-                    messageID);
+            LOGGER.info("Sending publish message to subscribers. ClientId={}, topic={}, messageId={}", pubMsg.getClientID(), topic, messageID);
         } else {
-            LOGGER.info("Sending publish message to subscribers. ClientId={}, topic={}, messageId={}", pubMsg.getClientID(), topic,
-                    messageID);
+            LOGGER.info("Sending publish message to subscribers. ClientId={}, topic={}, messageId={}", pubMsg.getClientID(), topic, messageID);
         }
         publish2Subscribers(pubMsg, topic);
     }

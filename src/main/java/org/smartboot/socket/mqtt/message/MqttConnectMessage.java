@@ -95,7 +95,7 @@ public class MqttConnectMessage extends MqttMessage {
 
         //VariableHeader
         byte[] nameBytes = mqttConnectVariableHeader.name().getBytes(StandardCharsets.UTF_8);
-        byte versionByte = (byte) mqttConnectVariableHeader.getProtocolLevel();
+        byte versionByte = mqttConnectVariableHeader.getProtocolLevel();
         dos.writeByte(0);
         dos.writeByte((byte) nameBytes.length);
         dos.write(nameBytes);
