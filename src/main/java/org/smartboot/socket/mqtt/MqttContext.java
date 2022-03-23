@@ -13,6 +13,10 @@ public interface MqttContext {
 
     boolean removeSession(MqttSession session);
 
+    void removeSession(String clientId);
+
+    MqttSession getSession(String clientId);
+
     /**
      * 获取Topic，如果不存在将创建
      *

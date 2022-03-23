@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.socket.MessageProcessor;
 import org.smartboot.socket.StateMachineEnum;
+import org.smartboot.socket.mqtt.exception.MqttProcessException;
 import org.smartboot.socket.mqtt.message.MqttConnectMessage;
 import org.smartboot.socket.mqtt.message.MqttMessage;
 import org.smartboot.socket.mqtt.message.MqttPingReqMessage;
@@ -77,7 +78,7 @@ public class MqttServerProcessor implements MessageProcessor<MqttMessage> {
         if (processor != null) {
             processor.process(mqttContext, onlineSessions.get(session.getSessionID()), msg);
         } else {
-            System.out.println(msg);
+            System.err.println("unSupport message: " + msg);
         }
     }
 
@@ -89,6 +90,12 @@ public class MqttServerProcessor implements MessageProcessor<MqttMessage> {
                 break;
             case SESSION_CLOSED:
                 mqttContext.removeSession(onlineSessions.remove(session.getSessionID()));
+                break;
+            case PROCESS_EXCEPTION:
+                if (throwable instanceof MqttProcessException) {
+                    LOGGER.warn("process exception", throwable);
+                    ((MqttProcessException) throwable).getCallback().run();
+                }
                 break;
         }
         System.out.println(stateMachineEnum);

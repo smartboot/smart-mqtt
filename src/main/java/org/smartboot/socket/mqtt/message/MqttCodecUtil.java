@@ -22,9 +22,9 @@ import org.smartboot.socket.mqtt.enums.MqttVersion;
 
 public final class MqttCodecUtil {
 
+    public static final int MIN_CLIENT_ID_LENGTH = 1;
+    public static final int MAX_CLIENT_ID_LENGTH = 23;
     private static final char[] TOPIC_WILDCARDS = {'#', '+'};
-    private static final int MIN_CLIENT_ID_LENGTH = 1;
-    private static final int MAX_CLIENT_ID_LENGTH = 23;
 
     private MqttCodecUtil() {
     }

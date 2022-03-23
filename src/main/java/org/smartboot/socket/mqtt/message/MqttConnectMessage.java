@@ -4,7 +4,6 @@ import org.smartboot.socket.mqtt.enums.MqttVersion;
 import org.smartboot.socket.mqtt.exception.MqttIdentifierRejectedException;
 import org.smartboot.socket.transport.WriteBuffer;
 import org.smartboot.socket.util.BufferUtils;
-import org.smartboot.socket.util.DecoderException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -15,11 +14,19 @@ import java.nio.charset.StandardCharsets;
 import static org.smartboot.socket.mqtt.message.MqttCodecUtil.isValidClientId;
 
 /**
+ * 连接服务端，客户端到服务端的网络连接建立后，客户端发送给服务端的第一个报文必须是 CONNECT 报文。
+ *
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
 public class MqttConnectMessage extends MqttMessage {
+    /**
+     * 可变报头
+     */
     private MqttConnectVariableHeader mqttConnectVariableHeader;
+    /**
+     * 有效载荷
+     */
     private MqttConnectPayload mqttConnectPayload;
 
     public MqttConnectMessage(MqttFixedHeader mqttFixedHeader) {
@@ -34,52 +41,34 @@ public class MqttConnectMessage extends MqttMessage {
 
     @Override
     public void decodeVariableHeader(ByteBuffer buffer) {
-        final String protoString = decodeString(buffer);
+        //协议名
+        //协议名是表示协议名 MQTT 的 UTF-8 编码的字符串。
+        //MQTT 规范的后续版本不会改变这个字符串的偏移和长度。
+        //如果协议名不正确服务端可以断开客户端的连接，也可以按照某些其它规范继续处理 CONNECT 报文。
+        //对于后一种情况，按照本规范，服务端不能继续处理 CONNECT 报文
+        final String protocolName = decodeString(buffer);
 
+        //协议级别，8位无符号值
         final byte protocolLevel = buffer.get();
 
-        final MqttVersion mqttVersion = MqttVersion.fromProtocolNameAndLevel(protoString, protocolLevel);
-
+        //连接标志
         final int b1 = BufferUtils.readUnsignedByte(buffer);
 
+        //保持连接
         final int keepAlive = decodeMsbLsb(buffer);
 
-        final boolean hasUserName = (b1 & 0x80) == 0x80;
-        final boolean hasPassword = (b1 & 0x40) == 0x40;
-        final boolean willRetain = (b1 & 0x20) == 0x20;
-        final int willQos = (b1 & 0x18) >> 3;
-        final boolean willFlag = (b1 & 0x04) == 0x04;
-        final boolean cleanSession = (b1 & 0x02) == 0x02;
-        if (mqttVersion == MqttVersion.MQTT_3_1_1) {
-            final boolean zeroReservedFlag = (b1 & 0x01) == 0x0;
-            if (!zeroReservedFlag) {
-                // MQTT v3.1.1: The Server MUST validate that the reserved flag in the CONNECT Control Packet is
-                // set to zero and disconnect the Client if it is not zero.
-                // See http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc385349230
-                throw new DecoderException("non-zero reserved flag");
-            }
-        }
-
         mqttConnectVariableHeader = new MqttConnectVariableHeader(
-                mqttVersion.protocolName(),
-                mqttVersion.protocolLevel(),
-                hasUserName,
-                hasPassword,
-                willRetain,
-                willQos,
-                willFlag,
-                cleanSession,
+                protocolName,
+                protocolLevel,
+                b1,
                 keepAlive);
     }
 
     @Override
     public void decodePlayLoad(ByteBuffer buffer) {
+        //客户端标识符
+        // 客户端标识符 (ClientId) 必须存在而且必须是 CONNECT 报文有效载荷的第一个字段
         final String decodedClientId = decodeString(buffer);
-        final MqttVersion mqttVersion = MqttVersion.fromProtocolNameAndLevel(mqttConnectVariableHeader.name(),
-                (byte) mqttConnectVariableHeader.version());
-        if (!isValidClientId(mqttVersion, decodedClientId)) {
-            throw new MqttIdentifierRejectedException("invalid clientIdentifier: " + decodedClientId);
-        }
 
         String decodedWillTopic = null;
         byte[] decodedWillMessage = null;
@@ -106,43 +95,43 @@ public class MqttConnectMessage extends MqttMessage {
 
         //VariableHeader
         byte[] nameBytes = mqttConnectVariableHeader.name().getBytes(StandardCharsets.UTF_8);
-        byte versionByte = (byte) mqttConnectVariableHeader.version();
+        byte versionByte = (byte) mqttConnectVariableHeader.getProtocolLevel();
         dos.writeByte(0);
         dos.writeByte((byte) nameBytes.length);
         dos.write(nameBytes);
         dos.writeByte(versionByte);
         byte flag = 0x00;
-        if (mqttConnectVariableHeader.hasUserName()){
+        if (mqttConnectVariableHeader.hasUserName()) {
             flag = (byte) 0x80;
         }
-        if (mqttConnectVariableHeader.hasPassword()){
+        if (mqttConnectVariableHeader.hasPassword()) {
             flag |= 0x40;
         }
-        if (mqttConnectVariableHeader.isWillFlag()){
+        if (mqttConnectVariableHeader.isWillFlag()) {
             flag |= 0x04;
             flag |= mqttConnectVariableHeader.willQos() << 3;
-            if (mqttConnectVariableHeader.isWillRetain()){
+            if (mqttConnectVariableHeader.isWillRetain()) {
                 flag |= 0x20;
             }
         }
-        if (mqttConnectVariableHeader.isCleanSession()){
+        if (mqttConnectVariableHeader.isCleanSession()) {
             flag |= 0x02;
         }
         dos.writeByte(flag);
         dos.writeShort((short) mqttConnectVariableHeader.keepAliveTimeSeconds());
         //ConnectPayload
-        if (mqttConnectPayload.clientIdentifier()!=null){
+        if (mqttConnectPayload.clientIdentifier() != null) {
             dos.writeUTF(mqttConnectPayload.clientIdentifier());
         }
-        if (mqttConnectPayload.willTopic() != null){
+        if (mqttConnectPayload.willTopic() != null) {
             dos.writeUTF(mqttConnectPayload.willTopic());
             dos.writeShort((short) mqttConnectPayload.willMessageInBytes().length);
             dos.write(mqttConnectPayload.willMessageInBytes());
         }
-        if (mqttConnectPayload.userName() != null){
+        if (mqttConnectPayload.userName() != null) {
             dos.writeUTF(mqttConnectPayload.userName());
         }
-        if (mqttConnectPayload.passwordInBytes() != null){
+        if (mqttConnectPayload.passwordInBytes() != null) {
             dos.writeShort((short) mqttConnectPayload.passwordInBytes().length);
             dos.write(mqttConnectPayload.passwordInBytes());
         }

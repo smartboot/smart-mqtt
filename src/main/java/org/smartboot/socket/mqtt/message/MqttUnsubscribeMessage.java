@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * 取消订阅
+ *
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */

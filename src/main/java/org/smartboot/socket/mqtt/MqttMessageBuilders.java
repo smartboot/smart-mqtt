@@ -183,22 +183,23 @@ public final class MqttMessageBuilders {
         }
 
         public MqttConnectMessage build() {
-            MqttFixedHeader mqttFixedHeader =
-                    new MqttFixedHeader(MqttMessageType.CONNECT, false, MqttQoS.AT_MOST_ONCE, false, 0);
-            MqttConnectVariableHeader mqttConnectVariableHeader =
-                    new MqttConnectVariableHeader(
-                            version.protocolName(),
-                            version.protocolLevel(),
-                            hasUser,
-                            hasPassword,
-                            willRetain,
-                            willQos.value(),
-                            willFlag,
-                            cleanSession,
-                            keepAliveSecs);
-            MqttConnectPayload mqttConnectPayload =
-                    new MqttConnectPayload(clientId, willTopic, willMessage, username, password);
-            return new MqttConnectMessage(mqttFixedHeader, mqttConnectVariableHeader, mqttConnectPayload);
+//            MqttFixedHeader mqttFixedHeader =
+//                    new MqttFixedHeader(MqttMessageType.CONNECT, false, MqttQoS.AT_MOST_ONCE, false, 0);
+//            MqttConnectVariableHeader mqttConnectVariableHeader =
+//                    new MqttConnectVariableHeader(
+//                            version.protocolName(),
+//                            version.protocolLevel(),
+//                            hasUser,
+//                            hasPassword,
+//                            willRetain,
+//                            willQos.value(),
+//                            willFlag,
+//                            cleanSession,
+//                            keepAliveSecs);
+//            MqttConnectPayload mqttConnectPayload =
+//                    new MqttConnectPayload(clientId, willTopic, willMessage, username, password);
+//            return new MqttConnectMessage(mqttFixedHeader, mqttConnectVariableHeader, mqttConnectPayload);
+            throw new UnsupportedOperationException();
         }
     }
 

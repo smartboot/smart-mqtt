@@ -22,23 +22,52 @@ public class MqttMessage {
      */
     public static final Charset UTF_8 = StandardCharsets.UTF_8;
     private static final char[] TOPIC_WILDCARDS = {'#', '+'};
-    protected MqttFixedHeader mqttFixedHeader = null;
     private static final int VARIABLE_BYTE_INT_MAX = 268435455;
+    private static final int UTF8_STRING_MAX_LENGTH = 65535;
+    protected MqttFixedHeader mqttFixedHeader = null;
 
 
     public MqttMessage(MqttFixedHeader mqttFixedHeader) {
         this.mqttFixedHeader = mqttFixedHeader;
     }
 
+    public static byte[] encodeMBI(long number) {
+        if (number < 0 || number >= VARIABLE_BYTE_INT_MAX) {
+            throw new IllegalArgumentException("This property must be a number between 0 and " + VARIABLE_BYTE_INT_MAX);
+        }
+        int numBytes = 0;
+        long no = number;
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        // Encode the remaining length fields in the four bytes
+        do {
+            byte digit = (byte) (no % 128);
+            no = no / 128;
+            if (no > 0) {
+                digit |= 0x80;
+            }
+            bos.write(digit);
+            numBytes++;
+        } while ((no > 0) && (numBytes < 4));
+
+        return bos.toByteArray();
+    }
+
     protected final String decodeString(ByteBuffer buffer) {
         return decodeString(buffer, 0, Integer.MAX_VALUE);
     }
 
+    /**
+     * 每一个字符串都有一个两字节的长度字段作为前缀，它给出这个字符串 UTF-8 编码的字节数，它们在图例
+     * 1.1 UTF-8 编码字符串的结构 中描述。因此可以传送的 UTF-8 编码的字符串大小有一个限制，不能超过
+     * 65535 字节。
+     * 除非另有说明，所有的 UTF-8 编码字符串的长度都必须在 0 到 65535 字节这个范围内。
+     */
     protected final String decodeString(ByteBuffer buffer, int minBytes, int maxBytes) {
         final int size = decodeMsbLsb(buffer);
         if (size < minBytes || size > maxBytes) {
-            buffer.position(buffer.position() + size);
-            return null;
+//            buffer.position(buffer.position() + size);
+//            return null;
+            throw new DecoderException("invalid string length " + size);
         }
         byte[] bytes = new byte[size];
         buffer.get(bytes);
@@ -70,6 +99,10 @@ public class MqttMessage {
         return decodeMsbLsb(buffer, 0, 65535);
     }
 
+    /**
+     * 整数数值是 16 位，使用大端序（big-endian，高位字节在低位字节前面）。这意味着一个 16 位的字在网
+     * 络上表示为最高有效字节（MSB），后面跟着最低有效字节（LSB）。
+     */
     protected final int decodeMsbLsb(ByteBuffer buffer, int min, int max) {
         short msbSize = BufferUtils.readUnsignedByte(buffer);
         short lsbSize = BufferUtils.readUnsignedByte(buffer);
@@ -125,27 +158,6 @@ public class MqttMessage {
             count++;
         } while (num > 0);
         return count;
-    }
-
-    public static byte[] encodeMBI(long number) {
-        if (number < 0 || number >= VARIABLE_BYTE_INT_MAX) {
-            throw new IllegalArgumentException("This property must be a number between 0 and " + VARIABLE_BYTE_INT_MAX);
-        }
-        int numBytes = 0;
-        long no = number;
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        // Encode the remaining length fields in the four bytes
-        do {
-            byte digit = (byte) (no % 128);
-            no = no / 128;
-            if (no > 0) {
-                digit |= 0x80;
-            }
-            bos.write(digit);
-            numBytes++;
-        } while ((no > 0) && (numBytes < 4));
-
-        return bos.toByteArray();
     }
 
     protected final void writeVariableLengthInt(WriteBuffer buf, int num) {

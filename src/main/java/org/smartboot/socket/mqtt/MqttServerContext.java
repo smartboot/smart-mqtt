@@ -41,6 +41,17 @@ public class MqttServerContext implements MqttContext {
     }
 
     @Override
+    public void removeSession(String clientId) {
+        MqttSession session = grantSessions.get(clientId);
+        removeSession(session);
+    }
+
+    @Override
+    public MqttSession getSession(String clientId) {
+        return grantSessions.get(clientId);
+    }
+
+    @Override
     public void publish2Subscribers(StoredMessage pubMsg, Topic topic) {
         topic.getSubscribes().forEach(clientId -> {
             MqttSession session = grantSessions.get(clientId);

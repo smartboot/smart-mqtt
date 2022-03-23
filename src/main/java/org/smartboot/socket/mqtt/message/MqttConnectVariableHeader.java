@@ -21,37 +21,42 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 
 /**
+ * CONNECT 报文的可变报头按下列次序包含四个字段：协议名（Protocol Name），协议级别（Protocol
+ * Level），连接标志（Connect Flags）和保持连接（Keep Alive）。
  */
 public final class MqttConnectVariableHeader {
 
+    /**
+     * 协议名
+     */
     private final String name;
-    private final int version;
+    /**
+     * 协议级别
+     */
+    private final byte protocolLevel;
     private final boolean hasUserName;
     private final boolean hasPassword;
     private final boolean isWillRetain;
     private final int willQos;
     private final boolean isWillFlag;
     private final boolean isCleanSession;
+    private final int reserved;
     private final int keepAliveTimeSeconds;
 
     public MqttConnectVariableHeader(
             String name,
-            int version,
-            boolean hasUserName,
-            boolean hasPassword,
-            boolean isWillRetain,
-            int willQos,
-            boolean isWillFlag,
-            boolean isCleanSession,
+            byte protocolLevel,
+            int connectFlag,
             int keepAliveTimeSeconds) {
         this.name = name;
-        this.version = version;
-        this.hasUserName = hasUserName;
-        this.hasPassword = hasPassword;
-        this.isWillRetain = isWillRetain;
-        this.willQos = willQos;
-        this.isWillFlag = isWillFlag;
-        this.isCleanSession = isCleanSession;
+        this.protocolLevel = protocolLevel;
+        this.hasUserName = (connectFlag & 0x80) == 0x80;
+        this.hasPassword = (connectFlag & 0x40) == 0x40;
+        this.isWillRetain = (connectFlag & 0x20) == 0x20;
+        this.willQos = (connectFlag & 0x18) >> 3;
+        this.isWillFlag = (connectFlag & 0x04) == 0x04;
+        this.isCleanSession = (connectFlag & 0x02) == 0x02;
+        this.reserved = (connectFlag & 0x01);
         this.keepAliveTimeSeconds = keepAliveTimeSeconds;
     }
 
@@ -59,8 +64,8 @@ public final class MqttConnectVariableHeader {
         return name;
     }
 
-    public int version() {
-        return version;
+    public byte getProtocolLevel() {
+        return protocolLevel;
     }
 
     public boolean hasUserName() {
@@ -89,6 +94,10 @@ public final class MqttConnectVariableHeader {
 
     public int keepAliveTimeSeconds() {
         return keepAliveTimeSeconds;
+    }
+
+    public int getReserved() {
+        return reserved;
     }
 
     @Override
