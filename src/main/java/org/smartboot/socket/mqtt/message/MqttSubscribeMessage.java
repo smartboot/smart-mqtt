@@ -15,7 +15,7 @@ import java.util.List;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttSubscribeMessage extends PacketIdVariableHeaderMessage {
+public class MqttSubscribeMessage extends MqttPacketIdentifierMessage {
 
     private MqttSubscribePayload mqttSubscribePayload;
 
@@ -23,8 +23,8 @@ public class MqttSubscribeMessage extends PacketIdVariableHeaderMessage {
         super(mqttFixedHeader);
     }
 
-    public MqttSubscribeMessage(MqttFixedHeader mqttFixedHeader, MqttPacketIdVariableHeader mqttPacketIdVariableHeader, MqttSubscribePayload mqttSubscribePayload) {
-        super(mqttFixedHeader, mqttPacketIdVariableHeader);
+    public MqttSubscribeMessage(MqttFixedHeader mqttFixedHeader, int packageId, MqttSubscribePayload mqttSubscribePayload) {
+        super(mqttFixedHeader, packageId);
         this.mqttSubscribePayload = mqttSubscribePayload;
     }
 
@@ -39,12 +39,16 @@ public class MqttSubscribeMessage extends PacketIdVariableHeaderMessage {
         this.mqttSubscribePayload = new MqttSubscribePayload(subscribeTopics);
     }
 
+    public MqttSubscribePayload getMqttSubscribePayload() {
+        return mqttSubscribePayload;
+    }
+
     @Override
     public void writeTo(WriteBuffer page) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
 
-        dos.writeShort(mqttPacketIdVariableHeader.packetId());
+        dos.writeShort(getPacketId());
         for (MqttTopicSubscription topicSubscription : mqttSubscribePayload.topicSubscriptions()) {
             dos.writeUTF(topicSubscription.topicName());
             dos.writeByte(topicSubscription.qualityOfService().value());

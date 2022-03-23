@@ -7,7 +7,10 @@ import org.smartboot.socket.mqtt.MqttSession;
 import org.smartboot.socket.mqtt.client.MqttClient;
 import org.smartboot.socket.mqtt.enums.MqttMessageType;
 import org.smartboot.socket.mqtt.enums.MqttQoS;
-import org.smartboot.socket.mqtt.message.*;
+import org.smartboot.socket.mqtt.message.MqttFixedHeader;
+import org.smartboot.socket.mqtt.message.MqttPubAckMessage;
+import org.smartboot.socket.mqtt.message.MqttPubRecMessage;
+import org.smartboot.socket.mqtt.message.MqttPublishMessage;
 import org.smartboot.socket.mqtt.processor.MqttProcessor;
 
 import static org.smartboot.socket.mqtt.enums.MqttQoS.AT_MOST_ONCE;
@@ -77,14 +80,14 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
         final int messageId = mqttPublishMessage.getMqttPublishVariableHeader().packetId();
 
         MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBREC, false, AT_MOST_ONCE, false, 0);
-        MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(fixedHeader, MqttPacketIdVariableHeader.from(messageId));
+        MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(fixedHeader, messageId);
 
         session.write(pubRecMessage);
     }
 
     private void sendPubAck(int messageID, MqttSession session) {
         MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBACK, false, AT_MOST_ONCE, false, 0);
-        MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(fixedHeader, MqttPacketIdVariableHeader.from(messageID));
+        MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(fixedHeader, messageID);
         session.write(pubAckMessage);
     }
 }

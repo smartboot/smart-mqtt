@@ -6,6 +6,9 @@ import java.util.List;
 
 public class MqttSubAckPayload {
 
+    /**
+     * 每个Topic订阅被授予的最大Qos等级
+     */
     private final List<Integer> grantedQoSLevels;
 
     public MqttSubAckPayload(int... grantedQoSLevels) {

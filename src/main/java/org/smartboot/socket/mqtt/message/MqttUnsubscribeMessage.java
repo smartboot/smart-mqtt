@@ -8,15 +8,15 @@ import java.util.List;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttUnsubscribeMessage extends PacketIdVariableHeaderMessage {
+public class MqttUnsubscribeMessage extends MqttPacketIdentifierMessage {
     private MqttUnsubscribePayload mqttUnsubscribePayload;
 
     public MqttUnsubscribeMessage(MqttFixedHeader mqttFixedHeader) {
         super(mqttFixedHeader);
     }
 
-    public MqttUnsubscribeMessage(MqttFixedHeader mqttFixedHeader, MqttPacketIdVariableHeader mqttPacketIdVariableHeader, MqttUnsubscribePayload mqttUnsubscribePayload) {
-        super(mqttFixedHeader, mqttPacketIdVariableHeader);
+    public MqttUnsubscribeMessage(MqttFixedHeader mqttFixedHeader, int packageId, MqttUnsubscribePayload mqttUnsubscribePayload) {
+        super(mqttFixedHeader, packageId);
         this.mqttUnsubscribePayload = mqttUnsubscribePayload;
     }
 

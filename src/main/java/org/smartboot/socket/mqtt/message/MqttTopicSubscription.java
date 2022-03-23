@@ -6,6 +6,10 @@ public final class MqttTopicSubscription {
 
     private final String topicFilter;
     private final MqttQoS qualityOfService;
+    /**
+     * 消费点位
+     */
+    private int consumerIndex;
 
     public MqttTopicSubscription(String topicFilter, MqttQoS qualityOfService) {
         this.topicFilter = topicFilter;
@@ -20,5 +24,11 @@ public final class MqttTopicSubscription {
         return qualityOfService;
     }
 
+    public int getConsumerIndex() {
+        return consumerIndex;
+    }
 
+    public void setConsumerIndex(int consumerIndex) {
+        this.consumerIndex = consumerIndex;
+    }
 }

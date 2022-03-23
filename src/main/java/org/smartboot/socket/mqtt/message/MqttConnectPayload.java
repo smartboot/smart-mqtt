@@ -2,6 +2,9 @@ package org.smartboot.socket.mqtt.message;
 
 public final class MqttConnectPayload {
 
+    /**
+     * 客户端标识符
+     */
     private final String clientIdentifier;
     private final String willTopic;
     private final byte[] willMessage;

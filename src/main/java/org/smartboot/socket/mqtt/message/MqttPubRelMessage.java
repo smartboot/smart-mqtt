@@ -13,6 +13,6 @@ public class MqttPubRelMessage extends SingleByteFixedHeaderAndPacketIdMessage {
     }
 
     public MqttPubRelMessage(int packetId) {
-        super(new MqttFixedHeader(MqttMessageType.PUBREL, false, MqttQoS.AT_MOST_ONCE, false, 0), MqttPacketIdVariableHeader.from(packetId));
+        super(new MqttFixedHeader(MqttMessageType.PUBREL, false, MqttQoS.AT_MOST_ONCE, false, 0), packetId);
     }
 }

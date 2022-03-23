@@ -1,19 +1,33 @@
 package org.smartboot.socket.mqtt;
 
+import org.apache.commons.lang.StringUtils;
 import org.smartboot.socket.mqtt.message.MqttMessage;
+import org.smartboot.socket.mqtt.message.MqttTopicSubscription;
 import org.smartboot.socket.transport.AioSession;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author 三刀
  * @version V1.0 , 2018/4/26
  */
 public class MqttSession {
+    /**
+     * 用于生成当前会话的报文标识符
+     */
+    private final AtomicInteger packetIdCreator = new AtomicInteger(1);
+    /**
+     * 当前连接订阅的Topic集合
+     */
+    private final List<MqttTopicSubscription> topicSubscriptions = new ArrayList<>();
+    private final AioSession session;
     private String clientId;
     private String username;
     private boolean cleanSession;
-    private AioSession session;
+
 
     public MqttSession(AioSession session) {
         this.session = session;
@@ -46,5 +60,24 @@ public class MqttSession {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public List<MqttTopicSubscription> getTopicSubscriptions() {
+        return topicSubscriptions;
+    }
+
+    /*
+     * 如果服务端收到一个 SUBSCRIBE 报文，
+     * 报文的主题过滤器与一个现存订阅的主题过滤器相同，
+     * 那么必须使用新的订阅彻底替换现存的订阅。
+     * 新订阅的主题过滤器和之前订阅的相同，但是它的最大 QoS 值可以不同。
+     */
+    public synchronized void subscribeTopic(MqttTopicSubscription subscription) {
+        topicSubscriptions.removeIf(oldSubscription -> StringUtils.equals(oldSubscription.topicName(), subscription.topicName()));
+        topicSubscriptions.add(subscription);
+    }
+
+    public AtomicInteger getPacketIdCreator() {
+        return packetIdCreator;
     }
 }

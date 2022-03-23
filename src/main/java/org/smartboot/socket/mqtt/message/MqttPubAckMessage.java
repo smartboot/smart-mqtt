@@ -9,7 +9,7 @@ public class MqttPubAckMessage extends SingleByteFixedHeaderAndPacketIdMessage {
         super(mqttFixedHeader);
     }
 
-    public MqttPubAckMessage(MqttFixedHeader mqttFixedHeader, MqttPacketIdVariableHeader mqttPacketIdVariableHeader) {
-        super(mqttFixedHeader, mqttPacketIdVariableHeader);
+    public MqttPubAckMessage(MqttFixedHeader mqttFixedHeader, int packetId) {
+        super(mqttFixedHeader, packetId);
     }
 }

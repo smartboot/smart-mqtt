@@ -7,10 +7,9 @@ import org.smartboot.socket.mqtt.MqttSession;
 import org.smartboot.socket.mqtt.enums.MqttMessageType;
 import org.smartboot.socket.mqtt.enums.MqttQoS;
 import org.smartboot.socket.mqtt.message.MqttFixedHeader;
-import org.smartboot.socket.mqtt.message.MqttPacketIdVariableHeader;
 import org.smartboot.socket.mqtt.message.MqttPubAckMessage;
-import org.smartboot.socket.mqtt.message.MqttPublishMessage;
 import org.smartboot.socket.mqtt.message.MqttPubRecMessage;
+import org.smartboot.socket.mqtt.message.MqttPublishMessage;
 import org.smartboot.socket.mqtt.processor.MqttProcessor;
 import org.smartboot.socket.mqtt.spi.IMessagesStore;
 import org.smartboot.socket.mqtt.spi.StoredMessage;
@@ -29,7 +28,7 @@ import static org.smartboot.socket.mqtt.enums.MqttQoS.AT_MOST_ONCE;
  */
 public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
     private static final Logger LOGGER = LoggerFactory.getLogger(PublishProcessor.class);
-    private IMessagesStore messagesStore = new MemoryMessageStore();
+    private final IMessagesStore messagesStore = new MemoryMessageStore();
 
     @Override
     public void process(MqttContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
@@ -54,20 +53,26 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
     }
 
     private void processQos0(MqttContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
-        final Topic topic = new Topic(mqttPublishMessage.getMqttPublishVariableHeader().topicName());
+        final Topic topic = context.getOrCreateTopic(mqttPublishMessage.getMqttPublishVariableHeader().topicName());
         String clientId = session.getClientId();
         String username = session.getUsername();
         StoredMessage storedMessage = asStoredMessage(mqttPublishMessage);
         storedMessage.setClientID(clientId);
         context.publish2Subscribers(storedMessage, topic);
 
+        /**
+         * 如果服务端收到一条保留（RETAIN）标志为 1 的 QoS 0 消息，它必须丢弃之前为那个主题保留
+         * 的任何消息。它应该将这个新的 QoS 0 消息当作那个主题的新保留消息，但是任何时候都可以选择丢弃它
+         * 如果这种情况发生了，那个主题将没有保留消息
+         */
         if (mqttPublishMessage.getMqttFixedHeader().isRetain()) {
             messagesStore.cleanRetained(topic);
         }
+        messagesStore.storeRetained(topic, storedMessage);
     }
 
     private void processQos1(MqttContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
-        final Topic topic = new Topic(mqttPublishMessage.getMqttPublishVariableHeader().topicName());
+        final Topic topic = context.getOrCreateTopic(mqttPublishMessage.getMqttPublishVariableHeader().topicName());
         String clientId = session.getClientId();
         String username = session.getUsername();
 
@@ -88,7 +93,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
     }
 
     private void processQos2(MqttContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
-        final Topic topic = new Topic(mqttPublishMessage.getMqttPublishVariableHeader().topicName());
+        final Topic topic = context.getOrCreateTopic(mqttPublishMessage.getMqttPublishVariableHeader().topicName());
         String clientId = session.getClientId();
         String username = session.getUsername();
 
@@ -98,7 +103,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
         storedMessage.setClientID(clientId);
 
         MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBREC, false, AT_MOST_ONCE, false, 0);
-        MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(fixedHeader, MqttPacketIdVariableHeader.from(messageId));
+        MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(fixedHeader, messageId);
 
         session.write(pubRecMessage);
     }
@@ -109,8 +114,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
         byte[] payloadContent = new byte[payload.remaining()];
         payload.get(payloadContent, payload.position(), payload.remaining());
 
-        StoredMessage stored = new StoredMessage(payloadContent,
-                msg.getMqttFixedHeader().getQosLevel(), msg.getMqttPublishVariableHeader().topicName());
+        StoredMessage stored = new StoredMessage(payloadContent, msg.getMqttFixedHeader().getQosLevel(), msg.getMqttPublishVariableHeader().topicName());
         stored.setRetained(msg.getMqttFixedHeader().isRetain());
         return stored;
     }
@@ -118,7 +122,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
     private void sendPubAck(int messageID, MqttSession session) {
         LOGGER.info("sendPubAck invoked");
         MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBACK, false, AT_MOST_ONCE, false, 0);
-        MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(fixedHeader, MqttPacketIdVariableHeader.from(messageID));
+        MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(fixedHeader, messageID);
         session.write(pubAckMessage);
     }
 }

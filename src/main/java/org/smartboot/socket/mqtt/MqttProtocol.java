@@ -45,7 +45,7 @@ public class MqttProtocol implements Protocol<MqttMessage> {
             unit.state = READ_FIXED_HEADER;
             session.setAttachment(unit);
         } else {
-            unit = (DecodeUnit) session.getAttachment();
+            unit = session.getAttachment();
         }
         switch (unit.state) {
             case READ_FIXED_HEADER:

@@ -12,8 +12,8 @@ public class MqttPubRecMessage extends SingleByteFixedHeaderAndPacketIdMessage {
         super(mqttFixedHeader);
     }
 
-    public MqttPubRecMessage(MqttFixedHeader mqttFixedHeader, MqttPacketIdVariableHeader mqttPacketIdVariableHeader) {
-        super(mqttFixedHeader, mqttPacketIdVariableHeader);
+    public MqttPubRecMessage(MqttFixedHeader mqttFixedHeader, int packetId) {
+        super(mqttFixedHeader, packetId);
     }
 
     public MqttPubRecMessage() {

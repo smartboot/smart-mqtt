@@ -7,10 +7,24 @@ import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.mqtt.MqttContext;
 import org.smartboot.socket.mqtt.MqttServerContext;
 import org.smartboot.socket.mqtt.MqttSession;
-import org.smartboot.socket.mqtt.message.*;
+import org.smartboot.socket.mqtt.message.MqttConnAckMessage;
+import org.smartboot.socket.mqtt.message.MqttMessage;
+import org.smartboot.socket.mqtt.message.MqttPingRespMessage;
+import org.smartboot.socket.mqtt.message.MqttPubAckMessage;
+import org.smartboot.socket.mqtt.message.MqttPubCompMessage;
+import org.smartboot.socket.mqtt.message.MqttPubRecMessage;
+import org.smartboot.socket.mqtt.message.MqttPubRelMessage;
+import org.smartboot.socket.mqtt.message.MqttPublishMessage;
+import org.smartboot.socket.mqtt.message.MqttSubAckMessage;
 import org.smartboot.socket.mqtt.processor.MqttProcessor;
-import org.smartboot.socket.mqtt.processor.client.*;
-import org.smartboot.socket.mqtt.processor.server.SubscribeProcessor;
+import org.smartboot.socket.mqtt.processor.client.ConnAckProcessor;
+import org.smartboot.socket.mqtt.processor.client.PingRespProcessor;
+import org.smartboot.socket.mqtt.processor.client.PubAckProcessor;
+import org.smartboot.socket.mqtt.processor.client.PubCompProcessor;
+import org.smartboot.socket.mqtt.processor.client.PubRecProcessor;
+import org.smartboot.socket.mqtt.processor.client.PubRelProcessor;
+import org.smartboot.socket.mqtt.processor.client.PublishProcessor;
+import org.smartboot.socket.mqtt.processor.client.SubAckProcessor;
 import org.smartboot.socket.transport.AioSession;
 
 import java.util.HashMap;
@@ -23,8 +37,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class MqttClientProcessor implements MessageProcessor<MqttMessage> {
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttClientProcessor.class);
+    private final MqttContext mqttContext = new MqttServerContext();
     private Map<Class<? extends MqttMessage>, MqttProcessor> processorMap = new HashMap<>();
-    private MqttContext mqttContext = new MqttServerContext();
     private Map<String, MqttSession> sessionMap = new ConcurrentHashMap();
     private MqttClient mqttClient;
 
@@ -45,7 +59,7 @@ public class MqttClientProcessor implements MessageProcessor<MqttMessage> {
         MqttProcessor processor = processorMap.get(msg.getClass());
         if (processor != null) {
             processor.process(mqttContext, sessionMap.get(session.getSessionID()), msg);
-        }else {
+        } else {
             LOGGER.error("unknown msg:{}", msg);
         }
     }
@@ -60,7 +74,8 @@ public class MqttClientProcessor implements MessageProcessor<MqttMessage> {
                 mqttClient.stopPing();
                 mqttClient.reconnect();
                 break;
-            default:break;
+            default:
+                break;
         }
         System.out.println(stateMachineEnum);
         if (throwable != null) {

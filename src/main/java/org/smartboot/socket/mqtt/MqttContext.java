@@ -8,9 +8,18 @@ import org.smartboot.socket.mqtt.spi.Topic;
  * @version V1.0 , 2018/4/26
  */
 public interface MqttContext {
+
     public MqttSession addSession(MqttSession session);
 
     boolean removeSession(MqttSession session);
+
+    /**
+     * 获取Topic，如果不存在将创建
+     *
+     * @param topic
+     * @return
+     */
+    Topic getOrCreateTopic(String topic);
 
     /**
      * 发送消息至所有客户端

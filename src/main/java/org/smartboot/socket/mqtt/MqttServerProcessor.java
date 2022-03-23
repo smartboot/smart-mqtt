@@ -26,9 +26,15 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class MqttServerProcessor implements MessageProcessor<MqttMessage> {
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttServerProcessor.class);
-    private Map<Class<? extends MqttMessage>, MqttProcessor> processorMap = new HashMap<>();
-    private MqttContext mqttContext = new MqttServerContext();
-    private Map<String, MqttSession> sessionMap = new ConcurrentHashMap();
+    /**
+     * Mqtt服务全局Context
+     */
+    private final MqttServerContext mqttContext = new MqttServerContext();
+    /**
+     * 处于在线状态的会话
+     */
+    private final Map<String, MqttSession> onlineSessions = new ConcurrentHashMap<>();
+    private final Map<Class<? extends MqttMessage>, MqttProcessor> processorMap = new HashMap<>();
 
     {
         processorMap.put(MqttPingReqMessage.class, new PingReqProcessor());
@@ -40,7 +46,7 @@ public class MqttServerProcessor implements MessageProcessor<MqttMessage> {
 
     @Override
     public void process(AioSession session, MqttMessage msg) {
-        LOGGER.info("process msg:{}",msg);
+        LOGGER.info("process msg:{}", msg);
 //        switch (msg.getMqttFixedHeader().getMessageType()) {
 //            case CONNECT:
 //                break;
@@ -69,7 +75,7 @@ public class MqttServerProcessor implements MessageProcessor<MqttMessage> {
 //        }
         MqttProcessor processor = processorMap.get(msg.getClass());
         if (processor != null) {
-            processor.process(mqttContext, sessionMap.get(session.getSessionID()), msg);
+            processor.process(mqttContext, onlineSessions.get(session.getSessionID()), msg);
         } else {
             System.out.println(msg);
         }
@@ -79,7 +85,10 @@ public class MqttServerProcessor implements MessageProcessor<MqttMessage> {
     public void stateEvent(AioSession session, StateMachineEnum stateMachineEnum, Throwable throwable) {
         switch (stateMachineEnum) {
             case NEW_SESSION:
-                sessionMap.put(session.getSessionID(), new MqttSession(session));
+                onlineSessions.put(session.getSessionID(), new MqttSession(session));
+                break;
+            case SESSION_CLOSED:
+                mqttContext.removeSession(onlineSessions.remove(session.getSessionID()));
                 break;
         }
         System.out.println(stateMachineEnum);

@@ -12,7 +12,7 @@ import java.util.List;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttSubAckMessage extends PacketIdVariableHeaderMessage {
+public class MqttSubAckMessage extends MqttPacketIdentifierMessage {
     private MqttSubAckPayload mqttSubAckPayload;
 
     public MqttSubAckMessage(MqttFixedHeader mqttFixedHeader) {
@@ -36,16 +36,17 @@ public class MqttSubAckMessage extends PacketIdVariableHeaderMessage {
         int variablePartSize = variableHeaderBufferSize + payloadBufferSize;
         writeBuffer.writeByte(getFixedHeaderByte1(mqttFixedHeader));
         writeVariableLengthInt(writeBuffer, variablePartSize);
-        writeBuffer.writeShort((short) mqttPacketIdVariableHeader.packetId());
+        writeBuffer.writeShort((short) getPacketId());
         for (int qos : mqttSubAckPayload.grantedQoSLevels()) {
             writeBuffer.writeByte((byte) qos);
         }
     }
 
-    public void setMqttSubAckPayload(MqttSubAckPayload mqttSubAckPayload) {
-        this.mqttSubAckPayload = mqttSubAckPayload;
-    }
     public MqttSubAckPayload getMqttSubAckPayload() {
         return this.mqttSubAckPayload;
+    }
+
+    public void setMqttSubAckPayload(MqttSubAckPayload mqttSubAckPayload) {
+        this.mqttSubAckPayload = mqttSubAckPayload;
     }
 }

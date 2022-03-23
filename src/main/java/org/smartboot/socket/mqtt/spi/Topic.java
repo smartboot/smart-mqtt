@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.stream.Collectors;
 
 /**
@@ -15,9 +17,11 @@ import java.util.stream.Collectors;
  */
 public class Topic extends ToString {
     private final String topic;
-
+    /**
+     * 当前Topic的所有订阅者
+     */
+    private final Set<String> subscribes = new ConcurrentSkipListSet<>();
     private transient List<Token> tokens;
-
     private transient boolean valid;
 
     public Topic(String topic) {
@@ -36,6 +40,18 @@ public class Topic extends ToString {
      */
     public static Topic asTopic(String s) {
         return new Topic(s);
+    }
+
+    public void subscribe(String clientIdentifier) {
+        subscribes.add(clientIdentifier);
+    }
+
+    public void unSubscribe(String clientIdentifier) {
+        subscribes.remove(clientIdentifier);
+    }
+
+    public Set<String> getSubscribes() {
+        return subscribes;
     }
 
     public List<Token> getTokens() {
@@ -168,6 +184,10 @@ public class Topic extends ToString {
         // i--;
         // }
         return i == msgTokens.size();
+    }
+
+    public String getTopic() {
+        return topic;
     }
 
     @Override
