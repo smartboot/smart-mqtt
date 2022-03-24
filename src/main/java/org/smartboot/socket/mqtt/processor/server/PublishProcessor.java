@@ -74,7 +74,6 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
     private void processQos1(MqttContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
         final Topic topic = context.getOrCreateTopic(mqttPublishMessage.getMqttPublishVariableHeader().topicName());
         String clientId = session.getClientId();
-        String username = session.getUsername();
 
         final int messageId = mqttPublishMessage.getMqttPublishVariableHeader().packetId();
 

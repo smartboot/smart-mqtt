@@ -11,6 +11,9 @@ import java.util.List;
  * @version V1.0 , 2018/4/22
  */
 public class MqttUnsubscribeMessage extends MqttPacketIdentifierMessage {
+    /**
+     * UNSUBSCRIBE 报文的有效载荷包含客户端想要取消订阅的主题过滤器列表。
+     */
     private MqttUnsubscribePayload mqttUnsubscribePayload;
 
     public MqttUnsubscribeMessage(MqttFixedHeader mqttFixedHeader) {
@@ -32,5 +35,7 @@ public class MqttUnsubscribeMessage extends MqttPacketIdentifierMessage {
         mqttUnsubscribePayload = new MqttUnsubscribePayload(unsubscribeTopics);
     }
 
-
+    public MqttUnsubscribePayload getMqttUnsubscribePayload() {
+        return mqttUnsubscribePayload;
+    }
 }

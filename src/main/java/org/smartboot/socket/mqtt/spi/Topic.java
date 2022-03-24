@@ -1,5 +1,7 @@
 package org.smartboot.socket.mqtt.spi;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartboot.socket.mqtt.ToString;
 
 import java.text.ParseException;
@@ -16,6 +18,7 @@ import java.util.stream.Collectors;
  * @version V1.0 , 2018/5/3
  */
 public class Topic extends ToString {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Topic.class);
     private final String topic;
     /**
      * 当前Topic的所有订阅者
@@ -47,7 +50,8 @@ public class Topic extends ToString {
     }
 
     public void unSubscribe(String clientIdentifier) {
-        subscribes.remove(clientIdentifier);
+        boolean suc = subscribes.remove(clientIdentifier);
+        LOGGER.info("clientId:{} unsubscribe topic:{} {}", clientIdentifier, topic, suc ? "success" : "ignore");
     }
 
     public Set<String> getSubscribes() {

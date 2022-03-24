@@ -18,6 +18,11 @@ public interface MqttContext {
     MqttSession getSession(String clientId);
 
     /**
+     * 取消订阅
+     */
+    void unSubscribe(String clientId, String topicFilter);
+
+    /**
      * 获取Topic，如果不存在将创建
      *
      * @param topic

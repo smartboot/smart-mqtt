@@ -9,6 +9,9 @@ import org.smartboot.socket.mqtt.enums.MqttConnectReturnCode;
 public class MqttConnAckVariableHeader {
     private final MqttConnectReturnCode connectReturnCode;
 
+    /**
+     * 当前会话标志使服务端和客户端在是否有已存储的会话状态上保持一致
+     */
     private final boolean sessionPresent;
 
     public MqttConnAckVariableHeader(MqttConnectReturnCode connectReturnCode, boolean sessionPresent) {

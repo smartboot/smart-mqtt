@@ -36,7 +36,7 @@ public class MqttServerContext implements MqttContext {
 
     @Override
     public boolean removeSession(MqttSession session) {
-        session.getTopicSubscriptions().forEach(topic -> topicMap.get(topic.topicName()).unSubscribe(session.getClientId()));
+        session.getTopicSubscriptions().forEach(topic -> unSubscribe(session.getClientId(), topic.topicName()));
         return grantSessions.remove(session.getClientId(), session);
     }
 
@@ -51,6 +51,16 @@ public class MqttServerContext implements MqttContext {
     @Override
     public MqttSession getSession(String clientId) {
         return grantSessions.get(clientId);
+    }
+
+    @Override
+    public void unSubscribe(String clientId, String topicFilter) {
+        Topic topic = topicMap.get(topicFilter);
+        if (topic != null) {
+            topic.unSubscribe(clientId);
+        } else {
+            LOGGER.warn("topic:{} not exists", topicFilter);
+        }
     }
 
     @Override

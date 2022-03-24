@@ -4,7 +4,6 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.socket.mqtt.MqttContext;
-import org.smartboot.socket.mqtt.MqttMessageBuilders;
 import org.smartboot.socket.mqtt.MqttSession;
 import org.smartboot.socket.mqtt.enums.MqttConnectReturnCode;
 import org.smartboot.socket.mqtt.enums.MqttMessageType;
@@ -24,8 +23,7 @@ import org.smartboot.socket.mqtt.util.ValidateUtils;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
-import static org.smartboot.socket.mqtt.enums.MqttConnectReturnCode.CONNECTION_REFUSED_IDENTIFIER_REJECTED;
-import static org.smartboot.socket.mqtt.enums.MqttConnectReturnCode.CONNECTION_REFUSED_UNACCEPTABLE_PROTOCOL_VERSION;
+import static org.smartboot.socket.mqtt.enums.MqttConnectReturnCode.*;
 
 /**
  * 连接处理器
@@ -51,9 +49,12 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
 //        initializeKeepAliveTimeout(channel, msg, clientId);
 //        storeWillMessage(mqttConnectMessage, clientId);
 
-        MqttConnAckMessage mqttConnAckMessage = MqttMessageBuilders.connAck()
-                .returnCode(MqttConnectReturnCode.CONNECTION_ACCEPTED)
-                .sessionPresent(true).build();
+        //如果服务端收到清理会话（CleanSession）标志为 1 的连接，除了将 CONNACK 报文中的返回码设置为 0 之外，
+        // 还必须将 CONNACK 报文中的当前会话设置（Session Present）标志为 0。
+        //如果服务端收到一个 CleanSession 为 0 的连接，当前会话标志的值取决于服务端是否已经保存了 ClientId 对应客户端的会话状态。
+        // 如果服务端已经保存了会话状态，它必须将 CONNACK 报文中的当前会话标志设置为 1 。
+        // 如果服务端没有已保存的会话状态，它必须将 CONNACK 报文中的当前会话设置为 0。还需要将 CONNACK 报文中的返回码设置为 0
+        MqttConnAckMessage mqttConnAckMessage = connAck(MqttConnectReturnCode.CONNECTION_ACCEPTED, !mqttConnectMessage.getVariableHeader().isCleanSession());
         session.write(mqttConnAckMessage);
 //        LOGGER.info("CONNECT message processed CId={}, username={}", clientId, payload.userName());
     }
@@ -76,7 +77,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         //CONNECT 报文，然后断开客户端的连接
         final MqttVersion mqttVersion = MqttVersion.getByProtocolWithVersion(protocol, connectVariableHeader.getProtocolLevel());
         ValidateUtils.notNull(mqttVersion, "invalid version", () -> {
-            MqttConnAckMessage badProto = connAck(CONNECTION_REFUSED_UNACCEPTABLE_PROTOCOL_VERSION, false);
+            MqttConnAckMessage badProto = connFailAck(CONNECTION_REFUSED_UNACCEPTABLE_PROTOCOL_VERSION);
             session.write(badProto);
             session.close();
         });
@@ -89,7 +90,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         //“0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ”（大写字母，小写字母和数字）
         boolean invalidClient = StringUtils.isNotBlank(clientId) && (mqttVersion == MqttVersion.MQTT_3_1 && clientId.length() > MqttCodecUtil.MAX_CLIENT_ID_LENGTH);
         ValidateUtils.isTrue(!invalidClient, "", () -> {
-            MqttConnAckMessage connAckMessage = connAck(CONNECTION_REFUSED_IDENTIFIER_REJECTED, false);
+            MqttConnAckMessage connAckMessage = connFailAck(CONNECTION_REFUSED_IDENTIFIER_REJECTED);
             session.write(connAckMessage);
             session.close();
             LOGGER.error("The MQTT client ID cannot be empty. Username={}", payload.userName());
@@ -97,7 +98,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         //如果客户端提供的 ClientId 为零字节且清理会话标志为 0，
         // 服务端必须发送返回码为 0x02（表示标识符不合格）的 CONNACK 报文响应客户端的 CONNECT 报文，然后关闭网络连接
         ValidateUtils.isTrue(connectVariableHeader.isCleanSession() || StringUtils.isBlank(clientId), "", () -> {
-            MqttConnAckMessage connAckMessage = connAck(CONNECTION_REFUSED_IDENTIFIER_REJECTED, false);
+            MqttConnAckMessage connAckMessage = connFailAck(CONNECTION_REFUSED_IDENTIFIER_REJECTED);
             session.write(connAckMessage);
             session.close();
             LOGGER.error("The MQTT client ID cannot be empty. Username={}", payload.userName());
@@ -152,6 +153,12 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
 //            m_willStore.put(clientId, will);
             LOGGER.info("MQTT last will and testament has been configured. CId={}", clientId);
         }
+    }
+
+    private MqttConnAckMessage connFailAck(MqttConnectReturnCode returnCode) {
+        //如果服务端发送了一个包含非零返回码的 CONNACK 报文，它必须将当前会话标志设置为 0
+        ValidateUtils.isTrue(returnCode != CONNECTION_ACCEPTED, "");
+        return connAck(returnCode, false);
     }
 
     private MqttConnAckMessage connAck(MqttConnectReturnCode returnCode, boolean sessionPresent) {
