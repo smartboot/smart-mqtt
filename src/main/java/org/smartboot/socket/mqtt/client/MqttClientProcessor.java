@@ -68,7 +68,7 @@ public class MqttClientProcessor implements MessageProcessor<MqttMessage> {
     public void stateEvent(AioSession session, StateMachineEnum stateMachineEnum, Throwable throwable) {
         switch (stateMachineEnum) {
             case NEW_SESSION:
-                sessionMap.put(session.getSessionID(), new MqttSession(session));
+                sessionMap.put(session.getSessionID(), new MqttSession(mqttContext, session));
                 break;
             case SESSION_CLOSED:
                 mqttClient.stopPing();

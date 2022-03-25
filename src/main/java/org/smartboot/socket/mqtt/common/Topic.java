@@ -1,17 +1,16 @@
-package org.smartboot.socket.mqtt.spi;
+package org.smartboot.socket.mqtt.common;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.socket.mqtt.ToString;
+import org.smartboot.socket.mqtt.store.IMessagesStore;
+import org.smartboot.socket.mqtt.store.SubscribeTopicGroup;
+import org.smartboot.socket.mqtt.store.impl.MemoryMessageStore;
 
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.stream.Collectors;
 
 /**
  * @author 三刀
@@ -20,22 +19,13 @@ import java.util.stream.Collectors;
 public class Topic extends ToString {
     private static final Logger LOGGER = LoggerFactory.getLogger(Topic.class);
     private final String topic;
-    /**
-     * 当前Topic的所有订阅者
-     */
-    private final Set<String> subscribes = new ConcurrentSkipListSet<>();
+    private final SubscribeTopicGroup consumerGroup = new SubscribeTopicGroup(this);
+    private final IMessagesStore messagesStore = new MemoryMessageStore();
     private transient List<Token> tokens;
     private transient boolean valid;
 
     public Topic(String topic) {
         this.topic = topic;
-    }
-
-    Topic(List<Token> tokens) {
-        this.tokens = tokens;
-        List<String> strTokens = tokens.stream().map(Token::toString).collect(Collectors.toList());
-        this.topic = String.join("/", strTokens);
-        this.valid = true;
     }
 
     /**
@@ -45,17 +35,8 @@ public class Topic extends ToString {
         return new Topic(s);
     }
 
-    public void subscribe(String clientIdentifier) {
-        subscribes.add(clientIdentifier);
-    }
-
-    public void unSubscribe(String clientIdentifier) {
-        boolean suc = subscribes.remove(clientIdentifier);
-        LOGGER.info("clientId:{} unsubscribe topic:{} {}", clientIdentifier, topic, suc ? "success" : "ignore");
-    }
-
-    public Set<String> getSubscribes() {
-        return subscribes;
+    public SubscribeTopicGroup getConsumerGroup() {
+        return consumerGroup;
     }
 
     public List<Token> getTokens() {
@@ -132,18 +113,6 @@ public class Topic extends ToString {
         return tokens == null || tokens.isEmpty();
     }
 
-    /**
-     * @return a new Topic corresponding to this less than the head token
-     */
-    public Topic exceptHeadToken() {
-        List<Token> tokens = getTokens();
-        if (tokens.isEmpty()) {
-            return new Topic(Collections.emptyList());
-        }
-        List<Token> tokensCopy = new ArrayList<>(tokens);
-        tokensCopy.remove(0);
-        return new Topic(tokensCopy);
-    }
 
     public boolean isValid() {
         if (tokens == null) {
@@ -192,6 +161,10 @@ public class Topic extends ToString {
 
     public String getTopic() {
         return topic;
+    }
+
+    public IMessagesStore getMessagesStore() {
+        return messagesStore;
     }
 
     @Override

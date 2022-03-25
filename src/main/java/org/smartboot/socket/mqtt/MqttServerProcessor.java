@@ -92,10 +92,10 @@ public class MqttServerProcessor implements MessageProcessor<MqttMessage> {
     public void stateEvent(AioSession session, StateMachineEnum stateMachineEnum, Throwable throwable) {
         switch (stateMachineEnum) {
             case NEW_SESSION:
-                onlineSessions.put(session.getSessionID(), new MqttSession(session));
+                onlineSessions.put(session.getSessionID(), new MqttSession(mqttContext, session));
                 break;
             case SESSION_CLOSED:
-                mqttContext.removeSession(onlineSessions.remove(session.getSessionID()));
+                onlineSessions.remove(session.getSessionID()).close();
                 break;
             case PROCESS_EXCEPTION:
                 if (throwable instanceof MqttProcessException) {

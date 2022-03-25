@@ -12,6 +12,8 @@ import org.smartboot.socket.mqtt.message.MqttSubAckPayload;
 import org.smartboot.socket.mqtt.message.MqttSubscribeMessage;
 import org.smartboot.socket.mqtt.message.MqttTopicSubscription;
 import org.smartboot.socket.mqtt.processor.MqttProcessor;
+import org.smartboot.socket.mqtt.common.Topic;
+import org.smartboot.socket.mqtt.store.SubscriberConsumeOffset;
 
 /**
  * 客户端订阅消息
@@ -45,11 +47,12 @@ public class SubscribeProcessor implements MqttProcessor<MqttSubscribeMessage> {
             /*
              * 如果主题过滤器不同于任何现存订阅的过滤器，服务端会创建一个新的订阅并发送所有匹配的保留消息。
              */
-            context.getOrCreateTopic(mqttTopicSubscription.topicName())
-                    .subscribe(session.getClientId());
-
-            session.subscribeTopic(mqttTopicSubscription);
+            Topic topic = context.getOrCreateTopic(mqttTopicSubscription.topicName());
+            SubscriberConsumeOffset consumeOffset = new SubscriberConsumeOffset(topic, session);
+            session.subscribeTopic(consumeOffset);
+            context.getTopicListener().notify(consumeOffset);
         }
+
 
         //订阅确认
         MqttSubAckMessage mqttSubAckMessage = new MqttSubAckMessage(new MqttFixedHeader(MqttMessageType.SUBACK, false, MqttQoS.AT_MOST_ONCE, false, 0));

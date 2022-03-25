@@ -14,7 +14,7 @@
  * You may elect to redistribute this code under either of these licenses.
  */
 
-package org.smartboot.socket.mqtt.spi;
+package org.smartboot.socket.mqtt.common;
 
 /**
  * Internal use only class.

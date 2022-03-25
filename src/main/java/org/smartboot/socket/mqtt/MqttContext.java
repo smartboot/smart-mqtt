@@ -1,7 +1,7 @@
 package org.smartboot.socket.mqtt;
 
-import org.smartboot.socket.mqtt.spi.StoredMessage;
-import org.smartboot.socket.mqtt.spi.Topic;
+import org.smartboot.socket.mqtt.push.PushListener;
+import org.smartboot.socket.mqtt.common.Topic;
 
 /**
  * @author 三刀
@@ -13,14 +13,7 @@ public interface MqttContext {
 
     boolean removeSession(MqttSession session);
 
-    void removeSession(String clientId);
-
     MqttSession getSession(String clientId);
-
-    /**
-     * 取消订阅
-     */
-    void unSubscribe(String clientId, String topicFilter);
 
     /**
      * 获取Topic，如果不存在将创建
@@ -30,14 +23,6 @@ public interface MqttContext {
      */
     Topic getOrCreateTopic(String topic);
 
-    /**
-     * 发送消息至所有客户端
-     *
-     * @param pubMsg
-     * @param topic
-     */
-    void publish2Subscribers(StoredMessage pubMsg, Topic topic);
+    PushListener getTopicListener();
 
-
-    void publish2Subscribers(StoredMessage pubMsg, Topic topic, int messageID);
 }

@@ -117,7 +117,10 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
             } else {
                 //如果清理会话（CleanSession）标志被设置为 1，客户端和服务端必须丢弃之前的任何会话并开始一个新的会话。
                 // 会话仅持续和网络连接同样长的时间。与这个会话关联的状态数据不能被任何之后的会话重用
-                context.removeSession(clientId);
+                MqttSession mqttSession = context.getSession(clientId);
+                if (mqttSession != null) {
+                    mqttSession.close();
+                }
             }
         } else {
             //如果清理会话（CleanSession）标志被设置为 0，服务端必须基于当前会话（使用客户端标识符识别）的
@@ -125,7 +128,6 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
             MqttSession mqttSession = context.getSession(clientId);
             if (mqttSession != null) {
                 LOGGER.info("Client ID is being used in an existing connection, force to be closed. CId={}", clientId);
-                context.removeSession(mqttSession);
                 mqttSession.close();
             }
         }

@@ -1,4 +1,4 @@
-package org.smartboot.socket.mqtt.spi;
+package org.smartboot.socket.mqtt.store;
 
 import org.smartboot.socket.mqtt.ToString;
 import org.smartboot.socket.mqtt.enums.MqttQoS;
@@ -23,6 +23,10 @@ public class StoredMessage extends ToString {
 
     private boolean retained;
     private String clientID;
+    /**
+     * 存储的消息偏移量
+     */
+    private long offset;
 
     public StoredMessage(byte[] payload, MqttQoS mqttQoS, String topic) {
         this.mqttQoS = mqttQoS;
@@ -56,5 +60,13 @@ public class StoredMessage extends ToString {
 
     public void setClientID(String clientID) {
         this.clientID = clientID;
+    }
+
+    public long getOffset() {
+        return offset;
+    }
+
+    public void setOffset(long offset) {
+        this.offset = offset;
     }
 }

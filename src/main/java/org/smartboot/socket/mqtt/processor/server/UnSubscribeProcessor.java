@@ -29,7 +29,7 @@ public class UnSubscribeProcessor implements MqttProcessor<MqttUnsubscribeMessag
         //  它必须停止分发任何新消息给这个客户端 [MQTT-3.10.4-2]。
         //  它必须完成分发任何已经开始往客户端发送的 QoS 1 和 QoS 2 的消息 [MQTT-3.10.4-3]。
         //  它可以继续发送任何现存的准备分发给客户端的缓存消息。
-        unsubscribeMessage.getMqttUnsubscribePayload().topics().forEach(topic -> context.unSubscribe(session.getClientId(), topic));
+        unsubscribeMessage.getMqttUnsubscribePayload().topics().forEach(session::unsubscribe);
 
         //取消订阅确认
         MqttUnsubAckMessage mqttSubAckMessage = new MqttUnsubAckMessage(new MqttFixedHeader(MqttMessageType.UNSUBACK, false, MqttQoS.AT_MOST_ONCE, false, 0));

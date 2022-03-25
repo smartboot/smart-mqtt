@@ -2,11 +2,10 @@ package org.smartboot.socket.mqtt;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.socket.mqtt.message.MqttPublishMessage;
-import org.smartboot.socket.mqtt.spi.StoredMessage;
-import org.smartboot.socket.mqtt.spi.Topic;
+import org.smartboot.socket.mqtt.push.PushListener;
+import org.smartboot.socket.mqtt.push.impl.PushListenerImpl;
+import org.smartboot.socket.mqtt.common.Topic;
 
-import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -24,6 +23,7 @@ public class MqttServerContext implements MqttContext {
      *
      */
     private final ConcurrentMap<String, Topic> topicMap = new ConcurrentHashMap<>();
+    private final PushListener listener = new PushListenerImpl();
 
     @Override
     public MqttSession addSession(MqttSession session) {
@@ -36,16 +36,7 @@ public class MqttServerContext implements MqttContext {
 
     @Override
     public boolean removeSession(MqttSession session) {
-        session.getTopicSubscriptions().forEach(topic -> unSubscribe(session.getClientId(), topic.topicName()));
         return grantSessions.remove(session.getClientId(), session);
-    }
-
-    @Override
-    public void removeSession(String clientId) {
-        MqttSession session = grantSessions.get(clientId);
-        if (session != null) {
-            removeSession(session);
-        }
     }
 
     @Override
@@ -54,35 +45,8 @@ public class MqttServerContext implements MqttContext {
     }
 
     @Override
-    public void unSubscribe(String clientId, String topicFilter) {
-        Topic topic = topicMap.get(topicFilter);
-        if (topic != null) {
-            topic.unSubscribe(clientId);
-        } else {
-            LOGGER.warn("topic:{} not exists", topicFilter);
-        }
+    public PushListener getTopicListener() {
+        return listener;
     }
 
-    @Override
-    public void publish2Subscribers(StoredMessage pubMsg, Topic topic) {
-        topic.getSubscribes().forEach(clientId -> {
-            MqttSession session = grantSessions.get(clientId);
-            System.out.println("分发消息给：" + session);
-            MqttPublishMessage publishMessage = MqttMessageBuilders.publish().payload(ByteBuffer.wrap(pubMsg.getPayload())).qos(pubMsg.getMqttQoS()).packetId(session.getPacketIdCreator().getAndIncrement()).topicName(topic.getTopic()).build();
-            session.write(publishMessage);
-        });
-    }
-
-    @Override
-    public void publish2Subscribers(StoredMessage pubMsg, Topic topic, int messageID) {
-        if (LOGGER.isTraceEnabled()) {
-//            LOGGER.trace("Sending publish message to subscribers. ClientId={}, topic={}, messageId={}, payload={}, " +
-//                            "subscriptionTree={}", pubMsg.getClientID(), topic, messageID, DebugUtils.payload2Str(pubMsg.getPayload()),
-//                    subscriptions.dumpTree());
-            LOGGER.info("Sending publish message to subscribers. ClientId={}, topic={}, messageId={}", pubMsg.getClientID(), topic, messageID);
-        } else {
-            LOGGER.info("Sending publish message to subscribers. ClientId={}, topic={}, messageId={}", pubMsg.getClientID(), topic, messageID);
-        }
-        publish2Subscribers(pubMsg, topic);
-    }
 }
