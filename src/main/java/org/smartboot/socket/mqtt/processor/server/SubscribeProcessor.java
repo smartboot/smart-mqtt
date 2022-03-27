@@ -48,7 +48,7 @@ public class SubscribeProcessor implements MqttProcessor<MqttSubscribeMessage> {
              * 如果主题过滤器不同于任何现存订阅的过滤器，服务端会创建一个新的订阅并发送所有匹配的保留消息。
              */
             Topic topic = context.getOrCreateTopic(mqttTopicSubscription.topicName());
-            SubscriberConsumeOffset consumeOffset = new SubscriberConsumeOffset(topic, session);
+            SubscriberConsumeOffset consumeOffset = new SubscriberConsumeOffset(topic, session,mqttTopicSubscription.qualityOfService());
             session.subscribeTopic(consumeOffset);
             context.getTopicListener().notify(consumeOffset);
         }

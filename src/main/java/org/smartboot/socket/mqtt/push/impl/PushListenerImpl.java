@@ -2,10 +2,12 @@ package org.smartboot.socket.mqtt.push.impl;
 
 import org.smartboot.socket.mqtt.MqttMessageBuilders;
 import org.smartboot.socket.mqtt.MqttSession;
-import org.smartboot.socket.mqtt.push.PushListener;
-import org.smartboot.socket.mqtt.message.MqttPublishMessage;
-import org.smartboot.socket.mqtt.store.StoredMessage;
 import org.smartboot.socket.mqtt.common.Topic;
+import org.smartboot.socket.mqtt.enums.MqttQoS;
+import org.smartboot.socket.mqtt.message.MqttPublishMessage;
+import org.smartboot.socket.mqtt.push.PushListener;
+import org.smartboot.socket.mqtt.push.QosTask;
+import org.smartboot.socket.mqtt.store.StoredMessage;
 import org.smartboot.socket.mqtt.store.SubscriberConsumeOffset;
 
 import java.nio.ByteBuffer;
@@ -19,6 +21,10 @@ import java.util.concurrent.Executors;
  */
 public class PushListenerImpl implements PushListener {
     private final ExecutorService executorService = Executors.newFixedThreadPool(4);
+    /**
+     * 滑动窗口大小
+     */
+    private long max_inflight = 1;
 
     @Override
     public void notify(Topic topic) {
@@ -60,15 +66,31 @@ public class PushListenerImpl implements PushListener {
                 }
                 return;
             }
-
             //消息处理
             MqttSession session = subscription.getMqttSession();
+
+            int packetId = session.getPacketIdCreator().getAndIncrement();
+            QosTask qosTask = new QosTask(packetId, subscription, PushListenerImpl.this);
+            //注册监听
+            if (storedMessage.getMqttQoS() == MqttQoS.AT_LEAST_ONCE || storedMessage.getMqttQoS() == MqttQoS.EXACTLY_ONCE) {
+                //当待确认ack消息数达到maxInflight时不再继续推送
+                if (subscription.getInFightQueue().size() >= max_inflight) {
+                    subscription.getPushSemaphore().release();
+                    return;
+                }
+                subscription.getInFightQueue().offer(qosTask);
+                session.put(qosTask);
+            }
+
+
             System.out.println("分发消息给：" + session);
-            MqttPublishMessage publishMessage = MqttMessageBuilders.publish().payload(ByteBuffer.wrap(storedMessage.getPayload())).qos(storedMessage.getMqttQoS()).packetId(session.getPacketIdCreator().getAndIncrement()).topicName(topic.getTopic()).build();
+            MqttPublishMessage publishMessage = MqttMessageBuilders.publish().payload(ByteBuffer.wrap(storedMessage.getPayload())).qos(storedMessage.getMqttQoS()).packetId(packetId).topicName(topic.getTopic()).build();
             session.write(publishMessage);
 
             subscription.setLastOffset(storedMessage.getOffset());
             subscription.setNextOffset(storedMessage.getOffset() + 1);
+
+
             //消费下一个
             if (subscription.getNextOffset() <= topic.getMessagesStore().latestOffset()) {
                 executorService.execute(this);

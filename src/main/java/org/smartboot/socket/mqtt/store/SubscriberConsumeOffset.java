@@ -2,7 +2,11 @@ package org.smartboot.socket.mqtt.store;
 
 import org.smartboot.socket.mqtt.MqttSession;
 import org.smartboot.socket.mqtt.common.Topic;
+import org.smartboot.socket.mqtt.enums.MqttQoS;
+import org.smartboot.socket.mqtt.push.QosTask;
 
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -25,6 +29,11 @@ public class SubscriberConsumeOffset {
      */
     private final Topic topic;
     /**
+     * 处于消费中的消息
+     */
+    private final BlockingQueue<QosTask> inFightQueue = new LinkedBlockingQueue<>();
+    private final MqttQoS mqttQoS;
+    /**
      * 上一个消费点位
      */
     private long lastOffset = -1;
@@ -32,15 +41,15 @@ public class SubscriberConsumeOffset {
      * 下一个消费点位
      */
     private long nextOffset = LATEST_OFFSET;
-
     /**
      * 是否可用
      */
     private boolean enable = true;
 
-    public SubscriberConsumeOffset(Topic topic, MqttSession session) {
+    public SubscriberConsumeOffset(Topic topic, MqttSession session, MqttQoS mqttQoS) {
         this.topic = topic;
         this.mqttSession = session;
+        this.mqttQoS = mqttQoS;
     }
 
     public Topic getTopic() {
@@ -77,5 +86,13 @@ public class SubscriberConsumeOffset {
 
     public void setEnable(boolean enable) {
         this.enable = enable;
+    }
+
+    public BlockingQueue<QosTask> getInFightQueue() {
+        return inFightQueue;
+    }
+
+    public MqttQoS getMqttQoS() {
+        return mqttQoS;
     }
 }

@@ -3,6 +3,7 @@ package org.smartboot.socket.mqtt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.socket.mqtt.message.MqttMessage;
+import org.smartboot.socket.mqtt.push.QosTask;
 import org.smartboot.socket.mqtt.store.SubscriberConsumeOffset;
 import org.smartboot.socket.transport.AioSession;
 
@@ -28,6 +29,11 @@ public class MqttSession {
      * 当前连接订阅的Topic的消费信息
      */
     private final Map<String, SubscriberConsumeOffset> consumeOffsets = new ConcurrentHashMap<>();
+
+    /**
+     * 待响应的消息
+     */
+    private final Map<Integer, QosTask> qosTaskMap = new ConcurrentHashMap<>();
 
     private final AioSession session;
     private final MqttContext mqttContext;
@@ -91,6 +97,18 @@ public class MqttSession {
             oldOffset.getTopic().getConsumerGroup().getConsumeOffsets().remove(this);
             LOGGER.info("unsubscribe topic:{} success, clientId:{}", topic, clientId);
         }
+    }
+
+    public QosTask getQosTask(int packetId) {
+        return qosTaskMap.get(packetId);
+    }
+
+    public void put(QosTask qosTask) {
+        qosTaskMap.put(qosTask.getPacketId(), qosTask);
+    }
+
+    public void remove(QosTask qosTask) {
+        qosTaskMap.remove(qosTask.getPacketId());
     }
 
     public AtomicInteger getPacketIdCreator() {

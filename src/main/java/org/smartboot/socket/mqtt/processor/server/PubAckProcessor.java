@@ -19,6 +19,6 @@ public class PubAckProcessor implements MqttProcessor<MqttPubAckMessage> {
     @Override
     public void process(MqttContext context, MqttSession session, MqttPubAckMessage pubAckMessage) {
         LOGGER.info("receive pubAck message:{}", pubAckMessage);
-
+        session.getQosTask(pubAckMessage.getPacketId()).done();
     }
 }
