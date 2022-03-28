@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.socket.mqtt.MqttContext;
 import org.smartboot.socket.mqtt.MqttSession;
+import org.smartboot.socket.mqtt.common.Topic;
 import org.smartboot.socket.mqtt.enums.MqttMessageType;
 import org.smartboot.socket.mqtt.enums.MqttQoS;
 import org.smartboot.socket.mqtt.message.MqttFixedHeader;
@@ -12,7 +13,6 @@ import org.smartboot.socket.mqtt.message.MqttSubAckPayload;
 import org.smartboot.socket.mqtt.message.MqttSubscribeMessage;
 import org.smartboot.socket.mqtt.message.MqttTopicSubscription;
 import org.smartboot.socket.mqtt.processor.MqttProcessor;
-import org.smartboot.socket.mqtt.common.Topic;
 import org.smartboot.socket.mqtt.store.SubscriberConsumeOffset;
 
 /**
@@ -48,7 +48,7 @@ public class SubscribeProcessor implements MqttProcessor<MqttSubscribeMessage> {
              * 如果主题过滤器不同于任何现存订阅的过滤器，服务端会创建一个新的订阅并发送所有匹配的保留消息。
              */
             Topic topic = context.getOrCreateTopic(mqttTopicSubscription.topicName());
-            SubscriberConsumeOffset consumeOffset = new SubscriberConsumeOffset(topic, session,mqttTopicSubscription.qualityOfService());
+            SubscriberConsumeOffset consumeOffset = new SubscriberConsumeOffset(topic, session, mqttTopicSubscription.qualityOfService());
             session.subscribeTopic(consumeOffset);
             context.getTopicListener().notify(consumeOffset);
         }
@@ -56,7 +56,7 @@ public class SubscribeProcessor implements MqttProcessor<MqttSubscribeMessage> {
 
         //订阅确认
         MqttSubAckMessage mqttSubAckMessage = new MqttSubAckMessage(new MqttFixedHeader(MqttMessageType.SUBACK, false, MqttQoS.AT_MOST_ONCE, false, 0));
-        mqttSubAckMessage.setPacketId(session.getPacketIdCreator().getAndIncrement());
+        mqttSubAckMessage.setPacketId(mqttSubscribeMessage.getPacketId());
 
         //有效载荷包含一个返回码清单。
         // 每个返回码对应等待确认的 SUBSCRIBE 报文中的一个主题过滤器。

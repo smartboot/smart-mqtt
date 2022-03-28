@@ -9,6 +9,7 @@ import org.smartboot.socket.mqtt.message.MqttConnectMessage;
 import org.smartboot.socket.mqtt.message.MqttMessage;
 import org.smartboot.socket.mqtt.message.MqttPingReqMessage;
 import org.smartboot.socket.mqtt.message.MqttPubAckMessage;
+import org.smartboot.socket.mqtt.message.MqttPubRelMessage;
 import org.smartboot.socket.mqtt.message.MqttPublishMessage;
 import org.smartboot.socket.mqtt.message.MqttSubscribeMessage;
 import org.smartboot.socket.mqtt.message.MqttUnsubscribeMessage;
@@ -16,6 +17,7 @@ import org.smartboot.socket.mqtt.processor.MqttProcessor;
 import org.smartboot.socket.mqtt.processor.server.ConnectProcessor;
 import org.smartboot.socket.mqtt.processor.server.PingReqProcessor;
 import org.smartboot.socket.mqtt.processor.server.PubAckProcessor;
+import org.smartboot.socket.mqtt.processor.server.PubRelProcessor;
 import org.smartboot.socket.mqtt.processor.server.PublishProcessor;
 import org.smartboot.socket.mqtt.processor.server.SubscribeProcessor;
 import org.smartboot.socket.mqtt.processor.server.UnSubscribeProcessor;
@@ -48,6 +50,7 @@ public class MqttServerProcessor implements MessageProcessor<MqttMessage> {
         processorMap.put(MqttSubscribeMessage.class, new SubscribeProcessor());
         processorMap.put(MqttUnsubscribeMessage.class, new UnSubscribeProcessor());
         processorMap.put(MqttPubAckMessage.class, new PubAckProcessor());
+        processorMap.put(MqttPubRelMessage.class, new PubRelProcessor());
     }
 
 

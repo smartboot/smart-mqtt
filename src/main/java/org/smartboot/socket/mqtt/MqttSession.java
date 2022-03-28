@@ -4,12 +4,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.socket.mqtt.message.MqttMessage;
 import org.smartboot.socket.mqtt.push.QosTask;
+import org.smartboot.socket.mqtt.store.StoredMessage;
 import org.smartboot.socket.mqtt.store.SubscriberConsumeOffset;
 import org.smartboot.socket.transport.AioSession;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -34,6 +36,8 @@ public class MqttSession {
      * 待响应的消息
      */
     private final Map<Integer, QosTask> qosTaskMap = new ConcurrentHashMap<>();
+
+    private final ConcurrentMap<Integer, StoredMessage> inboundInflightMessages = new ConcurrentHashMap<>();
 
     private final AioSession session;
     private final MqttContext mqttContext;
@@ -78,6 +82,14 @@ public class MqttSession {
         this.username = username;
     }
 
+    public void putInFightMessage(int packetId, StoredMessage storedMessage) {
+        inboundInflightMessages.put(packetId, storedMessage);
+    }
+
+    public StoredMessage pollInFightMessage(int packetId) {
+        return inboundInflightMessages.remove(packetId);
+    }
+
     /*
      * 如果服务端收到一个 SUBSCRIBE 报文，
      * 报文的主题过滤器与一个现存订阅的主题过滤器相同，
@@ -111,7 +123,7 @@ public class MqttSession {
         qosTaskMap.remove(qosTask.getPacketId());
     }
 
-    public AtomicInteger getPacketIdCreator() {
-        return packetIdCreator;
+    public int newPacketId() {
+        return packetIdCreator.getAndIncrement();
     }
 }

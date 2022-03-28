@@ -69,7 +69,7 @@ public class PushListenerImpl implements PushListener {
             //消息处理
             MqttSession session = subscription.getMqttSession();
 
-            int packetId = session.getPacketIdCreator().getAndIncrement();
+            int packetId = session.newPacketId();
             QosTask qosTask = new QosTask(packetId, subscription, PushListenerImpl.this);
             //注册监听
             if (storedMessage.getMqttQoS() == MqttQoS.AT_LEAST_ONCE || storedMessage.getMqttQoS() == MqttQoS.EXACTLY_ONCE) {

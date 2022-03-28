@@ -3,7 +3,9 @@ package org.smartboot.socket.mqtt.processor.server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.socket.mqtt.MqttContext;
+import org.smartboot.socket.mqtt.MqttMessageBuilders;
 import org.smartboot.socket.mqtt.MqttSession;
+import org.smartboot.socket.mqtt.common.Topic;
 import org.smartboot.socket.mqtt.enums.MqttMessageType;
 import org.smartboot.socket.mqtt.enums.MqttQoS;
 import org.smartboot.socket.mqtt.message.MqttFixedHeader;
@@ -12,11 +14,8 @@ import org.smartboot.socket.mqtt.message.MqttPubRecMessage;
 import org.smartboot.socket.mqtt.message.MqttPublishMessage;
 import org.smartboot.socket.mqtt.processor.MqttProcessor;
 import org.smartboot.socket.mqtt.store.StoredMessage;
-import org.smartboot.socket.mqtt.common.Topic;
 
 import java.nio.ByteBuffer;
-
-import static org.smartboot.socket.mqtt.enums.MqttQoS.AT_MOST_ONCE;
 
 /**
  * 发布Topic
@@ -52,11 +51,6 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
 
     private void processQos0(MqttContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
         final Topic topic = context.getOrCreateTopic(mqttPublishMessage.getMqttPublishVariableHeader().topicName());
-        String clientId = session.getClientId();
-        String username = session.getUsername();
-        StoredMessage storedMessage = asStoredMessage(mqttPublishMessage);
-        storedMessage.setClientID(clientId);
-//        context.publish2Subscribers(storedMessage, topic);
 
         /**
          * 如果服务端收到一条保留（RETAIN）标志为 1 的 QoS 0 消息，它必须丢弃之前为那个主题保留
@@ -66,12 +60,15 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
         if (mqttPublishMessage.getMqttFixedHeader().isRetain()) {
             topic.getMessagesStore().cleanTopic();
         }
-        try {
-            topic.getMessagesStore().storeTopic(storedMessage);
-        } finally {
-            context.getTopicListener().notify(topic);
-        }
 
+        ByteBuffer payload = mqttPublishMessage.getPayload();
+        topic.getConsumerGroup().getConsumeOffsets().keySet().forEach(mqttSession -> {
+            MqttPublishMessage publishMessage = MqttMessageBuilders.publish()
+                    .payload(payload.slice())//复用内存空间
+                    .qos(mqttPublishMessage.getMqttFixedHeader().getQosLevel())
+                    .packetId(mqttSession.newPacketId()).topicName(topic.getTopic()).build();
+            mqttSession.write(publishMessage);
+        });
     }
 
     private void processQos1(MqttContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
@@ -82,30 +79,40 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
 
         StoredMessage storedMessage = asStoredMessage(mqttPublishMessage);
         storedMessage.setClientID(clientId);
-//        context.publish2Subscribers(storedMessage, topic, messageId);
-        sendPubAck(messageId, session);
 
-        try {
+        //给 publisher 回响应
+        LOGGER.info("sendPubAck invoked");
+        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBACK, false, mqttPublishMessage.getMqttFixedHeader().getQosLevel(), false, 0);
+        MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(fixedHeader, messageId);
+        session.write(pubAckMessage);
+
+        // 发送给subscribe
+        ByteBuffer payload = mqttPublishMessage.getPayload();
+        topic.getConsumerGroup().getConsumeOffsets().keySet().forEach(mqttSession -> {
+            MqttPublishMessage publishMessage = MqttMessageBuilders.publish()
+                    .payload(payload.slice())//复用内存空间
+                    .qos(mqttPublishMessage.getMqttFixedHeader().getQosLevel())
+                    .packetId(mqttSession.newPacketId()).topicName(topic.getTopic()).build();
+            mqttSession.write(publishMessage);
+        });
+
+        if (mqttPublishMessage.getMqttFixedHeader().isRetain()) {
             topic.getMessagesStore().storeTopic(storedMessage);
-        } finally {
-            context.getTopicListener().notify(topic);
         }
     }
 
     private void processQos2(MqttContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
-        final Topic topic = context.getOrCreateTopic(mqttPublishMessage.getMqttPublishVariableHeader().topicName());
         String clientId = session.getClientId();
-        String username = session.getUsername();
-
-        final int messageId = mqttPublishMessage.getMqttPublishVariableHeader().packetId();
 
         StoredMessage storedMessage = asStoredMessage(mqttPublishMessage);
         storedMessage.setClientID(clientId);
 
-        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBREC, false, AT_MOST_ONCE, false, 0);
-        MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(fixedHeader, messageId);
-
+        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBREC, false, mqttPublishMessage.getMqttFixedHeader().getQosLevel(), false, 0);
+        MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(fixedHeader, mqttPublishMessage.getMqttPublishVariableHeader().packetId());
         session.write(pubRecMessage);
+
+        //响应监听
+        session.putInFightMessage(mqttPublishMessage.getMqttPublishVariableHeader().packetId(), storedMessage);
     }
 
     private StoredMessage asStoredMessage(MqttPublishMessage msg) {
@@ -119,10 +126,4 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
         return stored;
     }
 
-    private void sendPubAck(int messageID, MqttSession session) {
-        LOGGER.info("sendPubAck invoked");
-        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBACK, false, AT_MOST_ONCE, false, 0);
-        MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(fixedHeader, messageID);
-        session.write(pubAckMessage);
-    }
 }
