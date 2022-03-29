@@ -53,7 +53,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
     }
 
     private void callBack(MqttPublishMessage mqttPublishMessage) {
-        byte[] payload = mqttPublishMessage.getPayload().array();
+        byte[] payload = mqttPublishMessage.getPayload();
         String topicName = mqttPublishMessage.getMqttPublishVariableHeader().topicName();
         int packetId = mqttPublishMessage.getMqttPublishVariableHeader().packetId();
         if (packetId % 10000 == 0) {

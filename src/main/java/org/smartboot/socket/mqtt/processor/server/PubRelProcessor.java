@@ -14,8 +14,6 @@ import org.smartboot.socket.mqtt.processor.MqttProcessor;
 import org.smartboot.socket.mqtt.store.StoredMessage;
 import org.smartboot.socket.mqtt.util.ValidateUtils;
 
-import java.nio.ByteBuffer;
-
 /**
  * PUBREC 报文是对 QoS 等级 2 的 PUBLISH 报文的响应。它是 QoS 2 等级协议交换的第二个报文。
  *
@@ -30,10 +28,9 @@ public class PubRelProcessor implements MqttProcessor<MqttPubRelMessage> {
 
         final Topic topic = context.getOrCreateTopic(message.getTopic());
         // 发送给subscribe
-        ByteBuffer payload = ByteBuffer.wrap(message.getPayload());
         topic.getConsumerGroup().getConsumeOffsets().keySet().forEach(mqttSession -> {
             MqttPublishMessage publishMessage = MqttMessageBuilders.publish()
-                    .payload(payload.slice())//复用内存空间
+                    .payload(message.getPayload())
                     .qos(message.getMqttQoS())
                     .packetId(mqttPubRelMessage.getPacketId()).topicName(topic.getTopic()).build();
             mqttSession.write(publishMessage);

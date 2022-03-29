@@ -7,8 +7,6 @@ import org.smartboot.socket.mqtt.enums.MqttVersion;
 import org.smartboot.socket.mqtt.message.MqttConnAckMessage;
 import org.smartboot.socket.mqtt.message.MqttConnAckVariableHeader;
 import org.smartboot.socket.mqtt.message.MqttConnectMessage;
-import org.smartboot.socket.mqtt.message.MqttConnectPayload;
-import org.smartboot.socket.mqtt.message.MqttConnectVariableHeader;
 import org.smartboot.socket.mqtt.message.MqttFixedHeader;
 import org.smartboot.socket.mqtt.message.MqttPingReqMessage;
 import org.smartboot.socket.mqtt.message.MqttPublishMessage;
@@ -19,7 +17,6 @@ import org.smartboot.socket.mqtt.message.MqttTopicSubscription;
 import org.smartboot.socket.mqtt.message.MqttUnsubscribeMessage;
 import org.smartboot.socket.mqtt.message.MqttUnsubscribePayload;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,7 +53,7 @@ public final class MqttMessageBuilders {
         private String topic;
         private boolean retained;
         private MqttQoS qos;
-        private ByteBuffer payload;
+        private byte[] payload;
         private int packetId;
 
         PublishBuilder() {
@@ -77,7 +74,7 @@ public final class MqttMessageBuilders {
             return this;
         }
 
-        public PublishBuilder payload(ByteBuffer payload) {
+        public PublishBuilder payload(byte[] payload) {
             this.payload = payload;
             return this;
         }

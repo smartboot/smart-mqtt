@@ -10,7 +10,6 @@ import org.smartboot.socket.mqtt.push.QosTask;
 import org.smartboot.socket.mqtt.store.StoredMessage;
 import org.smartboot.socket.mqtt.store.SubscriberConsumeOffset;
 
-import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -84,7 +83,7 @@ public class PushListenerImpl implements PushListener {
 
 
             System.out.println("分发消息给：" + session);
-            MqttPublishMessage publishMessage = MqttMessageBuilders.publish().payload(ByteBuffer.wrap(storedMessage.getPayload())).qos(storedMessage.getMqttQoS()).packetId(packetId).topicName(topic.getTopic()).build();
+            MqttPublishMessage publishMessage = MqttMessageBuilders.publish().payload(storedMessage.getPayload()).qos(storedMessage.getMqttQoS()).packetId(packetId).topicName(topic.getTopic()).build();
             session.write(publishMessage);
 
             subscription.setLastOffset(storedMessage.getOffset());

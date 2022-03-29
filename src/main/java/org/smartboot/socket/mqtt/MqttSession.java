@@ -99,6 +99,7 @@ public class MqttSession {
     public synchronized void subscribeTopic(SubscriberConsumeOffset subscription) {
         unsubscribe(subscription.getTopic().getTopic());
         consumeOffsets.put(subscription.getTopic().getTopic(), subscription);
+        subscription.getTopic().getConsumerGroup().getConsumeOffsets().put(this, subscription);
         LOGGER.info("subscribe topic:{} success, clientId:{}", subscription.getTopic(), clientId);
     }
 

@@ -6,6 +6,7 @@ import org.smartboot.socket.mqtt.MqttContext;
 import org.smartboot.socket.mqtt.MqttSession;
 import org.smartboot.socket.mqtt.message.MqttPubAckMessage;
 import org.smartboot.socket.mqtt.processor.MqttProcessor;
+import org.smartboot.socket.mqtt.store.StoredMessage;
 
 /**
  * PUBACK 报文是对 QoS 1 等级的 PUBLISH 报文的响应
@@ -19,6 +20,8 @@ public class PubAckProcessor implements MqttProcessor<MqttPubAckMessage> {
     @Override
     public void process(MqttContext context, MqttSession session, MqttPubAckMessage pubAckMessage) {
         LOGGER.info("receive pubAck message:{}", pubAckMessage);
-        session.getQosTask(pubAckMessage.getPacketId()).done();
+        StoredMessage storedMessage = session.pollInFightMessage(pubAckMessage.getPacketId());
+        LOGGER.info("pubAck message:{}", storedMessage);
+//        session.getQosTask(pubAckMessage.getPacketId()).done();
     }
 }

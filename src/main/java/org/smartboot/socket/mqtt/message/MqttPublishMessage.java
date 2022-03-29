@@ -15,13 +15,13 @@ import java.nio.ByteBuffer;
 public class MqttPublishMessage extends MqttMessage {
     private MqttPublishVariableHeader mqttPublishVariableHeader;
 
-    private ByteBuffer payload;
+    private byte[] payload;
 
     public MqttPublishMessage(MqttFixedHeader mqttFixedHeader) {
         super(mqttFixedHeader);
     }
 
-    public MqttPublishMessage(MqttFixedHeader mqttFixedHeader, MqttPublishVariableHeader mqttPublishVariableHeader, ByteBuffer payload) {
+    public MqttPublishMessage(MqttFixedHeader mqttFixedHeader, MqttPublishVariableHeader mqttPublishVariableHeader, byte[] payload) {
         super(mqttFixedHeader);
         this.mqttPublishVariableHeader = mqttPublishVariableHeader;
         this.payload = payload;
@@ -43,17 +43,13 @@ public class MqttPublishMessage extends MqttMessage {
 
     @Override
     public void decodePlayLoad(ByteBuffer buffer) {
-        int variableHeaderLength = mqttPublishVariableHeader.topicName().getBytes().length + 4;
+        //只有当 QoS 等级是 1 或 2 时，报文标识符（Packet Identifier）字段才能出现在 PUBLISH 报文中。
+        //QoS 设置为 0 的 PUBLISH 报文不能包含报文标识符
+        int variableHeaderLength = mqttPublishVariableHeader.topicName().getBytes().length + (mqttFixedHeader.getQosLevel().value() > 0 ? 4 : 2);
         int remainingLength = mqttFixedHeader.remainingLength();
         int readLength = remainingLength - variableHeaderLength;
-        payload = ByteBuffer.allocate(readLength);
-        for (int i = 0; i < readLength; i++) {
-            payload.put(buffer.get());
-        }
-//        byte[] payloadBytes = new byte[readLength];
-//        buffer.get(payloadBytes);
-//        payload.put(payloadBytes);
-        payload.flip();
+        payload = new byte[readLength];
+        buffer.get(payload);
     }
 
     @Override
@@ -63,7 +59,7 @@ public class MqttPublishMessage extends MqttMessage {
 
         dos.writeUTF(mqttPublishVariableHeader.topicName());
         dos.writeShort(mqttPublishVariableHeader.packetId());
-        dos.write(payload.array());
+        dos.write(payload);
         dos.flush();
         byte[] varAndPayloadBytes = baos.toByteArray();
         baos.reset();
@@ -75,7 +71,7 @@ public class MqttPublishMessage extends MqttMessage {
         page.writeAndFlush(data);
     }
 
-    public ByteBuffer getPayload() {
+    public byte[] getPayload() {
         return payload;
     }
 

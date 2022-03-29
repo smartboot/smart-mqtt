@@ -117,12 +117,10 @@ public class MqttClient implements Closeable {
     public void pub(String topic, MqttQoS qos, byte[] payload){
         MqttPublishMessage publishMessage;
         if (qos.equals(MqttQoS.AT_MOST_ONCE)){
-            ByteBuffer byteBuffer = ByteBuffer.wrap(payload);
-            publishMessage = MqttMessageBuilders.publish().topicName(topic).qos(qos).payload(byteBuffer).build();
+            publishMessage = MqttMessageBuilders.publish().topicName(topic).qos(qos).payload(payload).build();
         }else {
             int packetId = getPacketId();
-            ByteBuffer byteBuffer = ByteBuffer.wrap(payload);
-            publishMessage = MqttMessageBuilders.publish().packetId(packetId).topicName(topic).qos(qos).payload(byteBuffer).build();
+            publishMessage = MqttMessageBuilders.publish().packetId(packetId).topicName(topic).qos(qos).payload(payload).build();
         }
         synchronized (aioSession.writeBuffer()){
             try {
