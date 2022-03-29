@@ -1,37 +1,15 @@
 # smart-mqtt
 
 #### 项目介绍
-基于smart-socket实现的MQTT服务
+基于 smart-socket 实现的MQTT服务，支持 Mqtt 3.1.1 版本协议。
 
-#### 软件架构
-软件架构说明
+#### 特色
+1. 严格遵循协议规范，代码中详细标注了对应的规范内容。
+2. 待补充
 
+#### mqtt客户端工具
+1. [MQTTBox](https://github.com/workswithweb/MQTTBox) (个人认为比较好用，强烈推荐~)
 
-#### 安装教程
-
-1. xxxx
-2. xxxx
-3. xxxx
-
-#### 使用说明
-
-1. xxxx
-2. xxxx
-3. xxxx
-
-#### 参与贡献
-
-1. Fork 本项目
-2. 新建 Feat_xxx 分支
-3. 提交代码
-4. 新建 Pull Request
-
-
-#### 码云特技
-
-1. 使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2. 码云官方博客 [blog.gitee.com](https://blog.gitee.com)
-3. 你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解码云上的优秀开源项目
-4. [GVP](https://gitee.com/gvp) 全称是码云最有价值开源项目，是码云综合评定出的优秀开源项目
-5. 码云官方提供的使用手册 [http://git.mydoc.io/](http://git.mydoc.io/)
-6. 码云封面人物是一档用来展示码云会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+#### 参考资料
+1. 《MQTT协议3.1.1中文版》
+2. [moquette](https://github.com/moquette-io/moquette)
