@@ -1,7 +1,6 @@
 package org.smartboot.socket.mqtt.processor.server;
 
 import org.smartboot.socket.mqtt.MqttContext;
-import org.smartboot.socket.mqtt.MqttMessageBuilders;
 import org.smartboot.socket.mqtt.MqttSession;
 import org.smartboot.socket.mqtt.common.Topic;
 import org.smartboot.socket.mqtt.enums.MqttMessageType;
@@ -9,7 +8,6 @@ import org.smartboot.socket.mqtt.enums.MqttQoS;
 import org.smartboot.socket.mqtt.message.MqttFixedHeader;
 import org.smartboot.socket.mqtt.message.MqttPubCompMessage;
 import org.smartboot.socket.mqtt.message.MqttPubRelMessage;
-import org.smartboot.socket.mqtt.message.MqttPublishMessage;
 import org.smartboot.socket.mqtt.processor.MqttProcessor;
 import org.smartboot.socket.mqtt.store.StoredMessage;
 import org.smartboot.socket.mqtt.util.ValidateUtils;
@@ -27,14 +25,6 @@ public class PubRelProcessor implements MqttProcessor<MqttPubRelMessage> {
         ValidateUtils.notNull(message, "message is null");
 
         final Topic topic = context.getOrCreateTopic(message.getTopic());
-        // 发送给subscribe
-        topic.getConsumerGroup().getConsumeOffsets().keySet().forEach(mqttSession -> {
-            MqttPublishMessage publishMessage = MqttMessageBuilders.publish()
-                    .payload(message.getPayload())
-                    .qos(message.getMqttQoS())
-                    .packetId(mqttPubRelMessage.getPacketId()).topicName(topic.getTopic()).build();
-            mqttSession.write(publishMessage);
-        });
         if (message.isRetained()) {
             topic.getMessagesStore().storeTopic(message);
         }
@@ -42,5 +32,7 @@ public class PubRelProcessor implements MqttProcessor<MqttPubRelMessage> {
         MqttPubCompMessage pubRelMessage = new MqttPubCompMessage(new MqttFixedHeader(MqttMessageType.PUBCOMP, false, MqttQoS.AT_MOST_ONCE, false, 0));
         pubRelMessage.setPacketId(mqttPubRelMessage.getPacketId());
         session.write(pubRelMessage);
+        // 发送给subscribe
+        context.publish(topic, message);
     }
 }

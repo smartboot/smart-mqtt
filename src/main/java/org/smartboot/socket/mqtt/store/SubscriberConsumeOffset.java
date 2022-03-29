@@ -32,6 +32,9 @@ public class SubscriberConsumeOffset {
      * 处于消费中的消息
      */
     private final BlockingQueue<QosTask> inFightQueue = new LinkedBlockingQueue<>();
+    /**
+     * 服务端向客户端发送应用消息所允许的最大 QoS 等级
+     */
     private final MqttQoS mqttQoS;
     /**
      * 上一个消费点位

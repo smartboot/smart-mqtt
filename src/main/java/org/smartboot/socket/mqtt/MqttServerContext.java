@@ -2,9 +2,12 @@ package org.smartboot.socket.mqtt;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.socket.mqtt.common.Topic;
+import org.smartboot.socket.mqtt.enums.MqttQoS;
+import org.smartboot.socket.mqtt.message.MqttPublishMessage;
 import org.smartboot.socket.mqtt.push.PushListener;
 import org.smartboot.socket.mqtt.push.impl.PushListenerImpl;
-import org.smartboot.socket.mqtt.common.Topic;
+import org.smartboot.socket.mqtt.store.StoredMessage;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -24,6 +27,12 @@ public class MqttServerContext implements MqttContext {
      */
     private final ConcurrentMap<String, Topic> topicMap = new ConcurrentHashMap<>();
     private final PushListener listener = new PushListenerImpl();
+
+    public static StoredMessage asStoredMessage(MqttPublishMessage msg) {
+        StoredMessage stored = new StoredMessage(msg.getPayload(), msg.getMqttFixedHeader().getQosLevel(), msg.getMqttPublishVariableHeader().topicName());
+        stored.setRetained(msg.getMqttFixedHeader().isRetain());
+        return stored;
+    }
 
     @Override
     public MqttSession addSession(MqttSession session) {
@@ -49,4 +58,23 @@ public class MqttServerContext implements MqttContext {
         return listener;
     }
 
+    @Override
+    public void publish(Topic topic, StoredMessage storedMessage) {
+        topic.getConsumerGroup().getConsumeOffsets().forEach((mqttSession, consumeOffset) -> {
+            LOGGER.info("publish to client:{}", mqttSession.getClientId());
+            MqttQoS mqttQoS = storedMessage.getMqttQoS();
+            if (mqttQoS.value() > consumeOffset.getMqttQoS().value()) {
+                mqttQoS = consumeOffset.getMqttQoS();
+            }
+            MqttPublishMessage publishMessage = MqttMessageBuilders.publish()
+                    .payload(storedMessage.getPayload())
+                    .qos(mqttQoS)
+                    .packetId(mqttSession.newPacketId()).topicName(topic.getTopic()).build();
+            //QoS1 响应监听
+            if (publishMessage.getMqttFixedHeader().getQosLevel() == MqttQoS.AT_LEAST_ONCE) {
+                mqttSession.putInFightMessage(publishMessage.getMqttPublishVariableHeader().packetId(), asStoredMessage(publishMessage));
+            }
+            mqttSession.write(publishMessage);
+        });
+    }
 }

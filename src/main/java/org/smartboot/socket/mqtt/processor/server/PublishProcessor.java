@@ -3,7 +3,7 @@ package org.smartboot.socket.mqtt.processor.server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.socket.mqtt.MqttContext;
-import org.smartboot.socket.mqtt.MqttMessageBuilders;
+import org.smartboot.socket.mqtt.MqttServerContext;
 import org.smartboot.socket.mqtt.MqttSession;
 import org.smartboot.socket.mqtt.common.Topic;
 import org.smartboot.socket.mqtt.enums.MqttMessageType;
@@ -59,15 +59,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
             topic.getMessagesStore().cleanTopic();
         }
 
-        byte[] payload = mqttPublishMessage.getPayload();
-        topic.getConsumerGroup().getConsumeOffsets().keySet().forEach(mqttSession -> {
-            LOGGER.info("publish to client:{}", mqttSession.getClientId());
-            MqttPublishMessage publishMessage = MqttMessageBuilders.publish()
-                    .payload(payload)
-                    .qos(mqttPublishMessage.getMqttFixedHeader().getQosLevel())
-                    .packetId(mqttSession.newPacketId()).topicName(topic.getTopic()).build();
-            mqttSession.write(publishMessage);
-        });
+        context.publish(topic, MqttServerContext.asStoredMessage(mqttPublishMessage));
     }
 
     private void processQos1(MqttContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
@@ -86,16 +78,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
         session.write(pubAckMessage);
 
         // 发送给subscribe
-        byte[] payload = mqttPublishMessage.getPayload();
-        topic.getConsumerGroup().getConsumeOffsets().keySet().forEach(mqttSession -> {
-            MqttPublishMessage publishMessage = MqttMessageBuilders.publish()
-                    .payload(payload)//复用内存空间
-                    .qos(mqttPublishMessage.getMqttFixedHeader().getQosLevel())
-                    .packetId(mqttSession.newPacketId()).topicName(topic.getTopic()).build();
-            //响应监听
-            session.putInFightMessage(publishMessage.getMqttPublishVariableHeader().packetId(), asStoredMessage(publishMessage));
-            mqttSession.write(publishMessage);
-        });
+        context.publish(topic, MqttServerContext.asStoredMessage(mqttPublishMessage));
 
         if (mqttPublishMessage.getMqttFixedHeader().isRetain()) {
             topic.getMessagesStore().storeTopic(storedMessage);

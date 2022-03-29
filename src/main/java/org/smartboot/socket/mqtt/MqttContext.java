@@ -1,7 +1,9 @@
 package org.smartboot.socket.mqtt;
 
-import org.smartboot.socket.mqtt.push.PushListener;
 import org.smartboot.socket.mqtt.common.Topic;
+import org.smartboot.socket.mqtt.message.MqttPublishMessage;
+import org.smartboot.socket.mqtt.push.PushListener;
+import org.smartboot.socket.mqtt.store.StoredMessage;
 
 /**
  * @author 三刀
@@ -9,7 +11,7 @@ import org.smartboot.socket.mqtt.common.Topic;
  */
 public interface MqttContext {
 
-    public MqttSession addSession(MqttSession session);
+    MqttSession addSession(MqttSession session);
 
     boolean removeSession(MqttSession session);
 
@@ -24,5 +26,10 @@ public interface MqttContext {
     Topic getOrCreateTopic(String topic);
 
     PushListener getTopicListener();
+
+    /**
+     * 发送消息至订阅者
+     */
+    void publish(Topic topic, StoredMessage storedMessage);
 
 }
