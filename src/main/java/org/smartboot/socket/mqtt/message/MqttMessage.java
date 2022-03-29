@@ -121,16 +121,6 @@ public class MqttMessage {
         return messageId;
     }
 
-    protected final boolean isValidPublishTopicName(String topicName) {
-        // publish topic name must not contain any wildcard
-        for (char c : TOPIC_WILDCARDS) {
-            if (topicName.indexOf(c) >= 0) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     protected final byte getFixedHeaderByte1(MqttFixedHeader header) {
         int ret = 0;
         ret |= header.getMessageType().value() << 4;

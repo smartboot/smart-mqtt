@@ -1,5 +1,6 @@
 package org.smartboot.socket.mqtt.message;
 
+import org.smartboot.socket.mqtt.util.MqttUtil;
 import org.smartboot.socket.transport.WriteBuffer;
 import org.smartboot.socket.util.DecoderException;
 
@@ -30,15 +31,16 @@ public class MqttPublishMessage extends MqttMessage {
     @Override
     public void decodeVariableHeader(ByteBuffer buffer) {
         final String decodedTopic = decodeString(buffer);
-        if (!isValidPublishTopicName(decodedTopic)) {
+        //PUBLISH 报文中的主题名不能包含通配符
+        if (MqttUtil.containsTopicWildcards(decodedTopic)) {
             throw new DecoderException("invalid publish topic name: " + decodedTopic + " (contains wildcards)");
         }
         int messageId = -1;
+        //只有当 QoS 等级是 1 或 2 时，报文标识符（Packet Identifier）字段才能出现在 PUBLISH 报文中。
         if (mqttFixedHeader.getQosLevel().value() > 0) {
             messageId = decodeMessageId(buffer);
         }
-        mqttPublishVariableHeader =
-                new MqttPublishVariableHeader(decodedTopic, messageId);
+        mqttPublishVariableHeader = new MqttPublishVariableHeader(decodedTopic, messageId);
     }
 
     @Override

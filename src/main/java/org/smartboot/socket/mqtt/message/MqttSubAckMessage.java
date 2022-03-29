@@ -1,5 +1,7 @@
 package org.smartboot.socket.mqtt.message;
 
+import org.smartboot.socket.mqtt.enums.MqttMessageType;
+import org.smartboot.socket.mqtt.enums.MqttQoS;
 import org.smartboot.socket.transport.WriteBuffer;
 import org.smartboot.socket.util.BufferUtils;
 
@@ -18,6 +20,11 @@ public class MqttSubAckMessage extends MqttPacketIdentifierMessage {
     public MqttSubAckMessage(MqttFixedHeader mqttFixedHeader) {
         super(mqttFixedHeader);
     }
+
+    public MqttSubAckMessage() {
+        this(new MqttFixedHeader(MqttMessageType.SUBACK, false, MqttQoS.AT_MOST_ONCE, false, 0));
+    }
+
 
     @Override
     public void decodePlayLoad(ByteBuffer buffer) {

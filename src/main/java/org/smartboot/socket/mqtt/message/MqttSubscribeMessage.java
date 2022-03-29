@@ -50,7 +50,7 @@ public class MqttSubscribeMessage extends MqttPacketIdentifierMessage {
 
         dos.writeShort(getPacketId());
         for (MqttTopicSubscription topicSubscription : mqttSubscribePayload.topicSubscriptions()) {
-            dos.writeUTF(topicSubscription.topicName());
+            dos.writeUTF(topicSubscription.topicFilter());
             dos.writeByte(topicSubscription.qualityOfService().value());
         }
         dos.flush();

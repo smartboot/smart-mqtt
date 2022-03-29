@@ -73,7 +73,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
 
         //给 publisher 回响应
         LOGGER.info("sendPubAck invoked");
-        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBACK, false, mqttPublishMessage.getMqttFixedHeader().getQosLevel(), false, 0);
+        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBACK, false, MqttQoS.AT_MOST_ONCE, false, 0);
         MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(fixedHeader, messageId);
         session.write(pubAckMessage);
 

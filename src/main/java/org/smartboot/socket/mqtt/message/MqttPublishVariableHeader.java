@@ -5,6 +5,9 @@ package org.smartboot.socket.mqtt.message;
  * @version V1.0 , 2018/4/22
  */
 public class MqttPublishVariableHeader {
+    /**
+     * PUBLISH 报文中的主题名不能包含通配符
+     */
     private final String topicName;
     private final int packetId;
 
