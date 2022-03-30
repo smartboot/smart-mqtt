@@ -1,7 +1,7 @@
 # smart-mqtt
 
 #### 项目介绍
-基于 smart-socket 实现的MQTT服务，支持 Mqtt 3.1.1 版本协议。
+基于 smart-socket 实现的MQTT服务， Mqtt 3.1.1 版本协议。
 
 #### 特色
 1. 严格遵循协议规范，代码中详细标注了对应的规范内容。
