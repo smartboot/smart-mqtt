@@ -12,8 +12,6 @@ import org.smartboot.mqtt.broker.processor.PubRelProcessor;
 import org.smartboot.mqtt.broker.processor.PublishProcessor;
 import org.smartboot.mqtt.broker.processor.SubscribeProcessor;
 import org.smartboot.mqtt.broker.processor.UnSubscribeProcessor;
-import org.smartboot.socket.MessageProcessor;
-import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.mqtt.common.exception.MqttProcessException;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
@@ -25,6 +23,8 @@ import org.smartboot.mqtt.common.message.MqttPubRelMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
+import org.smartboot.socket.MessageProcessor;
+import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.transport.AioSession;
 
 import java.util.HashMap;
@@ -35,12 +35,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author 三刀
  * @version V1.0 , 2018/4/24
  */
-public class MqttServerProcessor implements MessageProcessor<MqttMessage> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MqttServerProcessor.class);
+public class MqttBrokerMessageProcessor implements MessageProcessor<MqttMessage> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MqttBrokerMessageProcessor.class);
     /**
      * Mqtt服务全局Context
      */
-    private final MqttServerContext mqttContext = new MqttServerContext();
+    private final BrokerContextImpl mqttContext = new BrokerContextImpl();
     /**
      * 处于在线状态的会话
      */
@@ -63,32 +63,6 @@ public class MqttServerProcessor implements MessageProcessor<MqttMessage> {
     @Override
     public void process(AioSession session, MqttMessage msg) {
         LOGGER.info("process msg:{}", msg);
-//        switch (msg.getMqttFixedHeader().getMessageType()) {
-//            case CONNECT:
-//                break;
-//            case SUBSCRIBE:
-//                break;
-//            case UNSUBSCRIBE:
-//                break;
-//            case PUBLISH:
-//                break;
-//            case PUBREC:
-//                break;
-//            case PUBCOMP:
-//                break;
-//            case PUBREL:
-//                break;
-//
-//            case DISCONNECT:
-//                break;
-//            case PUBACK:
-//                break;
-//            case PINGREQ:
-//                break;
-//            default:
-//                LOGGER.error("unsupport message:{}", msg);
-//
-//        }
         MqttProcessor processor = processorMap.get(msg.getClass());
         if (processor != null) {
             processor.process(mqttContext, onlineSessions.get(session.getSessionID()), msg);

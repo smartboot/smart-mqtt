@@ -2,7 +2,7 @@ package org.smartboot.mqtt.broker.processor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.MqttContext;
+import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
@@ -20,7 +20,7 @@ public class UnSubscribeProcessor implements MqttProcessor<MqttUnsubscribeMessag
     private static final Logger LOGGER = LoggerFactory.getLogger(UnSubscribeProcessor.class);
 
     @Override
-    public void process(MqttContext context, MqttSession session, MqttUnsubscribeMessage unsubscribeMessage) {
+    public void process(BrokerContext context, MqttSession session, MqttUnsubscribeMessage unsubscribeMessage) {
         LOGGER.info("receive unsubscribe message:{}", unsubscribeMessage);
 
         //TODO

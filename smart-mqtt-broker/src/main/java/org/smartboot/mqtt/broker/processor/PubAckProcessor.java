@@ -2,7 +2,7 @@ package org.smartboot.mqtt.broker.processor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.MqttContext;
+import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
 import org.smartboot.mqtt.broker.store.StoredMessage;
@@ -17,7 +17,7 @@ public class PubAckProcessor implements MqttProcessor<MqttPubAckMessage> {
     private static final Logger LOGGER = LoggerFactory.getLogger(PubAckProcessor.class);
 
     @Override
-    public void process(MqttContext context, MqttSession session, MqttPubAckMessage pubAckMessage) {
+    public void process(BrokerContext context, MqttSession session, MqttPubAckMessage pubAckMessage) {
         LOGGER.info("receive pubAck message:{}", pubAckMessage);
         StoredMessage storedMessage = session.pollInFightMessage(pubAckMessage.getPacketId());
         LOGGER.info("pubAck message:{}", storedMessage);

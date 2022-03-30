@@ -2,7 +2,7 @@ package org.smartboot.mqtt.broker.processor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.MqttContext;
+import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.common.message.MqttPingReqMessage;
 import org.smartboot.mqtt.common.message.MqttPingRespMessage;
@@ -17,7 +17,7 @@ public class PingReqProcessor implements MqttProcessor<MqttPingReqMessage> {
     private static final Logger LOGGER = LoggerFactory.getLogger(PingReqProcessor.class);
 
     @Override
-    public void process(MqttContext context, MqttSession session, MqttPingReqMessage msg) {
+    public void process(BrokerContext context, MqttSession session, MqttPingReqMessage msg) {
 //        LOGGER.info("receive ping req message:{}", msg);
         MqttPingRespMessage mqttPingRespMessage = new MqttPingRespMessage();
         session.write(mqttPingRespMessage);

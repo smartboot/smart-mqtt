@@ -16,8 +16,8 @@ import java.util.concurrent.ConcurrentMap;
  * @author 三刀
  * @version V1.0 , 2018/4/26
  */
-public class MqttServerContext implements MqttContext {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MqttServerContext.class);
+public class BrokerContextImpl implements BrokerContext {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BrokerContextImpl.class);
     /**
      * 通过鉴权的连接会话
      */

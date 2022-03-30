@@ -3,7 +3,7 @@ package org.smartboot.mqtt.broker.processor;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.MqttContext;
+import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
@@ -34,7 +34,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectProcessor.class);
 
     @Override
-    public void process(MqttContext context, MqttSession session, MqttConnectMessage mqttConnectMessage) {
+    public void process(BrokerContext context, MqttSession session, MqttConnectMessage mqttConnectMessage) {
         LOGGER.info("receive connect message:{}", mqttConnectMessage);
         //有效性校验
         checkMessage(session, mqttConnectMessage);
@@ -104,7 +104,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         });
     }
 
-    private void refreshSession(MqttContext context, MqttSession session, MqttConnectMessage mqttConnectMessage) {
+    private void refreshSession(BrokerContext context, MqttSession session, MqttConnectMessage mqttConnectMessage) {
         MqttConnectPayload payload = mqttConnectMessage.getPayload();
         String clientId = payload.clientIdentifier();
 

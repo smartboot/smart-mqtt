@@ -7,7 +7,7 @@ import org.smartboot.mqtt.broker.store.StoredMessage;
  * @author 三刀
  * @version V1.0 , 2018/4/26
  */
-public interface MqttContext {
+public interface BrokerContext {
 
     MqttSession addSession(MqttSession session);
 

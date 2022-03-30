@@ -1,6 +1,6 @@
 package org.smartboot.mqtt.broker.processor;
 
-import org.smartboot.mqtt.broker.MqttContext;
+import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
@@ -16,7 +16,7 @@ import org.smartboot.mqtt.common.message.MqttPubRelMessage;
  */
 public class PubRecProcessor implements MqttProcessor<MqttPubRecMessage> {
     @Override
-    public void process(MqttContext context, MqttSession session, MqttPubRecMessage mqttPubRelMessage) {
+    public void process(BrokerContext context, MqttSession session, MqttPubRecMessage mqttPubRelMessage) {
         //发送pubRel消息。
         MqttPubRelMessage pubRelMessage = new MqttPubRelMessage(new MqttFixedHeader(MqttMessageType.PUBREL, false, MqttQoS.AT_MOST_ONCE, false, 0));
         pubRelMessage.setPacketId(mqttPubRelMessage.getPacketId());

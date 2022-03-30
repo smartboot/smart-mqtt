@@ -11,7 +11,7 @@ import java.io.IOException;
  */
 public class Bootstrap {
     public static void main(String[] args) {
-        AioQuickServer server=new AioQuickServer(1883,new MqttProtocol(),new MqttServerProcessor());
+        AioQuickServer server=new AioQuickServer(1883,new MqttProtocol(),new MqttBrokerMessageProcessor());
         try {
             server.start();
         } catch (IOException e) {

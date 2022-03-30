@@ -2,8 +2,8 @@ package org.smartboot.mqtt.broker.processor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.MqttContext;
-import org.smartboot.mqtt.broker.MqttServerContext;
+import org.smartboot.mqtt.broker.BrokerContext;
+import org.smartboot.mqtt.broker.BrokerContextImpl;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.Topic;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
@@ -25,7 +25,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
 
 
     @Override
-    public void process(MqttContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
+    public void process(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
         LOGGER.info("receive publish message:{}", mqttPublishMessage);
 
         MqttQoS mqttQoS = mqttPublishMessage.getMqttFixedHeader().getQosLevel();
@@ -46,7 +46,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
 
     }
 
-    private void processQos0(MqttContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
+    private void processQos0(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
         final Topic topic = context.getOrCreateTopic(mqttPublishMessage.getMqttPublishVariableHeader().topicName());
 
         /**
@@ -58,10 +58,10 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
             topic.getMessagesStore().cleanTopic();
         }
 
-        context.publish(topic, MqttServerContext.asStoredMessage(mqttPublishMessage));
+        context.publish(topic, BrokerContextImpl.asStoredMessage(mqttPublishMessage));
     }
 
-    private void processQos1(MqttContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
+    private void processQos1(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
         final Topic topic = context.getOrCreateTopic(mqttPublishMessage.getMqttPublishVariableHeader().topicName());
         String clientId = session.getClientId();
 
@@ -77,14 +77,14 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
         session.write(pubAckMessage);
 
         // 发送给subscribe
-        context.publish(topic, MqttServerContext.asStoredMessage(mqttPublishMessage));
+        context.publish(topic, BrokerContextImpl.asStoredMessage(mqttPublishMessage));
 
         if (mqttPublishMessage.getMqttFixedHeader().isRetain()) {
             topic.getMessagesStore().storeTopic(storedMessage);
         }
     }
 
-    private void processQos2(MqttContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
+    private void processQos2(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
         String clientId = session.getClientId();
 
         StoredMessage storedMessage = asStoredMessage(mqttPublishMessage);

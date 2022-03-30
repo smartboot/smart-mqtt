@@ -2,7 +2,7 @@ package org.smartboot.mqtt.broker.processor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.MqttContext;
+import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.common.message.MqttPubCompMessage;
 
@@ -16,7 +16,7 @@ public class PubCompProcessor implements MqttProcessor<MqttPubCompMessage> {
     private static final Logger LOGGER = LoggerFactory.getLogger(PubCompProcessor.class);
 
     @Override
-    public void process(MqttContext context, MqttSession session, MqttPubCompMessage mqttPubCompMessage) {
+    public void process(BrokerContext context, MqttSession session, MqttPubCompMessage mqttPubCompMessage) {
         LOGGER.info("pubComp message:{}", mqttPubCompMessage);
     }
 }

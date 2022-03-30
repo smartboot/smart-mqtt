@@ -1,6 +1,6 @@
 package org.smartboot.mqtt.broker.processor;
 
-import org.smartboot.mqtt.broker.MqttContext;
+import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.common.message.MqttMessage;
 
@@ -16,5 +16,5 @@ public interface MqttProcessor<T extends MqttMessage> {
      * @param session
      * @param t
      */
-    void process(MqttContext context, MqttSession session, T t);
+    void process(BrokerContext context, MqttSession session, T t);
 }

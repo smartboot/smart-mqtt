@@ -1,7 +1,7 @@
 package org.smartboot.mqtt.broker.processor;
 
 import org.smartboot.mqtt.broker.store.StoredMessage;
-import org.smartboot.mqtt.broker.MqttContext;
+import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.Topic;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
@@ -19,7 +19,7 @@ import org.smartboot.mqtt.common.util.ValidateUtils;
  */
 public class PubRelProcessor implements MqttProcessor<MqttPubRelMessage> {
     @Override
-    public void process(MqttContext context, MqttSession session, MqttPubRelMessage mqttPubRelMessage) {
+    public void process(BrokerContext context, MqttSession session, MqttPubRelMessage mqttPubRelMessage) {
         StoredMessage message = session.pollInFightMessage(mqttPubRelMessage.getPacketId());
         ValidateUtils.notNull(message, "message is null");
 

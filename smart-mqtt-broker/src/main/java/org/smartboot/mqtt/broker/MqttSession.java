@@ -40,12 +40,12 @@ public class MqttSession {
     private final ConcurrentMap<Integer, StoredMessage> inboundInflightMessages = new ConcurrentHashMap<>();
 
     private final AioSession session;
-    private final MqttContext mqttContext;
+    private final BrokerContext mqttContext;
     private String clientId;
     private String username;
 
 
-    public MqttSession(MqttContext mqttContext, AioSession session) {
+    public MqttSession(BrokerContext mqttContext, AioSession session) {
         this.mqttContext = mqttContext;
         this.session = session;
     }
