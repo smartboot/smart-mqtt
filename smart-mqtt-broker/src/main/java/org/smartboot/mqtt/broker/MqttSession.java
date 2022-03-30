@@ -43,6 +43,12 @@ public class MqttSession {
     private final BrokerContext mqttContext;
     private String clientId;
     private String username;
+    /**
+     * 最近一次收到客户端消息的时间
+     */
+    private long latestReceiveMessageSecondTime;
+
+    private boolean closed = false;
 
 
     public MqttSession(BrokerContext mqttContext, AioSession session) {
@@ -60,10 +66,23 @@ public class MqttSession {
     }
 
     public void close() {
+        if (closed) {
+            return;
+        }
+        //驱动keepalive监听退出
+        setLatestReceiveMessageSecondTime(Long.MIN_VALUE);
         consumeOffsets.keySet().forEach(this::unsubscribe);
         mqttContext.removeSession(this);
         session.close(false);
+        closed = true;
+    }
 
+    public long getLatestReceiveMessageSecondTime() {
+        return latestReceiveMessageSecondTime;
+    }
+
+    public void setLatestReceiveMessageSecondTime(long latestReceiveMessageSecondTime) {
+        this.latestReceiveMessageSecondTime = latestReceiveMessageSecondTime;
     }
 
     public String getClientId() {

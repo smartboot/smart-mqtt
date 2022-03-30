@@ -8,9 +8,14 @@ import org.smartboot.mqtt.broker.store.StoredMessage;
 import org.smartboot.mqtt.common.MqttMessageBuilders;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
+import org.smartboot.mqtt.common.protocol.MqttProtocol;
+import org.smartboot.socket.transport.AioQuickServer;
 
+import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * @author 三刀
@@ -27,11 +32,29 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private final ConcurrentMap<String, Topic> topicMap = new ConcurrentHashMap<>();
     private final PushListener listener = new PushListenerImpl();
+    private final BrokerConfigure brokerConfigure = new BrokerConfigure();
+    private final ScheduledExecutorService KEEP_ALIVE_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
+    /**
+     * Broker Server
+     */
+    private AioQuickServer server;
 
     public static StoredMessage asStoredMessage(MqttPublishMessage msg) {
         StoredMessage stored = new StoredMessage(msg.getPayload(), msg.getMqttFixedHeader().getQosLevel(), msg.getMqttPublishVariableHeader().topicName());
         stored.setRetained(msg.getMqttFixedHeader().isRetain());
         return stored;
+    }
+
+    @Override
+    public void init() throws IOException {
+        server = new AioQuickServer(1883, new MqttProtocol(), new MqttBrokerMessageProcessor(this));
+        server.start();
+        //启动keepalive监听线程
+    }
+
+    @Override
+    public BrokerConfigure getBrokerConfigure() {
+        return brokerConfigure;
     }
 
     @Override
@@ -76,5 +99,15 @@ public class BrokerContextImpl implements BrokerContext {
             }
             mqttSession.write(publishMessage);
         });
+    }
+
+    @Override
+    public ScheduledExecutorService getKeepAliveThreadPool() {
+        return KEEP_ALIVE_EXECUTOR;
+    }
+
+    @Override
+    public void destroy() {
+        server.shutdown();
     }
 }

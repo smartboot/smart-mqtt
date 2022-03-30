@@ -40,7 +40,7 @@ public class MqttBrokerMessageProcessor implements MessageProcessor<MqttMessage>
     /**
      * Mqtt服务全局Context
      */
-    private final BrokerContextImpl mqttContext = new BrokerContextImpl();
+    private final BrokerContext mqttContext;
     /**
      * 处于在线状态的会话
      */
@@ -59,13 +59,18 @@ public class MqttBrokerMessageProcessor implements MessageProcessor<MqttMessage>
         processorMap.put(MqttPubCompMessage.class, new PubCompProcessor());
     }
 
+    public MqttBrokerMessageProcessor(BrokerContext mqttContext) {
+        this.mqttContext = mqttContext;
+    }
 
     @Override
     public void process(AioSession session, MqttMessage msg) {
         LOGGER.info("process msg:{}", msg);
         MqttProcessor processor = processorMap.get(msg.getClass());
         if (processor != null) {
-            processor.process(mqttContext, onlineSessions.get(session.getSessionID()), msg);
+            MqttSession mqttSession = onlineSessions.get(session.getSessionID());
+            mqttSession.setLatestReceiveMessageSecondTime(System.currentTimeMillis());
+            processor.process(mqttContext, mqttSession, msg);
         } else {
             System.err.println("unSupport message: " + msg);
         }

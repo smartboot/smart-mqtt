@@ -1,8 +1,5 @@
 package org.smartboot.mqtt.broker;
 
-import org.smartboot.mqtt.common.protocol.MqttProtocol;
-import org.smartboot.socket.transport.AioQuickServer;
-
 import java.io.IOException;
 
 /**
@@ -10,12 +7,12 @@ import java.io.IOException;
  * @version V1.0 , 2018/4/24
  */
 public class Bootstrap {
-    public static void main(String[] args) {
-        AioQuickServer server=new AioQuickServer(1883,new MqttProtocol(),new MqttBrokerMessageProcessor());
-        try {
-            server.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public static void main(String[] args) throws IOException {
+        BrokerContext context = new BrokerContextImpl();
+        context.init();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            context.destroy();
+        }));
     }
 }
