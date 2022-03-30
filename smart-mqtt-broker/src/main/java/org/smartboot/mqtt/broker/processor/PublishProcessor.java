@@ -6,13 +6,13 @@ import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.BrokerContextImpl;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.Topic;
+import org.smartboot.mqtt.broker.store.StoredMessage;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
-import org.smartboot.mqtt.broker.store.StoredMessage;
 
 /**
  * 发布Topic
@@ -20,12 +20,12 @@ import org.smartboot.mqtt.broker.store.StoredMessage;
  * @author 三刀
  * @version V1.0 , 2018/4/25
  */
-public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
+public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage> {
     private static final Logger LOGGER = LoggerFactory.getLogger(PublishProcessor.class);
 
 
     @Override
-    public void process(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
+    public void process0(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
         LOGGER.info("receive publish message:{}", mqttPublishMessage);
 
         MqttQoS mqttQoS = mqttPublishMessage.getMqttFixedHeader().getQosLevel();

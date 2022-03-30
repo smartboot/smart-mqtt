@@ -14,9 +14,9 @@ import org.smartboot.mqtt.common.message.MqttPubRelMessage;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/27
  */
-public class PubRecProcessor implements MqttProcessor<MqttPubRecMessage> {
+public class PubRecProcessor extends AuthorizedMqttProcessor<MqttPubRecMessage> {
     @Override
-    public void process(BrokerContext context, MqttSession session, MqttPubRecMessage mqttPubRelMessage) {
+    public void process0(BrokerContext context, MqttSession session, MqttPubRecMessage mqttPubRelMessage) {
         //发送pubRel消息。
         MqttPubRelMessage pubRelMessage = new MqttPubRelMessage(new MqttFixedHeader(MqttMessageType.PUBREL, false, MqttQoS.AT_MOST_ONCE, false, 0));
         pubRelMessage.setPacketId(mqttPubRelMessage.getPacketId());

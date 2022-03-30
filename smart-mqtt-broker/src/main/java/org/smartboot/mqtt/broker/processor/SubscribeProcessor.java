@@ -5,12 +5,12 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.Topic;
+import org.smartboot.mqtt.broker.store.SubscriberConsumeOffset;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttSubAckMessage;
 import org.smartboot.mqtt.common.message.MqttSubAckPayload;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
-import org.smartboot.mqtt.broker.store.SubscriberConsumeOffset;
 import org.smartboot.mqtt.common.util.MqttUtil;
 
 /**
@@ -19,11 +19,11 @@ import org.smartboot.mqtt.common.util.MqttUtil;
  * @author 三刀
  * @version V1.0 , 2018/4/25
  */
-public class SubscribeProcessor implements MqttProcessor<MqttSubscribeMessage> {
+public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMessage> {
     private static final Logger LOGGER = LoggerFactory.getLogger(SubscribeProcessor.class);
 
     @Override
-    public void process(BrokerContext context, MqttSession session, MqttSubscribeMessage mqttSubscribeMessage) {
+    public void process0(BrokerContext context, MqttSession session, MqttSubscribeMessage mqttSubscribeMessage) {
         LOGGER.info("receive subscribe message:{}", mqttSubscribeMessage);
 
         //有效载荷包含一个返回码清单。每个返回码对应等待确认的 SUBSCRIBE 报文中的一个主题过滤器。

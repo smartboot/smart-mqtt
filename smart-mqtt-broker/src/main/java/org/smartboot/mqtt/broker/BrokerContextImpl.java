@@ -108,6 +108,7 @@ public class BrokerContextImpl implements BrokerContext {
 
     @Override
     public void destroy() {
+        LOGGER.info("destroy broker...");
         server.shutdown();
     }
 }

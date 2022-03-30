@@ -16,11 +16,11 @@ import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
  * @author 三刀
  * @version V1.0 , 2018/4/25
  */
-public class UnSubscribeProcessor implements MqttProcessor<MqttUnsubscribeMessage> {
+public class UnSubscribeProcessor extends AuthorizedMqttProcessor<MqttUnsubscribeMessage> {
     private static final Logger LOGGER = LoggerFactory.getLogger(UnSubscribeProcessor.class);
 
     @Override
-    public void process(BrokerContext context, MqttSession session, MqttUnsubscribeMessage unsubscribeMessage) {
+    public void process0(BrokerContext context, MqttSession session, MqttUnsubscribeMessage unsubscribeMessage) {
         LOGGER.info("receive unsubscribe message:{}", unsubscribeMessage);
 
         //TODO

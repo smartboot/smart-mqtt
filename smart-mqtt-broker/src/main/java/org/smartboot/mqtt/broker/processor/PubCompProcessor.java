@@ -12,11 +12,11 @@ import org.smartboot.mqtt.common.message.MqttPubCompMessage;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/27
  */
-public class PubCompProcessor implements MqttProcessor<MqttPubCompMessage> {
+public class PubCompProcessor extends AuthorizedMqttProcessor<MqttPubCompMessage> {
     private static final Logger LOGGER = LoggerFactory.getLogger(PubCompProcessor.class);
 
     @Override
-    public void process(BrokerContext context, MqttSession session, MqttPubCompMessage mqttPubCompMessage) {
+    public void process0(BrokerContext context, MqttSession session, MqttPubCompMessage mqttPubCompMessage) {
         LOGGER.info("pubComp message:{}", mqttPubCompMessage);
     }
 }

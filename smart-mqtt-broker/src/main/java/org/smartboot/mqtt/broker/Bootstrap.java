@@ -11,8 +11,6 @@ public class Bootstrap {
         BrokerContext context = new BrokerContextImpl();
         context.init();
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            context.destroy();
-        }));
+        Runtime.getRuntime().addShutdownHook(new Thread(context::destroy));
     }
 }

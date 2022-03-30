@@ -50,6 +50,11 @@ public class MqttSession {
 
     private boolean closed = false;
 
+    /**
+     * 已授权
+     */
+    private boolean authorized;
+
 
     public MqttSession(BrokerContext mqttContext, AioSession session) {
         this.mqttContext = mqttContext;
@@ -126,8 +131,8 @@ public class MqttSession {
         SubscriberConsumeOffset oldOffset = consumeOffsets.remove(topic);
         if (oldOffset != null) {
             oldOffset.setEnable(false);
-            oldOffset.getTopic().getConsumerGroup().getConsumeOffsets().remove(this);
-            LOGGER.info("unsubscribe topic:{} success, clientId:{}", topic, clientId);
+            oldOffset.getTopic().getConsumerGroup().getConsumeOffsets().remove(oldOffset.getMqttSession());
+            LOGGER.info("unsubscribe topic:{} success,oldClientId:{} ,currentClientId:{}", topic, oldOffset.getMqttSession().clientId, clientId);
         }
     }
 
@@ -145,5 +150,13 @@ public class MqttSession {
 
     public int newPacketId() {
         return packetIdCreator.getAndIncrement();
+    }
+
+    public boolean isAuthorized() {
+        return authorized;
+    }
+
+    public void setAuthorized(boolean authorized) {
+        this.authorized = authorized;
     }
 }

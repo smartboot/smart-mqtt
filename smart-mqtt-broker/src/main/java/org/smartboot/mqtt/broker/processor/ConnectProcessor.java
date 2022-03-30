@@ -161,8 +161,8 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         LOGGER.info("add session for client:{}", clientId);
     }
 
-    private boolean login(MqttSession channel, MqttConnectMessage msg) {
-
+    private boolean login(MqttSession session, MqttConnectMessage msg) {
+        session.setAuthorized(true);
         return true;
     }
 

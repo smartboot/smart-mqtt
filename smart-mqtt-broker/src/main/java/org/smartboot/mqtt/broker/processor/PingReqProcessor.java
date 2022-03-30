@@ -13,11 +13,11 @@ import org.smartboot.mqtt.common.message.MqttPingRespMessage;
  * @author 三刀
  * @version V1.0 , 2018/4/25
  */
-public class PingReqProcessor implements MqttProcessor<MqttPingReqMessage> {
+public class PingReqProcessor extends AuthorizedMqttProcessor<MqttPingReqMessage> {
     private static final Logger LOGGER = LoggerFactory.getLogger(PingReqProcessor.class);
 
     @Override
-    public void process(BrokerContext context, MqttSession session, MqttPingReqMessage msg) {
+    public void process0(BrokerContext context, MqttSession session, MqttPingReqMessage msg) {
 //        LOGGER.info("receive ping req message:{}", msg);
         MqttPingRespMessage mqttPingRespMessage = new MqttPingRespMessage();
         session.write(mqttPingRespMessage);

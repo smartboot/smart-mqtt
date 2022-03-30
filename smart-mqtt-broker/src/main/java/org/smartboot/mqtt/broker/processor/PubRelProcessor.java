@@ -1,9 +1,9 @@
 package org.smartboot.mqtt.broker.processor;
 
-import org.smartboot.mqtt.broker.store.StoredMessage;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.Topic;
+import org.smartboot.mqtt.broker.store.StoredMessage;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
@@ -17,9 +17,9 @@ import org.smartboot.mqtt.common.util.ValidateUtils;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/27
  */
-public class PubRelProcessor implements MqttProcessor<MqttPubRelMessage> {
+public class PubRelProcessor extends AuthorizedMqttProcessor<MqttPubRelMessage> {
     @Override
-    public void process(BrokerContext context, MqttSession session, MqttPubRelMessage mqttPubRelMessage) {
+    public void process0(BrokerContext context, MqttSession session, MqttPubRelMessage mqttPubRelMessage) {
         StoredMessage message = session.pollInFightMessage(mqttPubRelMessage.getPacketId());
         ValidateUtils.notNull(message, "message is null");
 
