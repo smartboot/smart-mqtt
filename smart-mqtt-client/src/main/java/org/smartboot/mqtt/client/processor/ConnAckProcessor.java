@@ -2,7 +2,6 @@ package org.smartboot.mqtt.client.processor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.client.MqttClientSession;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
@@ -104,17 +103,12 @@ public class ConnAckProcessor implements MqttProcessor<MqttConnAckMessage> {
 //        LOGGER.info("CONNECT message processed CId={}, username={}", clientId, payload.userName());
     }
 
-    private boolean login(MqttSession channel, MqttConnectMessage msg, final String clientId) {
-
-        return true;
-    }
 
     private void storeWillMessage(MqttConnectMessage msg, final String clientId) {
         // Handle will flag
         if (msg.getVariableHeader().isWillFlag()) {
             MqttQoS willQos = MqttQoS.valueOf(msg.getVariableHeader().willQos());
-            LOGGER.info("Configuring MQTT last will and testament CId={}, willQos={}, willTopic={}, willRetain={}",
-                    clientId, willQos, msg.getPayload().willTopic(), msg.getVariableHeader().isWillRetain());
+            LOGGER.info("Configuring MQTT last will and testament CId={}, willQos={}, willTopic={}, willRetain={}", clientId, willQos, msg.getPayload().willTopic(), msg.getVariableHeader().isWillRetain());
             byte[] willPayload = msg.getPayload().willMessage().getBytes();
             ByteBuffer bb = (ByteBuffer) ByteBuffer.allocate(willPayload.length).put(willPayload).flip();
             // save the will testament in the clientID store
@@ -126,8 +120,7 @@ public class ConnAckProcessor implements MqttProcessor<MqttConnAckMessage> {
     }
 
     private MqttConnAckMessage connAck(MqttConnectReturnCode returnCode, boolean sessionPresent) {
-        MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.CONNACK, false, MqttQoS.AT_MOST_ONCE,
-                false, 0);
+        MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.CONNACK, false, MqttQoS.AT_MOST_ONCE, false, 0);
         MqttConnAckVariableHeader mqttConnAckVariableHeader = new MqttConnAckVariableHeader(returnCode, sessionPresent);
         return new MqttConnAckMessage(mqttFixedHeader, mqttConnAckVariableHeader);
     }
