@@ -22,6 +22,9 @@ public class StoredMessage extends ToString {
     final String topic;
 
     private boolean retained;
+    /**
+     * 消息的发送方
+     */
     private String clientID;
     /**
      * 存储的消息偏移量

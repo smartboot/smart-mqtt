@@ -1,8 +1,8 @@
 package org.smartboot.mqtt.broker.store;
 
-import org.smartboot.mqtt.broker.push.QosTask;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.Topic;
+import org.smartboot.mqtt.broker.push.QosTask;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 
 import java.util.concurrent.BlockingQueue;
@@ -10,6 +10,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 
 /**
+ * 订阅者的消费点位
+ *
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/25
  */

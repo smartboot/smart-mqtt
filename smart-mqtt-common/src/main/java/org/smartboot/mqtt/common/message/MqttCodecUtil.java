@@ -29,33 +29,6 @@ public final class MqttCodecUtil {
     private MqttCodecUtil() {
     }
 
-    static boolean isValidPublishTopicName(String topicName) {
-        // publish topic name must not contain any wildcard
-        for (char c : TOPIC_WILDCARDS) {
-            if (topicName.indexOf(c) >= 0) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    static boolean isValidMessageId(int messageId) {
-        return messageId != 0;
-    }
-
-    static boolean isValidClientId(MqttVersion mqttVersion, String clientId) {
-        if (mqttVersion == MqttVersion.MQTT_3_1) {
-            return clientId != null && clientId.length() >= MIN_CLIENT_ID_LENGTH &&
-                    clientId.length() <= MAX_CLIENT_ID_LENGTH;
-        }
-        if (mqttVersion == MqttVersion.MQTT_3_1_1) {
-            // In 3.1.3.1 Client Identifier of MQTT 3.1.1 specification, The Server MAY allow ClientId’s
-            // that contain more than 23 encoded bytes. And, The Server MAY allow zero-length ClientId.
-            return clientId != null;
-        }
-        throw new IllegalArgumentException(mqttVersion + " is unknown mqtt version");
-    }
-
     public static MqttFixedHeader resetUnusedFields(MqttFixedHeader mqttFixedHeader) {
         switch (mqttFixedHeader.getMessageType()) {
             case CONNECT:
