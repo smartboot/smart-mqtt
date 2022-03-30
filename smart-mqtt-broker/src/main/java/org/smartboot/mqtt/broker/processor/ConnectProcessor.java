@@ -72,13 +72,17 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         context.getKeepAliveThreadPool().schedule(new Runnable() {
             @Override
             public void run() {
-                long IdleTime = System.currentTimeMillis() - session.getLatestReceiveMessageSecondTime() - finalTimeout;
-                if (IdleTime >= 0) {
+                if (session.isClosed()) {
+                    LOGGER.warn("session:{} is closed, quit keepalive monitor.", session.getClientId());
+                    return;
+                }
+                long remainingTime = finalTimeout + session.getLatestReceiveMessageSecondTime() - System.currentTimeMillis();
+                if (remainingTime > 0) {
+                    System.err.println("continue monitor, wait:" + remainingTime);
+                    context.getKeepAliveThreadPool().schedule(this, remainingTime, TimeUnit.MILLISECONDS);
+                } else {
                     LOGGER.info("session:{} keepalive timeout...", session.getClientId());
                     session.close();
-                } else {
-                    System.err.println("continue monitor, wait:" + (-IdleTime));
-                    context.getKeepAliveThreadPool().schedule(this, -IdleTime, TimeUnit.MILLISECONDS);
                 }
             }
         }, finalTimeout, TimeUnit.MILLISECONDS);

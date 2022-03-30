@@ -74,12 +74,14 @@ public class MqttSession {
         if (closed) {
             return;
         }
-        //驱动keepalive监听退出
-        setLatestReceiveMessageSecondTime(Long.MIN_VALUE);
         consumeOffsets.keySet().forEach(this::unsubscribe);
         mqttContext.removeSession(this);
         session.close(false);
         closed = true;
+    }
+
+    public boolean isClosed() {
+        return closed;
     }
 
     public long getLatestReceiveMessageSecondTime() {
