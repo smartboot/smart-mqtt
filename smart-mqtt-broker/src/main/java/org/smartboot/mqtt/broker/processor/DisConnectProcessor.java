@@ -14,5 +14,6 @@ public class DisConnectProcessor extends AuthorizedMqttProcessor<MqttDisconnectM
     @Override
     public void process0(BrokerContext context, MqttSession session, MqttDisconnectMessage message) {
         session.setWillMessage(null);
+        session.close();
     }
 }
