@@ -1,40 +1,34 @@
 package org.smartboot.mqtt.common.message;
 
+/**
+ * CONNECT 报文的有效载荷（payload）包含一个或多个以长度为前缀的字段，
+ * 可变报头中的标志决定是否包含这些字段。
+ * 如果包含的话，必须按这个顺序出现：客户端标识符，遗嘱主题，遗嘱消息，用户名，密 码
+ */
 public final class MqttConnectPayload {
 
     /**
      * 客户端标识符
      */
     private final String clientIdentifier;
+    /**
+     * 遗嘱主题
+     */
     private final String willTopic;
+    /**
+     * 遗嘱消息
+     */
     private final byte[] willMessage;
+    /**
+     * 用户名
+     */
     private final String userName;
+    /**
+     * 密码
+     */
     private final byte[] password;
 
-    /**
-     * @deprecated use {@link MqttConnectPayload#MqttConnectPayload(String, String, byte[], String, byte[])} instead
-     */
-    @Deprecated
-    public MqttConnectPayload(
-            String clientIdentifier,
-            String willTopic,
-            String willMessage,
-            String userName,
-            String password) {
-        this(
-                clientIdentifier,
-                willTopic,
-                willMessage.getBytes(MqttMessage.UTF_8),
-                userName,
-                password.getBytes(MqttMessage.UTF_8));
-    }
-
-    public MqttConnectPayload(
-            String clientIdentifier,
-            String willTopic,
-            byte[] willMessage,
-            String userName,
-            byte[] password) {
+    public MqttConnectPayload(String clientIdentifier, String willTopic, byte[] willMessage, String userName, byte[] password) {
         this.clientIdentifier = clientIdentifier;
         this.willTopic = willTopic;
         this.willMessage = willMessage;
@@ -50,28 +44,12 @@ public final class MqttConnectPayload {
         return willTopic;
     }
 
-    /**
-     * @deprecated use {@link MqttConnectPayload#willMessageInBytes()} instead
-     */
-    @Deprecated
-    public String willMessage() {
-        return new String(willMessage, MqttMessage.UTF_8);
-    }
-
     public byte[] willMessageInBytes() {
         return willMessage;
     }
 
     public String userName() {
         return userName;
-    }
-
-    /**
-     * @deprecated use {@link MqttConnectPayload#passwordInBytes()} instead
-     */
-    @Deprecated
-    public String password() {
-        return new String(password, MqttMessage.UTF_8);
     }
 
     public byte[] passwordInBytes() {

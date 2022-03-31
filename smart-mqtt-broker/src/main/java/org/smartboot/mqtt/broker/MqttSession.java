@@ -55,6 +55,10 @@ public class MqttSession {
      */
     private boolean authorized;
 
+    /**
+     * 遗嘱消息
+     */
+    private StoredMessage willMessage;
 
     public MqttSession(BrokerContext mqttContext, AioSession session) {
         this.mqttContext = mqttContext;
@@ -160,5 +164,13 @@ public class MqttSession {
 
     public void setAuthorized(boolean authorized) {
         this.authorized = authorized;
+    }
+
+    public StoredMessage getWillMessage() {
+        return willMessage;
+    }
+
+    public void setWillMessage(StoredMessage willMessage) {
+        this.willMessage = willMessage;
     }
 }

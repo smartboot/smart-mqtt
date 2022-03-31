@@ -109,7 +109,7 @@ public class ConnAckProcessor implements MqttProcessor<MqttConnAckMessage> {
         if (msg.getVariableHeader().isWillFlag()) {
             MqttQoS willQos = MqttQoS.valueOf(msg.getVariableHeader().willQos());
             LOGGER.info("Configuring MQTT last will and testament CId={}, willQos={}, willTopic={}, willRetain={}", clientId, willQos, msg.getPayload().willTopic(), msg.getVariableHeader().isWillRetain());
-            byte[] willPayload = msg.getPayload().willMessage().getBytes();
+            byte[] willPayload = msg.getPayload().willMessageInBytes();
             ByteBuffer bb = (ByteBuffer) ByteBuffer.allocate(willPayload.length).put(willPayload).flip();
             // save the will testament in the clientID store
 //            WillMessage will = new WillMessage(msg.payload().willTopic(), bb, msg.variableHeader().isWillRetain(),

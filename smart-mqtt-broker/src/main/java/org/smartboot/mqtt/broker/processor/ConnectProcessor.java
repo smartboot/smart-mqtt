@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
+import org.smartboot.mqtt.broker.store.StoredMessage;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttProtocolEnum;
@@ -19,7 +20,6 @@ import org.smartboot.mqtt.common.message.MqttConnectVariableHeader;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 
-import java.nio.ByteBuffer;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -49,7 +49,9 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
 
         //保持连接状态监听
         initializeKeepAliveTimeout(context, session, mqttConnectMessage);
-//        storeWillMessage(mqttConnectMessage, clientId);
+
+        //存储遗嘱消息
+        storeWillMessage(session, mqttConnectMessage);
 
         //如果服务端收到清理会话（CleanSession）标志为 1 的连接，除了将 CONNACK 报文中的返回码设置为 0 之外，
         // 还必须将 CONNACK 报文中的当前会话设置（Session Present）标志为 0。
@@ -170,20 +172,17 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         return true;
     }
 
-    private void storeWillMessage(MqttConnectMessage msg, final String clientId) {
-        // Handle will flag
-        if (msg.getVariableHeader().isWillFlag()) {
-            MqttQoS willQos = MqttQoS.valueOf(msg.getVariableHeader().willQos());
-            LOGGER.info("Configuring MQTT last will and testament CId={}, willQos={}, willTopic={}, willRetain={}",
-                    clientId, willQos, msg.getPayload().willTopic(), msg.getVariableHeader().isWillRetain());
-            byte[] willPayload = msg.getPayload().willMessage().getBytes();
-            ByteBuffer bb = (ByteBuffer) ByteBuffer.allocate(willPayload.length).put(willPayload).flip();
-            // save the will testament in the clientID store
-//            WillMessage will = new WillMessage(msg.payload().willTopic(), bb, msg.variableHeader().isWillRetain(),
-//                    willQos);
-//            m_willStore.put(clientId, will);
-            LOGGER.info("MQTT last will and testament has been configured. CId={}", clientId);
+    private void storeWillMessage(MqttSession session, MqttConnectMessage msg) {
+        // 遗嘱标志（Will Flag）被设置为 1，表示如果连接请求被接受了，
+        // 遗嘱（Will Message）消息必须被存储在服务端并且与这个网络连接关联。
+        // 之后网络连接关闭时，服务端必须发布这个遗嘱消息，
+        // 除非服务端收到 DISCONNECT 报文时删除了这个遗嘱消息
+        if (!msg.getVariableHeader().isWillFlag()) {
+            return;
         }
+        StoredMessage willMessage = new StoredMessage(msg.getPayload().willMessageInBytes(), MqttQoS.valueOf(msg.getVariableHeader().willQos()), msg.getPayload().willTopic());
+        willMessage.setRetained(msg.getMqttFixedHeader().isRetain());
+        session.setWillMessage(willMessage);
     }
 
     private MqttConnAckMessage connFailAck(MqttConnectReturnCode returnCode) {

@@ -68,15 +68,23 @@ public class MqttConnectMessage extends MqttMessage {
 
         String decodedWillTopic = null;
         byte[] decodedWillMessage = null;
+        //如果遗嘱标志被设置为 1，有效载荷的下一个字段是遗嘱主题（Will Topic）。
+        // 遗嘱主题必须是 1.5.3 节定义的 UTF-8 编码字符串
         if (mqttConnectVariableHeader.isWillFlag()) {
             decodedWillTopic = decodeString(buffer, 0, 32767);
             decodedWillMessage = decodeByteArray(buffer);
         }
         String decodedUserName = null;
         byte[] decodedPassword = null;
+        // 如果用户名（User Name）标志被设置为 1，有效载荷的下一个字段就是它。
+        // 用户名必须是 1.5.3 节定义的 UTF-8 编码字符串 [MQTT-3.1.3-11]。
+        // 服务端可以将它用于身份验证和授权。
         if (mqttConnectVariableHeader.hasUserName()) {
             decodedUserName = decodeString(buffer);
         }
+        // 密码字段包含一个两字节的长度字段，
+        // 长度表示二进制数据的字节数（不包含长度字段本身占用的两个字节），
+        // 后面跟着 0 到 65535 字节的二进制数据。
         if (mqttConnectVariableHeader.hasPassword()) {
             decodedPassword = decodeByteArray(buffer);
         }
