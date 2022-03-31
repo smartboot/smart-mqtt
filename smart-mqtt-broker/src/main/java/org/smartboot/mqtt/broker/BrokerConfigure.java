@@ -18,6 +18,11 @@ public class BrokerConfigure {
      */
     private long maxKeepAliveTime = 60000;
 
+    /**
+     * Push线程数
+     */
+    private int pushThreadNum = Runtime.getRuntime().availableProcessors();
+
     public int getPort() {
         return port;
     }
@@ -32,5 +37,13 @@ public class BrokerConfigure {
 
     public void setMaxKeepAliveTime(long maxKeepAliveTime) {
         this.maxKeepAliveTime = maxKeepAliveTime;
+    }
+
+    public int getPushThreadNum() {
+        return pushThreadNum;
+    }
+
+    public void setPushThreadNum(int pushThreadNum) {
+        this.pushThreadNum = pushThreadNum;
     }
 }

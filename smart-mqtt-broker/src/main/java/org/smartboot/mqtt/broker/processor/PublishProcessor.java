@@ -3,7 +3,6 @@ package org.smartboot.mqtt.broker.processor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
-import org.smartboot.mqtt.broker.BrokerContextImpl;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.Topic;
 import org.smartboot.mqtt.broker.store.StoredMessage;
@@ -58,7 +57,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
             topic.getMessagesStore().cleanTopic();
         }
 
-        context.publish(topic, BrokerContextImpl.asStoredMessage(mqttPublishMessage));
+        context.publish(topic, mqttPublishMessage.getMqttFixedHeader().getQosLevel(), mqttPublishMessage.getPayload());
     }
 
     private void processQos1(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
@@ -77,7 +76,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
         session.write(pubAckMessage);
 
         // 发送给subscribe
-        context.publish(topic, BrokerContextImpl.asStoredMessage(mqttPublishMessage));
+        context.publish(topic, mqttPublishMessage.getMqttFixedHeader().getQosLevel(), mqttPublishMessage.getPayload());
 
         if (mqttPublishMessage.getMqttFixedHeader().isRetain()) {
             topic.getMessagesStore().storeTopic(storedMessage);

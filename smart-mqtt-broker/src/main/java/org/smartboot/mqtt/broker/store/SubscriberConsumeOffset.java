@@ -2,11 +2,8 @@ package org.smartboot.mqtt.broker.store;
 
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.Topic;
-import org.smartboot.mqtt.broker.push.QosTask;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -30,10 +27,6 @@ public class SubscriberConsumeOffset {
      * 定义消息主题
      */
     private final Topic topic;
-    /**
-     * 处于消费中的消息
-     */
-    private final BlockingQueue<QosTask> inFightQueue = new LinkedBlockingQueue<>();
     /**
      * 服务端向客户端发送应用消息所允许的最大 QoS 等级
      */
@@ -91,10 +84,6 @@ public class SubscriberConsumeOffset {
 
     public void setEnable(boolean enable) {
         this.enable = enable;
-    }
-
-    public BlockingQueue<QosTask> getInFightQueue() {
-        return inFightQueue;
     }
 
     public MqttQoS getMqttQoS() {

@@ -32,6 +32,6 @@ public class PubRelProcessor extends AuthorizedMqttProcessor<MqttPubRelMessage> 
         pubRelMessage.setPacketId(mqttPubRelMessage.getPacketId());
         session.write(pubRelMessage);
         // 发送给subscribe
-        context.publish(topic, message);
+        context.publish(topic, message.getMqttQoS(), message.getPayload());
     }
 }

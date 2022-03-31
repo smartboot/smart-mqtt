@@ -2,7 +2,6 @@ package org.smartboot.mqtt.broker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.push.QosTask;
 import org.smartboot.mqtt.broker.store.StoredMessage;
 import org.smartboot.mqtt.broker.store.SubscriberConsumeOffset;
 import org.smartboot.mqtt.common.message.MqttMessage;
@@ -31,11 +30,6 @@ public class MqttSession {
      * 当前连接订阅的Topic的消费信息
      */
     private final Map<String, SubscriberConsumeOffset> consumeOffsets = new ConcurrentHashMap<>();
-
-    /**
-     * 待响应的消息
-     */
-    private final Map<Integer, QosTask> qosTaskMap = new ConcurrentHashMap<>();
 
     private final ConcurrentMap<Integer, StoredMessage> inboundInflightMessages = new ConcurrentHashMap<>();
 
@@ -127,6 +121,7 @@ public class MqttSession {
      * 新订阅的主题过滤器和之前订阅的相同，但是它的最大 QoS 值可以不同。
      */
     public synchronized void subscribeTopic(SubscriberConsumeOffset subscription) {
+
         unsubscribe(subscription.getTopic().getTopic());
         consumeOffsets.put(subscription.getTopic().getTopic(), subscription);
         subscription.getTopic().getConsumerGroup().getConsumeOffsets().put(this, subscription);
@@ -140,18 +135,6 @@ public class MqttSession {
             oldOffset.getTopic().getConsumerGroup().getConsumeOffsets().remove(oldOffset.getMqttSession());
             LOGGER.info("unsubscribe topic:{} success,oldClientId:{} ,currentClientId:{}", topic, oldOffset.getMqttSession().clientId, clientId);
         }
-    }
-
-    public QosTask getQosTask(int packetId) {
-        return qosTaskMap.get(packetId);
-    }
-
-    public void put(QosTask qosTask) {
-        qosTaskMap.put(qosTask.getPacketId(), qosTask);
-    }
-
-    public void remove(QosTask qosTask) {
-        qosTaskMap.remove(qosTask.getPacketId());
     }
 
     public int newPacketId() {

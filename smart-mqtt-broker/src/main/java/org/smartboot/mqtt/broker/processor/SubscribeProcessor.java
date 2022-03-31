@@ -42,7 +42,6 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
                 Topic topic = context.getOrCreateTopic(mqttTopicSubscription.topicFilter());
                 SubscriberConsumeOffset consumeOffset = new SubscriberConsumeOffset(topic, session, mqttTopicSubscription.qualityOfService());
                 session.subscribeTopic(consumeOffset);
-                context.getTopicListener().notify(consumeOffset);
             }
         }
 

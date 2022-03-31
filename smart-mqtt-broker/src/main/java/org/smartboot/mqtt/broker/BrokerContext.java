@@ -1,7 +1,6 @@
 package org.smartboot.mqtt.broker;
 
-import org.smartboot.mqtt.broker.push.PushListener;
-import org.smartboot.mqtt.broker.store.StoredMessage;
+import org.smartboot.mqtt.common.enums.MqttQoS;
 
 import java.io.IOException;
 import java.util.concurrent.ScheduledExecutorService;
@@ -33,12 +32,10 @@ public interface BrokerContext {
      */
     Topic getOrCreateTopic(String topic);
 
-    PushListener getTopicListener();
-
     /**
      * 发送消息至订阅者
      */
-    void publish(Topic topic, StoredMessage storedMessage);
+    void publish(Topic topic, MqttQoS mqttQoS, byte[] payload);
 
     ScheduledExecutorService getKeepAliveThreadPool();
 
