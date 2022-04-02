@@ -11,6 +11,4 @@ import java.util.function.Consumer;
  */
 public interface TopicFilterProvider {
     void match(String topic, BrokerContext context, Consumer<Topic> consumer);
-
-    void rematch(Topic newTopic);
 }

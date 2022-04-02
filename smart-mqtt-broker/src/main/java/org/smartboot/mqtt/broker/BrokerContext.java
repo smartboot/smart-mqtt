@@ -4,6 +4,7 @@ import org.smartboot.mqtt.broker.provider.Providers;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
@@ -32,6 +33,11 @@ public interface BrokerContext {
      * @return
      */
     Topic getOrCreateTopic(String topic);
+
+    /**
+     * 获得当前的Topic列表
+     */
+    Collection<Topic> getTopics();
 
     /**
      * 发送消息至订阅者

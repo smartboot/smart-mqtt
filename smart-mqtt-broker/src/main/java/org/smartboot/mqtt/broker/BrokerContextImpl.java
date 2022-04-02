@@ -15,6 +15,7 @@ import org.smartboot.socket.transport.AioQuickServer;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
@@ -98,10 +99,14 @@ public class BrokerContextImpl implements BrokerContext {
         return topicMap.computeIfAbsent(topic, topicName -> {
             ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topicName), "invalid topicName: " + topicName);
             Topic newTopic = new Topic(topicName);
-            //采用通配符且未匹配上的订阅者尝试重新匹配
-            providers.getTopicFilterProvider().rematch(newTopic);
+            providers.getEventListenerProvider().onTopicCreate(newTopic);
             return newTopic;
         });
+    }
+
+    @Override
+    public Collection<Topic> getTopics() {
+        return topicMap.values();
     }
 
     @Override

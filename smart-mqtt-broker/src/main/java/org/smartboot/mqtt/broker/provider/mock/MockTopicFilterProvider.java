@@ -23,9 +23,4 @@ public class MockTopicFilterProvider implements TopicFilterProvider {
         consumer.accept(topic);
     }
 
-    @Override
-    public void rematch(Topic newTopic) {
-
-    }
-
 }
