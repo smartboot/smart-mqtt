@@ -9,6 +9,8 @@ import org.smartboot.mqtt.common.MqttMessageBuilders;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
+import org.smartboot.mqtt.common.util.MqttUtil;
+import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.transport.AioQuickServer;
 
 import java.io.IOException;
@@ -94,7 +96,9 @@ public class BrokerContextImpl implements BrokerContext {
 
     public Topic getOrCreateTopic(String topic) {
         return topicMap.computeIfAbsent(topic, topicName -> {
+            ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topicName), "invalid topicName: " + topicName);
             Topic newTopic = new Topic(topicName);
+            //采用通配符且未匹配上的订阅者尝试重新匹配
             providers.getTopicFilterProvider().rematch(newTopic);
             return newTopic;
         });
