@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.broker.Topic;
 import org.smartboot.mqtt.broker.store.SubscriberConsumeOffset;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttSubAckMessage;
@@ -39,9 +38,13 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
                 /*
                  * 如果主题过滤器不同于任何现存订阅的过滤器，服务端会创建一个新的订阅并发送所有匹配的保留消息。
                  */
-                Topic topic = context.getOrCreateTopic(mqttTopicSubscription.topicFilter());
-                SubscriberConsumeOffset consumeOffset = new SubscriberConsumeOffset(topic, session, mqttTopicSubscription.qualityOfService());
-                session.subscribeTopic(consumeOffset);
+                context.getProviders().getTopicFilterProvider().match(mqttTopicSubscription.topicFilter(), context, topic -> {
+                    SubscriberConsumeOffset consumeOffset = new SubscriberConsumeOffset(topic, session, mqttTopicSubscription.qualityOfService());
+                    session.subscribeTopic(consumeOffset);
+
+                    //一个新的订阅建立时，对每个匹配的主题名，如果存在最近保留的消息，它必须被发送给这个订阅者
+                    //todo
+                });
             }
         }
 

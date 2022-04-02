@@ -42,7 +42,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         checkMessage(session, mqttConnectMessage);
 
         //身份验证
-        ValidateUtils.isTrue(login(session, mqttConnectMessage), "login fail", session::close);
+        ValidateUtils.isTrue(login(context, session, mqttConnectMessage), "login fail", session::close);
 
         //清理会话
         refreshSession(context, session, mqttConnectMessage);
@@ -143,8 +143,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         if (mqttConnectMessage.getVariableHeader().isCleanSession()) {
             if (StringUtils.isBlank(clientId)) {
                 clientId = UUID.randomUUID().toString().replace("-", "");
-                LOGGER.info("Client has connected with a server generated identifier. CId={}, username={}", clientId,
-                        payload.userName());
+                LOGGER.info("Client has connected with a server generated identifier. CId={}, username={}", clientId, payload.userName());
             } else {
                 //如果清理会话（CleanSession）标志被设置为 1，客户端和服务端必须丢弃之前的任何会话并开始一个新的会话。
                 // 会话仅持续和网络连接同样长的时间。与这个会话关联的状态数据不能被任何之后的会话重用
@@ -167,8 +166,9 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         LOGGER.info("add session for client:{}", clientId);
     }
 
-    private boolean login(MqttSession session, MqttConnectMessage msg) {
-        session.setAuthorized(true);
+    private boolean login(BrokerContext context, MqttSession session, MqttConnectMessage msg) {
+        boolean ok = context.getProviders().getClientAuthorizeProvider().auth(msg.getPayload().userName(), msg.getPayload().clientIdentifier(), msg.getPayload().passwordInBytes());
+        session.setAuthorized(ok);
         return true;
     }
 
@@ -192,8 +192,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
     }
 
     private MqttConnAckMessage connAck(MqttConnectReturnCode returnCode, boolean sessionPresent) {
-        MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.CONNACK, false, MqttQoS.AT_MOST_ONCE,
-                false, 0);
+        MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.CONNACK, false, MqttQoS.AT_MOST_ONCE, false, 0);
         MqttConnAckVariableHeader mqttConnAckVariableHeader = new MqttConnAckVariableHeader(returnCode, sessionPresent);
         return new MqttConnAckMessage(mqttFixedHeader, mqttConnAckVariableHeader);
     }

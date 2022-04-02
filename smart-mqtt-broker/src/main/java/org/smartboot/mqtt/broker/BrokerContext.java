@@ -1,5 +1,6 @@
 package org.smartboot.mqtt.broker;
 
+import org.smartboot.mqtt.broker.provider.Providers;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 
 import java.io.IOException;
@@ -40,4 +41,6 @@ public interface BrokerContext {
     ScheduledExecutorService getKeepAliveThreadPool();
 
     void destroy();
+
+    Providers getProviders();
 }

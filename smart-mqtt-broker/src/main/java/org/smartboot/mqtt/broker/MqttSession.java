@@ -72,6 +72,11 @@ public class MqttSession {
         if (closed) {
             return;
         }
+
+        if (willMessage != null) {
+            //非正常中断，推送遗嘱消息
+            mqttContext.publish(mqttContext.getOrCreateTopic(willMessage.getTopic()), willMessage.getMqttQoS(), willMessage.getPayload());
+        }
         consumeOffsets.keySet().forEach(this::unsubscribe);
         mqttContext.removeSession(this);
         session.close(false);

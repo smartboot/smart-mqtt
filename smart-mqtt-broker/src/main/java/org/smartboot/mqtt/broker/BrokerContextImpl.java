@@ -2,6 +2,8 @@ package org.smartboot.mqtt.broker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.broker.plugins.Plugin;
+import org.smartboot.mqtt.broker.provider.Providers;
 import org.smartboot.mqtt.broker.store.StoredMessage;
 import org.smartboot.mqtt.common.MqttMessageBuilders;
 import org.smartboot.mqtt.common.enums.MqttQoS;
@@ -10,6 +12,9 @@ import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.socket.transport.AioQuickServer;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -39,6 +44,9 @@ public class BrokerContextImpl implements BrokerContext {
      * Push线程池
      */
     private final ExecutorService PUSH_THREAD_POOL = Executors.newFixedThreadPool(brokerConfigure.getPushThreadNum());
+
+    private final List<Plugin> plugins = new ArrayList<>();
+    private final Providers providers = new Providers();
     /**
      * Broker Server
      */
@@ -55,6 +63,23 @@ public class BrokerContextImpl implements BrokerContext {
         server = new AioQuickServer(1883, new MqttProtocol(), new MqttBrokerMessageProcessor(this));
         server.start();
         //启动keepalive监听线程
+
+        loadAndInstallPlugins();
+    }
+
+    /**
+     * 加载并安装插件
+     */
+    private void loadAndInstallPlugins() {
+        for (Plugin plugin : ServiceLoader.load(Plugin.class, Providers.class.getClassLoader())) {
+            LOGGER.info("load plugin: " + plugin.pluginName());
+            plugins.add(plugin);
+        }
+        //安装插件
+        plugins.forEach(plugin -> {
+            LOGGER.info("install plugin: " + plugin.pluginName());
+            plugin.install(providers);
+        });
     }
 
     @Override
@@ -68,7 +93,11 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     public Topic getOrCreateTopic(String topic) {
-        return topicMap.computeIfAbsent(topic, Topic::new);
+        return topicMap.computeIfAbsent(topic, topicName -> {
+            Topic newTopic = new Topic(topicName);
+            providers.getTopicFilterProvider().rematch(newTopic);
+            return newTopic;
+        });
     }
 
     @Override
@@ -86,10 +115,7 @@ public class BrokerContextImpl implements BrokerContext {
     public void publish(Topic topic, MqttQoS mqttQoS, byte[] payload) {
         PUSH_THREAD_POOL.execute(() -> topic.getConsumerGroup().getConsumeOffsets().forEach((mqttSession, consumeOffset) -> {
             LOGGER.info("publish to client:{}", mqttSession.getClientId());
-            MqttPublishMessage publishMessage = MqttMessageBuilders.publish()
-                    .payload(payload)
-                    .qos(mqttQoS.value() > consumeOffset.getMqttQoS().value() ? consumeOffset.getMqttQoS() : mqttQoS)
-                    .packetId(mqttSession.newPacketId()).topicName(topic.getTopic()).build();
+            MqttPublishMessage publishMessage = MqttMessageBuilders.publish().payload(payload).qos(mqttQoS.value() > consumeOffset.getMqttQoS().value() ? consumeOffset.getMqttQoS() : mqttQoS).packetId(mqttSession.newPacketId()).topicName(topic.getTopic()).build();
             //QoS1 响应监听
             if (publishMessage.getMqttFixedHeader().getQosLevel() == MqttQoS.AT_LEAST_ONCE) {
                 mqttSession.putInFightMessage(publishMessage.getMqttPublishVariableHeader().packetId(), asStoredMessage(publishMessage));
@@ -101,6 +127,11 @@ public class BrokerContextImpl implements BrokerContext {
     @Override
     public ScheduledExecutorService getKeepAliveThreadPool() {
         return KEEP_ALIVE_EXECUTOR;
+    }
+
+    @Override
+    public Providers getProviders() {
+        return providers;
     }
 
     @Override
