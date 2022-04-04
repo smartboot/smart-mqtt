@@ -1,9 +1,10 @@
-package org.smartboot.mqtt.broker.store;
+package org.smartboot.mqtt.common;
 
 import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 
 /**
+ * 服务端存储的消息
  * @author 三刀
  * @version V1.0 , 2018/5/3
  */

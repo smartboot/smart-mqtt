@@ -1,7 +1,7 @@
 package org.smartboot.mqtt.broker;
 
 import org.smartboot.mqtt.broker.provider.Providers;
-import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.common.StoredMessage;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -32,17 +32,18 @@ public interface BrokerContext {
      * @param topic
      * @return
      */
-    Topic getOrCreateTopic(String topic);
+    BrokerTopic getOrCreateTopic(String topic);
 
     /**
      * 获得当前的Topic列表
      */
-    Collection<Topic> getTopics();
+    Collection<BrokerTopic> getTopics();
+
 
     /**
      * 发送消息至订阅者
      */
-    void publish(Topic topic, MqttQoS mqttQoS, byte[] payload);
+    void publish(BrokerTopic topic, StoredMessage storedMessage);
 
     ScheduledExecutorService getKeepAliveThreadPool();
 

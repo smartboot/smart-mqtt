@@ -1,7 +1,8 @@
 package org.smartboot.mqtt.broker.provider.mock;
 
-import org.smartboot.mqtt.broker.Topic;
+import org.smartboot.mqtt.broker.BrokerTopic;
 import org.smartboot.mqtt.broker.provider.EventListenerProvider;
+import org.smartboot.mqtt.common.StoredMessage;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -9,7 +10,12 @@ import org.smartboot.mqtt.broker.provider.EventListenerProvider;
  */
 public class MockEventListenerProvider implements EventListenerProvider {
     @Override
-    public void onTopicCreate(Topic topic) {
+    public void onTopicCreate(BrokerTopic topic) {
+
+    }
+
+    @Override
+    public void onPublish(StoredMessage storedMessage) {
 
     }
 }

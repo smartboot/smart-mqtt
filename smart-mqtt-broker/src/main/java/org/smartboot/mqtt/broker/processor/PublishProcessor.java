@@ -4,8 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.broker.Topic;
-import org.smartboot.mqtt.broker.store.StoredMessage;
+import org.smartboot.mqtt.broker.BrokerTopic;
+import org.smartboot.mqtt.common.StoredMessage;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
@@ -46,22 +46,22 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
     }
 
     private void processQos0(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
-        final Topic topic = context.getOrCreateTopic(mqttPublishMessage.getMqttPublishVariableHeader().topicName());
-
+        final BrokerTopic topic = context.getOrCreateTopic(mqttPublishMessage.getMqttPublishVariableHeader().topicName());
+        StoredMessage storedMessage = asStoredMessage(mqttPublishMessage);
         /**
          * 如果服务端收到一条保留（RETAIN）标志为 1 的 QoS 0 消息，它必须丢弃之前为那个主题保留
          * 的任何消息。它应该将这个新的 QoS 0 消息当作那个主题的新保留消息，但是任何时候都可以选择丢弃它
          * 如果这种情况发生了，那个主题将没有保留消息
          */
         if (mqttPublishMessage.getMqttFixedHeader().isRetain()) {
-            topic.getMessagesStore().cleanTopic();
+            context.getProviders().getMessageStoreProvider().cleanTopic(topic.getTopic());
         }
 
-        context.publish(topic, mqttPublishMessage.getMqttFixedHeader().getQosLevel(), mqttPublishMessage.getPayload());
+        context.publish(topic, storedMessage);
     }
 
     private void processQos1(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
-        final Topic topic = context.getOrCreateTopic(mqttPublishMessage.getMqttPublishVariableHeader().topicName());
+        final BrokerTopic topic = context.getOrCreateTopic(mqttPublishMessage.getMqttPublishVariableHeader().topicName());
         String clientId = session.getClientId();
 
         final int messageId = mqttPublishMessage.getMqttPublishVariableHeader().packetId();
@@ -76,10 +76,10 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
         session.write(pubAckMessage);
 
         // 发送给subscribe
-        context.publish(topic, mqttPublishMessage.getMqttFixedHeader().getQosLevel(), mqttPublishMessage.getPayload());
+        context.publish(topic, storedMessage);
 
         if (mqttPublishMessage.getMqttFixedHeader().isRetain()) {
-            topic.getMessagesStore().storeTopic(storedMessage);
+            context.getProviders().getMessageStoreProvider().storeTopic(storedMessage);
         }
     }
 

@@ -2,9 +2,10 @@ package org.smartboot.mqtt.broker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.store.StoredMessage;
-import org.smartboot.mqtt.broker.store.SubscriberConsumeOffset;
+import org.smartboot.mqtt.common.StoredMessage;
+import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.socket.transport.AioSession;
 
 import java.io.IOException;
@@ -29,7 +30,7 @@ public class MqttSession {
     /**
      * 当前连接订阅的Topic的消费信息
      */
-    private final Map<String, SubscriberConsumeOffset> consumeOffsets = new ConcurrentHashMap<>();
+    private final Map<String, TopicSubscriber> consumeOffsets = new ConcurrentHashMap<>();
 
     private final ConcurrentMap<Integer, StoredMessage> inboundInflightMessages = new ConcurrentHashMap<>();
 
@@ -59,6 +60,14 @@ public class MqttSession {
         this.session = session;
     }
 
+    public void publish(MqttPublishMessage publishMessage) {
+        LOGGER.info("publish to client:{}, topic:{} packetId:{}", clientId, publishMessage.getMqttPublishVariableHeader().topicName(), publishMessage.getMqttPublishVariableHeader().packetId());
+        //QoS1 响应监听
+        if (publishMessage.getMqttFixedHeader().getQosLevel() == MqttQoS.AT_LEAST_ONCE) {
+            putInFightMessage(publishMessage.getMqttPublishVariableHeader().packetId(), BrokerContextImpl.asStoredMessage(publishMessage));
+        }
+        write(publishMessage);
+    }
 
     public void write(MqttMessage mqttMessage) {
         try {
@@ -75,7 +84,7 @@ public class MqttSession {
 
         if (willMessage != null) {
             //非正常中断，推送遗嘱消息
-            mqttContext.publish(mqttContext.getOrCreateTopic(willMessage.getTopic()), willMessage.getMqttQoS(), willMessage.getPayload());
+            mqttContext.publish(mqttContext.getOrCreateTopic(willMessage.getTopic()), willMessage);
         }
         consumeOffsets.keySet().forEach(this::unsubscribe);
         mqttContext.removeSession(this);
@@ -125,19 +134,19 @@ public class MqttSession {
      * 那么必须使用新的订阅彻底替换现存的订阅。
      * 新订阅的主题过滤器和之前订阅的相同，但是它的最大 QoS 值可以不同。
      */
-    public synchronized void subscribeTopic(SubscriberConsumeOffset subscription) {
+    public synchronized void subscribeTopic(TopicSubscriber subscription) {
 
         unsubscribe(subscription.getTopic().getTopic());
         consumeOffsets.put(subscription.getTopic().getTopic(), subscription);
-        subscription.getTopic().getConsumerGroup().getConsumeOffsets().put(this, subscription);
+        subscription.getTopic().getConsumeOffsets().put(this, subscription);
         LOGGER.info("subscribe topic:{} success, clientId:{}", subscription.getTopic(), clientId);
     }
 
     public void unsubscribe(String topic) {
-        SubscriberConsumeOffset oldOffset = consumeOffsets.remove(topic);
+        TopicSubscriber oldOffset = consumeOffsets.remove(topic);
         if (oldOffset != null) {
             oldOffset.setEnable(false);
-            oldOffset.getTopic().getConsumerGroup().getConsumeOffsets().remove(oldOffset.getMqttSession());
+            oldOffset.getTopic().getConsumeOffsets().remove(oldOffset.getMqttSession());
             LOGGER.info("unsubscribe topic:{} success,oldClientId:{} ,currentClientId:{}", topic, oldOffset.getMqttSession().clientId, clientId);
         }
     }

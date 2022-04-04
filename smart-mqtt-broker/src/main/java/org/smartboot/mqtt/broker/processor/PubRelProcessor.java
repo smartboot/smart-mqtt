@@ -2,8 +2,8 @@ package org.smartboot.mqtt.broker.processor;
 
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.broker.Topic;
-import org.smartboot.mqtt.broker.store.StoredMessage;
+import org.smartboot.mqtt.broker.BrokerTopic;
+import org.smartboot.mqtt.common.StoredMessage;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
@@ -23,15 +23,15 @@ public class PubRelProcessor extends AuthorizedMqttProcessor<MqttPubRelMessage> 
         StoredMessage message = session.pollInFightMessage(mqttPubRelMessage.getPacketId());
         ValidateUtils.notNull(message, "message is null");
 
-        final Topic topic = context.getOrCreateTopic(message.getTopic());
+        final BrokerTopic topic = context.getOrCreateTopic(message.getTopic());
         if (message.isRetained()) {
-            topic.getMessagesStore().storeTopic(message);
+            context.getProviders().getMessageStoreProvider().storeTopic(message);
         }
         //发送pubRel消息。
         MqttPubCompMessage pubRelMessage = new MqttPubCompMessage(new MqttFixedHeader(MqttMessageType.PUBCOMP, false, MqttQoS.AT_MOST_ONCE, false, 0));
         pubRelMessage.setPacketId(mqttPubRelMessage.getPacketId());
         session.write(pubRelMessage);
         // 发送给subscribe
-        context.publish(topic, message.getMqttQoS(), message.getPayload());
+        context.publish(topic, message);
     }
 }

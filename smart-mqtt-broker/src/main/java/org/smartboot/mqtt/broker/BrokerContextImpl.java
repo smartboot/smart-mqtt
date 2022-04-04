@@ -4,9 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.plugins.Plugin;
 import org.smartboot.mqtt.broker.provider.Providers;
-import org.smartboot.mqtt.broker.store.StoredMessage;
-import org.smartboot.mqtt.common.MqttMessageBuilders;
-import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.common.StoredMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.MqttUtil;
@@ -37,7 +35,7 @@ public class BrokerContextImpl implements BrokerContext {
     /**
      *
      */
-    private final ConcurrentMap<String, Topic> topicMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, BrokerTopic> topicMap = new ConcurrentHashMap<>();
     private final BrokerConfigure brokerConfigure = new BrokerConfigure();
     /**
      * Keep-Alive监听线程
@@ -95,17 +93,17 @@ public class BrokerContextImpl implements BrokerContext {
         return grantSessions.putIfAbsent(session.getClientId(), session);
     }
 
-    public Topic getOrCreateTopic(String topic) {
+    public BrokerTopic getOrCreateTopic(String topic) {
         return topicMap.computeIfAbsent(topic, topicName -> {
             ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topicName), "invalid topicName: " + topicName);
-            Topic newTopic = new Topic(topicName);
+            BrokerTopic newTopic = new BrokerTopic(topicName);
             providers.getEventListenerProvider().onTopicCreate(newTopic);
             return newTopic;
         });
     }
 
     @Override
-    public Collection<Topic> getTopics() {
+    public Collection<BrokerTopic> getTopics() {
         return topicMap.values();
     }
 
@@ -119,17 +117,12 @@ public class BrokerContextImpl implements BrokerContext {
         return grantSessions.get(clientId);
     }
 
-
     @Override
-    public void publish(Topic topic, MqttQoS mqttQoS, byte[] payload) {
-        PUSH_THREAD_POOL.execute(() -> topic.getConsumerGroup().getConsumeOffsets().forEach((mqttSession, consumeOffset) -> {
-            LOGGER.info("publish to client:{}", mqttSession.getClientId());
-            MqttPublishMessage publishMessage = MqttMessageBuilders.publish().payload(payload).qos(mqttQoS.value() > consumeOffset.getMqttQoS().value() ? consumeOffset.getMqttQoS() : mqttQoS).packetId(mqttSession.newPacketId()).topicName(topic.getTopic()).build();
-            //QoS1 响应监听
-            if (publishMessage.getMqttFixedHeader().getQosLevel() == MqttQoS.AT_LEAST_ONCE) {
-                mqttSession.putInFightMessage(publishMessage.getMqttPublishVariableHeader().packetId(), asStoredMessage(publishMessage));
-            }
-            mqttSession.write(publishMessage);
+    public void publish(BrokerTopic topic, StoredMessage storedMessage) {
+        providers.getEventListenerProvider().onPublish(storedMessage);
+        PUSH_THREAD_POOL.execute(() -> topic.getConsumeOffsets().forEach((mqttSession, consumeOffset) -> {
+            MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(mqttSession.newPacketId(), storedMessage, consumeOffset.getMqttQoS());
+            mqttSession.publish(publishMessage);
         }));
     }
 

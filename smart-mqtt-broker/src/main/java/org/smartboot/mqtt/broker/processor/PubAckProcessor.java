@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.broker.store.StoredMessage;
+import org.smartboot.mqtt.common.StoredMessage;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
 
 /**
