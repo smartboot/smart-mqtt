@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.broker.provider;
+package org.smartboot.mqtt.broker.plugin.provider;
 
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.BrokerTopic;

@@ -2,8 +2,11 @@ package org.smartboot.mqtt.broker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.plugins.Plugin;
-import org.smartboot.mqtt.broker.provider.Providers;
+import org.smartboot.mqtt.broker.listener.BrokerLifecycleListener;
+import org.smartboot.mqtt.broker.listener.BrokerListeners;
+import org.smartboot.mqtt.broker.listener.TopicEventListener;
+import org.smartboot.mqtt.broker.plugin.Plugin;
+import org.smartboot.mqtt.broker.plugin.provider.Providers;
 import org.smartboot.mqtt.common.StoredMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
@@ -14,6 +17,7 @@ import org.smartboot.socket.transport.AioQuickServer;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EventListener;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,6 +52,7 @@ public class BrokerContextImpl implements BrokerContext {
 
     private final List<Plugin> plugins = new ArrayList<>();
     private final Providers providers = new Providers();
+    private final BrokerListeners listeners = new BrokerListeners();
     /**
      * Broker Server
      */
@@ -66,6 +71,7 @@ public class BrokerContextImpl implements BrokerContext {
         //启动keepalive监听线程
 
         loadAndInstallPlugins();
+        listeners.getBrokerLifecycleListeners().forEach(listener -> listener.onStarted(this));
     }
 
     /**
@@ -79,7 +85,7 @@ public class BrokerContextImpl implements BrokerContext {
         //安装插件
         plugins.forEach(plugin -> {
             LOGGER.info("install plugin: " + plugin.pluginName());
-            plugin.install(providers);
+            plugin.install(this);
         });
     }
 
@@ -97,7 +103,7 @@ public class BrokerContextImpl implements BrokerContext {
         return topicMap.computeIfAbsent(topic, topicName -> {
             ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topicName), "invalid topicName: " + topicName);
             BrokerTopic newTopic = new BrokerTopic(topicName);
-            providers.getEventListenerProvider().onTopicCreate(newTopic);
+            listeners.getTopicEventListeners().forEach(event -> event.onTopicCreate(newTopic));
             return newTopic;
         });
     }
@@ -119,7 +125,7 @@ public class BrokerContextImpl implements BrokerContext {
 
     @Override
     public void publish(BrokerTopic topic, StoredMessage storedMessage) {
-        providers.getEventListenerProvider().onPublish(storedMessage);
+        listeners.getTopicEventListeners().forEach(event -> event.onPublish(storedMessage));
         PUSH_THREAD_POOL.execute(() -> topic.getConsumeOffsets().forEach((mqttSession, consumeOffset) -> {
             MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(mqttSession.newPacketId(), storedMessage, consumeOffset.getMqttQoS());
             mqttSession.publish(publishMessage);
@@ -137,8 +143,19 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     @Override
+    public void addEvent(EventListener eventListener) {
+        if (eventListener instanceof TopicEventListener) {
+            listeners.getTopicEventListeners().add((TopicEventListener) eventListener);
+        }
+        if (eventListener instanceof BrokerLifecycleListener) {
+            listeners.getBrokerLifecycleListeners().add((BrokerLifecycleListener) eventListener);
+        }
+    }
+
+    @Override
     public void destroy() {
         LOGGER.info("destroy broker...");
+        listeners.getBrokerLifecycleListeners().forEach(listener -> listener.onDestroy(this));
         server.shutdown();
     }
 }

@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.broker.plugins;
+package org.smartboot.mqtt.broker.plugin;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）

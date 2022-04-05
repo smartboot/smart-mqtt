@@ -1,6 +1,6 @@
-package org.smartboot.mqtt.broker.provider.mock;
+package org.smartboot.mqtt.broker.plugin.provider.mock;
 
-import org.smartboot.mqtt.broker.provider.ClientAuthorizeProvider;
+import org.smartboot.mqtt.broker.plugin.provider.ClientAuthorizeProvider;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）

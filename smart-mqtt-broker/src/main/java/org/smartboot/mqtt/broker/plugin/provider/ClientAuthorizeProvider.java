@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.broker.provider;
+package org.smartboot.mqtt.broker.plugin.provider;
 
 /**
  *

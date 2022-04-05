@@ -1,10 +1,11 @@
 package org.smartboot.mqtt.broker;
 
-import org.smartboot.mqtt.broker.provider.Providers;
+import org.smartboot.mqtt.broker.plugin.provider.Providers;
 import org.smartboot.mqtt.common.StoredMessage;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.EventListener;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
@@ -50,4 +51,6 @@ public interface BrokerContext {
     void destroy();
 
     Providers getProviders();
+
+    void addEvent(EventListener eventListener);
 }

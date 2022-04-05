@@ -1,8 +1,8 @@
-package org.smartboot.mqtt.broker.plugins;
+package org.smartboot.mqtt.broker.plugin;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.provider.Providers;
+import org.smartboot.mqtt.broker.BrokerContext;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -35,16 +35,16 @@ public abstract class Plugin {
     /**
      * 安装插件,需要在servlet服务启动前调用
      */
-    public final void install(Providers containerRuntime) {
+    public final void install(BrokerContext brokerContext) {
         checkSate();
-        initPlugin(containerRuntime);
+        initPlugin(brokerContext);
         installed = true;
     }
 
     /**
      * 初始化插件
      */
-    protected void initPlugin(Providers brokerRuntime) {
+    protected void initPlugin(BrokerContext brokerContext) {
         LOGGER.info("plugin:[" + pluginName() + "] do nothing when initPlugin!");
     }
 

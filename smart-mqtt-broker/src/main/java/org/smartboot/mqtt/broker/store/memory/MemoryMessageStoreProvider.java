@@ -1,6 +1,6 @@
 package org.smartboot.mqtt.broker.store.memory;
 
-import org.smartboot.mqtt.broker.provider.MessageStoreProvider;
+import org.smartboot.mqtt.broker.plugin.provider.MessageStoreProvider;
 import org.smartboot.mqtt.common.StoredMessage;
 
 import java.util.concurrent.ConcurrentHashMap;

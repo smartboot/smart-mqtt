@@ -1,5 +1,7 @@
 package org.smartboot.mqtt.broker;
 
+import java.util.Properties;
+
 /**
  * broker服务配置
  *
@@ -8,16 +10,18 @@ package org.smartboot.mqtt.broker;
  */
 public class BrokerConfigure {
     /**
+     * 自定义配置
+     */
+    private final Properties properties = new Properties();
+    /**
      * 端口号
      */
     private int port;
-
     /**
      * 默认的客户端keep-alive超时时间.
      * 保持连接的实际值是由应用指定的，一般是几分钟。允许的最大值是 18 小时 12 分 15 秒。
      */
     private long maxKeepAliveTime = 60000;
-
     /**
      * Push线程数
      */
@@ -45,5 +49,9 @@ public class BrokerConfigure {
 
     public void setPushThreadNum(int pushThreadNum) {
         this.pushThreadNum = pushThreadNum;
+    }
+
+    public Properties getProperties() {
+        return properties;
     }
 }
