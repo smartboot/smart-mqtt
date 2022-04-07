@@ -20,14 +20,6 @@ public class MqttPublishVariableHeader {
         return topicName;
     }
 
-    /**
-     * @deprecated Use {@link #packetId()} instead.
-     */
-    @Deprecated
-    public int messageId() {
-        return packetId;
-    }
-
     public int packetId() {
         return packetId;
     }

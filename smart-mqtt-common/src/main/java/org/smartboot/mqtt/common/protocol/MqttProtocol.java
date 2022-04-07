@@ -2,22 +2,19 @@ package org.smartboot.mqtt.common.protocol;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.socket.Protocol;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.socket.Protocol;
 import org.smartboot.socket.transport.AioSession;
 import org.smartboot.socket.util.BufferUtils;
 import org.smartboot.socket.util.DecoderException;
 
 import java.nio.ByteBuffer;
 
-import static org.smartboot.mqtt.common.protocol.MqttProtocol.DecoderState.FINISH;
-import static org.smartboot.mqtt.common.protocol.MqttProtocol.DecoderState.READ_FIXED_HEADER;
-import static org.smartboot.mqtt.common.protocol.MqttProtocol.DecoderState.READ_PAYLOAD;
-import static org.smartboot.mqtt.common.protocol.MqttProtocol.DecoderState.READ_VARIABLE_HEADER;
+import static org.smartboot.mqtt.common.protocol.MqttProtocol.DecoderState.*;
 
 /**
  * @author 三刀
@@ -57,6 +54,7 @@ public class MqttProtocol implements Protocol<MqttMessage> {
                     short b1 = BufferUtils.readUnsignedByte(buffer);
 
                     MqttMessageType messageType = MqttMessageType.valueOf(b1 >> 4);
+                    System.out.println("messageType:" + messageType);
                     boolean dupFlag = (b1 & 0x08) == 0x08;
                     int qosLevel = (b1 & 0x06) >> 1;
                     boolean retain = (b1 & 0x01) != 0;

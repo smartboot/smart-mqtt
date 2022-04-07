@@ -23,8 +23,9 @@ import org.smartboot.mqtt.common.message.MqttPubRelMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
-import org.smartboot.socket.MessageProcessor;
 import org.smartboot.socket.StateMachineEnum;
+import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
+import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioSession;
 
 import java.util.HashMap;
@@ -35,7 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author 三刀
  * @version V1.0 , 2018/4/24
  */
-public class MqttBrokerMessageProcessor implements MessageProcessor<MqttMessage> {
+public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMessage> {
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttBrokerMessageProcessor.class);
     /**
      * Mqtt服务全局Context
@@ -61,10 +62,11 @@ public class MqttBrokerMessageProcessor implements MessageProcessor<MqttMessage>
 
     public MqttBrokerMessageProcessor(BrokerContext mqttContext) {
         this.mqttContext = mqttContext;
+//        addPlugin(new StreamMonitorPlugin<>());
     }
 
     @Override
-    public void process(AioSession session, MqttMessage msg) {
+    public void process0(AioSession session, MqttMessage msg) {
         LOGGER.info("process msg:{}", msg);
         MqttProcessor processor = processorMap.get(msg.getClass());
         if (processor != null) {
@@ -77,7 +79,7 @@ public class MqttBrokerMessageProcessor implements MessageProcessor<MqttMessage>
     }
 
     @Override
-    public void stateEvent(AioSession session, StateMachineEnum stateMachineEnum, Throwable throwable) {
+    public void stateEvent0(AioSession session, StateMachineEnum stateMachineEnum, Throwable throwable) {
         switch (stateMachineEnum) {
             case NEW_SESSION:
                 onlineSessions.put(session.getSessionID(), new MqttSession(mqttContext, session));

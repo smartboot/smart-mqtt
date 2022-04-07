@@ -1,13 +1,18 @@
 package org.smartboot.mqtt.client;
 
+import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
+import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.mqtt.common.message.MqttSubAckMessage;
+import org.smartboot.mqtt.common.message.WillMessage;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.HostnameVerifier;
 import java.util.Properties;
+import java.util.function.Consumer;
 
-public class MqttConnectOptions {
+public class MqttClientConfigure {
     /**
      * The default keep alive interval in seconds if one is not specified
      */
@@ -27,10 +32,9 @@ public class MqttConnectOptions {
 
     private int keepAliveInterval = KEEP_ALIVE_INTERVAL_DEFAULT;
     private int maxInflight = MAX_INFLIGHT_DEFAULT;
-    private String willDestination = null;
-    private MqttMessage willMessage = null;
+    private WillMessage willMessage;
     private String userName;
-    private char[] password;
+    private byte[] password;
     private SocketFactory socketFactory;
     private Properties sslClientProps = null;
     private boolean httpsHostnameVerificationEnabled = true;
@@ -46,10 +50,32 @@ public class MqttConnectOptions {
     // Client Operation Parameters
     private int executorServiceTimeout = 1; // How long to wait in seconds when terminating the executor service.
 
+    private String host;
+    private int port;
+    private Consumer<MqttConnAckMessage> connectAckConsumer = mqttConnAckMessage -> {
+
+    };
+
+    private Consumer<MqttSubAckMessage> subscribeAckConsumer = mqttSubAckMessage -> {
+    };
+
+    private TopicListener topicListener = new TopicListener() {
+        @Override
+        public void subscribe(String topicFilter, MqttQoS mqttQoS) {
+
+        }
+
+        @Override
+        public void unsubscribe(String topicFilter) {
+
+        }
+    };
+
+
     /**
      * Constructs a new <code>MqttConnectOptions</code> object using the default
      * values.
-     *
+     * <p>
      * The defaults are:
      * <ul>
      * <li>The keepalive interval is 60 seconds</li>
@@ -61,27 +87,16 @@ public class MqttConnectOptions {
      * </ul>
      * More information about these values can be found in the setter methods.
      */
-    public MqttConnectOptions() {
+    public MqttClientConfigure() {
         // Initialise Base MqttConnectOptions Object
     }
 
-    /**
-     * Returns the password to use for the connection.
-     *
-     * @return the password to use for the connection.
-     */
-    public char[] getPassword() {
+    public byte[] getPassword() {
         return password;
     }
 
-    /**
-     * Sets the password to use for the connection.
-     *
-     * @param password
-     *            A Char Array of the password
-     */
-    public void setPassword(char[] password) {
-        this.password = password.clone();
+    public void setPassword(byte[] password) {
+        this.password = password;
     }
 
     /**
@@ -96,8 +111,7 @@ public class MqttConnectOptions {
     /**
      * Sets the user name to use for the connection.
      *
-     * @param userName
-     *            The Username as a String
+     * @param userName The Username as a String
      */
     public void setUserName(String userName) {
         this.userName = userName;
@@ -115,8 +129,7 @@ public class MqttConnectOptions {
     /**
      * Set the maximum time to wait between reconnects
      *
-     * @param maxReconnectDelay
-     *            the duration (in millis)
+     * @param maxReconnectDelay the duration (in millis)
      */
     public void setMaxReconnectDelay(int maxReconnectDelay) {
         this.maxReconnectDelay = maxReconnectDelay;
@@ -177,21 +190,11 @@ public class MqttConnectOptions {
     /**
      * Returns the "keep alive" interval.
      *
-     * @see #setKeepAliveInterval(int)
      * @return the keep alive interval.
+     * @see #setKeepAliveInterval(int)
      */
     public int getKeepAliveInterval() {
         return keepAliveInterval;
-    }
-
-    /**
-     * Returns the MQTT version.
-     *
-     * @see #setMqttVersion(int)
-     * @return the MQTT version.
-     */
-    public MqttVersion getMqttVersion() {
-        return mqttVersion;
     }
 
     /**
@@ -207,10 +210,8 @@ public class MqttConnectOptions {
      * The default value is 60 seconds
      * </p>
      *
-     * @param keepAliveInterval
-     *            the interval, measured in seconds, must be &gt;= 0.
-     * @throws IllegalArgumentException
-     *             if the keepAliveInterval was invalid
+     * @param keepAliveInterval the interval, measured in seconds, must be &gt;= 0.
+     * @throws IllegalArgumentException if the keepAliveInterval was invalid
      */
     public void setKeepAliveInterval(int keepAliveInterval) throws IllegalArgumentException {
         if (keepAliveInterval < 0) {
@@ -220,11 +221,39 @@ public class MqttConnectOptions {
     }
 
     /**
+     * Returns the MQTT version.
+     *
+     * @return the MQTT version.
+     */
+    public MqttVersion getMqttVersion() {
+        return mqttVersion;
+    }
+
+    /**
+     * Sets the MQTT version. The default action is to connect with version 3.1.1,
+     * and to fall back to 3.1 if that fails. Version 3.1.1 or 3.1 can be selected
+     * specifically, with no fall back, by using the MQTT_VERSION_3_1_1 or
+     * MQTT_VERSION_3_1 options respectively.
+     *
+     * @param mqttVersion the version of the MQTT protocol.
+     * @throws IllegalArgumentException If the MqttVersion supplied is invalid
+     */
+    public void setMqttVersion(MqttVersion mqttVersion) throws IllegalArgumentException {
+        if (mqttVersion != MqttVersion.MQTT_3_1
+                && mqttVersion != MqttVersion.MQTT_3_1_1) {
+            throw new IllegalArgumentException(
+                    "An incorrect version was used \"" + mqttVersion + "\". Acceptable version options are "
+                            + MqttVersion.MQTT_3_1 + " and " + MqttVersion.MQTT_3_1_1 + ".");
+        }
+        this.mqttVersion = mqttVersion;
+    }
+
+    /**
      * Returns the "max inflight". The max inflight limits to how many messages we
      * can send without receiving acknowledgments.
      *
-     * @see #setMaxInflight(int)
      * @return the max inflight
+     * @see #setMaxInflight(int)
      */
     public int getMaxInflight() {
         return maxInflight;
@@ -237,8 +266,7 @@ public class MqttConnectOptions {
      * The default value is 10
      * </p>
      *
-     * @param maxInflight
-     *            the number of maxInfligt messages
+     * @param maxInflight the number of maxInfligt messages
      */
     public void setMaxInflight(int maxInflight) {
         if (maxInflight < 0) {
@@ -250,8 +278,8 @@ public class MqttConnectOptions {
     /**
      * Returns the connection timeout value.
      *
-     * @see #setConnectionTimeout(int)
      * @return the connection timeout value.
+     * @see #setConnectionTimeout(int)
      */
     public int getConnectionTimeout() {
         return connectionTimeout;
@@ -264,8 +292,7 @@ public class MqttConnectOptions {
      * of 0 disables timeout processing meaning the client will wait until the
      * network connection is made successfully or fails.
      *
-     * @param connectionTimeout
-     *            the timeout value, measured in seconds. It must be &gt;0;
+     * @param connectionTimeout the timeout value, measured in seconds. It must be &gt;0;
      */
     public void setConnectionTimeout(int connectionTimeout) {
         if (connectionTimeout < 0) {
@@ -290,32 +317,19 @@ public class MqttConnectOptions {
      * SSL connection, an <code>SSLSocketFactory</code> can be used to supply
      * application-specific security settings.
      *
-     * @param socketFactory
-     *            the factory to use.
+     * @param socketFactory the factory to use.
      */
     public void setSocketFactory(SocketFactory socketFactory) {
         this.socketFactory = socketFactory;
     }
 
-    /**
-     * Returns the topic to be used for last will and testament (LWT).
-     *
-     * @return the MqttTopic to use, or <code>null</code> if LWT is not set.
-     * @see #setWill(MqttTopic, byte[], int, boolean)
-     */
-    public String getWillDestination() {
-        return willDestination;
+
+    public WillMessage getWillMessage() {
+        return willMessage;
     }
 
-    /**
-     * Returns the message to be sent as last will and testament (LWT). The returned
-     * object is "read only". Calling any "setter" methods on the returned object
-     * will result in an <code>IllegalStateException</code> being thrown.
-     *
-     * @return the message to use, or <code>null</code> if LWT is not set.
-     */
-    public MqttMessage getWillMessage() {
-        return willMessage;
+    public void setWillMessage(WillMessage willMessage) {
+        this.willMessage = willMessage;
     }
 
     /**
@@ -397,8 +411,7 @@ public class MqttConnectOptions {
      * Example values: "PKIX" or "IBMJ9X509".</dd>
      * </dl>
      *
-     * @param props
-     *            The SSL {@link Properties}
+     * @param props The SSL {@link Properties}
      */
     public void setSSLProperties(Properties props) {
         this.sslClientProps = props;
@@ -429,8 +442,7 @@ public class MqttConnectOptions {
      * There is no default HostnameVerifier
      * </p>
      *
-     * @param hostnameVerifier
-     *            the {@link HostnameVerifier}
+     * @param hostnameVerifier the {@link HostnameVerifier}
      */
     public void setSSLHostnameVerifier(HostnameVerifier hostnameVerifier) {
         this.sslHostnameVerifier = hostnameVerifier;
@@ -467,20 +479,10 @@ public class MqttConnectOptions {
      * </ul>
      * </ul>
      *
-     * @param cleanSession
-     *            Set to True to enable cleanSession
+     * @param cleanSession Set to True to enable cleanSession
      */
     public void setCleanSession(boolean cleanSession) {
         this.cleanSession = cleanSession;
-    }
-
-    /**
-     * Return a list of serverURIs the client may connect to
-     *
-     * @return the serverURIs or null if not set
-     */
-    public String[] getServerURIs() {
-        return serverURIs;
     }
 
     /**
@@ -541,24 +543,12 @@ public class MqttConnectOptions {
 //    }
 
     /**
-     * Sets the MQTT version. The default action is to connect with version 3.1.1,
-     * and to fall back to 3.1 if that fails. Version 3.1.1 or 3.1 can be selected
-     * specifically, with no fall back, by using the MQTT_VERSION_3_1_1 or
-     * MQTT_VERSION_3_1 options respectively.
+     * Return a list of serverURIs the client may connect to
      *
-     * @param mqttVersion
-     *            the version of the MQTT protocol.
-     * @throws IllegalArgumentException
-     *             If the MqttVersion supplied is invalid
+     * @return the serverURIs or null if not set
      */
-    public void setMqttVersion(MqttVersion mqttVersion) throws IllegalArgumentException {
-        if (mqttVersion != MqttVersion.MQTT_3_1
-                && mqttVersion != MqttVersion.MQTT_3_1_1) {
-            throw new IllegalArgumentException(
-                    "An incorrect version was used \"" + mqttVersion + "\". Acceptable version options are "
-                            + MqttVersion.MQTT_3_1 + " and " + MqttVersion.MQTT_3_1_1 + ".");
-        }
-        this.mqttVersion = mqttVersion;
+    public String[] getServerURIs() {
+        return serverURIs;
     }
 
     /**
@@ -584,8 +574,7 @@ public class MqttConnectOptions {
      * minutes.</li>
      * </ul>
      *
-     * @param automaticReconnect
-     *            If set to True, Automatic Reconnect will be enabled
+     * @param automaticReconnect If set to True, Automatic Reconnect will be enabled
      */
     public void setAutomaticReconnect(boolean automaticReconnect) {
         this.automaticReconnect = automaticReconnect;
@@ -606,49 +595,58 @@ public class MqttConnectOptions {
         this.executorServiceTimeout = executorServiceTimeout;
     }
 
-    /**
-     * @return The Debug Properties
-     */
-    public Properties getDebug() {
-        final String strNull = "null";
-        Properties p = new Properties();
-        p.put("MqttVersion", getMqttVersion());
-        p.put("CleanSession", Boolean.valueOf(isCleanSession()));
-        p.put("ConTimeout", Integer.valueOf(getConnectionTimeout()));
-        p.put("KeepAliveInterval", Integer.valueOf(getKeepAliveInterval()));
-        p.put("UserName", (getUserName() == null) ? strNull : getUserName());
-        p.put("WillDestination", (getWillDestination() == null) ? strNull : getWillDestination());
-        if (getSocketFactory() == null) {
-            p.put("SocketFactory", strNull);
-        } else {
-            p.put("SocketFactory", getSocketFactory());
-        }
-        if (getSSLProperties() == null) {
-            p.put("SSLProperties", strNull);
-        } else {
-            p.put("SSLProperties", getSSLProperties());
-        }
-        return p;
+
+    public Properties getCustomWebSocketHeaders() {
+        return customWebSocketHeaders;
     }
 
     /**
      * Sets the Custom WebSocket Headers for the WebSocket Connection.
      *
-     * @param props
-     *            The custom websocket headers {@link Properties}
+     * @param props The custom websocket headers {@link Properties}
      */
 
     public void setCustomWebSocketHeaders(Properties props) {
         this.customWebSocketHeaders = props;
     }
 
-    public Properties getCustomWebSocketHeaders() {
-        return customWebSocketHeaders;
+    public Consumer<MqttConnAckMessage> getConnectAckConsumer() {
+        return connectAckConsumer;
     }
 
-    @Override
-    public String toString() {
-        return "";
+    public void setConnectAckConsumer(Consumer<MqttConnAckMessage> connectAckConsumer) {
+        this.connectAckConsumer = connectAckConsumer;
     }
 
+    public Consumer<MqttSubAckMessage> getSubscribeAckConsumer() {
+        return subscribeAckConsumer;
+    }
+
+    public void setSubscribeAckConsumer(Consumer<MqttSubAckMessage> subscribeAckConsumer) {
+        this.subscribeAckConsumer = subscribeAckConsumer;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    public TopicListener getTopicListener() {
+        return topicListener;
+    }
+
+    public void setTopicListener(TopicListener topicListener) {
+        this.topicListener = topicListener;
+    }
 }

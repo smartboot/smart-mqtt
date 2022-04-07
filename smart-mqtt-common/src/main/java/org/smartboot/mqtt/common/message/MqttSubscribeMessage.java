@@ -1,11 +1,10 @@
 package org.smartboot.mqtt.common.message;
 
 import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.transport.WriteBuffer;
 import org.smartboot.socket.util.BufferUtils;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -31,11 +30,16 @@ public class MqttSubscribeMessage extends MqttPacketIdentifierMessage {
     @Override
     public void decodePlayLoad(ByteBuffer buffer) {
         final List<MqttTopicSubscription> subscribeTopics = new ArrayList<MqttTopicSubscription>();
+        int payloadLength = mqttFixedHeader.remainingLength() - PACKET_LENGTH;
+        ValidateUtils.isTrue(buffer.remaining() >= payloadLength, "数据不足");
+        int limit = buffer.limit();
+        buffer.limit(buffer.position() + payloadLength);
         while (buffer.hasRemaining()) {
             final String decodedTopicName = decodeString(buffer);
             int qos = BufferUtils.readUnsignedByte(buffer) & 0x03;
             subscribeTopics.add(new MqttTopicSubscription(decodedTopicName, MqttQoS.valueOf(qos)));
         }
+        buffer.limit(limit);
         this.mqttSubscribePayload = new MqttSubscribePayload(subscribeTopics);
     }
 
@@ -44,23 +48,21 @@ public class MqttSubscribeMessage extends MqttPacketIdentifierMessage {
     }
 
     @Override
-    public void writeTo(WriteBuffer page) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(baos);
-
-        dos.writeShort(getPacketId());
+    public void writeTo(WriteBuffer writeBuffer) throws IOException {
+        int length = 2;
+        List<byte[]> topicFilters = new ArrayList<>(mqttSubscribePayload.topicSubscriptions().size());
         for (MqttTopicSubscription topicSubscription : mqttSubscribePayload.topicSubscriptions()) {
-            dos.writeUTF(topicSubscription.topicFilter());
-            dos.writeByte(topicSubscription.qualityOfService().value());
+            byte[] bytes = encodeUTF8(topicSubscription.topicFilter());
+            topicFilters.add(bytes);
+            length += 1 + bytes.length;
         }
-        dos.flush();
-        byte[] varAndPayloadBytes = baos.toByteArray();
-        baos.reset();
-        dos.writeByte(getFixedHeaderByte1(mqttFixedHeader));
-        dos.write(encodeMBI(varAndPayloadBytes.length));
-        dos.write(varAndPayloadBytes);
-        dos.flush();
-        byte[] data = baos.toByteArray();
-        page.writeAndFlush(data);
+        writeBuffer.writeByte(getFixedHeaderByte1(mqttFixedHeader));
+        writeBuffer.write(encodeMBI(length));
+        writeBuffer.writeShort((short) packetId);
+        int i = 0;
+        for (MqttTopicSubscription topicSubscription : mqttSubscribePayload.topicSubscriptions()) {
+            writeBuffer.write(topicFilters.get(i++));
+            writeBuffer.writeByte(topicSubscription.qualityOfService().value());
+        }
     }
 }

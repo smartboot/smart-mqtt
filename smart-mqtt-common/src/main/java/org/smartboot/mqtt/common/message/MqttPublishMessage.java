@@ -4,8 +4,6 @@ import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.socket.transport.WriteBuffer;
 import org.smartboot.socket.util.DecoderException;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -35,12 +33,12 @@ public class MqttPublishMessage extends MqttMessage {
         if (MqttUtil.containsTopicWildcards(decodedTopic)) {
             throw new DecoderException("invalid publish topic name: " + decodedTopic + " (contains wildcards)");
         }
-        int messageId = -1;
+        int packetId = -1;
         //只有当 QoS 等级是 1 或 2 时，报文标识符（Packet Identifier）字段才能出现在 PUBLISH 报文中。
         if (mqttFixedHeader.getQosLevel().value() > 0) {
-            messageId = decodeMessageId(buffer);
+            packetId = decodeMessageId(buffer);
         }
-        mqttPublishVariableHeader = new MqttPublishVariableHeader(decodedTopic, messageId);
+        mqttPublishVariableHeader = new MqttPublishVariableHeader(decodedTopic, packetId);
     }
 
     @Override
@@ -55,22 +53,17 @@ public class MqttPublishMessage extends MqttMessage {
     }
 
     @Override
-    public void writeTo(WriteBuffer page) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(baos);
+    public void writeTo(WriteBuffer writeBuffer) throws IOException {
+        byte[] topicBytes = encodeUTF8(mqttPublishVariableHeader.topicName());
+        boolean hasPacketId = mqttFixedHeader.getQosLevel().value() > 0;
+        writeBuffer.writeByte(getFixedHeaderByte1(mqttFixedHeader));
+        writeBuffer.write(encodeMBI(topicBytes.length + (hasPacketId ? 2 : 0) + payload.length));
 
-        dos.writeUTF(mqttPublishVariableHeader.topicName());
-        dos.writeShort(mqttPublishVariableHeader.packetId());
-        dos.write(payload);
-        dos.flush();
-        byte[] varAndPayloadBytes = baos.toByteArray();
-        baos.reset();
-        dos.writeByte(getFixedHeaderByte1(mqttFixedHeader));
-        dos.write(encodeMBI(varAndPayloadBytes.length));
-        dos.write(varAndPayloadBytes);
-        dos.flush();
-        byte[] data = baos.toByteArray();
-        page.writeAndFlush(data);
+        writeBuffer.write(topicBytes);
+        if (hasPacketId) {
+            writeBuffer.writeShort((short) mqttPublishVariableHeader.packetId());
+        }
+        writeBuffer.write(payload);
     }
 
     public byte[] getPayload() {

@@ -115,7 +115,11 @@ public class BrokerContextImpl implements BrokerContext {
 
     @Override
     public boolean removeSession(MqttSession session) {
-        return grantSessions.remove(session.getClientId(), session);
+        if (session.getClientId() != null) {
+            return grantSessions.remove(session.getClientId(), session);
+        } else {
+            return false;
+        }
     }
 
     @Override
@@ -126,9 +130,11 @@ public class BrokerContextImpl implements BrokerContext {
     @Override
     public void publish(BrokerTopic topic, StoredMessage storedMessage) {
         listeners.getTopicEventListeners().forEach(event -> event.onPublish(storedMessage));
+        System.out.println("publish message to: " + topic.getConsumeOffsets().size());
         PUSH_THREAD_POOL.execute(() -> topic.getConsumeOffsets().forEach((mqttSession, consumeOffset) -> {
             MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(mqttSession.newPacketId(), storedMessage, consumeOffset.getMqttQoS());
             mqttSession.publish(publishMessage);
+            System.out.println("publish message to " + mqttSession.getClientId());
         }));
     }
 

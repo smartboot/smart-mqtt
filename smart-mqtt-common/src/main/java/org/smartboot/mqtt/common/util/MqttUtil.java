@@ -5,6 +5,8 @@ import org.smartboot.mqtt.common.StoredMessage;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
+import java.util.UUID;
+
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/29
@@ -26,5 +28,9 @@ public class MqttUtil {
 
     public static MqttPublishMessage createPublishMessage(int packetId, StoredMessage storedMessage, MqttQoS subscribeQos) {
         return MqttMessageBuilders.publish().payload(storedMessage.getPayload()).qos(storedMessage.getMqttQoS().value() > subscribeQos.value() ? subscribeQos : storedMessage.getMqttQoS()).packetId(packetId).topicName(storedMessage.getTopic()).build();
+    }
+
+    public static String createClientId() {
+        return UUID.randomUUID().toString().replace("-", "");
     }
 }

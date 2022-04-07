@@ -69,9 +69,10 @@ public class MqttSession {
         write(publishMessage);
     }
 
-    public void write(MqttMessage mqttMessage) {
+    public synchronized void write(MqttMessage mqttMessage) {
         try {
             mqttMessage.writeTo(session.writeBuffer());
+            session.writeBuffer().flush();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -28,10 +28,13 @@ public class MqttUnsubscribeMessage extends MqttPacketIdentifierMessage {
     @Override
     public void decodePlayLoad(ByteBuffer buffer) {
         final List<String> unsubscribeTopics = new ArrayList<String>();
+        int limit = buffer.limit();
+        buffer.limit(buffer.position() + mqttFixedHeader.remainingLength() - PACKET_LENGTH);
         while (buffer.hasRemaining()) {
             final String decodedTopicName = decodeString(buffer);
             unsubscribeTopics.add(decodedTopicName);
         }
+        buffer.limit(limit);
         mqttUnsubscribePayload = new MqttUnsubscribePayload(unsubscribeTopics);
     }
 

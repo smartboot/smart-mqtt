@@ -1,6 +1,6 @@
 package org.smartboot.mqtt.client.processor;
 
-import org.smartboot.mqtt.client.MqttClientSession;
+import org.smartboot.mqtt.client.MqttClient;
 import org.smartboot.mqtt.common.message.MqttMessage;
 
 /**
@@ -11,9 +11,6 @@ public interface MqttProcessor<T extends MqttMessage> {
 
     /**
      * 处理Mqtt消息
-     *
-     * @param session
-     * @param t
      */
-    void process(MqttClientSession session, T t);
+    void process(MqttClient mqttClient, T message);
 }

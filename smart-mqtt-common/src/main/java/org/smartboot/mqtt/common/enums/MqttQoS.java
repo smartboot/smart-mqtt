@@ -10,12 +10,12 @@ public enum MqttQoS {
     EXACTLY_ONCE(2, "只分发一次"),
     FAILURE(0x80, "暂不支持");
 
-    private final int value;
+    private final byte value;
 
     private final String desc;
 
     MqttQoS(int value, String desc) {
-        this.value = value;
+        this.value = (byte) value;
         this.desc = desc;
     }
 
@@ -28,7 +28,7 @@ public enum MqttQoS {
         throw new IllegalArgumentException("invalid QoS: " + value);
     }
 
-    public int value() {
+    public byte value() {
         return value;
     }
 }

@@ -3,10 +3,8 @@ package org.smartboot.mqtt.common;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
-import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttConnAckVariableHeader;
-import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttPingReqMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
@@ -23,10 +21,6 @@ import java.util.List;
 public final class MqttMessageBuilders {
 
     private MqttMessageBuilders() {
-    }
-
-    public static ConnectBuilder connect() {
-        return new ConnectBuilder();
     }
 
     public static ConnAckBuilder connAck() {
@@ -91,115 +85,6 @@ public final class MqttMessageBuilders {
         }
     }
 
-    public static final class ConnectBuilder {
-
-        private MqttVersion version = MqttVersion.MQTT_3_1_1;
-        private String clientId;
-        private boolean cleanSession;
-        private boolean hasUser;
-        private boolean hasPassword;
-        private int keepAliveSecs;
-        private boolean willFlag;
-        private boolean willRetain;
-        private MqttQoS willQos = MqttQoS.AT_MOST_ONCE;
-        private String willTopic;
-        private byte[] willMessage;
-        private String username;
-        private byte[] password;
-
-        ConnectBuilder() {
-        }
-
-        public ConnectBuilder protocolVersion(MqttVersion version) {
-            this.version = version;
-            return this;
-        }
-
-        public ConnectBuilder clientId(String clientId) {
-            this.clientId = clientId;
-            return this;
-        }
-
-        public ConnectBuilder cleanSession(boolean cleanSession) {
-            this.cleanSession = cleanSession;
-            return this;
-        }
-
-        public ConnectBuilder keepAlive(int keepAliveSecs) {
-            this.keepAliveSecs = keepAliveSecs;
-            return this;
-        }
-
-        public ConnectBuilder willFlag(boolean willFlag) {
-            this.willFlag = willFlag;
-            return this;
-        }
-
-        public ConnectBuilder willQoS(MqttQoS willQos) {
-            this.willQos = willQos;
-            return this;
-        }
-
-        public ConnectBuilder willTopic(String willTopic) {
-            this.willTopic = willTopic;
-            return this;
-        }
-
-
-        public ConnectBuilder willMessage(byte[] willMessage) {
-            this.willMessage = willMessage;
-            return this;
-        }
-
-        public ConnectBuilder willRetain(boolean willRetain) {
-            this.willRetain = willRetain;
-            return this;
-        }
-
-        public ConnectBuilder hasUser(boolean value) {
-            this.hasUser = value;
-            return this;
-        }
-
-        public ConnectBuilder hasPassword(boolean value) {
-            this.hasPassword = value;
-            return this;
-        }
-
-        public ConnectBuilder username(String username) {
-            this.hasUser = true;
-            this.username = username;
-            return this;
-        }
-
-
-        public ConnectBuilder password(byte[] password) {
-            this.hasPassword = true;
-            this.password = password;
-            return this;
-        }
-
-        public MqttConnectMessage build() {
-//            MqttFixedHeader mqttFixedHeader =
-//                    new MqttFixedHeader(MqttMessageType.CONNECT, false, MqttQoS.AT_MOST_ONCE, false, 0);
-//            MqttConnectVariableHeader mqttConnectVariableHeader =
-//                    new MqttConnectVariableHeader(
-//                            version.protocolName(),
-//                            version.protocolLevel(),
-//                            hasUser,
-//                            hasPassword,
-//                            willRetain,
-//                            willQos.value(),
-//                            willFlag,
-//                            cleanSession,
-//                            keepAliveSecs);
-//            MqttConnectPayload mqttConnectPayload =
-//                    new MqttConnectPayload(clientId, willTopic, willMessage, username, password);
-//            return new MqttConnectMessage(mqttFixedHeader, mqttConnectVariableHeader, mqttConnectPayload);
-            throw new UnsupportedOperationException();
-        }
-    }
-
     public static final class SubscribeBuilder {
 
         private List<MqttTopicSubscription> subscriptions;
@@ -210,7 +95,7 @@ public final class MqttMessageBuilders {
 
         public SubscribeBuilder addSubscription(MqttQoS qos, String topic) {
             if (subscriptions == null) {
-                subscriptions = new ArrayList<MqttTopicSubscription>(5);
+                subscriptions = new ArrayList<>(5);
             }
             subscriptions.add(new MqttTopicSubscription(topic, qos));
             return this;

@@ -29,10 +29,13 @@ public class MqttSubAckMessage extends MqttPacketIdentifierMessage {
     @Override
     public void decodePlayLoad(ByteBuffer buffer) {
         final List<Integer> grantedQos = new ArrayList<Integer>();
+        int limit = buffer.limit();
+        buffer.limit(buffer.position() + mqttFixedHeader.remainingLength() - PACKET_LENGTH);
         while (buffer.hasRemaining()) {
             int qos = BufferUtils.readUnsignedByte(buffer) & 0x03;
             grantedQos.add(qos);
         }
+        buffer.limit(limit);
         mqttSubAckPayload = new MqttSubAckPayload(grantedQos);
     }
 

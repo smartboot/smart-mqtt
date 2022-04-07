@@ -19,6 +19,7 @@ package org.smartboot.mqtt.common.message;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
+import org.smartboot.mqtt.common.enums.MqttVersion;
 
 /**
  * CONNECT 报文的可变报头按下列次序包含四个字段：协议名（Protocol Name），协议级别（Protocol
@@ -29,7 +30,7 @@ public final class MqttConnectVariableHeader {
     /**
      * 协议名
      */
-    private final String name;
+    private final String protocolName;
     /**
      * 协议级别
      */
@@ -48,7 +49,7 @@ public final class MqttConnectVariableHeader {
             byte protocolLevel,
             int connectFlag,
             int keepAliveTimeSeconds) {
-        this.name = name;
+        this.protocolName = name;
         this.protocolLevel = protocolLevel;
         this.hasUserName = (connectFlag & 0x80) == 0x80;
         this.hasPassword = (connectFlag & 0x40) == 0x40;
@@ -60,8 +61,22 @@ public final class MqttConnectVariableHeader {
         this.keepAliveTimeSeconds = keepAliveTimeSeconds;
     }
 
-    public String name() {
-        return name;
+    public MqttConnectVariableHeader(MqttVersion mqttVersion, boolean hasUserName, boolean hasPassword, WillMessage willMessage, boolean isCleanSession, int keepAliveTimeSeconds) {
+        this.protocolName = mqttVersion.protocolName();
+        this.protocolLevel = mqttVersion.protocolLevel();
+        this.hasUserName = hasUserName;
+        this.hasPassword = hasPassword;
+        this.isWillFlag = willMessage != null;
+        this.isWillRetain = isWillFlag && willMessage.isWillRetain();
+        this.willQos = isWillFlag ? willMessage.getWillQos().value() : 0;
+        this.isCleanSession = isCleanSession;
+        //服务端必须验证 CONNECT 控制报文的保留标志位（第 0 位）是否为 0，如果不为 0 必须断开客户端连接
+        this.reserved = 0;
+        this.keepAliveTimeSeconds = keepAliveTimeSeconds;
+    }
+
+    public String protocolName() {
+        return protocolName;
     }
 
     public byte getProtocolLevel() {

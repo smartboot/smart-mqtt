@@ -94,9 +94,9 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         MqttConnectVariableHeader connectVariableHeader = mqttConnectMessage.getVariableHeader();
         //如果协议名不正确服务端可以断开客户端的连接，也可以按照某些其它规范继续处理 CONNECT 报文。
         //对于后一种情况，按照本规范，服务端不能继续处理 CONNECT 报文。
-        final MqttProtocolEnum protocol = MqttProtocolEnum.getByName(connectVariableHeader.name());
+        final MqttProtocolEnum protocol = MqttProtocolEnum.getByName(connectVariableHeader.protocolName());
         ValidateUtils.notNull(protocol, "invalid protocol", () -> {
-            LOGGER.error("invalid protocol:{}", connectVariableHeader.name());
+            LOGGER.error("invalid protocol:{}", connectVariableHeader.protocolName());
             session.close();
         });
 

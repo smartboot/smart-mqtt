@@ -8,6 +8,4 @@ public class MqttPingReqMessage extends OnlyFixedHeaderMessage {
     public MqttPingReqMessage(MqttFixedHeader mqttFixedHeader) {
         super(mqttFixedHeader);
     }
-
-
 }
