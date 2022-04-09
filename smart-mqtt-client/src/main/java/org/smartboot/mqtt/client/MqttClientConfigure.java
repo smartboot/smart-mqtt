@@ -2,15 +2,12 @@ package org.smartboot.mqtt.client;
 
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
-import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
-import org.smartboot.mqtt.common.message.MqttSubAckMessage;
 import org.smartboot.mqtt.common.message.WillMessage;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.HostnameVerifier;
 import java.util.Properties;
-import java.util.function.Consumer;
 
 public class MqttClientConfigure {
     /**
@@ -52,12 +49,6 @@ public class MqttClientConfigure {
 
     private String host;
     private int port;
-    private Consumer<MqttConnAckMessage> connectAckConsumer = mqttConnAckMessage -> {
-
-    };
-
-    private Consumer<MqttSubAckMessage> subscribeAckConsumer = mqttSubAckMessage -> {
-    };
 
     private TopicListener topicListener = new TopicListener() {
         @Override
@@ -608,22 +599,6 @@ public class MqttClientConfigure {
 
     public void setCustomWebSocketHeaders(Properties props) {
         this.customWebSocketHeaders = props;
-    }
-
-    public Consumer<MqttConnAckMessage> getConnectAckConsumer() {
-        return connectAckConsumer;
-    }
-
-    public void setConnectAckConsumer(Consumer<MqttConnAckMessage> connectAckConsumer) {
-        this.connectAckConsumer = connectAckConsumer;
-    }
-
-    public Consumer<MqttSubAckMessage> getSubscribeAckConsumer() {
-        return subscribeAckConsumer;
-    }
-
-    public void setSubscribeAckConsumer(Consumer<MqttSubAckMessage> subscribeAckConsumer) {
-        this.subscribeAckConsumer = subscribeAckConsumer;
     }
 
     public String getHost() {

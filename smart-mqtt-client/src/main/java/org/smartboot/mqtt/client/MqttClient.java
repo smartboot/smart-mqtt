@@ -56,14 +56,24 @@ public class MqttClient implements Closeable {
     private final String clientId;
     private final MqttClientConfigure clientConfigure = new MqttClientConfigure();
     private final AbstractMessageProcessor<MqttMessage> messageProcessor = new MqttClientProcessor(this);
-    private final ConcurrentLinkedQueue<Runnable> waitTasks = new ConcurrentLinkedQueue<>();
+    /**
+     * 完成connect之前注册的事件
+     */
+    private final ConcurrentLinkedQueue<Runnable> registeredTasks = new ConcurrentLinkedQueue<>();
+    /**
+     * 已订阅的消息主题
+     */
     private final Map<String, Subscribe> subscribes = new ConcurrentHashMap<>();
+    private final Map<Integer, Consumer<? extends MqttPacketIdentifierMessage>> responseConsumers = new ConcurrentHashMap<>();
     private AioQuickClient client;
     private AioSession aioSession;
     private AsynchronousChannelGroup asynchronousChannelGroup;
     private BufferPagePool bufferPagePool;
     private boolean connected = false;
-    private Map<Integer, Consumer<? extends MqttPacketIdentifierMessage>> responseConsumers = new ConcurrentHashMap<>();
+    /**
+     * connect ack 回调
+     */
+    private Consumer<MqttConnAckMessage> consumer;
 
     public MqttClient(String host, int port, String clientId) {
         clientConfigure.setHost(host);
@@ -84,7 +94,8 @@ public class MqttClient implements Closeable {
         } catch (IOException e) {
             LOGGER.error(e.getMessage(), e);
         }
-        connect(asynchronousChannelGroup, clientConfigure.getConnectAckConsumer());
+        connect(asynchronousChannelGroup, connAckMessage -> {
+        });
     }
 
     public void connect(AsynchronousChannelGroup asynchronousChannelGroup, Consumer<MqttConnAckMessage> consumer) {
@@ -92,19 +103,18 @@ public class MqttClient implements Closeable {
             bufferPagePool = new BufferPagePool(1024 * 1024 * 2, 10, true);
         }
         //设置 connect ack 回调事件
-        clientConfigure.setConnectAckConsumer(mqttConnAckMessage -> {
+        this.consumer = mqttConnAckMessage -> {
             gcConfigure();
             //连接成功,注册订阅消息
             if (mqttConnAckMessage.getMqttConnAckVariableHeader().connectReturnCode() == MqttConnectReturnCode.CONNECTION_ACCEPTED) {
                 connected = true;
                 Runnable runnable;
-                while ((runnable = waitTasks.poll()) != null) {
+                while ((runnable = registeredTasks.poll()) != null) {
                     runnable.run();
                 }
             }
-
             consumer.accept(mqttConnAckMessage);
-        });
+        };
         //启动心跳插件
         if (clientConfigure.getKeepAliveInterval() > 0) {
             messageProcessor.addPlugin(new HeartPlugin<MqttMessage>(clientConfigure.getKeepAliveInterval() * 1000 - 200, TimeUnit.MILLISECONDS) {
@@ -176,7 +186,7 @@ public class MqttClient implements Closeable {
         if (connected) {
             subscribe0(topics, qos, consumer);
         } else {
-            waitTasks.offer(() -> subscribe0(topics, qos, consumer));
+            registeredTasks.offer(() -> subscribe0(topics, qos, consumer));
         }
         return this;
     }
@@ -206,6 +216,10 @@ public class MqttClient implements Closeable {
         consumer.accept(message);
     }
 
+    public void notifyResponse(MqttConnAckMessage connAckMessage) {
+        consumer.accept(connAckMessage);
+    }
+
 
     /**
      * 设置遗嘱消息，必须在connect之前调用
@@ -219,7 +233,7 @@ public class MqttClient implements Closeable {
         if (connected) {
             publish0(topic, qos, payload, retain, consumer);
         } else {
-            waitTasks.offer(() -> publish0(topic, qos, payload, retain, consumer));
+            registeredTasks.offer(() -> publish0(topic, qos, payload, retain, consumer));
         }
     }
 

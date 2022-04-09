@@ -28,10 +28,22 @@ public class MqttClientBootstrap {
                 .connect();
 
         client.subscribe("test", MqttQoS.AT_MOST_ONCE, (mqttClient, publishMessage) -> {
-            System.out.println("aaaa");
+            System.out.println("subscribe message:" + new String(publishMessage.getPayload()));
         });
 
         client.publish("test", MqttQoS.AT_MOST_ONCE, "aa".getBytes(StandardCharsets.UTF_8), false, new Consumer<Integer>() {
+            @Override
+            public void accept(Integer integer) {
+                System.out.println("发送结果：" + integer);
+            }
+        });
+        client.publish("test", MqttQoS.AT_LEAST_ONCE, "bb".getBytes(StandardCharsets.UTF_8), false, new Consumer<Integer>() {
+            @Override
+            public void accept(Integer integer) {
+                System.out.println("发送结果：" + integer);
+            }
+        });
+        client.publish("test", MqttQoS.EXACTLY_ONCE, "cc".getBytes(StandardCharsets.UTF_8), false, new Consumer<Integer>() {
             @Override
             public void accept(Integer integer) {
                 System.out.println("发送结果：" + integer);

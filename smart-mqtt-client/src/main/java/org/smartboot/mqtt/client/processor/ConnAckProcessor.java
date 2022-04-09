@@ -17,7 +17,7 @@ public class ConnAckProcessor implements MqttProcessor<MqttConnAckMessage> {
     @Override
     public void process(MqttClient client, MqttConnAckMessage mqttConnAckMessage) {
         LOGGER.info("receive connectAck message:{}", mqttConnAckMessage);
-        client.getClientConfigure().getConnectAckConsumer().accept(mqttConnAckMessage);
+        client.notifyResponse(mqttConnAckMessage);
     }
 
 }
