@@ -67,7 +67,9 @@ public class BrokerContextImpl implements BrokerContext {
     @Override
     public void init() throws IOException {
         server = new AioQuickServer(1883, new MqttProtocol(), new MqttBrokerMessageProcessor(this));
+        server.setBannerEnabled(false);
         server.start();
+        System.out.println(BrokerConfigure.BANNER + "\r\n :: smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
         //启动keepalive监听线程
 
         loadAndInstallPlugins();

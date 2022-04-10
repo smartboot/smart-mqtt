@@ -10,6 +10,24 @@ import java.util.Properties;
  */
 public class BrokerConfigure {
     /**
+     * http://patorjk.com/software/taag/
+     * Font Name: Puffy
+     */
+    public static final String BANNER = "\n" +
+            "                               _                         _    _       _                  _                  \n" +
+            "                              ( )_                      ( )_ ( )_    ( )                ( )                 \n" +
+            "  ___   ___ ___     _ _  _ __ | ,_)     ___ ___     _ _ | ,_)| ,_)   | |_    _ __   _   | |/')    __   _ __ \n" +
+            "/',__)/' _ ` _ `\\ /'_` )( '__)| |     /' _ ` _ `\\ /'_` )| |  | |     | '_`\\ ( '__)/'_`\\ | , <   /'__`\\( '__)\n" +
+            "\\__, \\| ( ) ( ) |( (_| || |   | |_    | ( ) ( ) |( (_) || |_ | |_    | |_) )| |  ( (_) )| |\\`\\ (  ___/| |   \n" +
+            "(____/(_) (_) (_)`\\__,_)(_)   `\\__)   (_) (_) (_)`\\__, |`\\__)`\\__)   (_,__/'(_)  `\\___/'(_) (_)`\\____)(_)   \n" +
+            "                                                     | |                                                    \n" +
+            "                                                     (_)                                                    ";
+    /**
+     * 当前smart-mqtt
+     */
+    public static final String VERSION = "v1.0.0-SNAPSHOT";
+
+    /**
      * 自定义配置
      */
     private final Properties properties = new Properties();
