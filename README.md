@@ -25,7 +25,7 @@ smart-mqtt 底层通信采用了异步非阻塞通信框架 smart-socket，现�
 - [ ] 待补充。。。
 
 ## 功能演示
-未来 smart-mqtt 会发布开箱即用的运行包，现阶段还需要下载仓库源码进行本地编译、启动。
+未来 smart-mqtt 会发布开箱即用的运行包，现阶段还需要下载仓库源码进行本地编译、启动。    
  **步骤一：启动 MQTT Broker**     
 ![输入图片说明](https://oscimg.oschina.net/oscnet/up-bb309a3e1b46b16697816a7df847eb39fe8.png)
 
