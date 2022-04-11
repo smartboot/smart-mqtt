@@ -5,7 +5,6 @@ import org.smartboot.mqtt.common.message.WillMessage;
 import org.smartboot.mqtt.common.util.MqttUtil;
 
 import java.nio.charset.StandardCharsets;
-import java.util.function.Consumer;
 
 /**
  * @author 三刀
@@ -35,25 +34,10 @@ public class MqttClientBootstrap {
         });
 
         //最多分发一次
-        client.publish("test", MqttQoS.AT_MOST_ONCE, "aa".getBytes(StandardCharsets.UTF_8), false, new Consumer<Integer>() {
-            @Override
-            public void accept(Integer integer) {
-                System.out.println("发送结果：" + integer);
-            }
-        });
+        client.publish("test", MqttQoS.AT_MOST_ONCE, "aa".getBytes(StandardCharsets.UTF_8), false, integer -> System.out.println("发送结果：" + integer));
         //至少分发一次
-        client.publish("test", MqttQoS.AT_LEAST_ONCE, "bb".getBytes(StandardCharsets.UTF_8), false, new Consumer<Integer>() {
-            @Override
-            public void accept(Integer integer) {
-                System.out.println("发送结果：" + integer);
-            }
-        });
+        client.publish("test", MqttQoS.AT_LEAST_ONCE, "bb".getBytes(StandardCharsets.UTF_8), false, integer -> System.out.println("发送结果：" + integer));
         //只分发一次
-        client.publish("test", MqttQoS.EXACTLY_ONCE, "cc".getBytes(StandardCharsets.UTF_8), false, new Consumer<Integer>() {
-            @Override
-            public void accept(Integer integer) {
-                System.out.println("发送结果：" + integer);
-            }
-        });
+        client.publish("test", MqttQoS.EXACTLY_ONCE, "cc".getBytes(StandardCharsets.UTF_8), false, integer -> System.out.println("发送结果：" + integer));
     }
 }
