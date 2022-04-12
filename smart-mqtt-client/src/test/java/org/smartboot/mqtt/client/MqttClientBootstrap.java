@@ -15,7 +15,7 @@ public class MqttClientBootstrap {
     public static void main(String[] args) {
         MqttClient client = new MqttClient("localhost", 1883, MqttUtil.createClientId());
         //心跳
-        client.getClientConfigure().setKeepAliveInterval(2);
+        client.getClientConfigure().setKeepAliveInterval(2).setAutomaticReconnect(true);
 
         //遗嘱消息
         WillMessage willMessage = new WillMessage();

@@ -107,7 +107,10 @@ public class MqttClient implements Closeable {
         }
         //设置 connect ack 回调事件
         this.consumer = mqttConnAckMessage -> {
-            gcConfigure();
+            if (!clientConfigure.isAutomaticReconnect()) {
+                gcConfigure();
+            }
+
             //连接成功,注册订阅消息
             if (mqttConnAckMessage.getMqttConnAckVariableHeader().connectReturnCode() == MqttConnectReturnCode.CONNECTION_ACCEPTED) {
                 connected = true;
@@ -123,6 +126,13 @@ public class MqttClient implements Closeable {
             QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(new Runnable() {
                 @Override
                 public void run() {
+                    if (aioSession.isInvalid()) {
+                        if (clientConfigure.isAutomaticReconnect()) {
+                            LOGGER.warn("mqtt client is disconnect, try to reconnect...");
+                            connect(asynchronousChannelGroup, consumer);
+                        }
+                        return;
+                    }
                     long delay = System.currentTimeMillis() - latestSendMessageTime - clientConfigure.getKeepAliveInterval() * 1000L;
                     //gap 10ms
                     if (delay > -10) {
@@ -286,6 +296,8 @@ public class MqttClient implements Closeable {
 
     @Override
     public void close() throws IOException {
+        //关闭自动重连
+        clientConfigure.setAutomaticReconnect(false);
         client.shutdown();
     }
 

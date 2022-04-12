@@ -40,6 +40,9 @@ public class MqttClientConfigure {
     private int connectionTimeout = CONNECTION_TIMEOUT_DEFAULT;
     private String[] serverURIs = null;
     private MqttVersion mqttVersion = MqttVersion.MQTT_3_1_1;
+    /**
+     * 自动重连
+     */
     private boolean automaticReconnect = false;
     private int maxReconnectDelay = 128000;
     private Properties customWebSocketHeaders = null;
@@ -204,11 +207,12 @@ public class MqttClientConfigure {
      * @param keepAliveInterval the interval, measured in seconds, must be &gt;= 0.
      * @throws IllegalArgumentException if the keepAliveInterval was invalid
      */
-    public void setKeepAliveInterval(int keepAliveInterval) throws IllegalArgumentException {
+    public MqttClientConfigure setKeepAliveInterval(int keepAliveInterval) throws IllegalArgumentException {
         if (keepAliveInterval < 0) {
             throw new IllegalArgumentException();
         }
         this.keepAliveInterval = keepAliveInterval;
+        return this;
     }
 
     /**
