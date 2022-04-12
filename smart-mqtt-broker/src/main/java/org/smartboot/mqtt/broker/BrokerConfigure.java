@@ -27,14 +27,19 @@ public class BrokerConfigure {
      */
     public static final String VERSION = "v1.0.0-SNAPSHOT";
 
+
     /**
      * 自定义配置
      */
     private final Properties properties = new Properties();
     /**
+     * 地址
+     */
+    private String host;
+    /**
      * 端口号
      */
-    private int port;
+    private int port = SystemPropertyDefaultValue.PORT;
     /**
      * 默认的客户端keep-alive超时时间.
      * 保持连接的实际值是由应用指定的，一般是几分钟。允许的最大值是 18 小时 12 分 15 秒。
@@ -71,5 +76,33 @@ public class BrokerConfigure {
 
     public Properties getProperties() {
         return properties;
+    }
+
+    public void setProperty(String name, String value) {
+        properties.setProperty(name, value);
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+
+    interface SystemProperty {
+        /**
+         * 服务地址
+         */
+        String HOST = "broker.host";
+        /**
+         * broker服务端口号
+         */
+        String PORT = "broker.port";
+    }
+
+    interface SystemPropertyDefaultValue {
+        int PORT = 1883;
     }
 }

@@ -66,7 +66,8 @@ public class BrokerContextImpl implements BrokerContext {
 
     @Override
     public void init() throws IOException {
-        server = new AioQuickServer(1883, new MqttProtocol(), new MqttBrokerMessageProcessor(this));
+        updateBrokerConfigure();
+        server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(), new MqttBrokerMessageProcessor(this));
         server.setBannerEnabled(false);
         server.start();
         System.out.println(BrokerConfigure.BANNER + "\r\n :: smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
@@ -74,6 +75,14 @@ public class BrokerContextImpl implements BrokerContext {
 
         loadAndInstallPlugins();
         listeners.getBrokerLifecycleListeners().forEach(listener -> listener.onStarted(this));
+    }
+
+    private void updateBrokerConfigure() {
+        brokerConfigure.setHost(System.getProperty(BrokerConfigure.SystemProperty.HOST));
+        brokerConfigure.setPort(Integer.parseInt(System.getProperty(BrokerConfigure.SystemProperty.PORT, String.valueOf(BrokerConfigure.SystemPropertyDefaultValue.PORT))));
+        System.getProperties().stringPropertyNames().forEach(name -> {
+            brokerConfigure.setProperty(name, System.getProperty(name));
+        });
     }
 
     /**

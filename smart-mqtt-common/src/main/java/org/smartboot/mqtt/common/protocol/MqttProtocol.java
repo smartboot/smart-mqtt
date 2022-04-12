@@ -54,7 +54,7 @@ public class MqttProtocol implements Protocol<MqttMessage> {
                     short b1 = BufferUtils.readUnsignedByte(buffer);
 
                     MqttMessageType messageType = MqttMessageType.valueOf(b1 >> 4);
-                    System.out.println("messageType:" + messageType);
+//                    System.out.println("messageType:" + messageType);
                     boolean dupFlag = (b1 & 0x08) == 0x08;
                     int qosLevel = (b1 & 0x06) >> 1;
                     boolean retain = (b1 & 0x01) != 0;
