@@ -2,9 +2,10 @@ package org.smartboot.mqtt.broker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.common.QosProcess;
 import org.smartboot.mqtt.common.StoredMessage;
-import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.socket.transport.AioSession;
 
@@ -13,6 +14,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 /**
  * 会话，客户端和服务端之间的状态交互。
@@ -33,6 +35,8 @@ public class MqttSession {
     private final Map<String, TopicSubscriber> consumeOffsets = new ConcurrentHashMap<>();
 
     private final ConcurrentMap<Integer, StoredMessage> inboundInflightMessages = new ConcurrentHashMap<>();
+    private final Map<Integer, Consumer<? extends MqttPacketIdentifierMessage>> responseConsumers = new ConcurrentHashMap<>();
+
 
     private final AioSession session;
     private final BrokerContext mqttContext;
@@ -55,18 +59,39 @@ public class MqttSession {
      */
     private StoredMessage willMessage;
 
+    private QosProcess qosProcess = new QosProcess();
+
     public MqttSession(BrokerContext mqttContext, AioSession session) {
         this.mqttContext = mqttContext;
         this.session = session;
     }
 
-    public void publish(MqttPublishMessage publishMessage) {
-        LOGGER.info("publish to client:{}, topic:{} packetId:{}", clientId, publishMessage.getMqttPublishVariableHeader().topicName(), publishMessage.getMqttPublishVariableHeader().packetId());
-        //QoS1 响应监听
-        if (publishMessage.getMqttFixedHeader().getQosLevel() == MqttQoS.AT_LEAST_ONCE) {
-            putInFightMessage(publishMessage.getMqttPublishVariableHeader().packetId(), BrokerContextImpl.asStoredMessage(publishMessage));
+    public void publish(MqttPublishMessage message) {
+        LOGGER.info("publish to client:{}, topic:{} packetId:{}", clientId, message.getMqttPublishVariableHeader().topicName(), message.getMqttPublishVariableHeader().packetId());
+
+        switch (message.getMqttFixedHeader().getQosLevel()) {
+            case AT_MOST_ONCE:
+                qosProcess.publishQos0(message, this::write);
+                break;
+            case AT_LEAST_ONCE:
+                qosProcess.publishQos1(responseConsumers, message.getMqttPublishVariableHeader().packetId(), message, integer -> {
+
+                }, this::write);
+                break;
+            case EXACTLY_ONCE:
+                qosProcess.publishQos2(responseConsumers, message.getMqttPublishVariableHeader().packetId(), message, new Consumer<Integer>() {
+                    @Override
+                    public void accept(Integer integer) {
+
+                    }
+                }, this::write);
+                break;
         }
-        write(publishMessage);
+    }
+
+    public void notifyResponse(MqttPacketIdentifierMessage message) {
+        Consumer consumer = responseConsumers.get(message.getPacketId());
+        consumer.accept(message);
     }
 
     public synchronized void write(MqttMessage mqttMessage) {

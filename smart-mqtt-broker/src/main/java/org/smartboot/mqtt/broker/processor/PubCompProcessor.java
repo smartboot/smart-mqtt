@@ -18,5 +18,6 @@ public class PubCompProcessor extends AuthorizedMqttProcessor<MqttPubCompMessage
     @Override
     public void process0(BrokerContext context, MqttSession session, MqttPubCompMessage mqttPubCompMessage) {
         LOGGER.info("pubComp message:{}", mqttPubCompMessage);
+        session.notifyResponse(mqttPubCompMessage);
     }
 }

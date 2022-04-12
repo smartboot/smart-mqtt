@@ -8,6 +8,7 @@ import org.smartboot.mqtt.common.QosCallback;
 import org.smartboot.mqtt.common.QosCallbackController;
 import org.smartboot.mqtt.common.QosCallbackProcessor;
 import org.smartboot.mqtt.common.QosCallbackProcessors;
+import org.smartboot.mqtt.common.QosProcess;
 import org.smartboot.mqtt.common.QosPubAckProcessor;
 import org.smartboot.mqtt.common.QosPubCompProcessor;
 import org.smartboot.mqtt.common.QosPubRecProcessor;
@@ -23,10 +24,6 @@ import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPingReqMessage;
-import org.smartboot.mqtt.common.message.MqttPubAckMessage;
-import org.smartboot.mqtt.common.message.MqttPubCompMessage;
-import org.smartboot.mqtt.common.message.MqttPubRecMessage;
-import org.smartboot.mqtt.common.message.MqttPubRelMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttSubAckMessage;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
@@ -73,7 +70,7 @@ public class MqttClient implements Closeable {
     private final Map<String, Subscribe> subscribes = new ConcurrentHashMap<>();
     private final Map<Integer, Consumer<? extends MqttPacketIdentifierMessage>> responseConsumers = new ConcurrentHashMap<>();
     private final QosCallbackController qosCallbackController;
-
+    private QosProcess qosProcess = new QosProcess();
     private AioQuickClient client;
     private AioSession aioSession;
     private AsynchronousChannelGroup asynchronousChannelGroup;
@@ -280,42 +277,26 @@ public class MqttClient implements Closeable {
         }
     }
 
+
     private void publish0(String topic, MqttQoS qos, byte[] payload, boolean retain, Consumer<Integer> consumer) {
         ValidateUtils.notNull(qos, "qos is null");
         MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().topicName(topic).qos(qos).payload(payload).retained(retain);
         if (qos.value() > 0) {
             int packetId = newPacketId();
             publishBuilder.packetId(packetId);
-            if (qos == MqttQoS.AT_LEAST_ONCE) {
-                //至少一次
-                responseConsumers.put(packetId, message -> {
-                    ValidateUtils.isTrue(message instanceof MqttPubAckMessage, "invalid message type");
-                    responseConsumers.remove(packetId);
-                    LOGGER.info("Qos1消息发送成功...");
-                    consumer.accept(packetId);
-                });
-                // Qos level 1
-                qosCallbackController.put(clientId + "_" + packetId, new QosCallback(clientId, packetId, qos.value(), QosCallback.CLIENT));
-
-            } else if (qos == MqttQoS.EXACTLY_ONCE) {
-                //只有一次
-                responseConsumers.put(packetId, message -> {
-                    ValidateUtils.isTrue(message instanceof MqttPubRecMessage, "invalid message type");
-                    responseConsumers.put(packetId, (Consumer<MqttPubCompMessage>) compMessage -> {
-                        LOGGER.info("Qos2消息发送成功...");
-                        consumer.accept(compMessage.getPacketId());
-                    });
-                    MqttPubRelMessage pubRelMessage = new MqttPubRelMessage(new MqttFixedHeader(MqttMessageType.PUBREL, false, MqttQoS.AT_MOST_ONCE, false, 0));
-                    pubRelMessage.setPacketId(message.getPacketId());
-                    write(pubRelMessage);
-                });
-
-                // Qos level 2
-                qosCallbackController.put(clientId + "_" + packetId, new QosCallback(clientId, packetId, qos.value(), QosCallback.CLIENT));
-            }
-
         }
-        write(publishBuilder.build());
+        MqttPublishMessage message = publishBuilder.build();
+        switch (qos) {
+            case AT_MOST_ONCE:
+                qosProcess.publishQos0(message, this::write);
+                break;
+            case AT_LEAST_ONCE:
+                qosProcess.publishQos1(responseConsumers, message.getMqttPublishVariableHeader().packetId(), message, consumer, this::write);
+                break;
+            case EXACTLY_ONCE:
+                qosProcess.publishQos2(responseConsumers, message.getMqttPublishVariableHeader().packetId(), message, consumer, this::write);
+                break;
+        }
     }
 
     public int newPacketId() {
