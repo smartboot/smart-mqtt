@@ -40,46 +40,42 @@ public class MqttSession {
 
     private final AioSession session;
     private final BrokerContext mqttContext;
+    private final QosPublisher qosPublisher;
     private String clientId;
     private String username;
     /**
      * 最近一次收到客户端消息的时间
      */
     private long latestReceiveMessageSecondTime;
-
     private boolean closed = false;
-
     /**
      * 已授权
      */
     private boolean authorized;
-
     /**
      * 遗嘱消息
      */
     private StoredMessage willMessage;
 
-    private QosPublisher qosProcess = new QosPublisher();
-
-    public MqttSession(BrokerContext mqttContext, AioSession session) {
+    public MqttSession(BrokerContext mqttContext, AioSession session, QosPublisher qosPublisher) {
         this.mqttContext = mqttContext;
         this.session = session;
+        this.qosPublisher = qosPublisher;
     }
 
     public void publish(MqttPublishMessage message) {
         LOGGER.info("publish to client:{}, topic:{} packetId:{}", clientId, message.getMqttPublishVariableHeader().topicName(), message.getMqttPublishVariableHeader().packetId());
-
         switch (message.getMqttFixedHeader().getQosLevel()) {
             case AT_MOST_ONCE:
-                qosProcess.publishQos0(message, this::write);
+                qosPublisher.publishQos0(message, this::write);
                 break;
             case AT_LEAST_ONCE:
-                qosProcess.publishQos1(responseConsumers, message.getMqttPublishVariableHeader().packetId(), message, integer -> {
+                qosPublisher.publishQos1(responseConsumers, message.getMqttPublishVariableHeader().packetId(), message, integer -> {
 
                 }, this::write);
                 break;
             case EXACTLY_ONCE:
-                qosProcess.publishQos2(responseConsumers, message.getMqttPublishVariableHeader().packetId(), message, new Consumer<Integer>() {
+                qosPublisher.publishQos2(responseConsumers, message.getMqttPublishVariableHeader().packetId(), message, new Consumer<Integer>() {
                     @Override
                     public void accept(Integer integer) {
 

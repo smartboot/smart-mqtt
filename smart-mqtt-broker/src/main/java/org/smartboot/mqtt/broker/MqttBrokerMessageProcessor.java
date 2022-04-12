@@ -12,6 +12,7 @@ import org.smartboot.mqtt.broker.processor.PubRelProcessor;
 import org.smartboot.mqtt.broker.processor.PublishProcessor;
 import org.smartboot.mqtt.broker.processor.SubscribeProcessor;
 import org.smartboot.mqtt.broker.processor.UnSubscribeProcessor;
+import org.smartboot.mqtt.common.QosPublisher;
 import org.smartboot.mqtt.common.exception.MqttProcessException;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
@@ -24,7 +25,6 @@ import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.socket.StateMachineEnum;
-import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioSession;
 
@@ -47,6 +47,7 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
      */
     private final Map<String, MqttSession> onlineSessions = new ConcurrentHashMap<>();
     private final Map<Class<? extends MqttMessage>, MqttProcessor> processorMap = new HashMap<>();
+    private final QosPublisher qosPublisher = new QosPublisher();
 
     {
         processorMap.put(MqttPingReqMessage.class, new PingReqProcessor());
@@ -82,7 +83,7 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
     public void stateEvent0(AioSession session, StateMachineEnum stateMachineEnum, Throwable throwable) {
         switch (stateMachineEnum) {
             case NEW_SESSION:
-                onlineSessions.put(session.getSessionID(), new MqttSession(mqttContext, session));
+                onlineSessions.put(session.getSessionID(), new MqttSession(mqttContext, session, qosPublisher));
                 break;
             case SESSION_CLOSED:
                 onlineSessions.remove(session.getSessionID()).close();
