@@ -18,8 +18,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-public class QosProcess {
-    private static final Logger LOGGER = LoggerFactory.getLogger(QosProcess.class);
+public class QosPublisher {
+    private static final Logger LOGGER = LoggerFactory.getLogger(QosPublisher.class);
 
     public void publishQos0(MqttPublishMessage publishMessage, Consumer<MqttMessage> writeConsumer) {
         MqttQoS qos = publishMessage.getMqttFixedHeader().getQosLevel();

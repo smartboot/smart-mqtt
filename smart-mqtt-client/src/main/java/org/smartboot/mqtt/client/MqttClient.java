@@ -8,7 +8,7 @@ import org.smartboot.mqtt.common.QosCallback;
 import org.smartboot.mqtt.common.QosCallbackController;
 import org.smartboot.mqtt.common.QosCallbackProcessor;
 import org.smartboot.mqtt.common.QosCallbackProcessors;
-import org.smartboot.mqtt.common.QosProcess;
+import org.smartboot.mqtt.common.QosPublisher;
 import org.smartboot.mqtt.common.QosPubAckProcessor;
 import org.smartboot.mqtt.common.QosPubCompProcessor;
 import org.smartboot.mqtt.common.QosPubRecProcessor;
@@ -70,7 +70,7 @@ public class MqttClient implements Closeable {
     private final Map<String, Subscribe> subscribes = new ConcurrentHashMap<>();
     private final Map<Integer, Consumer<? extends MqttPacketIdentifierMessage>> responseConsumers = new ConcurrentHashMap<>();
     private final QosCallbackController qosCallbackController;
-    private QosProcess qosProcess = new QosProcess();
+    private QosPublisher qosProcess = new QosPublisher();
     private AioQuickClient client;
     private AioSession aioSession;
     private AsynchronousChannelGroup asynchronousChannelGroup;

@@ -2,7 +2,7 @@ package org.smartboot.mqtt.broker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.common.QosProcess;
+import org.smartboot.mqtt.common.QosPublisher;
 import org.smartboot.mqtt.common.StoredMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
@@ -59,7 +59,7 @@ public class MqttSession {
      */
     private StoredMessage willMessage;
 
-    private QosProcess qosProcess = new QosProcess();
+    private QosPublisher qosProcess = new QosPublisher();
 
     public MqttSession(BrokerContext mqttContext, AioSession session) {
         this.mqttContext = mqttContext;
