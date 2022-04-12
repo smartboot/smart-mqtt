@@ -3,15 +3,19 @@ package org.smartboot.mqtt.broker.processor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
-import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.BrokerTopic;
+import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.common.StoredMessage;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
+import org.smartboot.mqtt.common.message.MqttPubCompMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
+import org.smartboot.mqtt.common.message.MqttPubRelMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
+
+import java.util.function.Consumer;
 
 /**
  * 发布Topic
@@ -86,14 +90,25 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
     private void processQos2(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
         String clientId = session.getClientId();
 
-        StoredMessage storedMessage = asStoredMessage(mqttPublishMessage);
-        storedMessage.setClientID(clientId);
 
         MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBREC, false, mqttPublishMessage.getMqttFixedHeader().getQosLevel(), false, 0);
         MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(fixedHeader, mqttPublishMessage.getMqttPublishVariableHeader().packetId());
         //响应监听
-        session.putInFightMessage(mqttPublishMessage.getMqttPublishVariableHeader().packetId(), storedMessage);
-        session.write(pubRecMessage);
+        session.write(pubRecMessage, (Consumer<MqttPubRelMessage>) message -> {
+            final BrokerTopic topic = context.getOrCreateTopic(mqttPublishMessage.getMqttPublishVariableHeader().topicName());
+            StoredMessage storedMessage = asStoredMessage(mqttPublishMessage);
+            storedMessage.setClientID(clientId);
+            if (mqttPublishMessage.getMqttFixedHeader().isRetain()) {
+
+                context.getProviders().getMessageStoreProvider().storeTopic(storedMessage);
+            }
+            //发送pubRel消息。
+            MqttPubCompMessage pubRelMessage = new MqttPubCompMessage(new MqttFixedHeader(MqttMessageType.PUBCOMP, false, MqttQoS.AT_MOST_ONCE, false, 0));
+            pubRelMessage.setPacketId(message.getPacketId());
+            session.write(pubRelMessage);
+            // 发送给subscribe
+            context.publish(topic, storedMessage);
+        });
     }
 
     private StoredMessage asStoredMessage(MqttPublishMessage msg) {

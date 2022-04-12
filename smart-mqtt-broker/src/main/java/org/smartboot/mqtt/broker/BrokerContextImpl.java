@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Consumer;
 
 /**
  * @author 三刀
@@ -144,7 +145,12 @@ public class BrokerContextImpl implements BrokerContext {
         System.out.println("publish message to: " + topic.getConsumeOffsets().size());
         PUSH_THREAD_POOL.execute(() -> topic.getConsumeOffsets().forEach((mqttSession, consumeOffset) -> {
             MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(mqttSession.newPacketId(), storedMessage, consumeOffset.getMqttQoS());
-            mqttSession.publish(publishMessage);
+            mqttSession.publish(publishMessage, new Consumer<Integer>() {
+                @Override
+                public void accept(Integer integer) {
+                    //移除超时监听
+                }
+            });
             System.out.println("publish message to " + mqttSession.getClientId());
         }));
     }

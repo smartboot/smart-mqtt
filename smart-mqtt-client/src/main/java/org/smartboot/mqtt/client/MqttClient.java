@@ -3,26 +3,18 @@ package org.smartboot.mqtt.client;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.MqttMessageBuilders;
-import org.smartboot.mqtt.common.QosCallback;
-import org.smartboot.mqtt.common.QosCallbackController;
-import org.smartboot.mqtt.common.QosCallbackProcessor;
-import org.smartboot.mqtt.common.QosCallbackProcessors;
-import org.smartboot.mqtt.common.QosPubAckProcessor;
-import org.smartboot.mqtt.common.QosPubCompProcessor;
-import org.smartboot.mqtt.common.QosPubRecProcessor;
 import org.smartboot.mqtt.common.QosPublisher;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
-import org.smartboot.mqtt.common.enums.QosCallbackTypeEnum;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttConnectPayload;
 import org.smartboot.mqtt.common.message.MqttConnectVariableHeader;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttMessage;
-import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPingReqMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttSubAckMessage;
@@ -30,11 +22,9 @@ import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
 import org.smartboot.mqtt.common.message.WillMessage;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
-import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioQuickClient;
-import org.smartboot.socket.transport.AioSession;
 import org.smartboot.socket.util.QuickTimerTask;
 
 import java.io.Closeable;
@@ -50,14 +40,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-public class MqttClient implements Closeable {
+public class MqttClient extends AbstractSession implements Closeable {
 
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
-    /**
-     * 用于生成当前会话的报文标识符
-     */
-    private final AtomicInteger packetIdCreator = new AtomicInteger(1);
-    private final String clientId;
+
     private final MqttClientConfigure clientConfigure = new MqttClientConfigure();
     private final AbstractMessageProcessor<MqttMessage> messageProcessor = new MqttClientProcessor(this);
     /**
@@ -68,33 +54,22 @@ public class MqttClient implements Closeable {
      * 已订阅的消息主题
      */
     private final Map<String, Subscribe> subscribes = new ConcurrentHashMap<>();
-    private final Map<Integer, Consumer<? extends MqttPacketIdentifierMessage>> responseConsumers = new ConcurrentHashMap<>();
-    private final QosCallbackController qosCallbackController;
-    private final QosPublisher qosProcess = new QosPublisher();
     private AioQuickClient client;
-    private AioSession aioSession;
+
     private AsynchronousChannelGroup asynchronousChannelGroup;
     private BufferPagePool bufferPagePool;
     private boolean connected = false;
-    /**
-     * 最近一次发送的消息
-     */
-    private long latestSendMessageTime;
+
     /**
      * connect ack 回调
      */
     private Consumer<MqttConnAckMessage> consumer;
 
     public MqttClient(String host, int port, String clientId) {
+        super(new QosPublisher());
         clientConfigure.setHost(host);
         clientConfigure.setPort(port);
         this.clientId = clientId;
-        this.qosCallbackController = new MqttClientQosCallbackController(this);
-
-        QosCallbackProcessors.registerProcessor(QosCallbackTypeEnum.PUBACK.getType(), new QosPubAckProcessor());
-        QosCallbackProcessors.registerProcessor(QosCallbackTypeEnum.PUBREC.getType(), new QosPubRecProcessor());
-        QosCallbackProcessors.registerProcessor(QosCallbackTypeEnum.PUBCOMP.getType(), new QosPubCompProcessor());
-
     }
 
     public void connect() {
@@ -139,14 +114,14 @@ public class MqttClient implements Closeable {
             QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(new Runnable() {
                 @Override
                 public void run() {
-                    if (aioSession.isInvalid()) {
+                    if (session.isInvalid()) {
                         if (clientConfigure.isAutomaticReconnect()) {
                             LOGGER.warn("mqtt client is disconnect, try to reconnect...");
                             connect(asynchronousChannelGroup, consumer);
                         }
                         return;
                     }
-                    long delay = System.currentTimeMillis() - latestSendMessageTime - clientConfigure.getKeepAliveInterval() * 1000L;
+                    long delay = System.currentTimeMillis() - getLatestSendMessageTime() - clientConfigure.getKeepAliveInterval() * 1000L;
                     //gap 10ms
                     if (delay > -10) {
                         MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.PINGREQ, false, MqttQoS.AT_MOST_ONCE, false, 0);
@@ -164,7 +139,7 @@ public class MqttClient implements Closeable {
         try {
             client.setBufferPagePool(bufferPagePool);
             client.setWriteBuffer(1024 * 1024, 10);
-            aioSession = client.start(asynchronousChannelGroup);
+            session = client.start(asynchronousChannelGroup);
             //remainingLength 字段动态计算，此处可传入任意值
             MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.CONNECT, false, MqttQoS.AT_MOST_ONCE, false, 0);
             MqttConnectVariableHeader variableHeader = new MqttConnectVariableHeader(clientConfigure.getMqttVersion(), StringUtils.isNotBlank(clientConfigure.getUserName()), clientConfigure.getPassword() != null, clientConfigure.getWillMessage(), clientConfigure.isCleanSession(), clientConfigure.getKeepAliveInterval());
@@ -184,25 +159,6 @@ public class MqttClient implements Closeable {
         clientConfigure.setWillMessage(null);
     }
 
-    public synchronized void write(MqttMessage mqttMessage) {
-        try {
-            mqttMessage.writeTo(aioSession.writeBuffer());
-            aioSession.writeBuffer().flush();
-            latestSendMessageTime = System.currentTimeMillis();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public synchronized void write(MqttPacketIdentifierMessage mqttMessage, Consumer<? extends MqttPacketIdentifierMessage> consumer) {
-        try {
-            responseConsumers.put(mqttMessage.getPacketId(), consumer);
-            mqttMessage.writeTo(aioSession.writeBuffer());
-            aioSession.writeBuffer().flush();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     public MqttClient subscribe(String topic, MqttQoS qos, BiConsumer<MqttClient, MqttPublishMessage> consumer) {
         return subscribe(new String[]{topic}, new MqttQoS[]{qos}, consumer);
@@ -237,25 +193,6 @@ public class MqttClient implements Closeable {
         write(subscribeMessage);
     }
 
-    public void notifyResponse(MqttPacketIdentifierMessage message) {
-        Consumer consumer = responseConsumers.get(message.getPacketId());
-        consumer.accept(message);
-
-        QosCallback qosCallback = qosCallbackController.get(clientId + "_" + message.getPacketId());
-        if (qosCallback == null) {
-            return;
-        }
-
-        // 1、get processor
-        QosCallbackProcessor processor = QosCallbackProcessors.getProcessor(qosCallback.getCallbackType());
-        if (processor == null) {
-            throw new IllegalStateException("cannot find processor");
-        }
-
-        // 2、process
-        processor.process(qosCallbackController, qosCallback, message, aioSession);
-    }
-
     public void notifyResponse(MqttConnAckMessage connAckMessage) {
         consumer.accept(connAckMessage);
     }
@@ -270,37 +207,17 @@ public class MqttClient implements Closeable {
     }
 
     public void publish(String topic, MqttQoS qos, byte[] payload, boolean retain, Consumer<Integer> consumer) {
-        if (connected) {
-            publish0(topic, qos, payload, retain, consumer);
-        } else {
-            registeredTasks.offer(() -> publish0(topic, qos, payload, retain, consumer));
-        }
-    }
-
-
-    private void publish0(String topic, MqttQoS qos, byte[] payload, boolean retain, Consumer<Integer> consumer) {
-        ValidateUtils.notNull(qos, "qos is null");
         MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().topicName(topic).qos(qos).payload(payload).retained(retain);
         if (qos.value() > 0) {
             int packetId = newPacketId();
             publishBuilder.packetId(packetId);
         }
         MqttPublishMessage message = publishBuilder.build();
-        switch (qos) {
-            case AT_MOST_ONCE:
-                qosProcess.publishQos0(message, this::write);
-                break;
-            case AT_LEAST_ONCE:
-                qosProcess.publishQos1(responseConsumers, message.getMqttPublishVariableHeader().packetId(), message, consumer, this::write);
-                break;
-            case EXACTLY_ONCE:
-                qosProcess.publishQos2(responseConsumers, message.getMqttPublishVariableHeader().packetId(), message, consumer, this::write);
-                break;
+        if (connected) {
+            publish(message, consumer);
+        } else {
+            registeredTasks.offer(() -> publish(message, consumer));
         }
-    }
-
-    public int newPacketId() {
-        return packetIdCreator.getAndIncrement();
     }
 
     public MqttClientConfigure getClientConfigure() {

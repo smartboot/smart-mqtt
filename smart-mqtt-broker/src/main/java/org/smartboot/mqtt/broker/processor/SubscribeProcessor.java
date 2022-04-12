@@ -4,14 +4,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.broker.store.MessageQueue;
 import org.smartboot.mqtt.broker.TopicSubscriber;
+import org.smartboot.mqtt.broker.store.MessageQueue;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttSubAckMessage;
 import org.smartboot.mqtt.common.message.MqttSubAckPayload;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
 import org.smartboot.mqtt.common.util.MqttUtil;
+
+import java.util.function.Consumer;
 
 /**
  * 客户端订阅消息
@@ -41,7 +43,12 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
                 storeQueue.forEach(storedMessage -> {
                     LOGGER.info("publish topic:{}  retain message to client:{}", storedMessage.getTopic(), session.getClientId());
                     MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(session.newPacketId(), storedMessage, consumeOffset.getMqttQoS());
-                    session.publish(publishMessage);
+                    session.publish(publishMessage, new Consumer<Integer>() {
+                        @Override
+                        public void accept(Integer integer) {
+                            //移除超时监听
+                        }
+                    });
                 });
             }).value();
         }
