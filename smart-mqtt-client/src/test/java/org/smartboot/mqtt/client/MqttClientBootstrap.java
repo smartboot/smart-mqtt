@@ -1,6 +1,8 @@
 package org.smartboot.mqtt.client;
 
+import org.smartboot.mqtt.common.QosCallbackProcessors;
 import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.common.enums.QosCallbackTypeEnum;
 import org.smartboot.mqtt.common.message.WillMessage;
 import org.smartboot.mqtt.common.util.MqttUtil;
 

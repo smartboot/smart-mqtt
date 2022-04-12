@@ -4,9 +4,17 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.MqttMessageBuilders;
+import org.smartboot.mqtt.common.QosCallback;
+import org.smartboot.mqtt.common.QosCallbackController;
+import org.smartboot.mqtt.common.QosCallbackProcessor;
+import org.smartboot.mqtt.common.QosCallbackProcessors;
+import org.smartboot.mqtt.common.QosPubAckProcessor;
+import org.smartboot.mqtt.common.QosPubCompProcessor;
+import org.smartboot.mqtt.common.QosPubRecProcessor;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.common.enums.QosCallbackTypeEnum;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttConnectPayload;
@@ -64,6 +72,8 @@ public class MqttClient implements Closeable {
      */
     private final Map<String, Subscribe> subscribes = new ConcurrentHashMap<>();
     private final Map<Integer, Consumer<? extends MqttPacketIdentifierMessage>> responseConsumers = new ConcurrentHashMap<>();
+    private final QosCallbackController qosCallbackController;
+
     private AioQuickClient client;
     private AioSession aioSession;
     private AsynchronousChannelGroup asynchronousChannelGroup;
@@ -82,6 +92,12 @@ public class MqttClient implements Closeable {
         clientConfigure.setHost(host);
         clientConfigure.setPort(port);
         this.clientId = clientId;
+        this.qosCallbackController = new MqttClientQosCallbackController(this);
+
+        QosCallbackProcessors.registerProcessor(QosCallbackTypeEnum.PUBACK.getType(), new QosPubAckProcessor());
+        QosCallbackProcessors.registerProcessor(QosCallbackTypeEnum.PUBREC.getType(), new QosPubRecProcessor());
+        QosCallbackProcessors.registerProcessor(QosCallbackTypeEnum.PUBCOMP.getType(), new QosPubCompProcessor());
+
     }
 
     public void connect() {
@@ -227,6 +243,20 @@ public class MqttClient implements Closeable {
     public void notifyResponse(MqttPacketIdentifierMessage message) {
         Consumer consumer = responseConsumers.get(message.getPacketId());
         consumer.accept(message);
+
+        QosCallback qosCallback = qosCallbackController.get(clientId + "_" + message.getPacketId());
+        if (qosCallback == null) {
+            return;
+        }
+
+        // 1、get processor
+        QosCallbackProcessor processor = QosCallbackProcessors.getProcessor(qosCallback.getCallbackType());
+        if (processor == null) {
+            throw new IllegalStateException("cannot find processor");
+        }
+
+        // 2、process
+        processor.process(qosCallbackController, qosCallback, message, aioSession);
     }
 
     public void notifyResponse(MqttConnAckMessage connAckMessage) {
@@ -264,6 +294,9 @@ public class MqttClient implements Closeable {
                     LOGGER.info("Qos1消息发送成功...");
                     consumer.accept(packetId);
                 });
+                // Qos level 1
+                qosCallbackController.put(clientId + "_" + packetId, new QosCallback(clientId, packetId, qos.value(), QosCallback.CLIENT));
+
             } else if (qos == MqttQoS.EXACTLY_ONCE) {
                 //只有一次
                 responseConsumers.put(packetId, message -> {
@@ -276,6 +309,9 @@ public class MqttClient implements Closeable {
                     pubRelMessage.setPacketId(message.getPacketId());
                     write(pubRelMessage);
                 });
+
+                // Qos level 2
+                qosCallbackController.put(clientId + "_" + packetId, new QosCallback(clientId, packetId, qos.value(), QosCallback.CLIENT));
             }
 
         }
