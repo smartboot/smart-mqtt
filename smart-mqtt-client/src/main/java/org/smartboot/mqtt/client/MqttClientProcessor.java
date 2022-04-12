@@ -4,10 +4,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.client.processor.ConnAckProcessor;
 import org.smartboot.mqtt.client.processor.MqttAckProcessor;
+import org.smartboot.mqtt.client.processor.MqttPingRespProcessor;
 import org.smartboot.mqtt.client.processor.MqttProcessor;
 import org.smartboot.mqtt.client.processor.PublishProcessor;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.mqtt.common.message.MqttPingRespMessage;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
 import org.smartboot.mqtt.common.message.MqttPubCompMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
@@ -39,6 +41,7 @@ public class MqttClientProcessor extends AbstractMessageProcessor<MqttMessage> {
         processorMap.put(MqttPubCompMessage.class, new MqttAckProcessor<MqttPubCompMessage>());
         processorMap.put(MqttPubRelMessage.class, new MqttAckProcessor<MqttPubRelMessage>());
         processorMap.put(MqttSubAckMessage.class, new MqttAckProcessor<MqttPubRelMessage>());
+        processorMap.put(MqttPingRespMessage.class, new MqttPingRespProcessor());
     }
 
     @Override

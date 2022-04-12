@@ -15,7 +15,6 @@ import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPingReqMessage;
-import org.smartboot.mqtt.common.message.MqttPingRespMessage;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
 import org.smartboot.mqtt.common.message.MqttPubCompMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
@@ -28,10 +27,10 @@ import org.smartboot.mqtt.common.message.WillMessage;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.buffer.BufferPagePool;
-import org.smartboot.socket.extension.plugins.HeartPlugin;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioQuickClient;
 import org.smartboot.socket.transport.AioSession;
+import org.smartboot.socket.util.QuickTimerTask;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -70,6 +69,10 @@ public class MqttClient implements Closeable {
     private AsynchronousChannelGroup asynchronousChannelGroup;
     private BufferPagePool bufferPagePool;
     private boolean connected = false;
+    /**
+     * 最近一次发送的消息
+     */
+    private long latestSendMessageTime;
     /**
      * connect ack 回调
      */
@@ -117,22 +120,21 @@ public class MqttClient implements Closeable {
         };
         //启动心跳插件
         if (clientConfigure.getKeepAliveInterval() > 0) {
-            messageProcessor.addPlugin(new HeartPlugin<MqttMessage>(clientConfigure.getKeepAliveInterval() * 1000 - 200, TimeUnit.MILLISECONDS) {
-
+            QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(new Runnable() {
                 @Override
-                public void sendHeartRequest(AioSession session) throws IOException {
-                    if (connected) {
+                public void run() {
+                    long delay = System.currentTimeMillis() - latestSendMessageTime - clientConfigure.getKeepAliveInterval() * 1000L;
+                    //gap 10ms
+                    if (delay > -10) {
                         MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.PINGREQ, false, MqttQoS.AT_MOST_ONCE, false, 0);
                         MqttPingReqMessage pingReqMessage = new MqttPingReqMessage(mqttFixedHeader);
                         write(pingReqMessage);
+                        QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(this, clientConfigure.getKeepAliveInterval(), TimeUnit.SECONDS);
+                    } else {
+                        QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(this, -delay, TimeUnit.MILLISECONDS);
                     }
                 }
-
-                @Override
-                public boolean isHeartMessage(AioSession session, MqttMessage msg) {
-                    return connected && msg instanceof MqttPingRespMessage;
-                }
-            });
+            }, clientConfigure.getKeepAliveInterval(), TimeUnit.SECONDS);
         }
 //        messageProcessor.addPlugin(new StreamMonitorPlugin<>());
         client = new AioQuickClient(clientConfigure.getHost(), clientConfigure.getPort(), new MqttProtocol(), messageProcessor);
@@ -163,6 +165,7 @@ public class MqttClient implements Closeable {
         try {
             mqttMessage.writeTo(aioSession.writeBuffer());
             aioSession.writeBuffer().flush();
+            latestSendMessageTime = System.currentTimeMillis();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
