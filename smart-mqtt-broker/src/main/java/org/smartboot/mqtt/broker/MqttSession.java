@@ -71,14 +71,14 @@ public class MqttSession {
                 break;
             case AT_LEAST_ONCE:
                 qosPublisher.publishQos1(responseConsumers, message.getMqttPublishVariableHeader().packetId(), message, integer -> {
-
+                        //移除超时重试监听
                 }, this::write);
                 break;
             case EXACTLY_ONCE:
                 qosPublisher.publishQos2(responseConsumers, message.getMqttPublishVariableHeader().packetId(), message, new Consumer<Integer>() {
                     @Override
                     public void accept(Integer integer) {
-
+                        //移除超时重试监听
                     }
                 }, this::write);
                 break;
