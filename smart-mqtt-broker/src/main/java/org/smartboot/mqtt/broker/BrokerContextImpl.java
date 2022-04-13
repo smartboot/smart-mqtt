@@ -1,5 +1,6 @@
 package org.smartboot.mqtt.broker;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.listener.BrokerLifecycleListener;
@@ -14,6 +15,8 @@ import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.transport.AioQuickServer;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -60,12 +63,9 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private AioQuickServer server;
 
-    public BrokerContextImpl(Properties brokerProperties) {
-        updateBrokerConfigure(brokerProperties);
-    }
-
     @Override
     public void init() throws IOException {
+        updateBrokerConfigure();
         server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(), new MqttBrokerMessageProcessor(this));
         server.setBannerEnabled(false);
         server.start();
@@ -76,10 +76,25 @@ public class BrokerContextImpl implements BrokerContext {
         listeners.getBrokerLifecycleListeners().forEach(listener -> listener.onStarted(this));
     }
 
-    private void updateBrokerConfigure(Properties brokerProperties) {
+    private void updateBrokerConfigure() throws IOException {
+        Properties brokerProperties = new Properties();
+        //加载默认配置
+        brokerProperties.load(Bootstrap.class.getClassLoader().getResourceAsStream("smart-mqtt.properties"));
+        //加载自定义配置文件
+        String brokerConfig = System.getProperty(BrokerConfigure.SystemProperty.BrokerConfig);
+        if (StringUtils.isNotBlank(brokerConfig)) {
+            File file = new File(brokerConfig);
+            ValidateUtils.isTrue(file.isFile(), "文件不存在");
+            FileInputStream fileInputStream = new FileInputStream(file);
+            brokerProperties.load(fileInputStream);
+        }
+        //系统属性优先级最高
+        System.getProperties().stringPropertyNames().forEach(name -> brokerProperties.setProperty(name, System.getProperty(name)));
+
+        brokerProperties.stringPropertyNames().forEach(name -> brokerConfigure.setProperty(name, brokerProperties.getProperty(name)));
+
         brokerConfigure.setHost(brokerProperties.getProperty(BrokerConfigure.SystemProperty.HOST));
         brokerConfigure.setPort(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.PORT, String.valueOf(BrokerConfigure.SystemPropertyDefaultValue.PORT))));
-        brokerProperties.stringPropertyNames().forEach(name -> brokerConfigure.setProperty(name, System.getProperty(name)));
     }
 
     /**

@@ -143,7 +143,13 @@ public class MqttClient extends AbstractSession implements Closeable {
             //remainingLength 字段动态计算，此处可传入任意值
             MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.CONNECT, false, MqttQoS.AT_MOST_ONCE, false, 0);
             MqttConnectVariableHeader variableHeader = new MqttConnectVariableHeader(clientConfigure.getMqttVersion(), StringUtils.isNotBlank(clientConfigure.getUserName()), clientConfigure.getPassword() != null, clientConfigure.getWillMessage(), clientConfigure.isCleanSession(), clientConfigure.getKeepAliveInterval());
-            MqttConnectPayload payload = new MqttConnectPayload(clientId, clientConfigure.getWillMessage().getWillTopic(), clientConfigure.getWillMessage().getWillMessage(), clientConfigure.getUserName(), clientConfigure.getPassword());
+            String willTopic = null;
+            byte[] willMessage = null;
+            if (clientConfigure.getWillMessage() != null) {
+                willTopic = clientConfigure.getWillMessage().getWillTopic();
+                willMessage = clientConfigure.getWillMessage().getWillMessage();
+            }
+            MqttConnectPayload payload = new MqttConnectPayload(clientId, willTopic, willMessage, clientConfigure.getUserName(), clientConfigure.getPassword());
             MqttConnectMessage connectMessage = new MqttConnectMessage(mqttFixedHeader, variableHeader, payload);
             write(connectMessage);
             connected = true;
