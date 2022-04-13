@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EventListener;
 import java.util.List;
+import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -59,15 +60,12 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private AioQuickServer server;
 
-    public static StoredMessage asStoredMessage(MqttPublishMessage msg) {
-        StoredMessage stored = new StoredMessage(msg.getPayload(), msg.getMqttFixedHeader().getQosLevel(), msg.getMqttPublishVariableHeader().topicName());
-        stored.setRetained(msg.getMqttFixedHeader().isRetain());
-        return stored;
+    public BrokerContextImpl(Properties brokerProperties) {
+        updateBrokerConfigure(brokerProperties);
     }
 
     @Override
     public void init() throws IOException {
-        updateBrokerConfigure();
         server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(), new MqttBrokerMessageProcessor(this));
         server.setBannerEnabled(false);
         server.start();
@@ -78,12 +76,10 @@ public class BrokerContextImpl implements BrokerContext {
         listeners.getBrokerLifecycleListeners().forEach(listener -> listener.onStarted(this));
     }
 
-    private void updateBrokerConfigure() {
-        brokerConfigure.setHost(System.getProperty(BrokerConfigure.SystemProperty.HOST));
-        brokerConfigure.setPort(Integer.parseInt(System.getProperty(BrokerConfigure.SystemProperty.PORT, String.valueOf(BrokerConfigure.SystemPropertyDefaultValue.PORT))));
-        System.getProperties().stringPropertyNames().forEach(name -> {
-            brokerConfigure.setProperty(name, System.getProperty(name));
-        });
+    private void updateBrokerConfigure(Properties brokerProperties) {
+        brokerConfigure.setHost(brokerProperties.getProperty(BrokerConfigure.SystemProperty.HOST));
+        brokerConfigure.setPort(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.PORT, String.valueOf(BrokerConfigure.SystemPropertyDefaultValue.PORT))));
+        brokerProperties.stringPropertyNames().forEach(name -> brokerConfigure.setProperty(name, System.getProperty(name)));
     }
 
     /**

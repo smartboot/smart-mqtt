@@ -93,6 +93,10 @@ public class BrokerConfigure {
 
     interface SystemProperty {
         /**
+         * broker自定义配置文件
+         */
+        String BrokerConfig = "brokerConfig";
+        /**
          * 服务地址
          */
         String HOST = "broker.host";
