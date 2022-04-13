@@ -91,7 +91,7 @@ public class BrokerConfigure {
     }
 
 
-    interface SystemProperty {
+    public interface SystemProperty {
         /**
          * broker自定义配置文件
          */
@@ -104,6 +104,11 @@ public class BrokerConfigure {
          * broker服务端口号
          */
         String PORT = "broker.port";
+
+        /**
+         * 集群节点数量上限
+         */
+        String CLUSTER_NODE_LIMIT = "cluster.node.limit";
     }
 
     interface SystemPropertyDefaultValue {
