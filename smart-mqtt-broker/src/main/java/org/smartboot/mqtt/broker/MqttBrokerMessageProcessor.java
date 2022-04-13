@@ -72,7 +72,7 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
         MqttProcessor processor = processorMap.get(msg.getClass());
         if (processor != null) {
             MqttSession mqttSession = onlineSessions.get(session.getSessionID());
-            mqttSession.setLatestReceiveMessageSecondTime(System.currentTimeMillis());
+            mqttSession.setLatestReceiveMessageTime(System.currentTimeMillis());
             processor.process(mqttContext, mqttSession, msg);
         } else {
             System.err.println("unSupport message: " + msg);

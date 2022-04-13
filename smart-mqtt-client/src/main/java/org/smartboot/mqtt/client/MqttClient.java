@@ -229,7 +229,7 @@ public class MqttClient extends AbstractSession implements Closeable {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         //关闭自动重连
         clientConfigure.setAutomaticReconnect(false);
         client.shutdown();

@@ -17,8 +17,11 @@ import java.util.function.Consumer;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/4/12
  */
-public class AbstractSession {
+public abstract class AbstractSession {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSession.class);
+    /**
+     * req-resp 消息模式的处理回调
+     */
     protected final Map<Integer, Consumer<? extends MqttPacketIdentifierMessage>> responseConsumers = new ConcurrentHashMap<>();
     private final QosPublisher qosPublisher;
     /**
@@ -34,7 +37,7 @@ public class AbstractSession {
     /**
      * 最近一次收到客户端消息的时间
      */
-    private long latestReceiveMessageSecondTime;
+    private long latestReceiveMessageTime;
 
     public AbstractSession(QosPublisher publisher) {
         this.qosPublisher = publisher;
@@ -79,12 +82,12 @@ public class AbstractSession {
         return latestSendMessageTime;
     }
 
-    public long getLatestReceiveMessageSecondTime() {
-        return latestReceiveMessageSecondTime;
+    public long getLatestReceiveMessageTime() {
+        return latestReceiveMessageTime;
     }
 
-    public void setLatestReceiveMessageSecondTime(long latestReceiveMessageSecondTime) {
-        this.latestReceiveMessageSecondTime = latestReceiveMessageSecondTime;
+    public void setLatestReceiveMessageTime(long latestReceiveMessageTime) {
+        this.latestReceiveMessageTime = latestReceiveMessageTime;
     }
 
     public final String getClientId() {
@@ -94,4 +97,9 @@ public class AbstractSession {
     public int newPacketId() {
         return packetIdCreator.getAndIncrement();
     }
+
+    /**
+     * 关闭连接
+     */
+    public abstract void close();
 }
