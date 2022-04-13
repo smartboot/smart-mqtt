@@ -150,6 +150,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
                 MqttSession mqttSession = context.getSession(clientId);
                 if (mqttSession != null) {
                     mqttSession.close();
+                    LOGGER.info("clean session:{}", clientId);
                 }
             }
         } else {

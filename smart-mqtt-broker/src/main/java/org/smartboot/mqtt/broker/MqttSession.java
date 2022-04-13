@@ -55,7 +55,8 @@ public class MqttSession extends AbstractSession {
             mqttContext.publish(mqttContext.getOrCreateTopic(willMessage.getTopic()), willMessage);
         }
         consumeOffsets.keySet().forEach(this::unsubscribe);
-        mqttContext.removeSession(this);
+        boolean flag = mqttContext.removeSession(this);
+        LOGGER.info("remove content session success:{}", flag);
         session.close(false);
         closed = true;
     }
@@ -63,7 +64,6 @@ public class MqttSession extends AbstractSession {
     public boolean isClosed() {
         return closed;
     }
-
 
 
     public void setClientId(String clientId) {

@@ -41,13 +41,8 @@ public class AbstractSession {
     }
 
     public final synchronized void write(MqttPacketIdentifierMessage mqttMessage, Consumer<? extends MqttPacketIdentifierMessage> consumer) {
-        try {
-            responseConsumers.put(mqttMessage.getPacketId(), consumer);
-            mqttMessage.writeTo(session.writeBuffer());
-            session.writeBuffer().flush();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        responseConsumers.put(mqttMessage.getPacketId(), consumer);
+        write(mqttMessage);
     }
 
     public final void notifyResponse(MqttPacketIdentifierMessage message) {
