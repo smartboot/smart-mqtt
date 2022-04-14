@@ -4,7 +4,7 @@
     <groupId>org.smartboot.mqtt</groupId>
     <artifactId>smart-mqtt</artifactId>
     <name>smart-mqtt</name>
-    <version>0.0.1</version>
+    <version>0.1</version>
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -14,7 +14,7 @@
     </parent>
 
     <properties>
-        <smart.mqtt.version>0.0.1</smart.mqtt.version>
+        <smart.mqtt.version>0.1</smart.mqtt.version>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <commons.lang.version>2.6</commons.lang.version>
