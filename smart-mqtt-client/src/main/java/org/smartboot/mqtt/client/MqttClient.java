@@ -213,10 +213,7 @@ public class MqttClient extends AbstractSession implements Closeable {
         responseConsumers.put(unsubscribedMessage.getPacketId(), new AckMessage(unsubscribedMessage, mqttMessage -> {
             ValidateUtils.isTrue(mqttMessage instanceof MqttUnsubAckMessage, "uncorrected message type.");
             for (String unsubscribedTopic : unsubscribedTopics) {
-                Subscribe subscribe = subscribes.get(unsubscribedTopic);
-                if  (subscribe != null) {
-                    subscribe.setUnsubscribed(true);
-                }
+                subscribes.remove(unsubscribedTopic);
             }
         }));
         write(unsubscribedMessage);
@@ -249,12 +246,6 @@ public class MqttClient extends AbstractSession implements Closeable {
                 MqttQoS minQos = MqttQoS.valueOf(Math.min(subscription.qualityOfService().value(), qosValues.get(i++)));
                 clientConfigure.getTopicListener().subscribe(subscription.topicFilter(), subscription.qualityOfService() == MqttQoS.FAILURE ? MqttQoS.FAILURE : minQos);
                 if (subscription.qualityOfService() != MqttQoS.FAILURE) {
-                    Subscribe subscribe = subscribes.get(subscription.topicFilter());
-                    // This topic has been unsubscribed.
-                    if (subscribe != null) {
-
-                    }
-
                     subscribes.put(subscription.topicFilter(), new Subscribe(subscription.topicFilter(), minQos, consumer));
                 } else {
                     LOGGER.error("subscribe topic:{} fail", subscription.topicFilter());
