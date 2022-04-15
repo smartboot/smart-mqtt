@@ -50,6 +50,11 @@ public class BrokerConfigure {
      */
     private int pushThreadNum = Runtime.getRuntime().availableProcessors();
 
+    /**
+     * 网络连接建立后，如果服务端在合理的时间内没有收到 CONNECT 报文，服务端应该关闭这个连接。
+     */
+    private int connectTimeout = 5;
+
     public int getPort() {
         return port;
     }
@@ -90,6 +95,13 @@ public class BrokerConfigure {
         this.host = host;
     }
 
+    public int getConnectTimeout() {
+        return connectTimeout;
+    }
+
+    public void setConnectTimeout(int connectTimeout) {
+        this.connectTimeout = connectTimeout;
+    }
 
     public interface SystemProperty {
         /**
@@ -104,6 +116,7 @@ public class BrokerConfigure {
          * broker服务端口号
          */
         String PORT = "broker.port";
+
 
         /**
          * 集群节点数量上限

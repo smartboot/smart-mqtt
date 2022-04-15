@@ -38,6 +38,8 @@ public class MqttClientConfigure {
     private HostnameVerifier sslHostnameVerifier = null;
     private boolean cleanSession = CLEAN_SESSION_DEFAULT;
     private int connectionTimeout = CONNECTION_TIMEOUT_DEFAULT;
+
+    private int connectAckTimeout = 5;
     private String[] serverURIs = null;
     private MqttVersion mqttVersion = MqttVersion.MQTT_3_1_1;
     /**
@@ -627,5 +629,13 @@ public class MqttClientConfigure {
 
     public void setTopicListener(TopicListener topicListener) {
         this.topicListener = topicListener;
+    }
+
+    public int getConnectAckTimeout() {
+        return connectAckTimeout;
+    }
+
+    public void setConnectAckTimeout(int connectAckTimeout) {
+        this.connectAckTimeout = connectAckTimeout;
     }
 }

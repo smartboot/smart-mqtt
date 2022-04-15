@@ -54,6 +54,7 @@ public abstract class AbstractSession {
 
     public final void notifyResponse(MqttPacketIdentifierMessage message) {
         AckMessage ackMessage = responseConsumers.remove(message.getPacketId());
+        ackMessage.setDone(true);
         ackMessage.getConsumer().accept(message);
     }
 

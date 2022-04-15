@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.AckMessage;
 import org.smartboot.mqtt.common.MqttMessageBuilders;
-import org.smartboot.mqtt.common.MqttMessageBuilders.UnsubscribeBuilder;
 import org.smartboot.mqtt.common.QosPublisher;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
@@ -35,7 +34,6 @@ import org.smartboot.socket.util.QuickTimerTask;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.channels.AsynchronousChannelGroup;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -122,6 +120,7 @@ public class MqttClient extends AbstractSession implements Closeable {
                 responseConsumers.values().forEach(ackMessage -> write(ackMessage.getOriginalMessage()));
             }
             consumer.accept(mqttConnAckMessage);
+            connected = true;
         };
         //启动心跳插件
         if (clientConfigure.getKeepAliveInterval() > 0) {
@@ -154,6 +153,7 @@ public class MqttClient extends AbstractSession implements Closeable {
             client.setBufferPagePool(bufferPagePool);
             client.setWriteBuffer(1024 * 1024, 10);
             session = client.start(asynchronousChannelGroup);
+
             //remainingLength 字段动态计算，此处可传入任意值
             MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.CONNECT, false, MqttQoS.AT_MOST_ONCE, false, 0);
             MqttConnectVariableHeader variableHeader = new MqttConnectVariableHeader(clientConfigure.getMqttVersion(), StringUtils.isNotBlank(clientConfigure.getUserName()), clientConfigure.getPassword() != null, clientConfigure.getWillMessage(), clientConfigure.isCleanSession(), clientConfigure.getKeepAliveInterval());
@@ -165,8 +165,15 @@ public class MqttClient extends AbstractSession implements Closeable {
             }
             MqttConnectPayload payload = new MqttConnectPayload(clientId, willTopic, willMessage, clientConfigure.getUserName(), clientConfigure.getPassword());
             MqttConnectMessage connectMessage = new MqttConnectMessage(mqttFixedHeader, variableHeader, payload);
+
+            //如果客户端在合理的时间内没有收到服务端的 CONNACK 报文，客户端应该关闭网络连接。
+            // 合理的时间取决于应用的类型和通信基础设施。
+            QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(() -> {
+                if (!connected) {
+                    close();
+                }
+            }, clientConfigure.getConnectAckTimeout(), TimeUnit.SECONDS);
             write(connectMessage);
-            connected = true;
         } catch (IOException e) {
             LOGGER.error(e.getMessage(), e);
         }
