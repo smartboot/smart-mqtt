@@ -22,4 +22,10 @@ public class MemorySessionStateProvider implements SessionStateProvider {
     public SessionState get(String clientId) {
         return sessionStates.get(clientId);
     }
+
+    @Override
+    public void remove(String clientId) {
+        sessionStates.remove(clientId);
+    }
+
 }

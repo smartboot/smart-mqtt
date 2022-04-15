@@ -60,9 +60,12 @@ public class MqttSession extends AbstractSession {
         if (closed) {
             return;
         }
-        //当清理会话标志为 0 的会话连接断开之后，服务端必须将之后的 QoS 1 和 QoS 2 级别的消息保存为会话状态的一部分，
-        // 如果这些消息匹配断开连接时客户端的任何订阅
-        if (!cleanSession) {
+
+        if (cleanSession) {
+            mqttContext.getProviders().getSessionStateProvider().remove(clientId);
+        } else {
+            //当清理会话标志为 0 的会话连接断开之后，服务端必须将之后的 QoS 1 和 QoS 2 级别的消息保存为会话状态的一部分，
+            // 如果这些消息匹配断开连接时客户端的任何订阅
             SessionState sessionState = new SessionState();
             sessionState.getResponseConsumers().putAll(responseConsumers);
             subscribers.values().forEach(topicSubscriber -> sessionState.getSubscribers().add(new TopicSubscriber(topicSubscriber.getTopic(), null, topicSubscriber.getMqttQoS())));
