@@ -1,7 +1,5 @@
 package org.smartboot.mqtt.broker;
 
-import org.smartboot.mqtt.broker.BrokerTopic;
-import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 
 /**
@@ -21,16 +19,11 @@ public class TopicSubscriber {
      */
     private final MqttQoS mqttQoS;
     /**
-     * 订阅的topic过滤器
-     */
-    private String topicFilter;
-    /**
      * 是否可用
      */
     private boolean enable = true;
 
-    public TopicSubscriber(String topicFilter, BrokerTopic topic, MqttSession session, MqttQoS mqttQoS) {
-        this.topicFilter = topicFilter;
+    public TopicSubscriber(BrokerTopic topic, MqttSession session, MqttQoS mqttQoS) {
         this.topic = topic;
         this.mqttSession = session;
         this.mqttQoS = mqttQoS;

@@ -5,6 +5,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
+import org.smartboot.mqtt.broker.TopicSubscriber;
+import org.smartboot.mqtt.broker.store.SessionState;
+import org.smartboot.mqtt.broker.store.SessionStateProvider;
 import org.smartboot.mqtt.common.StoredMessage;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
@@ -18,9 +21,9 @@ import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttConnectPayload;
 import org.smartboot.mqtt.common.message.MqttConnectVariableHeader;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
+import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static org.smartboot.mqtt.common.enums.MqttConnectReturnCode.*;
@@ -138,30 +141,42 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
 
     private void refreshSession(BrokerContext context, MqttSession session, MqttConnectMessage mqttConnectMessage) {
         MqttConnectPayload payload = mqttConnectMessage.getPayload();
+        session.setCleanSession(mqttConnectMessage.getVariableHeader().isCleanSession());
         String clientId = payload.clientIdentifier();
+        //服务端可以允许客户端提供一个零字节的客户端标识符 (ClientId) ，如果这样做了，服务端必须将这看作特
+        //殊情况并分配唯一的客户端标识符给那个客户端。然后它必须假设客户端提供了那个唯一的客户端标识符，正常处理这个 CONNECT 报文
+        if (clientId.length() == 0) {
+            clientId = MqttUtil.createClientId();
+        }
 
-        if (mqttConnectMessage.getVariableHeader().isCleanSession()) {
-            if (StringUtils.isBlank(clientId)) {
-                clientId = UUID.randomUUID().toString().replace("-", "");
-                LOGGER.info("Client has connected with a server generated identifier. CId={}, username={}", clientId, payload.userName());
-            } else {
+        MqttSession mqttSession = context.getSession(clientId);
+        if (mqttSession != null) {
+            if (session.isCleanSession()) {
                 //如果清理会话（CleanSession）标志被设置为 1，客户端和服务端必须丢弃之前的任何会话并开始一个新的会话。
-                // 会话仅持续和网络连接同样长的时间。与这个会话关联的状态数据不能被任何之后的会话重用
-                MqttSession mqttSession = context.getSession(clientId);
-                if (mqttSession != null) {
-                    mqttSession.close();
-                    LOGGER.info("clean session:{}", clientId);
+                mqttSession.setCleanSession(true);
+                mqttSession.close();
+            } else {
+                //如果mqttSession#cleanSession为false，将还原会话状态
+                mqttSession.close();
+                //如果清理会话（CleanSession）标志被设置为 0，服务端必须基于当前会话（使用客户端标识符识别）的状态恢复与客户端的通信。
+                SessionStateProvider sessionStateProvider = context.getProviders().getSessionStateProvider();
+                SessionState sessionState = sessionStateProvider.get(clientId);
+                if (sessionState != null) {
+                    session.getResponseConsumers().putAll(sessionState.getResponseConsumers());
+                    sessionState.getSubscribers().forEach(topicSubscriber -> {
+                        session.subscribeTopic(new TopicSubscriber(topicSubscriber.getTopic(), session, topicSubscriber.getMqttQoS()));
+                    });
+                    //客户端设置清理会话（CleanSession）标志为 0 重连时，客户端和服务端必须使用原始的报文标识符重发
+                    //任何未确认的 PUBLISH 报文（如果 QoS>0）和 PUBREL 报文 [MQTT-4.4.0-1]。这是唯一要求客户端或
+                    //服务端重发消息的情况。
+                    session.getResponseConsumers().forEach((key, ackMessage) -> {
+                        session.getResponseConsumers().put(key, ackMessage);
+                        session.write(ackMessage.getOriginalMessage());
+                    });
                 }
             }
-        } else {
-            //如果清理会话（CleanSession）标志被设置为 0，服务端必须基于当前会话（使用客户端标识符识别）的
-            //状态恢复与客户端的通信。如果没有与这个客户端标识符关联的会话，服务端必须创建一个新的会话。
-            MqttSession mqttSession = context.getSession(clientId);
-            if (mqttSession != null) {
-                LOGGER.info("Client ID is being used in an existing connection, force to be closed. CId={}", clientId);
-                mqttSession.close();
-            }
         }
+
         session.setClientId(clientId);
         context.addSession(session);
         LOGGER.info("add session for client:{}", clientId);

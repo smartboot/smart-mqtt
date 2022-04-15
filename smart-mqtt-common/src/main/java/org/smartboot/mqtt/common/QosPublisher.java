@@ -6,7 +6,6 @@ import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttMessage;
-import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
 import org.smartboot.mqtt.common.message.MqttPubCompMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
@@ -27,34 +26,37 @@ public class QosPublisher {
         writeConsumer.accept(publishMessage);
     }
 
-    public <T> void publishQos1(Map<T, Consumer<? extends MqttPacketIdentifierMessage>> responseConsumers, T cacheKey, MqttPublishMessage publishMessage, Consumer<Integer> consumer, Consumer<MqttMessage> writeConsumer) {
+    public <T> void publishQos1(Map<T, AckMessage> responseConsumers, T cacheKey, MqttPublishMessage publishMessage, Consumer<Integer> consumer, Consumer<MqttMessage> writeConsumer) {
         MqttQoS qos = publishMessage.getMqttFixedHeader().getQosLevel();
         ValidateUtils.notNull(qos == MqttQoS.AT_LEAST_ONCE, "qos is null");
         //至少一次
-        responseConsumers.put(cacheKey, message -> {
+        responseConsumers.put(cacheKey, new AckMessage(publishMessage, message -> {
             ValidateUtils.isTrue(message instanceof MqttPubAckMessage, "invalid message type");
             responseConsumers.remove(cacheKey);
             LOGGER.info("Qos1消息发送成功...");
             consumer.accept(publishMessage.getMqttPublishVariableHeader().packetId());
-        });
+        }));
         writeConsumer.accept(publishMessage);
     }
 
-    public <T> void publishQos2(Map<T, Consumer<? extends MqttPacketIdentifierMessage>> responseConsumers, T cacheKey, MqttPublishMessage publishMessage, Consumer<Integer> consumer, Consumer<MqttMessage> writeConsumer) {
+    public <T> void publishQos2(Map<T, AckMessage> responseConsumers, T cacheKey, MqttPublishMessage publishMessage, Consumer<Integer> consumer, Consumer<MqttMessage> writeConsumer) {
         MqttQoS qos = publishMessage.getMqttFixedHeader().getQosLevel();
         ValidateUtils.notNull(qos == MqttQoS.EXACTLY_ONCE, "qos is null");
         //只有一次
-        responseConsumers.put(cacheKey, message -> {
+        responseConsumers.put(cacheKey, new AckMessage(publishMessage, message -> {
             ValidateUtils.isTrue(message instanceof MqttPubRecMessage, "invalid message type");
             ValidateUtils.isTrue(Objects.equals(message.getPacketId(), publishMessage.getMqttPublishVariableHeader().packetId()), "invalid packetId");
-            responseConsumers.put(cacheKey, (Consumer<MqttPubCompMessage>) compMessage -> {
-                LOGGER.info("Qos2消息发送成功...");
-                consumer.accept(compMessage.getPacketId());
-            });
             MqttPubRelMessage pubRelMessage = new MqttPubRelMessage(new MqttFixedHeader(MqttMessageType.PUBREL, false, MqttQoS.AT_MOST_ONCE, false, 0));
             pubRelMessage.setPacketId(message.getPacketId());
+            responseConsumers.put(cacheKey, new AckMessage(pubRelMessage, compMessage -> {
+                ValidateUtils.isTrue(compMessage instanceof MqttPubCompMessage, "invalid message type");
+                ValidateUtils.isTrue(Objects.equals(compMessage.getPacketId(), pubRelMessage.getPacketId()), "invalid packetId");
+                LOGGER.info("Qos2消息发送成功...");
+                consumer.accept(compMessage.getPacketId());
+            }));
+
             writeConsumer.accept(pubRelMessage);
-        });
+        }));
         writeConsumer.accept(publishMessage);
     }
 }

@@ -4,6 +4,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.AbstractSession;
+import org.smartboot.mqtt.common.AckMessage;
 import org.smartboot.mqtt.common.MqttMessageBuilders;
 import org.smartboot.mqtt.common.QosPublisher;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
@@ -22,6 +23,7 @@ import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
 import org.smartboot.mqtt.common.message.WillMessage;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
+import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioQuickClient;
@@ -107,6 +109,12 @@ public class MqttClient extends AbstractSession implements Closeable {
                     runnable.run();
                 }
             }
+            //客户端设置清理会话（CleanSession）标志为 0 重连时，客户端和服务端必须使用原始的报文标识符重发
+            //任何未确认的 PUBLISH 报文（如果 QoS>0）和 PUBREL 报文 [MQTT-4.4.0-1]。这是唯一要求客户端或
+            //服务端重发消息的情况。
+            if (!clientConfigure.isCleanSession()) {
+                responseConsumers.values().forEach(ackMessage -> write(ackMessage.getOriginalMessage()));
+            }
             consumer.accept(mqttConnAckMessage);
         };
         //启动心跳插件
@@ -185,17 +193,20 @@ public class MqttClient extends AbstractSession implements Closeable {
             subscribeBuilder.addSubscription(qos[i], topic[i]);
         }
         MqttSubscribeMessage subscribeMessage = subscribeBuilder.build();
-        responseConsumers.put(subscribeMessage.getPacketId(), (Consumer<MqttSubAckMessage>) mqttMessage -> {
-            List<MqttTopicSubscription> subscriptions = subscribeMessage.getMqttSubscribePayload().topicSubscriptions();
+        responseConsumers.put(subscribeMessage.getPacketId(), new AckMessage(subscribeMessage, mqttMessage -> {
+            List<Integer> qosValues = ((MqttSubAckMessage) mqttMessage).getMqttSubAckPayload().grantedQoSLevels();
+            ValidateUtils.isTrue(qosValues.size() == qos.length, "invalid response");
             int i = 0;
-            for (MqttTopicSubscription subscription : subscriptions) {
-                MqttQoS minQos = MqttQoS.valueOf(Math.min(subscription.qualityOfService().value(), qos[i++].value()));
+            for (MqttTopicSubscription subscription : subscribeMessage.getMqttSubscribePayload().topicSubscriptions()) {
+                MqttQoS minQos = MqttQoS.valueOf(Math.min(subscription.qualityOfService().value(), qosValues.get(i++)));
                 clientConfigure.getTopicListener().subscribe(subscription.topicFilter(), subscription.qualityOfService() == MqttQoS.FAILURE ? MqttQoS.FAILURE : minQos);
                 if (subscription.qualityOfService() != MqttQoS.FAILURE) {
                     subscribes.put(subscription.topicFilter(), new Subscribe(subscription.topicFilter(), minQos, consumer));
+                } else {
+                    LOGGER.error("subscribe topic:{} fail", subscription.topicFilter());
                 }
             }
-        });
+        }));
         write(subscribeMessage);
     }
 

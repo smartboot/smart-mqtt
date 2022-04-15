@@ -22,7 +22,7 @@ public abstract class AbstractSession {
     /**
      * req-resp 消息模式的处理回调
      */
-    protected final Map<Integer, Consumer<? extends MqttPacketIdentifierMessage>> responseConsumers = new ConcurrentHashMap<>();
+    protected final Map<Integer, AckMessage> responseConsumers = new ConcurrentHashMap<>();
     private final QosPublisher qosPublisher;
     /**
      * 用于生成当前会话的报文标识符
@@ -44,13 +44,17 @@ public abstract class AbstractSession {
     }
 
     public final synchronized void write(MqttPacketIdentifierMessage mqttMessage, Consumer<? extends MqttPacketIdentifierMessage> consumer) {
-        responseConsumers.put(mqttMessage.getPacketId(), consumer);
+        responseConsumers.put(mqttMessage.getPacketId(), new AckMessage(mqttMessage, consumer));
         write(mqttMessage);
     }
 
+    public Map<Integer, AckMessage> getResponseConsumers() {
+        return responseConsumers;
+    }
+
     public final void notifyResponse(MqttPacketIdentifierMessage message) {
-        Consumer consumer = responseConsumers.get(message.getPacketId());
-        consumer.accept(message);
+        AckMessage ackMessage = responseConsumers.remove(message.getPacketId());
+        ackMessage.getConsumer().accept(message);
     }
 
     public final synchronized void write(MqttMessage mqttMessage) {
@@ -95,7 +99,11 @@ public abstract class AbstractSession {
     }
 
     public int newPacketId() {
-        return packetIdCreator.getAndIncrement();
+        int packageId = packetIdCreator.getAndIncrement();
+        if (responseConsumers.containsKey(packageId)) {
+            return newPacketId();
+        }
+        return packageId;
     }
 
     /**

@@ -35,7 +35,7 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
         for (MqttTopicSubscription mqttTopicSubscription : mqttSubscribeMessage.getMqttSubscribePayload().topicSubscriptions()) {
             qosArray[i++] = context.getProviders().getTopicFilterProvider().match(mqttTopicSubscription, context, topic -> {
                 LOGGER.info("topicFilter:{} subscribe topic:{} success!", mqttTopicSubscription.topicFilter(), topic.getTopic());
-                TopicSubscriber consumeOffset = new TopicSubscriber(mqttTopicSubscription.topicFilter(), topic, session, mqttTopicSubscription.qualityOfService());
+                TopicSubscriber consumeOffset = new TopicSubscriber(topic, session, mqttTopicSubscription.qualityOfService());
                 session.subscribeTopic(consumeOffset);
 
                 //一个新的订阅建立时，对每个匹配的主题名，如果存在最近保留的消息，它必须被发送给这个订阅者

@@ -50,6 +50,11 @@ public class BrokerContextImpl implements BrokerContext {
      * Keep-Alive监听线程
      */
     private final ScheduledExecutorService KEEP_ALIVE_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
+
+    /**
+     * ACK超时监听
+     */
+    private final ScheduledExecutorService ACK_TIMEOUT_MONITOR_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
     /**
      * Push线程池
      */
