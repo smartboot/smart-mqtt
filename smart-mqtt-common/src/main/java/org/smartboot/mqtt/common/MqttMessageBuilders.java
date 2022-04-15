@@ -117,7 +117,7 @@ public final class MqttMessageBuilders {
     public static final class UnsubscribeBuilder {
 
         private List<String> topicFilters;
-        private int messageId;
+        private int packetId;
 
         UnsubscribeBuilder() {
         }
@@ -130,8 +130,8 @@ public final class MqttMessageBuilders {
             return this;
         }
 
-        public UnsubscribeBuilder messageId(int messageId) {
-            this.messageId = messageId;
+        public UnsubscribeBuilder packetId(int packetId) {
+            this.packetId = packetId;
             return this;
         }
 
@@ -139,7 +139,7 @@ public final class MqttMessageBuilders {
             MqttFixedHeader mqttFixedHeader =
                     new MqttFixedHeader(MqttMessageType.UNSUBSCRIBE, false, MqttQoS.AT_LEAST_ONCE, false, 0);
             MqttUnsubscribePayload mqttSubscribePayload = new MqttUnsubscribePayload(topicFilters);
-            return new MqttUnsubscribeMessage(mqttFixedHeader, messageId, mqttSubscribePayload);
+            return new MqttUnsubscribeMessage(mqttFixedHeader, packetId, mqttSubscribePayload);
         }
     }
 

@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.AckMessage;
 import org.smartboot.mqtt.common.MqttMessageBuilders;
+import org.smartboot.mqtt.common.MqttMessageBuilders.UnsubscribeBuilder;
 import org.smartboot.mqtt.common.QosPublisher;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
@@ -21,6 +22,8 @@ import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttSubAckMessage;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
+import org.smartboot.mqtt.common.message.MqttUnsubAckMessage;
+import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.mqtt.common.message.WillMessage;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.ValidateUtils;
@@ -32,8 +35,11 @@ import org.smartboot.socket.util.QuickTimerTask;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.channels.AsynchronousChannelGroup;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ThreadFactory;
@@ -173,6 +179,48 @@ public class MqttClient extends AbstractSession implements Closeable {
         clientConfigure.setWillMessage(null);
     }
 
+    public MqttClient unsubscribe(String topic) {
+        return unsubscribe(new String[]{topic});
+    }
+
+    public MqttClient unsubscribe(String[] topics) {
+        if (connected) {
+            unsubscribe0(topics);
+        } else {
+            registeredTasks.offer(() -> unsubscribe0(topics));
+        }
+        return this;
+    }
+
+    public void unsubscribe0(String[] topics) {
+        Set<String> unsubscribedTopics = new HashSet<>(topics.length);
+        for (String unsubscribedTopic : topics) {
+            if (subscribes.containsKey(unsubscribedTopic)) {
+                unsubscribedTopics.add(unsubscribedTopic);
+            }
+        }
+
+        if (unsubscribedTopics.isEmpty()) {
+            LOGGER.warn("empty unsubscribe topics detected!");
+            return;
+        }
+
+        MqttMessageBuilders.UnsubscribeBuilder unsubscribeBuilder = MqttMessageBuilders.unsubscribe().packetId(newPacketId());
+        unsubscribedTopics.forEach(unsubscribeBuilder::addTopicFilter);
+
+        MqttUnsubscribeMessage unsubscribedMessage = unsubscribeBuilder.build();
+        // wait ack message.
+        responseConsumers.put(unsubscribedMessage.getPacketId(), new AckMessage(unsubscribedMessage, mqttMessage -> {
+            ValidateUtils.isTrue(mqttMessage instanceof MqttUnsubAckMessage, "uncorrected message type.");
+            for (String unsubscribedTopic : unsubscribedTopics) {
+                Subscribe subscribe = subscribes.get(unsubscribedTopic);
+                if  (subscribe != null) {
+                    subscribe.setUnsubscribed(true);
+                }
+            }
+        }));
+        write(unsubscribedMessage);
+    }
 
     public MqttClient subscribe(String topic, MqttQoS qos, BiConsumer<MqttClient, MqttPublishMessage> consumer) {
         return subscribe(new String[]{topic}, new MqttQoS[]{qos}, consumer);
@@ -201,6 +249,12 @@ public class MqttClient extends AbstractSession implements Closeable {
                 MqttQoS minQos = MqttQoS.valueOf(Math.min(subscription.qualityOfService().value(), qosValues.get(i++)));
                 clientConfigure.getTopicListener().subscribe(subscription.topicFilter(), subscription.qualityOfService() == MqttQoS.FAILURE ? MqttQoS.FAILURE : minQos);
                 if (subscription.qualityOfService() != MqttQoS.FAILURE) {
+                    Subscribe subscribe = subscribes.get(subscription.topicFilter());
+                    // This topic has been unsubscribed.
+                    if (subscribe != null) {
+
+                    }
+
                     subscribes.put(subscription.topicFilter(), new Subscribe(subscription.topicFilter(), minQos, consumer));
                 } else {
                     LOGGER.error("subscribe topic:{} fail", subscription.topicFilter());
