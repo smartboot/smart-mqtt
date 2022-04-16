@@ -117,6 +117,11 @@ public class BrokerConfigure {
          */
         String PORT = "broker.port";
 
+        /**
+         * connect默认超时时间
+         */
+        String CONNECT_TIMEOUT = "broker.connect.timeout";
+
 
         /**
          * 集群节点数量上限
@@ -126,5 +131,6 @@ public class BrokerConfigure {
 
     interface SystemPropertyDefaultValue {
         int PORT = 1883;
+        int CONNECT_TIMEOUT = 5;
     }
 }

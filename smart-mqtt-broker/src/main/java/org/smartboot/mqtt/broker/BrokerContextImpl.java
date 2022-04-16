@@ -100,6 +100,7 @@ public class BrokerContextImpl implements BrokerContext {
 
         brokerConfigure.setHost(brokerProperties.getProperty(BrokerConfigure.SystemProperty.HOST));
         brokerConfigure.setPort(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.PORT, String.valueOf(BrokerConfigure.SystemPropertyDefaultValue.PORT))));
+        brokerConfigure.setConnectTimeout(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.CONNECT_TIMEOUT, String.valueOf(BrokerConfigure.SystemPropertyDefaultValue.CONNECT_TIMEOUT))));
     }
 
     /**
