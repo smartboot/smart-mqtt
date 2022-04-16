@@ -62,7 +62,7 @@ public class MqttSubscribeMessage extends MqttPacketIdentifierMessage {
         int i = 0;
         for (MqttTopicSubscription topicSubscription : mqttSubscribePayload.topicSubscriptions()) {
             writeBuffer.write(topicFilters.get(i++));
-            writeBuffer.writeByte(topicSubscription.qualityOfService().value());
+            writeBuffer.writeByte((byte) topicSubscription.qualityOfService().value());
         }
     }
 }
