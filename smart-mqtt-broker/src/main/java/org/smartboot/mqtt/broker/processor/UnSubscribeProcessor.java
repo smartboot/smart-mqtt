@@ -4,9 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.common.enums.MqttMessageType;
-import org.smartboot.mqtt.common.enums.MqttQoS;
-import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttUnsubAckMessage;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 
@@ -31,8 +28,8 @@ public class UnSubscribeProcessor extends AuthorizedMqttProcessor<MqttUnsubscrib
         unsubscribeMessage.getMqttUnsubscribePayload().topics().forEach(session::unsubscribe);
 
         //取消订阅确认
-        MqttUnsubAckMessage mqttSubAckMessage = new MqttUnsubAckMessage(new MqttFixedHeader(MqttMessageType.UNSUBACK, false, MqttQoS.AT_MOST_ONCE, false, 0));
-        mqttSubAckMessage.setPacketId(mqttSubAckMessage.getPacketId());
+        MqttUnsubAckMessage mqttSubAckMessage = new MqttUnsubAckMessage();
+        mqttSubAckMessage.setPacketId(unsubscribeMessage.getPacketId());
         session.write(mqttSubAckMessage);
     }
 }

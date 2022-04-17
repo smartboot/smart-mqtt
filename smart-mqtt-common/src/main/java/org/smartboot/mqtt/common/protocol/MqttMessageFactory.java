@@ -38,7 +38,7 @@ final class MqttMessageFactory {
                 return new MqttSubAckMessage(mqttFixedHeader);
 
             case UNSUBACK:
-                return new MqttUnsubAckMessage(mqttFixedHeader);
+                return new MqttUnsubAckMessage();
 
             case UNSUBSCRIBE:
                 return new MqttUnsubscribeMessage(mqttFixedHeader);
