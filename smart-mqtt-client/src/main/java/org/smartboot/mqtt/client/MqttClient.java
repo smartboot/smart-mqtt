@@ -10,6 +10,7 @@ import org.smartboot.mqtt.common.QosPublisher;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.common.listener.MqttSessionListener;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttConnectPayload;
@@ -17,6 +18,7 @@ import org.smartboot.mqtt.common.message.MqttConnectVariableHeader;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPingReqMessage;
+import org.smartboot.mqtt.common.message.MqttPingRespMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttSubAckMessage;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
@@ -47,9 +49,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class MqttClient extends AbstractSession implements Closeable {
-
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
-
     private final MqttClientConfigure clientConfigure = new MqttClientConfigure();
     private final AbstractMessageProcessor<MqttMessage> messageProcessor = new MqttClientProcessor(this);
     /**
@@ -60,6 +60,7 @@ public class MqttClient extends AbstractSession implements Closeable {
      * 已订阅的消息主题
      */
     private final Map<String, Subscribe> subscribes = new ConcurrentHashMap<>();
+
     private AioQuickClient client;
 
     private AsynchronousChannelGroup asynchronousChannelGroup;
@@ -70,12 +71,29 @@ public class MqttClient extends AbstractSession implements Closeable {
      * connect ack 回调
      */
     private Consumer<MqttConnAckMessage> consumer;
+    private boolean pingTimeout = false;
 
     public MqttClient(String host, int port, String clientId) {
         super(new QosPublisher());
         clientConfigure.setHost(host);
         clientConfigure.setPort(port);
         this.clientId = clientId;
+        //ping-pong消息超时监听
+        addListener(new MqttSessionListener() {
+            @Override
+            public void onMessageReceived(AbstractSession mqttClient, MqttMessage mqttMessage) {
+                if (mqttMessage instanceof MqttPingRespMessage) {
+                    pingTimeout = false;
+                }
+            }
+
+            @Override
+            public void onMessageWrite(AbstractSession session, MqttMessage mqttMessage) {
+                if (mqttMessage instanceof MqttPingReqMessage) {
+                    pingTimeout = true;
+                }
+            }
+        });
     }
 
     public void connect() {
@@ -127,6 +145,12 @@ public class MqttClient extends AbstractSession implements Closeable {
             QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(new Runnable() {
                 @Override
                 public void run() {
+                    //客户端发送了 PINGREQ 报文之后，如果在合理的时间内仍没有收到 PINGRESP 报文，
+                    // 它应该关闭到服务端的网络连接。
+                    if (pingTimeout) {
+                        pingTimeout = false;
+                        client.shutdown();
+                    }
                     if (session.isInvalid()) {
                         if (clientConfigure.isAutomaticReconnect()) {
                             LOGGER.warn("mqtt client is disconnect, try to reconnect...");
