@@ -73,6 +73,7 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
         MqttProcessor processor = processorMap.get(msg.getClass());
         if (processor != null) {
             MqttSession mqttSession = onlineSessions.get(session.getSessionID());
+            mqttSession.getListeners().forEach(listener -> listener.onMessageReceived(mqttSession, msg));
             mqttSession.setLatestReceiveMessageTime(System.currentTimeMillis());
             processor.process(mqttContext, mqttSession, msg);
         } else {
@@ -90,7 +91,7 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
                     if (!mqttSession.isAuthorized()) {
                         mqttSession.close();
                     }
-                }, mqttContext.getBrokerConfigure().getConnectTimeout(), TimeUnit.SECONDS);
+                }, mqttContext.getBrokerConfigure().getNoConnectIdleTimeout(), TimeUnit.MILLISECONDS);
                 onlineSessions.put(session.getSessionID(), mqttSession);
                 break;
             case SESSION_CLOSED:

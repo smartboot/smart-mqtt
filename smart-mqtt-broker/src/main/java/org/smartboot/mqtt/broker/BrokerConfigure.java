@@ -52,8 +52,9 @@ public class BrokerConfigure {
 
     /**
      * 网络连接建立后，如果服务端在合理的时间内没有收到 CONNECT 报文，服务端应该关闭这个连接。
+     * 单位：毫秒
      */
-    private int connectTimeout = 5;
+    private int noConnectIdleTimeout = 5000;
 
     public int getPort() {
         return port;
@@ -95,12 +96,12 @@ public class BrokerConfigure {
         this.host = host;
     }
 
-    public int getConnectTimeout() {
-        return connectTimeout;
+    public int getNoConnectIdleTimeout() {
+        return noConnectIdleTimeout;
     }
 
-    public void setConnectTimeout(int connectTimeout) {
-        this.connectTimeout = connectTimeout;
+    public void setNoConnectIdleTimeout(int noConnectIdleTimeout) {
+        this.noConnectIdleTimeout = noConnectIdleTimeout;
     }
 
     public interface SystemProperty {
@@ -120,7 +121,7 @@ public class BrokerConfigure {
         /**
          * connect默认超时时间
          */
-        String CONNECT_TIMEOUT = "broker.connect.timeout";
+        String CONNECT_IDLE_TIMEOUT = "broker.connect.idleTimeout";
 
 
         /**
