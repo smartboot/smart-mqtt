@@ -1,5 +1,6 @@
 package org.smartboot.mqtt.broker;
 
+import org.smartboot.mqtt.broker.listener.BrokerListeners;
 import org.smartboot.mqtt.broker.plugin.provider.Providers;
 import org.smartboot.mqtt.common.StoredMessage;
 
@@ -51,6 +52,8 @@ public interface BrokerContext {
     void destroy();
 
     Providers getProviders();
+
+    BrokerListeners getListeners();
 
     void addEvent(EventListener eventListener);
 }

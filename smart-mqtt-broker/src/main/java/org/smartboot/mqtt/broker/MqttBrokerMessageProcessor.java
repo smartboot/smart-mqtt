@@ -24,12 +24,10 @@ import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioSession;
-import org.smartboot.socket.util.QuickTimerTask;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author 三刀
@@ -62,7 +60,6 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
 
     public MqttBrokerMessageProcessor(BrokerContext mqttContext) {
         this.mqttContext = mqttContext;
-//        addPlugin(new StreamMonitorPlugin<>());
     }
 
     @Override
@@ -85,13 +82,13 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
     public void stateEvent0(AioSession session, StateMachineEnum stateMachineEnum, Throwable throwable) {
         switch (stateMachineEnum) {
             case NEW_SESSION:
-                //网络连接建立后，如果服务端在合理的时间内没有收到 CONNECT 报文，服务端应该关闭这个连接。
                 MqttSession mqttSession = new MqttSession(mqttContext, session, qosPublisher);
-                QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(() -> {
-                    if (!mqttSession.isAuthorized()) {
-                        mqttSession.close();
-                    }
-                }, mqttContext.getBrokerConfigure().getNoConnectIdleTimeout(), TimeUnit.MILLISECONDS);
+                //注册MqttSessionListener
+                mqttContext.getListeners().getSessionListeners().forEach(listener -> {
+                    mqttSession.addListener(listener);
+                    listener.onSessionCreate(mqttSession);
+                });
+
                 onlineSessions.put(session.getSessionID(), mqttSession);
                 break;
             case SESSION_CLOSED:
@@ -104,7 +101,6 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
                 }
                 break;
         }
-        System.out.println(stateMachineEnum);
         if (throwable != null) {
             throwable.printStackTrace();
         }

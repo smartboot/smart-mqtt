@@ -5,10 +5,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.listener.BrokerLifecycleListener;
 import org.smartboot.mqtt.broker.listener.BrokerListeners;
+import org.smartboot.mqtt.broker.listener.ConnectIdleTimeListener;
 import org.smartboot.mqtt.broker.listener.TopicEventListener;
 import org.smartboot.mqtt.broker.plugin.Plugin;
 import org.smartboot.mqtt.broker.plugin.provider.Providers;
 import org.smartboot.mqtt.common.StoredMessage;
+import org.smartboot.mqtt.common.listener.MqttSessionListener;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.MqttUtil;
@@ -71,6 +73,9 @@ public class BrokerContextImpl implements BrokerContext {
     @Override
     public void init() throws IOException {
         updateBrokerConfigure();
+        //注册Listener
+        addEvent(new ConnectIdleTimeListener(brokerConfigure));
+
         server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(), new MqttBrokerMessageProcessor(this));
         server.setBannerEnabled(false);
         server.start();
@@ -183,12 +188,20 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     @Override
+    public BrokerListeners getListeners() {
+        return listeners;
+    }
+
+    @Override
     public void addEvent(EventListener eventListener) {
         if (eventListener instanceof TopicEventListener) {
             listeners.getTopicEventListeners().add((TopicEventListener) eventListener);
         }
         if (eventListener instanceof BrokerLifecycleListener) {
             listeners.getBrokerLifecycleListeners().add((BrokerLifecycleListener) eventListener);
+        }
+        if (eventListener instanceof MqttSessionListener) {
+            listeners.getSessionListeners().add((MqttSessionListener<MqttSession>) eventListener);
         }
     }
 
