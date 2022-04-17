@@ -64,9 +64,6 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
 
     @Override
     public void process0(AioSession session, MqttMessage msg) {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("process msg:{}", msg);
-        }
         MqttProcessor processor = processorMap.get(msg.getClass());
         if (processor != null) {
             MqttSession mqttSession = onlineSessions.get(session.getSessionID());

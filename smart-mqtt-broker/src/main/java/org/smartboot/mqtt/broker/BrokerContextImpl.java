@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.listener.BrokerLifecycleListener;
 import org.smartboot.mqtt.broker.listener.BrokerListeners;
 import org.smartboot.mqtt.broker.listener.ConnectIdleTimeListener;
+import org.smartboot.mqtt.broker.listener.MessageLoggerListener;
 import org.smartboot.mqtt.broker.listener.TopicEventListener;
 import org.smartboot.mqtt.broker.plugin.Plugin;
 import org.smartboot.mqtt.broker.plugin.provider.Providers;
@@ -75,6 +76,7 @@ public class BrokerContextImpl implements BrokerContext {
         updateBrokerConfigure();
         //注册Listener
         addEvent(new ConnectIdleTimeListener(brokerConfigure));
+        addEvent(new MessageLoggerListener());
 
         server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(), new MqttBrokerMessageProcessor(this));
         server.setBannerEnabled(false);
