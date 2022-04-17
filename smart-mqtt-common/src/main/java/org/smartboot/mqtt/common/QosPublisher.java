@@ -2,9 +2,7 @@ package org.smartboot.mqtt.common;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
-import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
 import org.smartboot.mqtt.common.message.MqttPubCompMessage;
@@ -46,8 +44,7 @@ public class QosPublisher {
         responseConsumers.put(cacheKey, new AckMessage(publishMessage, message -> {
             ValidateUtils.isTrue(message instanceof MqttPubRecMessage, "invalid message type");
             ValidateUtils.isTrue(Objects.equals(message.getPacketId(), publishMessage.getMqttPublishVariableHeader().packetId()), "invalid packetId");
-            MqttPubRelMessage pubRelMessage = new MqttPubRelMessage(new MqttFixedHeader(MqttMessageType.PUBREL, false, MqttQoS.AT_MOST_ONCE, false, 0));
-            pubRelMessage.setPacketId(message.getPacketId());
+            MqttPubRelMessage pubRelMessage = new MqttPubRelMessage(message.getPacketId());
             responseConsumers.put(cacheKey, new AckMessage(pubRelMessage, compMessage -> {
                 ValidateUtils.isTrue(compMessage instanceof MqttPubCompMessage, "invalid message type");
                 ValidateUtils.isTrue(Objects.equals(compMessage.getPacketId(), pubRelMessage.getPacketId()), "invalid packetId");

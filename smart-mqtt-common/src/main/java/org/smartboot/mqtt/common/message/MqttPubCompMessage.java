@@ -9,7 +9,7 @@ public class MqttPubCompMessage extends SingleByteFixedHeaderAndPacketIdMessage 
         super(mqttFixedHeader);
     }
 
-    public MqttPubCompMessage(MqttFixedHeader mqttFixedHeader, int mqttPacketIdVariableHeader) {
-        super(mqttFixedHeader, mqttPacketIdVariableHeader);
+    public MqttPubCompMessage(int mqttPacketIdVariableHeader) {
+        super(MqttFixedHeader.PUB_COMP_HEADER, mqttPacketIdVariableHeader);
     }
 }

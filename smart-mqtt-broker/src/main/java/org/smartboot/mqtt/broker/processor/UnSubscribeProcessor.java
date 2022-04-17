@@ -28,8 +28,7 @@ public class UnSubscribeProcessor extends AuthorizedMqttProcessor<MqttUnsubscrib
         unsubscribeMessage.getMqttUnsubscribePayload().topics().forEach(session::unsubscribe);
 
         //取消订阅确认
-        MqttUnsubAckMessage mqttSubAckMessage = new MqttUnsubAckMessage();
-        mqttSubAckMessage.setPacketId(unsubscribeMessage.getPacketId());
+        MqttUnsubAckMessage mqttSubAckMessage = new MqttUnsubAckMessage(unsubscribeMessage.getPacketId());
         session.write(mqttSubAckMessage);
     }
 }

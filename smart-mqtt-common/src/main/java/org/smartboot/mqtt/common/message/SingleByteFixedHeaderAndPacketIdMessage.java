@@ -17,6 +17,7 @@ public class SingleByteFixedHeaderAndPacketIdMessage extends MqttPacketIdentifie
         super(mqttFixedHeader, packageId);
     }
 
+
     @Override
     public void writeTo(WriteBuffer writeBuffer) throws IOException {
         int variableHeaderBufferSize = 2; // variable part only has a message id

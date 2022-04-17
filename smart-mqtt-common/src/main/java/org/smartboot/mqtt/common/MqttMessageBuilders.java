@@ -136,10 +136,8 @@ public final class MqttMessageBuilders {
         }
 
         public MqttUnsubscribeMessage build() {
-            MqttFixedHeader mqttFixedHeader =
-                    new MqttFixedHeader(MqttMessageType.UNSUBSCRIBE, false, MqttQoS.AT_LEAST_ONCE, false, 0);
             MqttUnsubscribePayload mqttSubscribePayload = new MqttUnsubscribePayload(topicFilters);
-            return new MqttUnsubscribeMessage(mqttFixedHeader, packetId, mqttSubscribePayload);
+            return new MqttUnsubscribeMessage(MqttFixedHeader.UNSUBSCRIBE_HEADER, packetId, mqttSubscribePayload);
         }
     }
 
@@ -162,11 +160,9 @@ public final class MqttMessageBuilders {
         }
 
         public MqttConnAckMessage build() {
-            MqttFixedHeader mqttFixedHeader =
-                    new MqttFixedHeader(MqttMessageType.CONNACK, false, MqttQoS.AT_MOST_ONCE, false, 0);
             MqttConnAckVariableHeader mqttConnAckVariableHeader =
                     new MqttConnAckVariableHeader(returnCode, sessionPresent);
-            return new MqttConnAckMessage(mqttFixedHeader, mqttConnAckVariableHeader);
+            return new MqttConnAckMessage(mqttConnAckVariableHeader);
         }
     }
 
@@ -179,9 +175,7 @@ public final class MqttMessageBuilders {
         }
 
         public MqttPingReqMessage build() {
-            MqttFixedHeader mqttFixedHeader =
-                    new MqttFixedHeader(MqttMessageType.PINGREQ, false, MqttQoS.AT_MOST_ONCE, false, 0);
-            return new MqttPingReqMessage(mqttFixedHeader);
+            return new MqttPingReqMessage();
         }
     }
 }

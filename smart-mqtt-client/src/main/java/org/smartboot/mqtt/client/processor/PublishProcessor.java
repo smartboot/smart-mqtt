@@ -4,9 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.client.MqttClient;
 import org.smartboot.mqtt.client.Subscribe;
-import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
-import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
 import org.smartboot.mqtt.common.message.MqttPubCompMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
@@ -15,8 +13,6 @@ import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttPublishVariableHeader;
 
 import java.util.function.Consumer;
-
-import static org.smartboot.mqtt.common.enums.MqttQoS.AT_MOST_ONCE;
 
 /**
  * 发布Topic
@@ -63,18 +59,15 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
 
     private void processQos1(MqttClient mqttClient, MqttPublishMessage mqttPublishMessage) {
         processPublishMessage(mqttPublishMessage, mqttClient);
-        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBACK, false, AT_MOST_ONCE, false, 0);
-        MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(fixedHeader, mqttPublishMessage.getMqttPublishVariableHeader().packetId());
+        MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(mqttPublishMessage.getMqttPublishVariableHeader().packetId());
         mqttClient.write(pubAckMessage);
     }
 
     private void processQos2(MqttClient session, MqttPublishMessage mqttPublishMessage) {
         final int messageId = mqttPublishMessage.getMqttPublishVariableHeader().packetId();
-        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBREC, false, AT_MOST_ONCE, false, 0);
-        MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(fixedHeader, messageId);
+        MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(messageId);
         session.write(pubRecMessage, (Consumer<MqttPubRelMessage>) message -> {
-            MqttPubCompMessage pubRelMessage = new MqttPubCompMessage(new MqttFixedHeader(MqttMessageType.PUBCOMP, false, MqttQoS.AT_MOST_ONCE, false, 0));
-            pubRelMessage.setPacketId(message.getPacketId());
+            MqttPubCompMessage pubRelMessage = new MqttPubCompMessage(message.getPacketId());
             session.write(pubRelMessage);
 
             processPublishMessage(mqttPublishMessage, session);

@@ -6,9 +6,7 @@ import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.BrokerTopic;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.common.StoredMessage;
-import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
-import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
 import org.smartboot.mqtt.common.message.MqttPubCompMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
@@ -75,8 +73,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
 
         //给 publisher 回响应
         LOGGER.info("sendPubAck invoked");
-        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBACK, false, MqttQoS.AT_MOST_ONCE, false, 0);
-        MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(fixedHeader, messageId);
+        MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(messageId);
         session.write(pubAckMessage);
 
         // 发送给subscribe
@@ -91,8 +88,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
         String clientId = session.getClientId();
 
 
-        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBREC, false, mqttPublishMessage.getMqttFixedHeader().getQosLevel(), false, 0);
-        MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(fixedHeader, mqttPublishMessage.getMqttPublishVariableHeader().packetId());
+        MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(mqttPublishMessage.getMqttPublishVariableHeader().packetId());
         //响应监听
         session.write(pubRecMessage, (Consumer<MqttPubRelMessage>) message -> {
             final BrokerTopic topic = context.getOrCreateTopic(mqttPublishMessage.getMqttPublishVariableHeader().topicName());
@@ -103,8 +99,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
                 context.getProviders().getMessageStoreProvider().storeTopic(storedMessage);
             }
             //发送pubRel消息。
-            MqttPubCompMessage pubRelMessage = new MqttPubCompMessage(new MqttFixedHeader(MqttMessageType.PUBCOMP, false, MqttQoS.AT_MOST_ONCE, false, 0));
-            pubRelMessage.setPacketId(message.getPacketId());
+            MqttPubCompMessage pubRelMessage = new MqttPubCompMessage(message.getPacketId());
             session.write(pubRelMessage);
             // 发送给subscribe
             context.publish(topic, storedMessage);

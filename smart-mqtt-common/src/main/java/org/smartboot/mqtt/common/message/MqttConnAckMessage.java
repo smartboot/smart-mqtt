@@ -18,8 +18,8 @@ public class MqttConnAckMessage extends MqttMessage {
         super(mqttFixedHeader);
     }
 
-    public MqttConnAckMessage(MqttFixedHeader mqttFixedHeader, MqttConnAckVariableHeader mqttConnAckVariableHeader) {
-        super(mqttFixedHeader);
+    public MqttConnAckMessage(MqttConnAckVariableHeader mqttConnAckVariableHeader) {
+        super(MqttFixedHeader.CONN_ACK_HEADER);
         this.mqttConnAckVariableHeader = mqttConnAckVariableHeader;
     }
 

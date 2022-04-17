@@ -10,7 +10,6 @@ import org.smartboot.mqtt.broker.store.SessionState;
 import org.smartboot.mqtt.broker.store.SessionStateProvider;
 import org.smartboot.mqtt.common.StoredMessage;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
-import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttProtocolEnum;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
@@ -20,7 +19,6 @@ import org.smartboot.mqtt.common.message.MqttConnAckVariableHeader;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttConnectPayload;
 import org.smartboot.mqtt.common.message.MqttConnectVariableHeader;
-import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 
@@ -208,8 +206,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
     }
 
     private MqttConnAckMessage connAck(MqttConnectReturnCode returnCode, boolean sessionPresent) {
-        MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.CONNACK, false, MqttQoS.AT_MOST_ONCE, false, 0);
         MqttConnAckVariableHeader mqttConnAckVariableHeader = new MqttConnAckVariableHeader(returnCode, sessionPresent);
-        return new MqttConnAckMessage(mqttFixedHeader, mqttConnAckVariableHeader);
+        return new MqttConnAckMessage(mqttConnAckVariableHeader);
     }
 }

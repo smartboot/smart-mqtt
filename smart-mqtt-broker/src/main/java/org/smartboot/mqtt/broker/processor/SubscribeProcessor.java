@@ -56,8 +56,7 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
 
         //订阅确认
         //允许服务端在发送 SUBACK 报文之前就开始发送与订阅匹配的 PUBLISH 报文
-        MqttSubAckMessage mqttSubAckMessage = new MqttSubAckMessage();
-        mqttSubAckMessage.setPacketId(mqttSubscribeMessage.getPacketId());
+        MqttSubAckMessage mqttSubAckMessage = new MqttSubAckMessage(mqttSubscribeMessage.getPacketId());
 
         //有效载荷包含一个返回码清单。
         // 每个返回码对应等待确认的 SUBSCRIBE 报文中的一个主题过滤器。

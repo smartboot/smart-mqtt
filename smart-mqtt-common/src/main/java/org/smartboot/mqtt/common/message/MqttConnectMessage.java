@@ -28,8 +28,8 @@ public class MqttConnectMessage extends MqttMessage {
         super(mqttFixedHeader);
     }
 
-    public MqttConnectMessage(MqttFixedHeader mqttFixedHeader, MqttConnectVariableHeader mqttConnectVariableHeader, MqttConnectPayload mqttConnectPayload) {
-        super(mqttFixedHeader);
+    public MqttConnectMessage(MqttConnectVariableHeader mqttConnectVariableHeader, MqttConnectPayload mqttConnectPayload) {
+        super(MqttFixedHeader.CONNECT_HEADER);
         this.mqttConnectVariableHeader = mqttConnectVariableHeader;
         this.mqttConnectPayload = mqttConnectPayload;
     }
