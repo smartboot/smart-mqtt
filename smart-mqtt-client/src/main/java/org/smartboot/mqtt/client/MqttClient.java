@@ -107,14 +107,18 @@ public class MqttClient extends AbstractSession implements Closeable {
         } catch (IOException e) {
             LOGGER.error(e.getMessage(), e);
         }
+        connect(asynchronousChannelGroup);
+    }
+
+    public void connect(AsynchronousChannelGroup asynchronousChannelGroup) {
         connect(asynchronousChannelGroup, connAckMessage -> {
         });
     }
 
     public void connect(AsynchronousChannelGroup asynchronousChannelGroup, Consumer<MqttConnAckMessage> consumer) {
-        if (bufferPagePool == null) {
-            bufferPagePool = new BufferPagePool(1024 * 1024 * 2, 10, true);
-        }
+//        if (bufferPagePool == null) {
+//            bufferPagePool = new BufferPagePool(1024 * 1024 * 2, 10, true);
+//        }
         //设置 connect ack 回调事件
         this.consumer = mqttConnAckMessage -> {
             if (!clientConfigure.isAutomaticReconnect()) {
@@ -171,7 +175,7 @@ public class MqttClient extends AbstractSession implements Closeable {
 //        messageProcessor.addPlugin(new StreamMonitorPlugin<>());
         client = new AioQuickClient(clientConfigure.getHost(), clientConfigure.getPort(), new MqttProtocol(), messageProcessor);
         try {
-            client.setBufferPagePool(bufferPagePool);
+//            client.setBufferPagePool(bufferPagePool);
             client.setWriteBuffer(1024 * 1024, 10);
             session = client.start(asynchronousChannelGroup);
 
@@ -249,16 +253,26 @@ public class MqttClient extends AbstractSession implements Closeable {
         return subscribe(new String[]{topic}, new MqttQoS[]{qos}, consumer);
     }
 
+    public MqttClient subscribe(String topic, MqttQoS qos, BiConsumer<MqttClient, MqttPublishMessage> consumer, BiConsumer<MqttClient, MqttQoS> subAckConsumer) {
+        return subscribe(new String[]{topic}, new MqttQoS[]{qos}, consumer, subAckConsumer);
+    }
+
     public MqttClient subscribe(String[] topics, MqttQoS[] qos, BiConsumer<MqttClient, MqttPublishMessage> consumer) {
+        subscribe0(topics, qos, consumer, (mqttClient, mqttQoS) -> {
+        });
+        return this;
+    }
+
+    public MqttClient subscribe(String[] topics, MqttQoS[] qos, BiConsumer<MqttClient, MqttPublishMessage> consumer, BiConsumer<MqttClient, MqttQoS> subAckConsumer) {
         if (connected) {
-            subscribe0(topics, qos, consumer);
+            subscribe0(topics, qos, consumer, subAckConsumer);
         } else {
-            registeredTasks.offer(() -> subscribe0(topics, qos, consumer));
+            registeredTasks.offer(() -> subscribe0(topics, qos, consumer, subAckConsumer));
         }
         return this;
     }
 
-    public void subscribe0(String[] topic, MqttQoS[] qos, BiConsumer<MqttClient, MqttPublishMessage> consumer) {
+    private void subscribe0(String[] topic, MqttQoS[] qos, BiConsumer<MqttClient, MqttPublishMessage> consumer, BiConsumer<MqttClient, MqttQoS> subAckConsumer) {
         MqttMessageBuilders.SubscribeBuilder subscribeBuilder = MqttMessageBuilders.subscribe().packetId(newPacketId());
         for (int i = 0; i < topic.length; i++) {
             subscribeBuilder.addSubscription(qos[i], topic[i]);
@@ -276,6 +290,7 @@ public class MqttClient extends AbstractSession implements Closeable {
                 } else {
                     LOGGER.error("subscribe topic:{} fail", subscription.topicFilter());
                 }
+                subAckConsumer.accept(this, minQos);
             }
         }));
         write(subscribeMessage);
@@ -292,6 +307,12 @@ public class MqttClient extends AbstractSession implements Closeable {
     public MqttClient willMessage(WillMessage willMessage) {
         clientConfigure.setWillMessage(willMessage);
         return this;
+    }
+
+    public void publish(String topic, MqttQoS qos, byte[] payload, boolean retain) {
+        publish(topic, qos, payload, retain, integer -> {
+
+        });
     }
 
     public void publish(String topic, MqttQoS qos, byte[] payload, boolean retain, Consumer<Integer> consumer) {

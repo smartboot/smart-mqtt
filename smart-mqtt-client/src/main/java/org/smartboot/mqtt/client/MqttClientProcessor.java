@@ -48,7 +48,7 @@ public class MqttClientProcessor extends AbstractMessageProcessor<MqttMessage> {
     public void process0(AioSession session, MqttMessage msg) {
         mqttClient.getListeners().forEach(listener -> listener.onMessageReceived(mqttClient, msg));
         MqttProcessor processor = processorMap.get(msg.getClass());
-        LOGGER.info("receive msg:{}", msg);
+//        LOGGER.info("receive msg:{}", msg);
         if (processor != null) {
             processor.process(mqttClient, msg);
         } else {
@@ -58,7 +58,7 @@ public class MqttClientProcessor extends AbstractMessageProcessor<MqttMessage> {
 
     @Override
     public void stateEvent0(AioSession session, StateMachineEnum stateMachineEnum, Throwable throwable) {
-        System.out.println(stateMachineEnum);
+//        System.out.println(stateMachineEnum);
         if (throwable != null) {
             throwable.printStackTrace();
         }

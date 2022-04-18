@@ -79,7 +79,7 @@ public class MqttSession extends AbstractSession {
         }
         subscribers.keySet().forEach(this::unsubscribe);
         boolean flag = mqttContext.removeSession(this);
-        LOGGER.info("remove content session success:{}", flag);
+//        LOGGER.info("remove content session success:{}", flag);
         closed = true;
         session.close(false);
     }
@@ -112,7 +112,7 @@ public class MqttSession extends AbstractSession {
         unsubscribe(subscription.getTopic().getTopic());
         subscribers.put(subscription.getTopic().getTopic(), subscription);
         subscription.getTopic().getConsumeOffsets().put(this, subscription);
-        LOGGER.info("subscribe topic:{} success, clientId:{}", subscription.getTopic(), clientId);
+//        LOGGER.info("subscribe topic:{} success, clientId:{}", subscription.getTopic(), clientId);
     }
 
     public void unsubscribe(String topic) {
@@ -120,7 +120,7 @@ public class MqttSession extends AbstractSession {
         if (oldOffset != null) {
             oldOffset.setEnable(false);
             oldOffset.getTopic().getConsumeOffsets().remove(oldOffset.getMqttSession());
-            LOGGER.info("unsubscribe topic:{} success,oldClientId:{} ,currentClientId:{}", topic, oldOffset.getMqttSession().clientId, clientId);
+//            LOGGER.info("unsubscribe topic:{} success,oldClientId:{} ,currentClientId:{}", topic, oldOffset.getMqttSession().clientId, clientId);
         }
     }
 

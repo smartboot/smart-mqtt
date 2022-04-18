@@ -3,6 +3,7 @@ package org.smartboot.mqtt.broker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.processor.ConnectProcessor;
+import org.smartboot.mqtt.broker.processor.DisConnectProcessor;
 import org.smartboot.mqtt.broker.processor.MqttAckProcessor;
 import org.smartboot.mqtt.broker.processor.MqttProcessor;
 import org.smartboot.mqtt.broker.processor.PingReqProcessor;
@@ -12,6 +13,7 @@ import org.smartboot.mqtt.broker.processor.UnSubscribeProcessor;
 import org.smartboot.mqtt.common.QosPublisher;
 import org.smartboot.mqtt.common.exception.MqttProcessException;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
+import org.smartboot.mqtt.common.message.MqttDisconnectMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPingReqMessage;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
@@ -22,6 +24,7 @@ import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.socket.StateMachineEnum;
+import org.smartboot.socket.extension.plugins.MonitorPlugin;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioSession;
 
@@ -56,10 +59,12 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
         processorMap.put(MqttPubRelMessage.class, new MqttAckProcessor<>());
         processorMap.put(MqttPubRecMessage.class, new MqttAckProcessor<>());
         processorMap.put(MqttPubCompMessage.class, new MqttAckProcessor<>());
+        processorMap.put(MqttDisconnectMessage.class, new DisConnectProcessor());
     }
 
     public MqttBrokerMessageProcessor(BrokerContext mqttContext) {
         this.mqttContext = mqttContext;
+        addPlugin(new MonitorPlugin<>(5));
     }
 
     @Override

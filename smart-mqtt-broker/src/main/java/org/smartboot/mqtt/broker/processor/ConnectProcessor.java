@@ -37,7 +37,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
 
     @Override
     public void process(BrokerContext context, MqttSession session, MqttConnectMessage mqttConnectMessage) {
-        LOGGER.info("receive connect message:{}", mqttConnectMessage);
+//        LOGGER.info("receive connect message:{}", mqttConnectMessage);
         //有效性校验
         //服务端必须按照 3.1 节的要求验证 CONNECT 报文，如果报文不符合规范，服务端不发送CONNACK 报文直接关闭网络连接
         checkMessage(session, mqttConnectMessage);
@@ -76,7 +76,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
             @Override
             public void run() {
                 if (session.isClosed()) {
-                    LOGGER.warn("session:{} is closed, quit keepalive monitor.", session.getClientId());
+//                    LOGGER.warn("session:{} is closed, quit keepalive monitor.", session.getClientId());
                     return;
                 }
                 long remainingTime = finalTimeout + session.getLatestReceiveMessageTime() - System.currentTimeMillis();
@@ -84,7 +84,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
 //                    LOGGER.info("continue monitor, wait:{},current:{} latestReceiveTime:{} timeout:{}", remainingTime, System.currentTimeMillis(), session.getLatestReceiveMessageSecondTime(), finalTimeout);
                     context.getKeepAliveThreadPool().schedule(this, remainingTime, TimeUnit.MILLISECONDS);
                 } else {
-                    LOGGER.info("session:{} keepalive timeout,current:{} latestReceiveTime:{} timeout:{}", session.getClientId(), System.currentTimeMillis(), session.getLatestReceiveMessageTime(), finalTimeout);
+//                    LOGGER.info("session:{} keepalive timeout,current:{} latestReceiveTime:{} timeout:{}", session.getClientId(), System.currentTimeMillis(), session.getLatestReceiveMessageTime(), finalTimeout);
                     session.close();
                 }
             }
@@ -177,7 +177,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
 
         session.setClientId(clientId);
         context.addSession(session);
-        LOGGER.info("add session for client:{}", clientId);
+//        LOGGER.info("add session for client:{}", clientId);
     }
 
     private boolean login(BrokerContext context, MqttSession session, MqttConnectMessage msg) {

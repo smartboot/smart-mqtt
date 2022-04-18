@@ -27,7 +27,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
 
     @Override
     public void process0(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
-        LOGGER.info("receive publish message:{}", mqttPublishMessage);
+//        LOGGER.info("receive publish message:{}", mqttPublishMessage);
 
         MqttQoS mqttQoS = mqttPublishMessage.getMqttFixedHeader().getQosLevel();
         switch (mqttQoS) {

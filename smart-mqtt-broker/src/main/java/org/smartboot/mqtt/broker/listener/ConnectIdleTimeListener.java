@@ -26,7 +26,7 @@ public class ConnectIdleTimeListener implements MqttSessionListener<MqttSession>
 
     @Override
     public void onSessionCreate(MqttSession session) {
-        LOGGER.info("注册Connect超时监听");
+//        LOGGER.info("注册Connect超时监听");
         QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(new AsyncTask() {
             @Override
             public void execute() {

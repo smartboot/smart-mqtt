@@ -76,7 +76,7 @@ public class BrokerContextImpl implements BrokerContext {
         updateBrokerConfigure();
         //注册Listener
         addEvent(new ConnectIdleTimeListener(brokerConfigure));
-        addEvent(new MessageLoggerListener());
+//        addEvent(new MessageLoggerListener());
 
         server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(), new MqttBrokerMessageProcessor(this));
         server.setBannerEnabled(false);
@@ -166,7 +166,7 @@ public class BrokerContextImpl implements BrokerContext {
     @Override
     public void publish(BrokerTopic topic, StoredMessage storedMessage) {
         listeners.getTopicEventListeners().forEach(event -> event.onPublish(storedMessage));
-        System.out.println("publish message to: " + topic.getConsumeOffsets().size());
+//        System.out.println("publish message to: " + topic.getConsumeOffsets().size());
         PUSH_THREAD_POOL.execute(() -> topic.getConsumeOffsets().forEach((mqttSession, consumeOffset) -> {
             MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(mqttSession.newPacketId(), storedMessage, consumeOffset.getMqttQoS());
             mqttSession.publish(publishMessage, new Consumer<Integer>() {
@@ -175,7 +175,7 @@ public class BrokerContextImpl implements BrokerContext {
                     //移除超时监听
                 }
             });
-            System.out.println("publish message to " + mqttSession.getClientId());
+//            System.out.println("publish message to " + mqttSession.getClientId());
         }));
     }
 

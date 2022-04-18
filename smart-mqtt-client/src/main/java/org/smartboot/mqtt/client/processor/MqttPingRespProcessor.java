@@ -14,6 +14,6 @@ public class MqttPingRespProcessor implements MqttProcessor<MqttPingRespMessage>
 
     @Override
     public void process(MqttClient mqttClient, MqttPingRespMessage message) {
-        LOGGER.info("receive ping response");
+//        LOGGER.info("receive ping response");
     }
 }

@@ -74,7 +74,7 @@ public abstract class AbstractSession {
     }
 
     public void publish(MqttPublishMessage message, Consumer<Integer> consumer) {
-        LOGGER.info("publish to client:{}, topic:{} packetId:{}", clientId, message.getMqttPublishVariableHeader().topicName(), message.getMqttPublishVariableHeader().packetId());
+//        LOGGER.info("publish to client:{}, topic:{} packetId:{}", clientId, message.getMqttPublishVariableHeader().topicName(), message.getMqttPublishVariableHeader().packetId());
         switch (message.getMqttFixedHeader().getQosLevel()) {
             case AT_MOST_ONCE:
                 qosPublisher.publishQos0(message, this::write);
