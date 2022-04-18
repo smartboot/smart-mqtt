@@ -27,7 +27,7 @@ public class MqttUtil {
     }
 
     public static MqttPublishMessage createPublishMessage(int packetId, StoredMessage storedMessage, MqttQoS subscribeQos) {
-        return MqttMessageBuilders.publish().payload(storedMessage.getPayload()).qos(storedMessage.getMqttQoS().value() > subscribeQos.value() ? subscribeQos : storedMessage.getMqttQoS()).packetId(packetId).topicName(storedMessage.getTopic()).build();
+        return MqttMessageBuilders.publish().payload(storedMessage.getPayload()).qos(subscribeQos).packetId(packetId).topicName(storedMessage.getTopic()).build();
     }
 
     public static String createClientId() {

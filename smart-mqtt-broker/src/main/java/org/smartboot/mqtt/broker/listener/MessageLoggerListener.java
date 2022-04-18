@@ -22,4 +22,9 @@ public class MessageLoggerListener implements MqttSessionListener<MqttSession> {
             LOGGER.debug("process msg:{}", mqttMessage);
         }
     }
+
+    @Override
+    public void onMessageWrite(MqttSession session, MqttMessage mqttMessage) {
+        LOGGER.info("write message:{} to client:{}", mqttMessage, session.getClientId());
+    }
 }
