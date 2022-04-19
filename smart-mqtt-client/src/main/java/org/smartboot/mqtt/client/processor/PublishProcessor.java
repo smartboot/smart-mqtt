@@ -44,7 +44,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
     }
 
     private void processQos0(MqttClient mqttClient, MqttPublishMessage mqttPublishMessage) {
-        LOGGER.info("receive publish:{}", mqttPublishMessage);
+//        LOGGER.info("receive publish:{}", mqttPublishMessage);
         processPublishMessage(mqttPublishMessage, mqttClient);
     }
 

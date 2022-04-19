@@ -43,7 +43,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         checkMessage(session, mqttConnectMessage);
 
         //身份验证
-        ValidateUtils.isTrue(login(context, session, mqttConnectMessage), "login fail", session::close);
+        ValidateUtils.isTrue(login(context, session, mqttConnectMessage), "login fail", session::disconnect);
 
         //清理会话
         refreshSession(context, session, mqttConnectMessage);
@@ -85,7 +85,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
                     context.getKeepAliveThreadPool().schedule(this, remainingTime, TimeUnit.MILLISECONDS);
                 } else {
 //                    LOGGER.info("session:{} keepalive timeout,current:{} latestReceiveTime:{} timeout:{}", session.getClientId(), System.currentTimeMillis(), session.getLatestReceiveMessageTime(), finalTimeout);
-                    session.close();
+                    session.disconnect();
                 }
             }
         }, finalTimeout, TimeUnit.MILLISECONDS);
@@ -98,7 +98,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         final MqttProtocolEnum protocol = MqttProtocolEnum.getByName(connectVariableHeader.protocolName());
         ValidateUtils.notNull(protocol, "invalid protocol", () -> {
             LOGGER.error("invalid protocol:{}", connectVariableHeader.protocolName());
-            session.close();
+            session.disconnect();
         });
 
         MqttConnectPayload payload = mqttConnectMessage.getPayload();
@@ -111,11 +111,11 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         ValidateUtils.notNull(mqttVersion, "invalid version", () -> {
             MqttConnAckMessage badProto = connFailAck(CONNECTION_REFUSED_UNACCEPTABLE_PROTOCOL_VERSION);
             session.write(badProto);
-            session.close();
+            session.disconnect();
         });
 
         //服务端必须验证 CONNECT 控制报文的保留标志位（第 0 位）是否为 0，如果不为 0 必须断开客户端连接。
-        ValidateUtils.isTrue(connectVariableHeader.getReserved() == 0, "", session::close);
+        ValidateUtils.isTrue(connectVariableHeader.getReserved() == 0, "", session::disconnect);
 
         //客户端标识符 (ClientId) 必须存在而且必须是 CONNECT 报文有效载荷的第一个字段
         //服务端必须允许 1 到 23 个字节长的 UTF-8 编码的客户端标识符，客户端标识符只能包含这些字符：
@@ -124,7 +124,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         ValidateUtils.isTrue(!invalidClient, "", () -> {
             MqttConnAckMessage connAckMessage = connFailAck(CONNECTION_REFUSED_IDENTIFIER_REJECTED);
             session.write(connAckMessage);
-            session.close();
+            session.disconnect();
             LOGGER.error("The MQTT client ID cannot be empty. Username={}", payload.userName());
         });
         //如果客户端提供的 ClientId 为零字节且清理会话标志为 0，
@@ -132,7 +132,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         ValidateUtils.isTrue(connectVariableHeader.isCleanSession() || StringUtils.isBlank(clientId), "", () -> {
             MqttConnAckMessage connAckMessage = connFailAck(CONNECTION_REFUSED_IDENTIFIER_REJECTED);
             session.write(connAckMessage);
-            session.close();
+            session.disconnect();
             LOGGER.error("The MQTT client ID cannot be empty. Username={}", payload.userName());
         });
     }
@@ -152,10 +152,10 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
             if (session.isCleanSession()) {
                 //如果清理会话（CleanSession）标志被设置为 1，客户端和服务端必须丢弃之前的任何会话并开始一个新的会话。
                 mqttSession.setCleanSession(true);
-                mqttSession.close();
+                mqttSession.disconnect();
             } else {
                 //如果mqttSession#cleanSession为false，将还原会话状态
-                mqttSession.close();
+                mqttSession.disconnect();
                 //如果清理会话（CleanSession）标志被设置为 0，服务端必须基于当前会话（使用客户端标识符识别）的状态恢复与客户端的通信。
                 SessionStateProvider sessionStateProvider = context.getProviders().getSessionStateProvider();
                 SessionState sessionState = sessionStateProvider.get(clientId);

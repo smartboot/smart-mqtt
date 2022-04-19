@@ -32,7 +32,7 @@ public class ConnectIdleTimeListener implements MqttSessionListener<MqttSession>
             public void execute() {
                 if (!session.isAuthorized()) {
                     LOGGER.info("长时间未收到Connect消息，连接断开！");
-                    session.close();
+                    session.disconnect();
                 }
             }
         }, configure.getNoConnectIdleTimeout(), TimeUnit.MILLISECONDS);

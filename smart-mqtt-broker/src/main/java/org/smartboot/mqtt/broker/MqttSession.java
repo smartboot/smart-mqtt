@@ -56,7 +56,7 @@ public class MqttSession extends AbstractSession {
         this.cleanSession = cleanSession;
     }
 
-    public void close() {
+    public void disconnect() {
         if (closed) {
             return;
         }

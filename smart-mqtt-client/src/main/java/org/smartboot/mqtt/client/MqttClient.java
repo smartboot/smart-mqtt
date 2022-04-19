@@ -31,7 +31,6 @@ import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioQuickClient;
 import org.smartboot.socket.util.QuickTimerTask;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.nio.channels.AsynchronousChannelGroup;
 import java.util.HashSet;
@@ -46,7 +45,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-public class MqttClient extends AbstractSession implements Closeable {
+public class MqttClient extends AbstractSession {
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
     private final MqttClientConfigure clientConfigure = new MqttClientConfigure();
     private final AbstractMessageProcessor<MqttMessage> messageProcessor = new MqttClientProcessor(this);
@@ -77,16 +76,16 @@ public class MqttClient extends AbstractSession implements Closeable {
         clientConfigure.setPort(port);
         this.clientId = clientId;
         //ping-pong消息超时监听
-        addListener(new MqttSessionListener() {
+        addListener(new MqttSessionListener<MqttClient>() {
             @Override
-            public void onMessageReceived(AbstractSession mqttClient, MqttMessage mqttMessage) {
+            public void onMessageReceived(MqttClient mqttClient, MqttMessage mqttMessage) {
                 if (mqttMessage instanceof MqttPingRespMessage) {
                     pingTimeout = false;
                 }
             }
 
             @Override
-            public void onMessageWrite(AbstractSession session, MqttMessage mqttMessage) {
+            public void onMessageWrite(MqttClient session, MqttMessage mqttMessage) {
                 if (mqttMessage instanceof MqttPingReqMessage) {
                     pingTimeout = true;
                 }
@@ -193,7 +192,7 @@ public class MqttClient extends AbstractSession implements Closeable {
             // 合理的时间取决于应用的类型和通信基础设施。
             QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(() -> {
                 if (!connected) {
-                    close();
+                    disconnect();
                 }
             }, clientConfigure.getConnectAckTimeout(), TimeUnit.SECONDS);
             write(connectMessage);
@@ -338,7 +337,7 @@ public class MqttClient extends AbstractSession implements Closeable {
     }
 
     @Override
-    public void close() {
+    public void disconnect() {
         //关闭自动重连
         clientConfigure.setAutomaticReconnect(false);
         client.shutdown();

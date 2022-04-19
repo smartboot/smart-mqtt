@@ -123,5 +123,5 @@ public abstract class AbstractSession {
     /**
      * 关闭连接
      */
-    public abstract void close();
+    public abstract void disconnect();
 }

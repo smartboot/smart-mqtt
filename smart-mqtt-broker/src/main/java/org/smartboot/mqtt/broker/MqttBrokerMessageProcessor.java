@@ -94,7 +94,7 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
                 onlineSessions.put(session.getSessionID(), mqttSession);
                 break;
             case SESSION_CLOSED:
-                onlineSessions.remove(session.getSessionID()).close();
+                onlineSessions.remove(session.getSessionID()).disconnect();
                 break;
             case PROCESS_EXCEPTION:
                 if (throwable instanceof MqttProcessException) {
