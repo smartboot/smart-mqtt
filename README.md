@@ -37,3 +37,6 @@ smart-mqtt 现已提供了比较基础的 client 能力，通过下图所示代�
 ## 参考资料
 1. 《MQTT协议3.1.1中文版》
 2. [moquette](https://github.com/moquette-io/moquette)
+
+## 加入我们
+[加入我们](https://gitee.com/smartboot/smart-mqtt/issues/I532KO)
