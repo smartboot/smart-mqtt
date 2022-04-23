@@ -1,5 +1,8 @@
 package org.smartboot.mqtt.common.message;
 
+import org.smartboot.socket.transport.WriteBuffer;
+
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -11,11 +14,7 @@ import java.nio.ByteBuffer;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttPacketIdentifierMessage extends MqttMessage {
-    /**
-     * 报文标识符
-     */
-    protected int packetId;
+public class MqttPacketIdentifierMessage extends MqttVariableMessage<MqttPacketIdVariableHeader> {
 
     public MqttPacketIdentifierMessage(MqttFixedHeader mqttFixedHeader) {
         super(mqttFixedHeader);
@@ -23,19 +22,25 @@ public class MqttPacketIdentifierMessage extends MqttMessage {
 
     public MqttPacketIdentifierMessage(MqttFixedHeader mqttFixedHeader, int packetId) {
         super(mqttFixedHeader);
-        this.packetId = packetId;
+        MqttPacketIdVariableHeader header = new MqttPacketIdVariableHeader();
+        header.setPacketId(packetId);
+        setVariableHeader(header);
     }
 
     @Override
     public final void decodeVariableHeader(ByteBuffer buffer) {
-        packetId = decodeMessageId(buffer);
+        MqttPacketIdVariableHeader header = new MqttPacketIdVariableHeader();
+        header.setPacketId(decodeMessageId(buffer));
+        setVariableHeader(header);
     }
 
-    public int getPacketId() {
-        return packetId;
-    }
 
-    public void setPacketId(int packetId) {
-        this.packetId = packetId;
+    @Override
+    public void writeTo(WriteBuffer writeBuffer) throws IOException {
+        MqttPacketIdVariableHeader variableHeader = getVariableHeader();
+        int variableHeaderBufferSize = 2; // variable part only has a message id
+        writeBuffer.writeByte(getFixedHeaderByte1(fixedHeader));
+        writeVariableLengthInt(writeBuffer, variableHeaderBufferSize);
+        writeBuffer.writeShort((short) variableHeader.getPacketId());
     }
 }

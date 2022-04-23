@@ -78,8 +78,4 @@ public class MqttFixedHeader {
         return remainingLength;
     }
 
-    @Override
-    public String toString() {
-        return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
-    }
 }

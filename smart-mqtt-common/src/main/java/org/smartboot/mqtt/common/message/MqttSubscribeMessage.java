@@ -1,5 +1,6 @@
 package org.smartboot.mqtt.common.message;
 
+import com.alibaba.fastjson.annotation.JSONField;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.transport.WriteBuffer;
@@ -16,6 +17,7 @@ import java.util.List;
  */
 public class MqttSubscribeMessage extends MqttPacketIdentifierMessage {
 
+    @JSONField(ordinal = 2)
     private MqttSubscribePayload mqttSubscribePayload;
 
     public MqttSubscribeMessage(MqttFixedHeader mqttFixedHeader) {
@@ -29,18 +31,22 @@ public class MqttSubscribeMessage extends MqttPacketIdentifierMessage {
 
     @Override
     public void decodePlayLoad(ByteBuffer buffer) {
-        final List<MqttTopicSubscription> subscribeTopics = new ArrayList<MqttTopicSubscription>();
-        int payloadLength = mqttFixedHeader.remainingLength() - PACKET_LENGTH;
+        final List<MqttTopicSubscription> subscribeTopics = new ArrayList<>();
+        int payloadLength = fixedHeader.remainingLength() - PACKET_LENGTH;
         ValidateUtils.isTrue(buffer.remaining() >= payloadLength, "数据不足");
         int limit = buffer.limit();
         buffer.limit(buffer.position() + payloadLength);
         while (buffer.hasRemaining()) {
             final String decodedTopicName = decodeString(buffer);
             int qos = BufferUtils.readUnsignedByte(buffer) & 0x03;
-            subscribeTopics.add(new MqttTopicSubscription(decodedTopicName, MqttQoS.valueOf(qos)));
+            MqttTopicSubscription subscription = new MqttTopicSubscription();
+            subscription.setTopicFilter(decodedTopicName);
+            subscription.setQualityOfService(MqttQoS.valueOf(qos));
+            subscribeTopics.add(subscription);
         }
         buffer.limit(limit);
-        this.mqttSubscribePayload = new MqttSubscribePayload(subscribeTopics);
+        this.mqttSubscribePayload = new MqttSubscribePayload();
+        mqttSubscribePayload.setTopicSubscriptions(subscribeTopics);
     }
 
     public MqttSubscribePayload getMqttSubscribePayload() {
@@ -50,19 +56,19 @@ public class MqttSubscribeMessage extends MqttPacketIdentifierMessage {
     @Override
     public void writeTo(WriteBuffer writeBuffer) throws IOException {
         int length = 2;
-        List<byte[]> topicFilters = new ArrayList<>(mqttSubscribePayload.topicSubscriptions().size());
-        for (MqttTopicSubscription topicSubscription : mqttSubscribePayload.topicSubscriptions()) {
-            byte[] bytes = encodeUTF8(topicSubscription.topicFilter());
+        List<byte[]> topicFilters = new ArrayList<>(mqttSubscribePayload.getTopicSubscriptions().size());
+        for (MqttTopicSubscription topicSubscription : mqttSubscribePayload.getTopicSubscriptions()) {
+            byte[] bytes = encodeUTF8(topicSubscription.getTopicFilter());
             topicFilters.add(bytes);
             length += 1 + bytes.length;
         }
-        writeBuffer.writeByte(getFixedHeaderByte1(mqttFixedHeader));
+        writeBuffer.writeByte(getFixedHeaderByte1(fixedHeader));
         writeBuffer.write(encodeMBI(length));
-        writeBuffer.writeShort((short) packetId);
+        writeBuffer.writeShort((short) getVariableHeader().getPacketId());
         int i = 0;
-        for (MqttTopicSubscription topicSubscription : mqttSubscribePayload.topicSubscriptions()) {
+        for (MqttTopicSubscription topicSubscription : mqttSubscribePayload.getTopicSubscriptions()) {
             writeBuffer.write(topicFilters.get(i++));
-            writeBuffer.writeByte((byte) topicSubscription.qualityOfService().value());
+            writeBuffer.writeByte((byte) topicSubscription.getQualityOfService().value());
         }
     }
 }

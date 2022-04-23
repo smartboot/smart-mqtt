@@ -1,17 +1,18 @@
 package org.smartboot.mqtt.common.message;
 
-import java.util.Collections;
+import org.smartboot.mqtt.common.ToString;
+
 import java.util.List;
 
-public final class MqttSubscribePayload {
+public final class MqttSubscribePayload extends ToString {
 
-    private final List<MqttTopicSubscription> topicSubscriptions;
+    private List<MqttTopicSubscription> topicSubscriptions;
 
-    public MqttSubscribePayload(List<MqttTopicSubscription> topicSubscriptions) {
-        this.topicSubscriptions = Collections.unmodifiableList(topicSubscriptions);
+    public void setTopicSubscriptions(List<MqttTopicSubscription> topicSubscriptions) {
+        this.topicSubscriptions = topicSubscriptions;
     }
 
-    public List<MqttTopicSubscription> topicSubscriptions() {
+    public List<MqttTopicSubscription> getTopicSubscriptions() {
         return topicSubscriptions;
     }
 

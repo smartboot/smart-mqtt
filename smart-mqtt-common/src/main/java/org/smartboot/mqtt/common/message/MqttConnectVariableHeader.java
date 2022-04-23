@@ -25,7 +25,7 @@ import org.smartboot.mqtt.common.enums.MqttVersion;
  * CONNECT 报文的可变报头按下列次序包含四个字段：协议名（Protocol Name），协议级别（Protocol
  * Level），连接标志（Connect Flags）和保持连接（Keep Alive）。
  */
-public final class MqttConnectVariableHeader {
+public final class MqttConnectVariableHeader extends MqttVariableHeader {
 
     /**
      * 协议名
@@ -115,8 +115,4 @@ public final class MqttConnectVariableHeader {
         return reserved;
     }
 
-    @Override
-    public String toString() {
-        return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
-    }
 }

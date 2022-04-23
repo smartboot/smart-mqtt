@@ -30,7 +30,6 @@ public class MqttSession extends AbstractSession {
     private final BrokerContext mqttContext;
     private String username;
 
-    private boolean closed = false;
     /**
      * 已授权
      */
@@ -57,7 +56,7 @@ public class MqttSession extends AbstractSession {
     }
 
     public void disconnect() {
-        if (closed) {
+        if (isDisconnect()) {
             return;
         }
         if (isAuthorized()) {
@@ -80,14 +79,9 @@ public class MqttSession extends AbstractSession {
         subscribers.keySet().forEach(this::unsubscribe);
         boolean flag = mqttContext.removeSession(this);
 //        LOGGER.info("remove content session success:{}", flag);
-        closed = true;
+        setDisconnect(true);
         session.close(false);
     }
-
-    public boolean isClosed() {
-        return closed;
-    }
-
 
     public void setClientId(String clientId) {
         this.clientId = clientId;

@@ -80,7 +80,9 @@ public final class MqttMessageBuilders {
 
         public MqttPublishMessage build() {
             MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false, qos, retained, 0);
-            MqttPublishVariableHeader mqttVariableHeader = new MqttPublishVariableHeader(topic, packetId);
+            MqttPublishVariableHeader mqttVariableHeader = new MqttPublishVariableHeader();
+            mqttVariableHeader.setTopicName(topic);
+            mqttVariableHeader.setPacketId(packetId);
             return new MqttPublishMessage(mqttFixedHeader, mqttVariableHeader, payload);
         }
     }
@@ -97,7 +99,10 @@ public final class MqttMessageBuilders {
             if (subscriptions == null) {
                 subscriptions = new ArrayList<>(5);
             }
-            subscriptions.add(new MqttTopicSubscription(topic, qos));
+            MqttTopicSubscription subscription = new MqttTopicSubscription();
+            subscription.setQualityOfService(qos);
+            subscription.setTopicFilter(topic);
+            subscriptions.add(subscription);
             return this;
         }
 
@@ -109,7 +114,8 @@ public final class MqttMessageBuilders {
         public MqttSubscribeMessage build() {
             MqttFixedHeader mqttFixedHeader =
                     new MqttFixedHeader(MqttMessageType.SUBSCRIBE, false, MqttQoS.AT_LEAST_ONCE, false, 0);
-            MqttSubscribePayload mqttSubscribePayload = new MqttSubscribePayload(subscriptions);
+            MqttSubscribePayload mqttSubscribePayload = new MqttSubscribePayload();
+            mqttSubscribePayload.setTopicSubscriptions(subscriptions);
             return new MqttSubscribeMessage(mqttFixedHeader, packetId, mqttSubscribePayload);
         }
     }

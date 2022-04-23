@@ -14,6 +14,7 @@ import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttConnectPayload;
 import org.smartboot.mqtt.common.message.MqttConnectVariableHeader;
+import org.smartboot.mqtt.common.message.MqttDisconnectMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPingReqMessage;
 import org.smartboot.mqtt.common.message.MqttPingRespMessage;
@@ -47,6 +48,9 @@ import java.util.function.Consumer;
 
 public class MqttClient extends AbstractSession {
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
+    /**
+     * 客户端配置项
+     */
     private final MqttClientConfigure clientConfigure = new MqttClientConfigure();
     private final AbstractMessageProcessor<MqttMessage> messageProcessor = new MqttClientProcessor(this);
     /**
@@ -125,7 +129,7 @@ public class MqttClient extends AbstractSession {
             }
 
             //连接成功,注册订阅消息
-            if (mqttConnAckMessage.getMqttConnAckVariableHeader().connectReturnCode() == MqttConnectReturnCode.CONNECTION_ACCEPTED) {
+            if (mqttConnAckMessage.getVariableHeader().connectReturnCode() == MqttConnectReturnCode.CONNECTION_ACCEPTED) {
                 connected = true;
                 Runnable runnable;
                 while ((runnable = registeredTasks.poll()) != null) {
@@ -239,7 +243,7 @@ public class MqttClient extends AbstractSession {
 
         MqttUnsubscribeMessage unsubscribedMessage = unsubscribeBuilder.build();
         // wait ack message.
-        responseConsumers.put(unsubscribedMessage.getPacketId(), new AckMessage(unsubscribedMessage, mqttMessage -> {
+        responseConsumers.put(unsubscribedMessage.getVariableHeader().packetId(), new AckMessage(unsubscribedMessage, mqttMessage -> {
             ValidateUtils.isTrue(mqttMessage instanceof MqttUnsubAckMessage, "uncorrected message type.");
             for (String unsubscribedTopic : unsubscribedTopics) {
                 subscribes.remove(unsubscribedTopic);
@@ -277,11 +281,11 @@ public class MqttClient extends AbstractSession {
             subscribeBuilder.addSubscription(qos[i], topic[i]);
         }
         MqttSubscribeMessage subscribeMessage = subscribeBuilder.build();
-        responseConsumers.put(subscribeMessage.getPacketId(), new AckMessage(subscribeMessage, mqttMessage -> {
+        responseConsumers.put(subscribeMessage.getVariableHeader().packetId(), new AckMessage(subscribeMessage, mqttMessage -> {
             List<Integer> qosValues = ((MqttSubAckMessage) mqttMessage).getMqttSubAckPayload().grantedQoSLevels();
             ValidateUtils.isTrue(qosValues.size() == qos.length, "invalid response");
             int i = 0;
-            for (MqttTopicSubscription subscription : subscribeMessage.getMqttSubscribePayload().topicSubscriptions()) {
+            for (MqttTopicSubscription subscription : subscribeMessage.getMqttSubscribePayload().getTopicSubscriptions()) {
                 MqttQoS minQos = MqttQoS.valueOf(Math.min(subscription.qualityOfService().value(), qosValues.get(i++)));
                 clientConfigure.getTopicListener().subscribe(subscription.topicFilter(), subscription.qualityOfService() == MqttQoS.FAILURE ? MqttQoS.FAILURE : minQos);
                 if (subscription.qualityOfService() != MqttQoS.FAILURE) {
@@ -336,10 +340,18 @@ public class MqttClient extends AbstractSession {
         return subscribes;
     }
 
+    /**
+     * 客户端发送 DISCONNECT 报文之后：
+     * <li> 必须关闭网络连接 [MQTT-3.14.4-1]。</li>
+     * <li>不能通过那个网络连接再发送任何控制报文 [MQTT-3.14.4-2]</li>
+     */
     @Override
     public void disconnect() {
+        //DISCONNECT 报文是客户端发给服务端的最后一个控制报文。表示客户端正常断开连接。
+        write(new MqttDisconnectMessage());
         //关闭自动重连
         clientConfigure.setAutomaticReconnect(false);
+        setDisconnect(true);
         client.shutdown();
     }
 

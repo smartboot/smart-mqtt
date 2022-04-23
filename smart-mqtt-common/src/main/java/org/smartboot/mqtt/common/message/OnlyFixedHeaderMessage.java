@@ -12,7 +12,7 @@ public class OnlyFixedHeaderMessage extends MqttMessage {
     }
 
     public final void writeTo(WriteBuffer writeBuffer) {
-        writeBuffer.writeByte(getFixedHeaderByte1(mqttFixedHeader));
+        writeBuffer.writeByte(getFixedHeaderByte1(fixedHeader));
         writeBuffer.writeByte((byte) 0);
     }
 }

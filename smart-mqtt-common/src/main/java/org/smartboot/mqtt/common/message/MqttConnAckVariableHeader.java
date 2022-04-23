@@ -6,7 +6,7 @@ import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttConnAckVariableHeader {
+public class MqttConnAckVariableHeader extends MqttVariableHeader {
     private final MqttConnectReturnCode connectReturnCode;
 
     /**

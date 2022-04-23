@@ -20,7 +20,7 @@ public class MockTopicFilterProvider implements TopicFilterProvider {
 
     @Override
     public MqttQoS match(MqttTopicSubscription topicSubscription, BrokerContext context, Consumer<BrokerTopic> consumer) {
-        String topicFilter = topicSubscription.topicFilter();
+        String topicFilter = topicSubscription.getTopicFilter();
         if (MqttUtil.containsTopicWildcards(topicFilter)) {
             LOGGER.error("开源版不支持Topic通配符匹配，若有需求请升级为企业版!");
             return MqttQoS.FAILURE;
@@ -30,7 +30,7 @@ public class MockTopicFilterProvider implements TopicFilterProvider {
          */
         BrokerTopic topic = context.getOrCreateTopic(topicFilter);
         consumer.accept(topic);
-        return topicSubscription.qualityOfService();
+        return topicSubscription.getQualityOfService();
     }
 
 }

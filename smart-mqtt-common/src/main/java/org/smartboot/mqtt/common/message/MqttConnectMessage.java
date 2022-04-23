@@ -14,11 +14,7 @@ import java.nio.charset.StandardCharsets;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttConnectMessage extends MqttMessage {
-    /**
-     * 可变报头
-     */
-    private MqttConnectVariableHeader mqttConnectVariableHeader;
+public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableHeader> {
     /**
      * 有效载荷
      */
@@ -30,7 +26,7 @@ public class MqttConnectMessage extends MqttMessage {
 
     public MqttConnectMessage(MqttConnectVariableHeader mqttConnectVariableHeader, MqttConnectPayload mqttConnectPayload) {
         super(MqttFixedHeader.CONNECT_HEADER);
-        this.mqttConnectVariableHeader = mqttConnectVariableHeader;
+        setVariableHeader(mqttConnectVariableHeader);
         this.mqttConnectPayload = mqttConnectPayload;
     }
 
@@ -52,15 +48,16 @@ public class MqttConnectMessage extends MqttMessage {
         //保持连接
         final int keepAlive = decodeMsbLsb(buffer);
 
-        mqttConnectVariableHeader = new MqttConnectVariableHeader(
+        setVariableHeader(new MqttConnectVariableHeader(
                 protocolName,
                 protocolLevel,
                 b1,
-                keepAlive);
+                keepAlive));
     }
 
     @Override
     public void decodePlayLoad(ByteBuffer buffer) {
+        MqttConnectVariableHeader variableHeader = getVariableHeader();
         //客户端标识符
         // 客户端标识符 (ClientId) 必须存在而且必须是 CONNECT 报文有效载荷的第一个字段
         final String decodedClientId = decodeString(buffer);
@@ -69,7 +66,7 @@ public class MqttConnectMessage extends MqttMessage {
         byte[] decodedWillMessage = null;
         //如果遗嘱标志被设置为 1，有效载荷的下一个字段是遗嘱主题（Will Topic）。
         // 遗嘱主题必须是 1.5.3 节定义的 UTF-8 编码字符串
-        if (mqttConnectVariableHeader.isWillFlag()) {
+        if (variableHeader.isWillFlag()) {
             decodedWillTopic = decodeString(buffer, 0, 32767);
             decodedWillMessage = decodeByteArray(buffer);
         }
@@ -78,13 +75,13 @@ public class MqttConnectMessage extends MqttMessage {
         // 如果用户名（User Name）标志被设置为 1，有效载荷的下一个字段就是它。
         // 用户名必须是 1.5.3 节定义的 UTF-8 编码字符串 [MQTT-3.1.3-11]。
         // 服务端可以将它用于身份验证和授权。
-        if (mqttConnectVariableHeader.hasUserName()) {
+        if (variableHeader.hasUserName()) {
             decodedUserName = decodeString(buffer);
         }
         // 密码字段包含一个两字节的长度字段，
         // 长度表示二进制数据的字节数（不包含长度字段本身占用的两个字节），
         // 后面跟着 0 到 65535 字节的二进制数据。
-        if (mqttConnectVariableHeader.hasPassword()) {
+        if (variableHeader.hasPassword()) {
             decodedPassword = decodeByteArray(buffer);
         }
 
@@ -93,6 +90,7 @@ public class MqttConnectMessage extends MqttMessage {
 
     @Override
     public void writeTo(WriteBuffer writeBuffer) throws IOException {
+        MqttConnectVariableHeader variableHeader = getVariableHeader();
         //VariableHeader
         byte[] clientIdBytes = encodeUTF8(mqttConnectPayload.clientIdentifier());
         //剩余长度等于可变报头的长度（10 字节）加上有效载荷的长度。
@@ -118,40 +116,40 @@ public class MqttConnectMessage extends MqttMessage {
 
 
         //第一部分：固定报头
-        writeBuffer.writeByte(getFixedHeaderByte1(mqttFixedHeader));
+        writeBuffer.writeByte(getFixedHeaderByte1(fixedHeader));
         writeBuffer.write(encodeMBI(remainingLength));
 
 
         //第二部分：可变报头，10字节
         //协议名
-        byte[] nameBytes = mqttConnectVariableHeader.protocolName().getBytes(StandardCharsets.UTF_8);
+        byte[] nameBytes = variableHeader.protocolName().getBytes(StandardCharsets.UTF_8);
         ValidateUtils.isTrue(nameBytes.length == 4, "invalid protocol name");
-        byte versionByte = mqttConnectVariableHeader.getProtocolLevel();
+        byte versionByte = variableHeader.getProtocolLevel();
         writeBuffer.writeShort((short) nameBytes.length);
         writeBuffer.write(nameBytes);
         //协议级别
         writeBuffer.writeByte(versionByte);
         //连接标志
         byte connectFlag = 0x00;
-        if (mqttConnectVariableHeader.hasUserName()) {
+        if (variableHeader.hasUserName()) {
             connectFlag = (byte) 0x80;
         }
-        if (mqttConnectVariableHeader.hasPassword()) {
+        if (variableHeader.hasPassword()) {
             connectFlag |= 0x40;
         }
-        if (mqttConnectVariableHeader.isWillFlag()) {
+        if (variableHeader.isWillFlag()) {
             connectFlag |= 0x04;
-            connectFlag |= mqttConnectVariableHeader.willQos() << 3;
-            if (mqttConnectVariableHeader.isWillRetain()) {
+            connectFlag |= variableHeader.willQos() << 3;
+            if (variableHeader.isWillRetain()) {
                 connectFlag |= 0x20;
             }
         }
-        if (mqttConnectVariableHeader.isCleanSession()) {
+        if (variableHeader.isCleanSession()) {
             connectFlag |= 0x02;
         }
         writeBuffer.writeByte(connectFlag);
         //保持连接
-        writeBuffer.writeShort((short) mqttConnectVariableHeader.keepAliveTimeSeconds());
+        writeBuffer.writeShort((short) variableHeader.keepAliveTimeSeconds());
 
         //第三部分：有效载荷
         //客户端标识符 (ClientId) 必须存在而且必须是 CONNECT 报文有效载荷的第一个字段
@@ -178,7 +176,4 @@ public class MqttConnectMessage extends MqttMessage {
         return mqttConnectPayload;
     }
 
-    public MqttConnectVariableHeader getVariableHeader() {
-        return mqttConnectVariableHeader;
-    }
 }

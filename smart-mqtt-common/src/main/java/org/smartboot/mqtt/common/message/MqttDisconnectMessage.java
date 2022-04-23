@@ -8,4 +8,8 @@ public class MqttDisconnectMessage extends OnlyFixedHeaderMessage {
     public MqttDisconnectMessage(MqttFixedHeader mqttFixedHeader) {
         super(mqttFixedHeader);
     }
+
+    public MqttDisconnectMessage() {
+        this(MqttFixedHeader.DISCONNECT_HEADER);
+    }
 }

@@ -103,10 +103,10 @@ public class MqttProtocol implements Protocol<MqttMessage> {
 
             case READ_VARIABLE_HEADER:
                 try {
-                    if (unit.mqttMessage.getMqttFixedHeader().remainingLength() > maxBytesInMessage) {
-                        throw new DecoderException("too large message: " + unit.mqttMessage.getMqttFixedHeader().remainingLength() + " bytes");
+                    if (unit.mqttMessage.getFixedHeader().remainingLength() > maxBytesInMessage) {
+                        throw new DecoderException("too large message: " + unit.mqttMessage.getFixedHeader().remainingLength() + " bytes");
                     }
-                    if (buffer.remaining() < unit.mqttMessage.getMqttFixedHeader().remainingLength()) {
+                    if (buffer.remaining() < unit.mqttMessage.getFixedHeader().remainingLength()) {
                         break;
                     }
                     unit.mqttMessage.decodeVariableHeader(buffer);

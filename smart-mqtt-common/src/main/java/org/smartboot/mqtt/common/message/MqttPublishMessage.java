@@ -11,9 +11,7 @@ import java.nio.ByteBuffer;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttPublishMessage extends MqttMessage {
-    private MqttPublishVariableHeader mqttPublishVariableHeader;
-
+public class MqttPublishMessage extends MqttVariableMessage<MqttPublishVariableHeader> {
     private byte[] payload;
 
     public MqttPublishMessage(MqttFixedHeader mqttFixedHeader) {
@@ -22,7 +20,7 @@ public class MqttPublishMessage extends MqttMessage {
 
     public MqttPublishMessage(MqttFixedHeader mqttFixedHeader, MqttPublishVariableHeader mqttPublishVariableHeader, byte[] payload) {
         super(mqttFixedHeader);
-        this.mqttPublishVariableHeader = mqttPublishVariableHeader;
+        setVariableHeader(mqttPublishVariableHeader);
         this.payload = payload;
     }
 
@@ -35,18 +33,21 @@ public class MqttPublishMessage extends MqttMessage {
         }
         int packetId = -1;
         //只有当 QoS 等级是 1 或 2 时，报文标识符（Packet Identifier）字段才能出现在 PUBLISH 报文中。
-        if (mqttFixedHeader.getQosLevel().value() > 0) {
+        if (fixedHeader.getQosLevel().value() > 0) {
             packetId = decodeMessageId(buffer);
         }
-        mqttPublishVariableHeader = new MqttPublishVariableHeader(decodedTopic, packetId);
+        MqttPublishVariableHeader variableHeader = new MqttPublishVariableHeader();
+        variableHeader.setPacketId(packetId);
+        variableHeader.setTopicName(decodedTopic);
+        setVariableHeader(variableHeader);
     }
 
     @Override
     public void decodePlayLoad(ByteBuffer buffer) {
         //只有当 QoS 等级是 1 或 2 时，报文标识符（Packet Identifier）字段才能出现在 PUBLISH 报文中。
         //QoS 设置为 0 的 PUBLISH 报文不能包含报文标识符
-        int variableHeaderLength = mqttPublishVariableHeader.topicName().getBytes().length + (mqttFixedHeader.getQosLevel().value() > 0 ? 4 : 2);
-        int remainingLength = mqttFixedHeader.remainingLength();
+        int variableHeaderLength = getVariableHeader().getTopicName().getBytes().length + (fixedHeader.getQosLevel().value() > 0 ? 4 : 2);
+        int remainingLength = fixedHeader.remainingLength();
         int readLength = remainingLength - variableHeaderLength;
         payload = new byte[readLength];
         buffer.get(payload);
@@ -54,14 +55,15 @@ public class MqttPublishMessage extends MqttMessage {
 
     @Override
     public void writeTo(WriteBuffer writeBuffer) throws IOException {
-        byte[] topicBytes = encodeUTF8(mqttPublishVariableHeader.topicName());
-        boolean hasPacketId = mqttFixedHeader.getQosLevel().value() > 0;
-        writeBuffer.writeByte(getFixedHeaderByte1(mqttFixedHeader));
+        MqttPublishVariableHeader variableHeader = getVariableHeader();
+        byte[] topicBytes = encodeUTF8(variableHeader.getTopicName());
+        boolean hasPacketId = fixedHeader.getQosLevel().value() > 0;
+        writeBuffer.writeByte(getFixedHeaderByte1(fixedHeader));
         writeBuffer.write(encodeMBI(topicBytes.length + (hasPacketId ? 2 : 0) + payload.length));
 
         writeBuffer.write(topicBytes);
         if (hasPacketId) {
-            writeBuffer.writeShort((short) mqttPublishVariableHeader.packetId());
+            writeBuffer.writeShort((short) variableHeader.getPacketId());
         }
         writeBuffer.write(payload);
     }
@@ -70,7 +72,4 @@ public class MqttPublishMessage extends MqttMessage {
         return payload;
     }
 
-    public MqttPublishVariableHeader getMqttPublishVariableHeader() {
-        return mqttPublishVariableHeader;
-    }
 }

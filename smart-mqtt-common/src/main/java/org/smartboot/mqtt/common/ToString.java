@@ -1,5 +1,6 @@
 package org.smartboot.mqtt.common;
 
+import com.alibaba.fastjson.JSON;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 
@@ -10,6 +11,6 @@ import org.apache.commons.lang.builder.ToStringStyle;
 public class ToString {
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
+        return JSON.toJSONString(this);
     }
 }

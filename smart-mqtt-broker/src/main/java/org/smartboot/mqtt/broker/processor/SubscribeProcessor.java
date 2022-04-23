@@ -30,12 +30,12 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
 
         //有效载荷包含一个返回码清单。每个返回码对应等待确认的 SUBSCRIBE 报文中的一个主题过滤器。
         // 返回码的顺序必须和 SUBSCRIBE 报文中主题过滤器的顺序相同
-        int[] qosArray = new int[mqttSubscribeMessage.getMqttSubscribePayload().topicSubscriptions().size()];
+        int[] qosArray = new int[mqttSubscribeMessage.getMqttSubscribePayload().getTopicSubscriptions().size()];
         int i = 0;
-        for (MqttTopicSubscription mqttTopicSubscription : mqttSubscribeMessage.getMqttSubscribePayload().topicSubscriptions()) {
+        for (MqttTopicSubscription mqttTopicSubscription : mqttSubscribeMessage.getMqttSubscribePayload().getTopicSubscriptions()) {
             qosArray[i++] = context.getProviders().getTopicFilterProvider().match(mqttTopicSubscription, context, topic -> {
 //                LOGGER.info("topicFilter:{} subscribe topic:{} success!", mqttTopicSubscription.topicFilter(), topic.getTopic());
-                TopicSubscriber consumeOffset = new TopicSubscriber(topic, session, mqttTopicSubscription.qualityOfService());
+                TopicSubscriber consumeOffset = new TopicSubscriber(topic, session, mqttTopicSubscription.getQualityOfService());
                 session.subscribeTopic(consumeOffset);
 
                 //一个新的订阅建立时，对每个匹配的主题名，如果存在最近保留的消息，它必须被发送给这个订阅者
@@ -56,7 +56,7 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
 
         //订阅确认
         //允许服务端在发送 SUBACK 报文之前就开始发送与订阅匹配的 PUBLISH 报文
-        MqttSubAckMessage mqttSubAckMessage = new MqttSubAckMessage(mqttSubscribeMessage.getPacketId());
+        MqttSubAckMessage mqttSubAckMessage = new MqttSubAckMessage(mqttSubscribeMessage.getVariableHeader().getPacketId());
 
         //有效载荷包含一个返回码清单。
         // 每个返回码对应等待确认的 SUBSCRIBE 报文中的一个主题过滤器。

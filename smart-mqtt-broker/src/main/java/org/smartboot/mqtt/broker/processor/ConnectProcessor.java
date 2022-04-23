@@ -75,7 +75,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         context.getKeepAliveThreadPool().schedule(new Runnable() {
             @Override
             public void run() {
-                if (session.isClosed()) {
+                if (session.isDisconnect()) {
 //                    LOGGER.warn("session:{} is closed, quit keepalive monitor.", session.getClientId());
                     return;
                 }
@@ -195,7 +195,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
             return;
         }
         StoredMessage willMessage = new StoredMessage(msg.getPayload().willMessageInBytes(), MqttQoS.valueOf(msg.getVariableHeader().willQos()), msg.getPayload().willTopic());
-        willMessage.setRetained(msg.getMqttFixedHeader().isRetain());
+        willMessage.setRetained(msg.getFixedHeader().isRetain());
         session.setWillMessage(willMessage);
     }
 

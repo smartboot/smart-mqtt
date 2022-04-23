@@ -13,6 +13,9 @@ import org.smartboot.mqtt.common.message.MqttDisconnectMessage;
 public class DisConnectProcessor extends AuthorizedMqttProcessor<MqttDisconnectMessage> {
     @Override
     public void process0(BrokerContext context, MqttSession session, MqttDisconnectMessage message) {
+        //服务端在收到 DISCONNECT 报文时：
+        // 1. 必须丢弃任何与当前连接关联的未发布的遗嘱消息，具体描述见 3.1.2.5 节 [MQTT-3.14.4-3]。
+        // 2. 应该关闭网络连接，如果客户端 还没有这么做。
         session.setWillMessage(null);
         session.disconnect();
     }

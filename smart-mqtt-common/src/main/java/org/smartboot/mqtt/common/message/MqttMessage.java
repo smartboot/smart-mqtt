@@ -1,7 +1,6 @@
 package org.smartboot.mqtt.common.message;
 
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
+import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.exception.MqttProcessException;
 import org.smartboot.socket.transport.WriteBuffer;
 import org.smartboot.socket.util.BufferUtils;
@@ -18,7 +17,7 @@ import java.nio.charset.StandardCharsets;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttMessage {
+public class MqttMessage extends ToString {
     /**
      * 8-bit UTF (UCS Transformation Format)
      */
@@ -27,10 +26,13 @@ public class MqttMessage {
     private static final char[] TOPIC_WILDCARDS = {'#', '+'};
     private static final int VARIABLE_BYTE_INT_MAX = 268435455;
     private static final int UTF8_STRING_MAX_LENGTH = 65535;
-    protected MqttFixedHeader mqttFixedHeader = null;
+    /**
+     * 固定报头
+     */
+    protected MqttFixedHeader fixedHeader = null;
 
     public MqttMessage(MqttFixedHeader mqttFixedHeader) {
-        this.mqttFixedHeader = mqttFixedHeader;
+        this.fixedHeader = mqttFixedHeader;
     }
 
     public static byte[] encodeMBI(long number) {
@@ -130,8 +132,8 @@ public class MqttMessage {
         return bytearr;
     }
 
-    public final MqttFixedHeader getMqttFixedHeader() {
-        return mqttFixedHeader;
+    public final MqttFixedHeader getFixedHeader() {
+        return fixedHeader;
     }
 
     /**
@@ -217,8 +219,4 @@ public class MqttMessage {
         } while (num > 0);
     }
 
-    @Override
-    public String toString() {
-        return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
-    }
 }

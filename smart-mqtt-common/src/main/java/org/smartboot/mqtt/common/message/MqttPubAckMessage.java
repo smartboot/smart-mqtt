@@ -4,7 +4,7 @@ package org.smartboot.mqtt.common.message;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttPubAckMessage extends SingleByteFixedHeaderAndPacketIdMessage {
+public class MqttPubAckMessage extends MqttPacketIdentifierMessage {
     public MqttPubAckMessage(MqttFixedHeader mqttFixedHeader) {
         super(mqttFixedHeader);
     }

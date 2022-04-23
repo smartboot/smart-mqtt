@@ -6,6 +6,7 @@ import org.smartboot.mqtt.common.listener.MqttSessionListener;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
+import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.transport.AioSession;
 
 import java.io.IOException;
@@ -43,12 +44,17 @@ public abstract class AbstractSession {
      */
     private long latestReceiveMessageTime;
 
+    /**
+     * 是否正常断开连接
+     */
+    private boolean disconnect = false;
+
     public AbstractSession(QosPublisher publisher) {
         this.qosPublisher = publisher;
     }
 
     public final synchronized void write(MqttPacketIdentifierMessage mqttMessage, Consumer<? extends MqttPacketIdentifierMessage> consumer) {
-        responseConsumers.put(mqttMessage.getPacketId(), new AckMessage(mqttMessage, consumer));
+        responseConsumers.put(mqttMessage.getVariableHeader().getPacketId(), new AckMessage(mqttMessage, consumer));
         write(mqttMessage);
     }
 
@@ -57,13 +63,14 @@ public abstract class AbstractSession {
     }
 
     public final void notifyResponse(MqttPacketIdentifierMessage message) {
-        AckMessage ackMessage = responseConsumers.remove(message.getPacketId());
+        AckMessage ackMessage = responseConsumers.remove(message.getVariableHeader().getPacketId());
         ackMessage.setDone(true);
         ackMessage.getConsumer().accept(message);
     }
 
     public final synchronized void write(MqttMessage mqttMessage) {
         try {
+            ValidateUtils.isTrue(!disconnect, "已断开连接,无法发送消息");
             listeners.forEach(listener -> listener.onMessageWrite(AbstractSession.this, mqttMessage));
             mqttMessage.writeTo(session.writeBuffer());
             session.writeBuffer().flush();
@@ -75,15 +82,15 @@ public abstract class AbstractSession {
 
     public void publish(MqttPublishMessage message, Consumer<Integer> consumer) {
 //        LOGGER.info("publish to client:{}, topic:{} packetId:{}", clientId, message.getMqttPublishVariableHeader().topicName(), message.getMqttPublishVariableHeader().packetId());
-        switch (message.getMqttFixedHeader().getQosLevel()) {
+        switch (message.getFixedHeader().getQosLevel()) {
             case AT_MOST_ONCE:
                 qosPublisher.publishQos0(message, this::write);
                 break;
             case AT_LEAST_ONCE:
-                qosPublisher.publishQos1(responseConsumers, message.getMqttPublishVariableHeader().packetId(), message, consumer, this::write);
+                qosPublisher.publishQos1(responseConsumers, message.getVariableHeader().getPacketId(), message, consumer, this::write);
                 break;
             case EXACTLY_ONCE:
-                qosPublisher.publishQos2(responseConsumers, message.getMqttPublishVariableHeader().packetId(), message, consumer, this::write);
+                qosPublisher.publishQos2(responseConsumers, message.getVariableHeader().getPacketId(), message, consumer, this::write);
                 break;
         }
     }
@@ -124,4 +131,12 @@ public abstract class AbstractSession {
      * 关闭连接
      */
     public abstract void disconnect();
+
+    public boolean isDisconnect() {
+        return disconnect;
+    }
+
+    protected void setDisconnect(boolean disconnect) {
+        this.disconnect = disconnect;
+    }
 }

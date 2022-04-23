@@ -28,7 +28,7 @@ public class MqttSubAckMessage extends MqttPacketIdentifierMessage {
     public void decodePlayLoad(ByteBuffer buffer) {
         final List<Integer> grantedQos = new ArrayList<Integer>();
         int limit = buffer.limit();
-        buffer.limit(buffer.position() + mqttFixedHeader.remainingLength() - PACKET_LENGTH);
+        buffer.limit(buffer.position() + fixedHeader.remainingLength() - PACKET_LENGTH);
         while (buffer.hasRemaining()) {
             int qos = BufferUtils.readUnsignedByte(buffer) & 0x03;
             grantedQos.add(qos);
@@ -42,9 +42,9 @@ public class MqttSubAckMessage extends MqttPacketIdentifierMessage {
         int variableHeaderBufferSize = 2;
         int payloadBufferSize = mqttSubAckPayload.grantedQoSLevels().size();
         int variablePartSize = variableHeaderBufferSize + payloadBufferSize;
-        writeBuffer.writeByte(getFixedHeaderByte1(mqttFixedHeader));
+        writeBuffer.writeByte(getFixedHeaderByte1(fixedHeader));
         writeVariableLengthInt(writeBuffer, variablePartSize);
-        writeBuffer.writeShort((short) getPacketId());
+        writeBuffer.writeShort((short) getVariableHeader().getPacketId());
         for (int qos : mqttSubAckPayload.grantedQoSLevels()) {
             writeBuffer.writeByte((byte) qos);
         }
