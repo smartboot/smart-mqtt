@@ -50,7 +50,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
 
     private void processPublishMessage(MqttPublishMessage mqttPublishMessage, MqttClient mqttClient) {
         MqttPublishVariableHeader header = mqttPublishMessage.getVariableHeader();
-        Subscribe subscribe = mqttClient.getSubscribes().get(header.topicName());
+        Subscribe subscribe = mqttClient.getSubscribes().get(header.getTopicName());
         // If unsubscribed, maybe null.
         if (subscribe != null && !subscribe.getUnsubscribed()) {
             subscribe.getConsumer().accept(mqttClient, mqttPublishMessage);
@@ -59,15 +59,15 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
 
     private void processQos1(MqttClient mqttClient, MqttPublishMessage mqttPublishMessage) {
         processPublishMessage(mqttPublishMessage, mqttClient);
-        MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(mqttPublishMessage.getVariableHeader().packetId());
+        MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(mqttPublishMessage.getVariableHeader().getPacketId());
         mqttClient.write(pubAckMessage);
     }
 
     private void processQos2(MqttClient session, MqttPublishMessage mqttPublishMessage) {
-        final int messageId = mqttPublishMessage.getVariableHeader().packetId();
+        final int messageId = mqttPublishMessage.getVariableHeader().getPacketId();
         MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(messageId);
         session.write(pubRecMessage, (Consumer<MqttPubRelMessage>) message -> {
-            MqttPubCompMessage pubRelMessage = new MqttPubCompMessage(message.getVariableHeader().packetId());
+            MqttPubCompMessage pubRelMessage = new MqttPubCompMessage(message.getVariableHeader().getPacketId());
             session.write(pubRelMessage);
 
             processPublishMessage(mqttPublishMessage, session);

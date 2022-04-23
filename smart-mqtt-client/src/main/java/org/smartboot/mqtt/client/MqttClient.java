@@ -243,7 +243,7 @@ public class MqttClient extends AbstractSession {
 
         MqttUnsubscribeMessage unsubscribedMessage = unsubscribeBuilder.build();
         // wait ack message.
-        responseConsumers.put(unsubscribedMessage.getVariableHeader().packetId(), new AckMessage(unsubscribedMessage, mqttMessage -> {
+        responseConsumers.put(unsubscribedMessage.getVariableHeader().getPacketId(), new AckMessage(unsubscribedMessage, mqttMessage -> {
             ValidateUtils.isTrue(mqttMessage instanceof MqttUnsubAckMessage, "uncorrected message type.");
             for (String unsubscribedTopic : unsubscribedTopics) {
                 subscribes.remove(unsubscribedTopic);
@@ -281,17 +281,17 @@ public class MqttClient extends AbstractSession {
             subscribeBuilder.addSubscription(qos[i], topic[i]);
         }
         MqttSubscribeMessage subscribeMessage = subscribeBuilder.build();
-        responseConsumers.put(subscribeMessage.getVariableHeader().packetId(), new AckMessage(subscribeMessage, mqttMessage -> {
+        responseConsumers.put(subscribeMessage.getVariableHeader().getPacketId(), new AckMessage(subscribeMessage, mqttMessage -> {
             List<Integer> qosValues = ((MqttSubAckMessage) mqttMessage).getMqttSubAckPayload().grantedQoSLevels();
             ValidateUtils.isTrue(qosValues.size() == qos.length, "invalid response");
             int i = 0;
             for (MqttTopicSubscription subscription : subscribeMessage.getMqttSubscribePayload().getTopicSubscriptions()) {
-                MqttQoS minQos = MqttQoS.valueOf(Math.min(subscription.qualityOfService().value(), qosValues.get(i++)));
-                clientConfigure.getTopicListener().subscribe(subscription.topicFilter(), subscription.qualityOfService() == MqttQoS.FAILURE ? MqttQoS.FAILURE : minQos);
-                if (subscription.qualityOfService() != MqttQoS.FAILURE) {
-                    subscribes.put(subscription.topicFilter(), new Subscribe(subscription.topicFilter(), minQos, consumer));
+                MqttQoS minQos = MqttQoS.valueOf(Math.min(subscription.getQualityOfService().value(), qosValues.get(i++)));
+                clientConfigure.getTopicListener().subscribe(subscription.getTopicFilter(), subscription.getQualityOfService() == MqttQoS.FAILURE ? MqttQoS.FAILURE : minQos);
+                if (subscription.getQualityOfService() != MqttQoS.FAILURE) {
+                    subscribes.put(subscription.getTopicFilter(), new Subscribe(subscription.getTopicFilter(), minQos, consumer));
                 } else {
-                    LOGGER.error("subscribe topic:{} fail", subscription.topicFilter());
+                    LOGGER.error("subscribe topic:{} fail", subscription.getTopicFilter());
                 }
                 subAckConsumer.accept(this, minQos);
             }
