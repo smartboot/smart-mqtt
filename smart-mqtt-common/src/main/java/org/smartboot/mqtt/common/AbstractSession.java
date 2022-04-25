@@ -47,7 +47,7 @@ public abstract class AbstractSession {
     /**
      * 是否正常断开连接
      */
-    private boolean disconnect = false;
+    protected boolean disconnect = false;
 
     public AbstractSession(QosPublisher publisher) {
         this.qosPublisher = publisher;
@@ -136,7 +136,5 @@ public abstract class AbstractSession {
         return disconnect;
     }
 
-    protected void setDisconnect(boolean disconnect) {
-        this.disconnect = disconnect;
-    }
+
 }

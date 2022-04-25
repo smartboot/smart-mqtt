@@ -19,12 +19,12 @@ public class MessageLoggerListener implements MqttSessionListener<MqttSession> {
         if (mqttMessage instanceof MqttPingReqMessage) {
             LOGGER.info("receive ping message from client:{}", session.getClientId());
         } else if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("process msg:{}", mqttMessage);
+            LOGGER.debug("smart-mqtt broker receive messageClass:{} ,data:{}", mqttMessage.getClass().getSimpleName(), mqttMessage);
         }
     }
 
     @Override
     public void onMessageWrite(MqttSession session, MqttMessage mqttMessage) {
-        LOGGER.info("write message:{} to client:{}", mqttMessage, session.getClientId());
+        LOGGER.info("write message:{} to client:{}", mqttMessage.getClass().getSimpleName(), session.getClientId());
     }
 }

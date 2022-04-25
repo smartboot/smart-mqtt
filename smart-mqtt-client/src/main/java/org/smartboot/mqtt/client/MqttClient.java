@@ -351,7 +351,7 @@ public class MqttClient extends AbstractSession {
         write(new MqttDisconnectMessage());
         //关闭自动重连
         clientConfigure.setAutomaticReconnect(false);
-        setDisconnect(true);
+        disconnect = true;
         client.shutdown();
     }
 

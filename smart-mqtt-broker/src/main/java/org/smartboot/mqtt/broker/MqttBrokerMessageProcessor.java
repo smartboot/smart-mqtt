@@ -24,7 +24,6 @@ import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.socket.StateMachineEnum;
-import org.smartboot.socket.extension.plugins.MonitorPlugin;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioSession;
 
@@ -64,14 +63,11 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
 
     public MqttBrokerMessageProcessor(BrokerContext mqttContext) {
         this.mqttContext = mqttContext;
-        addPlugin(new MonitorPlugin<>(5));
+//        addPlugin(new MonitorPlugin<>(5));
     }
 
     @Override
     public void process0(AioSession session, MqttMessage msg) {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("smart-mqtt broker process messageClass:{} ,data:{}", msg.getClass().getSimpleName(), msg);
-        }
         MqttProcessor processor = processorMap.get(msg.getClass());
         if (processor != null) {
             MqttSession mqttSession = onlineSessions.get(session.getSessionID());

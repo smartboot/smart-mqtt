@@ -1,6 +1,5 @@
 package org.smartboot.mqtt.broker.processor;
 
-import com.alibaba.fastjson.support.config.FastJsonConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
@@ -73,7 +72,6 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
         storedMessage.setClientID(clientId);
 
         //给 publisher 回响应
-        LOGGER.info("sendPubAck invoked");
         MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(messageId);
         session.write(pubAckMessage);
 

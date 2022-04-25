@@ -79,7 +79,7 @@ public class MqttSession extends AbstractSession {
         subscribers.keySet().forEach(this::unsubscribe);
         boolean flag = mqttContext.removeSession(this);
 //        LOGGER.info("remove content session success:{}", flag);
-        setDisconnect(true);
+        disconnect = true;
         session.close(false);
     }
 
