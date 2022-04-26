@@ -46,7 +46,7 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
      */
     private final Map<String, MqttSession> onlineSessions = new ConcurrentHashMap<>();
     private final Map<Class<? extends MqttMessage>, MqttProcessor> processorMap = new HashMap<>();
-    private final QosPublisher qosPublisher = new QosPublisher();
+    private final QosPublisher qosPublisher;
 
     {
         processorMap.put(MqttPingReqMessage.class, new PingReqProcessor());
@@ -63,6 +63,7 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
 
     public MqttBrokerMessageProcessor(BrokerContext mqttContext) {
         this.mqttContext = mqttContext;
+        qosPublisher = new BrokerQosPublisher(mqttContext);
 //        addPlugin(new MonitorPlugin<>(5));
     }
 

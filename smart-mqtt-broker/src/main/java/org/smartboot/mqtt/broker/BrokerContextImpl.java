@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.listener.BrokerLifecycleListener;
 import org.smartboot.mqtt.broker.listener.BrokerListeners;
 import org.smartboot.mqtt.broker.listener.ConnectIdleTimeListener;
-import org.smartboot.mqtt.broker.listener.MessageLoggerListener;
 import org.smartboot.mqtt.broker.listener.TopicEventListener;
 import org.smartboot.mqtt.broker.plugin.Plugin;
 import org.smartboot.mqtt.broker.plugin.provider.Providers;
@@ -166,16 +165,16 @@ public class BrokerContextImpl implements BrokerContext {
     @Override
     public void publish(BrokerTopic topic, StoredMessage storedMessage) {
         listeners.getTopicEventListeners().forEach(event -> event.onPublish(storedMessage));
-//        System.out.println("publish message to: " + topic.getConsumeOffsets().size());
         PUSH_THREAD_POOL.execute(() -> topic.getConsumeOffsets().forEach((mqttSession, consumeOffset) -> {
-            MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(mqttSession.newPacketId(), storedMessage, consumeOffset.getMqttQoS());
-            mqttSession.publish(publishMessage, new Consumer<Integer>() {
-                @Override
-                public void accept(Integer integer) {
-                    //移除超时监听
-                }
+            PUSH_THREAD_POOL.execute(() -> {
+                MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(mqttSession.newPacketId(), storedMessage, consumeOffset.getMqttQoS());
+                mqttSession.publish(publishMessage, new Consumer<Integer>() {
+                    @Override
+                    public void accept(Integer integer) {
+                        //移除超时监听
+                    }
+                });
             });
-//            System.out.println("publish message to " + mqttSession.getClientId());
         }));
     }
 

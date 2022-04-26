@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.AckMessage;
 import org.smartboot.mqtt.common.MqttMessageBuilders;
-import org.smartboot.mqtt.common.QosPublisher;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.listener.MqttSessionListener;
@@ -75,7 +74,7 @@ public class MqttClient extends AbstractSession {
     private boolean pingTimeout = false;
 
     public MqttClient(String host, int port, String clientId) {
-        super(new QosPublisher());
+        super(new ClientQosPublisher());
         clientConfigure.setHost(host);
         clientConfigure.setPort(port);
         this.clientId = clientId;

@@ -84,13 +84,13 @@ public abstract class AbstractSession {
 //        LOGGER.info("publish to client:{}, topic:{} packetId:{}", clientId, message.getMqttPublishVariableHeader().topicName(), message.getMqttPublishVariableHeader().packetId());
         switch (message.getFixedHeader().getQosLevel()) {
             case AT_MOST_ONCE:
-                qosPublisher.publishQos0(message, this::write);
+                write(message);
                 break;
             case AT_LEAST_ONCE:
-                qosPublisher.publishQos1(responseConsumers, message.getVariableHeader().getPacketId(), message, consumer, this::write);
+                qosPublisher.publishQos1(this, message, consumer);
                 break;
             case EXACTLY_ONCE:
-                qosPublisher.publishQos2(responseConsumers, message.getVariableHeader().getPacketId(), message, consumer, this::write);
+                qosPublisher.publishQos2(this, message, consumer);
                 break;
         }
     }
