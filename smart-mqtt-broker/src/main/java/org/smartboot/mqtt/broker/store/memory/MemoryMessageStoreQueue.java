@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class MemoryMessageStoreQueue implements MessageQueue {
     private static final Logger LOGGER = LoggerFactory.getLogger(MemoryMessageStoreQueue.class);
-    private final StoredMessage[] store = new StoredMessage[2];
+    private final StoredMessage[] store = new StoredMessage[64];
     private final AtomicLong putOffset = new AtomicLong(-1);
 
     public synchronized StoredMessage put(String clientId, MqttPublishMessage msg) {
