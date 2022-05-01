@@ -77,7 +77,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
             @Override
             public void run() {
                 if (session.isDisconnect()) {
-//                    LOGGER.warn("session:{} is closed, quit keepalive monitor.", session.getClientId());
+                    LOGGER.warn("session:{} is closed, quit keepalive monitor.", session.getClientId());
                     return;
                 }
                 long remainingTime = finalTimeout + session.getLatestReceiveMessageTime() - System.currentTimeMillis();
@@ -85,7 +85,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
 //                    LOGGER.info("continue monitor, wait:{},current:{} latestReceiveTime:{} timeout:{}", remainingTime, System.currentTimeMillis(), session.getLatestReceiveMessageSecondTime(), finalTimeout);
                     context.getKeepAliveThreadPool().schedule(this, remainingTime, TimeUnit.MILLISECONDS);
                 } else {
-//                    LOGGER.info("session:{} keepalive timeout,current:{} latestReceiveTime:{} timeout:{}", session.getClientId(), System.currentTimeMillis(), session.getLatestReceiveMessageTime(), finalTimeout);
+                    LOGGER.info("session:{} keepalive timeout,current:{} latestReceiveTime:{} timeout:{}", session.getClientId(), System.currentTimeMillis(), session.getLatestReceiveMessageTime(), finalTimeout);
                     session.disconnect();
                 }
             }
