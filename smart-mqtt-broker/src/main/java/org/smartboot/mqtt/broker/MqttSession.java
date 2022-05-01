@@ -4,8 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.store.SessionState;
 import org.smartboot.mqtt.common.AbstractSession;
+import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.QosPublisher;
-import org.smartboot.mqtt.common.StoredMessage;
+import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.socket.transport.AioSession;
 
 import java.util.Collection;
@@ -37,14 +38,22 @@ public class MqttSession extends AbstractSession {
     /**
      * 遗嘱消息
      */
-    private StoredMessage willMessage;
+    private MqttPublishMessage willMessage;
 
     private boolean cleanSession;
 
+    private final InflightQueue inflightQueue;
+
     public MqttSession(BrokerContext mqttContext, AioSession session, QosPublisher qosPublisher) {
-        super((qosPublisher));
+        super(qosPublisher);
         this.mqttContext = mqttContext;
         this.session = session;
+        this.inflightQueue = new InflightQueue(mqttContext.getBrokerConfigure().getMaxInflight());
+    }
+
+
+    public InflightQueue getInflightQueue() {
+        return inflightQueue;
     }
 
     public boolean isCleanSession() {
@@ -67,14 +76,14 @@ public class MqttSession extends AbstractSession {
                 // 如果这些消息匹配断开连接时客户端的任何订阅
                 SessionState sessionState = new SessionState();
                 sessionState.getResponseConsumers().putAll(responseConsumers);
-                subscribers.values().forEach(topicSubscriber -> sessionState.getSubscribers().add(new TopicSubscriber(topicSubscriber.getTopic(), null, topicSubscriber.getMqttQoS())));
+                subscribers.values().forEach(topicSubscriber -> sessionState.getSubscribers().add(new TopicSubscriber(topicSubscriber.getTopic(), null, topicSubscriber.getMqttQoS(), topicSubscriber.getNextConsumerOffset(), topicSubscriber.getRetainConsumerOffset())));
                 mqttContext.getProviders().getSessionStateProvider().store(clientId, sessionState);
             }
         }
 
         if (willMessage != null) {
             //非正常中断，推送遗嘱消息
-            mqttContext.publish(mqttContext.getOrCreateTopic(willMessage.getTopic()), willMessage);
+            mqttContext.publish(this, willMessage);
         }
         subscribers.keySet().forEach(this::unsubscribe);
         boolean flag = mqttContext.removeSession(this);
@@ -127,11 +136,7 @@ public class MqttSession extends AbstractSession {
         this.authorized = authorized;
     }
 
-    public StoredMessage getWillMessage() {
-        return willMessage;
-    }
-
-    public void setWillMessage(StoredMessage willMessage) {
+    public void setWillMessage(MqttPublishMessage willMessage) {
         this.willMessage = willMessage;
     }
 

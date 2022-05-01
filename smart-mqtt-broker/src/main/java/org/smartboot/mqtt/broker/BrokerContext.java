@@ -2,7 +2,7 @@ package org.smartboot.mqtt.broker;
 
 import org.smartboot.mqtt.broker.listener.BrokerListeners;
 import org.smartboot.mqtt.broker.plugin.provider.Providers;
-import org.smartboot.mqtt.common.StoredMessage;
+import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -45,7 +45,14 @@ public interface BrokerContext {
     /**
      * 发送消息至订阅者
      */
-    void publish(BrokerTopic topic, StoredMessage storedMessage);
+    void publish(MqttSession session, MqttPublishMessage message);
+
+    /**
+     * 推送retain消息至客户端
+     *
+     * @param session
+     */
+    void publishRetain(TopicSubscriber session);
 
     ScheduledExecutorService getKeepAliveThreadPool();
 

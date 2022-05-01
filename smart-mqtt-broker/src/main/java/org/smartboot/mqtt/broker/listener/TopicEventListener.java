@@ -1,7 +1,7 @@
 package org.smartboot.mqtt.broker.listener;
 
 import org.smartboot.mqtt.broker.BrokerTopic;
-import org.smartboot.mqtt.common.StoredMessage;
+import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 import java.util.EventListener;
 
@@ -12,5 +12,5 @@ import java.util.EventListener;
 public interface TopicEventListener extends EventListener {
     void onTopicCreate(BrokerTopic topic);
 
-    void onPublish(StoredMessage storedMessage);
+    void onPublish(MqttPublishMessage message);
 }

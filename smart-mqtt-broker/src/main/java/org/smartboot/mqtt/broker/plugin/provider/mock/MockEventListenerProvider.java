@@ -2,7 +2,7 @@ package org.smartboot.mqtt.broker.plugin.provider.mock;
 
 import org.smartboot.mqtt.broker.BrokerTopic;
 import org.smartboot.mqtt.broker.listener.TopicEventListener;
-import org.smartboot.mqtt.common.StoredMessage;
+import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -15,7 +15,7 @@ public class MockEventListenerProvider implements TopicEventListener {
     }
 
     @Override
-    public void onPublish(StoredMessage storedMessage) {
+    public void onPublish(MqttPublishMessage message) {
 
     }
 }

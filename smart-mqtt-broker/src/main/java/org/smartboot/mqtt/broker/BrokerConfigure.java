@@ -39,7 +39,7 @@ public class BrokerConfigure {
     /**
      * 端口号
      */
-    private int port = SystemPropertyDefaultValue.PORT;
+    private int port;
     /**
      * 默认的客户端keep-alive超时时间.
      * 保持连接的实际值是由应用指定的，一般是几分钟。允许的最大值是 18 小时 12 分 15 秒。
@@ -54,7 +54,12 @@ public class BrokerConfigure {
      * 网络连接建立后，如果服务端在合理的时间内没有收到 CONNECT 报文，服务端应该关闭这个连接。
      * 单位：毫秒
      */
-    private int noConnectIdleTimeout = 5000;
+    private int noConnectIdleTimeout;
+
+    /**
+     *
+     */
+    private int maxInflight;
 
     public int getPort() {
         return port;
@@ -104,6 +109,14 @@ public class BrokerConfigure {
         this.noConnectIdleTimeout = noConnectIdleTimeout;
     }
 
+    public int getMaxInflight() {
+        return maxInflight;
+    }
+
+    public void setMaxInflight(int maxInflight) {
+        this.maxInflight = maxInflight;
+    }
+
     public interface SystemProperty {
         /**
          * broker自定义配置文件
@@ -123,7 +136,10 @@ public class BrokerConfigure {
          */
         String CONNECT_IDLE_TIMEOUT = "broker.connect.idleTimeout";
 
-
+        /**
+         * 最大飞行窗口
+         */
+        String MAX_INFLIGHT = "broker.maxInflight";
         /**
          * 集群节点数量上限
          */
@@ -131,7 +147,9 @@ public class BrokerConfigure {
     }
 
     interface SystemPropertyDefaultValue {
-        int PORT = 1883;
-        int CONNECT_TIMEOUT = 5;
+        String PORT = "1883";
+        String CONNECT_TIMEOUT = "5";
+
+        String MAX_INFLIGHT = "8";
     }
 }

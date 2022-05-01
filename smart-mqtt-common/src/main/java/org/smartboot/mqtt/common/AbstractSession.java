@@ -23,6 +23,7 @@ import java.util.function.Consumer;
  */
 public abstract class AbstractSession {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSession.class);
+    private static final int QOS0_PACKET_ID = 0;
     /**
      * req-resp 消息模式的处理回调
      */
@@ -80,11 +81,21 @@ public abstract class AbstractSession {
         }
     }
 
+    /**
+     * 若发送的Qos为0，则回调的consumer packetId为0
+     *
+     * @param message
+     * @param consumer
+     */
     public void publish(MqttPublishMessage message, Consumer<Integer> consumer) {
 //        LOGGER.info("publish to client:{}, topic:{} packetId:{}", clientId, message.getMqttPublishVariableHeader().topicName(), message.getMqttPublishVariableHeader().packetId());
         switch (message.getFixedHeader().getQosLevel()) {
             case AT_MOST_ONCE:
-                write(message);
+                try {
+                    write(message);
+                } finally {
+                    consumer.accept(QOS0_PACKET_ID);
+                }
                 break;
             case AT_LEAST_ONCE:
                 qosPublisher.publishQos1(this, message, consumer);
@@ -111,8 +122,15 @@ public abstract class AbstractSession {
         return clientId;
     }
 
+    /**
+     * 生成大于0的 packetId
+     */
     public int newPacketId() {
         int packageId = packetIdCreator.getAndIncrement();
+        if (packageId <= 0) {
+            packetIdCreator.set(0);
+            return newPacketId();
+        }
         if (responseConsumers.containsKey(packageId)) {
             return newPacketId();
         }

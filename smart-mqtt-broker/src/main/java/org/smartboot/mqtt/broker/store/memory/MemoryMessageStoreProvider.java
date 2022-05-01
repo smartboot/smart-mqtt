@@ -2,6 +2,7 @@ package org.smartboot.mqtt.broker.store.memory;
 
 import org.smartboot.mqtt.broker.plugin.provider.MessageStoreProvider;
 import org.smartboot.mqtt.common.StoredMessage;
+import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,8 +26,8 @@ public class MemoryMessageStoreProvider implements MessageStoreProvider {
     }
 
     @Override
-    public void storeTopic(StoredMessage storedMessage) {
-        MemoryMessageStoreQueue queue = topicQueues.computeIfAbsent(storedMessage.getTopic(), s -> new MemoryMessageStoreQueue());
-        queue.put(storedMessage);
+    public StoredMessage storeMessage(String clientId, MqttPublishMessage storedMessage) {
+        MemoryMessageStoreQueue queue = topicQueues.computeIfAbsent(storedMessage.getVariableHeader().getTopicName(), s -> new MemoryMessageStoreQueue());
+        return queue.put(clientId, storedMessage);
     }
 }

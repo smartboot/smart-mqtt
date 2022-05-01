@@ -6,14 +6,10 @@ import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.TopicSubscriber;
 import org.smartboot.mqtt.broker.store.MessageQueue;
-import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttSubAckMessage;
 import org.smartboot.mqtt.common.message.MqttSubAckPayload;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
-import org.smartboot.mqtt.common.util.MqttUtil;
-
-import java.util.function.Consumer;
 
 /**
  * 客户端订阅消息
@@ -35,21 +31,13 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
         for (MqttTopicSubscription mqttTopicSubscription : mqttSubscribeMessage.getMqttSubscribePayload().getTopicSubscriptions()) {
             qosArray[i++] = context.getProviders().getTopicFilterProvider().match(mqttTopicSubscription, context, topic -> {
 //                LOGGER.info("topicFilter:{} subscribe topic:{} success!", mqttTopicSubscription.topicFilter(), topic.getTopic());
-                TopicSubscriber consumeOffset = new TopicSubscriber(topic, session, mqttTopicSubscription.getQualityOfService());
+                MessageQueue messageQueue = context.getProviders().getMessageStoreProvider().getStoreQueue(topic.getTopic());
+                //以当前消息队列的最新点位为起始点位
+                TopicSubscriber consumeOffset = new TopicSubscriber(topic, session, mqttTopicSubscription.getQualityOfService(), messageQueue.getLatestOffset() + 1, -1);
                 session.subscribeTopic(consumeOffset);
 
                 //一个新的订阅建立时，对每个匹配的主题名，如果存在最近保留的消息，它必须被发送给这个订阅者
-                MessageQueue storeQueue = context.getProviders().getMessageStoreProvider().getStoreQueue(topic.getTopic());
-                storeQueue.forEach(storedMessage -> {
-                    LOGGER.info("publish topic:{}  retain message to client:{}", storedMessage.getTopic(), session.getClientId());
-                    MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(session.newPacketId(), storedMessage, consumeOffset.getMqttQoS());
-                    session.publish(publishMessage, new Consumer<Integer>() {
-                        @Override
-                        public void accept(Integer integer) {
-                            //移除超时监听
-                        }
-                    });
-                });
+                context.publishRetain(consumeOffset);
             }).value();
         }
 

@@ -8,7 +8,7 @@ import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.TopicSubscriber;
 import org.smartboot.mqtt.broker.store.SessionState;
 import org.smartboot.mqtt.broker.store.SessionStateProvider;
-import org.smartboot.mqtt.common.StoredMessage;
+import org.smartboot.mqtt.common.MqttMessageBuilders;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttProtocolEnum;
 import org.smartboot.mqtt.common.enums.MqttQoS;
@@ -19,6 +19,7 @@ import org.smartboot.mqtt.common.message.MqttConnAckVariableHeader;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttConnectPayload;
 import org.smartboot.mqtt.common.message.MqttConnectVariableHeader;
+import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 
@@ -61,7 +62,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         // 如果服务端没有已保存的会话状态，它必须将 CONNACK 报文中的当前会话设置为 0。还需要将 CONNACK 报文中的返回码设置为 0
         MqttConnAckMessage mqttConnAckMessage = connAck(MqttConnectReturnCode.CONNECTION_ACCEPTED, !mqttConnectMessage.getVariableHeader().isCleanSession());
         session.write(mqttConnAckMessage);
-//        LOGGER.info("CONNECT message processed CId={}, username={}", clientId, payload.userName());
+        LOGGER.info("CONNECT message processed CId={}", session.getClientId());
     }
 
     private void initializeKeepAliveTimeout(BrokerContext context, MqttSession session, MqttConnectMessage mqttConnectMessage) {
@@ -162,7 +163,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
                 if (sessionState != null) {
                     session.getResponseConsumers().putAll(sessionState.getResponseConsumers());
                     sessionState.getSubscribers().forEach(topicSubscriber -> {
-                        session.subscribeTopic(new TopicSubscriber(topicSubscriber.getTopic(), session, topicSubscriber.getMqttQoS()));
+                        session.subscribeTopic(new TopicSubscriber(topicSubscriber.getTopic(), session, topicSubscriber.getMqttQoS(), topicSubscriber.getNextConsumerOffset(), topicSubscriber.getRetainConsumerOffset()));
                     });
                     //客户端设置清理会话（CleanSession）标志为 0 重连时，客户端和服务端必须使用原始的报文标识符重发
                     //任何未确认的 PUBLISH 报文（如果 QoS>0）和 PUBREL 报文 [MQTT-4.4.0-1]。这是唯一要求客户端或
@@ -194,9 +195,8 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         if (!msg.getVariableHeader().isWillFlag()) {
             return;
         }
-        StoredMessage willMessage = new StoredMessage(msg.getPayload().willMessageInBytes(), MqttQoS.valueOf(msg.getVariableHeader().willQos()), msg.getPayload().willTopic());
-        willMessage.setRetained(msg.getFixedHeader().isRetain());
-        session.setWillMessage(willMessage);
+        MqttPublishMessage publishMessage = MqttMessageBuilders.publish().topicName(msg.getPayload().willTopic()).qos(MqttQoS.valueOf(msg.getVariableHeader().willQos())).payload(msg.getPayload().willMessageInBytes()).retained(msg.getFixedHeader().isRetain()).build();
+        session.setWillMessage(publishMessage);
     }
 
     private MqttConnAckMessage connFailAck(MqttConnectReturnCode returnCode) {

@@ -2,6 +2,8 @@ package org.smartboot.mqtt.broker;
 
 import org.smartboot.mqtt.common.enums.MqttQoS;
 
+import java.util.concurrent.Semaphore;
+
 /**
  * Topic订阅者
  *
@@ -23,10 +25,24 @@ public class TopicSubscriber {
      */
     private boolean enable = true;
 
-    public TopicSubscriber(BrokerTopic topic, MqttSession session, MqttQoS mqttQoS) {
+    /**
+     * 期望消费的点位
+     */
+    private long nextConsumerOffset;
+
+    /**
+     * retain的消费点位，防止重连后的retain消息被重复消费
+     */
+    private long retainConsumerOffset;
+
+    private final Semaphore semaphore = new Semaphore(1);
+
+    public TopicSubscriber(BrokerTopic topic, MqttSession session, MqttQoS mqttQoS, long nextConsumerOffset, long retainConsumerOffset) {
         this.topic = topic;
         this.mqttSession = session;
         this.mqttQoS = mqttQoS;
+        this.nextConsumerOffset = nextConsumerOffset;
+        this.retainConsumerOffset = retainConsumerOffset;
     }
 
     public BrokerTopic getTopic() {
@@ -47,5 +63,27 @@ public class TopicSubscriber {
 
     public MqttQoS getMqttQoS() {
         return mqttQoS;
+    }
+
+    public long getNextConsumerOffset() {
+        return nextConsumerOffset;
+    }
+
+    public void setNextConsumerOffset(long nextConsumerOffset) {
+        this.nextConsumerOffset = nextConsumerOffset;
+        //retain点位保持同步，防止断链重连后消息被重复消费
+        this.retainConsumerOffset = nextConsumerOffset;
+    }
+
+    public Semaphore getSemaphore() {
+        return semaphore;
+    }
+
+    public long getRetainConsumerOffset() {
+        return retainConsumerOffset;
+    }
+
+    public void setRetainConsumerOffset(long retainConsumerOffset) {
+        this.retainConsumerOffset = retainConsumerOffset;
     }
 }

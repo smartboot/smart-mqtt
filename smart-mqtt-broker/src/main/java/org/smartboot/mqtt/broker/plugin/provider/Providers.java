@@ -1,6 +1,7 @@
 package org.smartboot.mqtt.broker.plugin.provider;
 
 import org.smartboot.mqtt.broker.plugin.provider.mock.MockClientAuthorizeProvider;
+import org.smartboot.mqtt.broker.plugin.provider.mock.MockRetainMessageProvider;
 import org.smartboot.mqtt.broker.plugin.provider.mock.MockTopicFilterProvider;
 import org.smartboot.mqtt.broker.store.SessionStateProvider;
 import org.smartboot.mqtt.broker.store.memory.MemoryMessageStoreProvider;
@@ -15,6 +16,8 @@ public class Providers {
     private ClientAuthorizeProvider clientAuthorizeProvider = new MockClientAuthorizeProvider();
     private MessageStoreProvider messageStoreProvider = new MemoryMessageStoreProvider();
     private SessionStateProvider sessionStateProvider = new MemorySessionStateProvider();
+
+    private RetainMessageProvider retainMessageProvider = new MockRetainMessageProvider();
 
     public TopicFilterProvider getTopicFilterProvider() {
         return topicFilterProvider;
@@ -46,5 +49,13 @@ public class Providers {
 
     public void setSessionStateProvider(SessionStateProvider sessionStateProvider) {
         this.sessionStateProvider = sessionStateProvider;
+    }
+
+    public RetainMessageProvider getRetainMessageProvider() {
+        return retainMessageProvider;
+    }
+
+    public void setRetainMessageProvider(RetainMessageProvider retainMessageProvider) {
+        this.retainMessageProvider = retainMessageProvider;
     }
 }
