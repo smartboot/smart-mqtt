@@ -183,17 +183,24 @@ public class BrokerContextImpl implements BrokerContext {
             providers.getRetainMessageProvider().storeRetainMessage(storedMessage);
         }
 
-        PUSH_THREAD_POOL.execute(() -> {
-            BrokerTopic topic = getOrCreateTopic(message.getVariableHeader().getTopicName());
-            topic.getConsumeOffsets().values().forEach(consumeOffset -> PUSH_THREAD_POOL.execute(() -> {
-                batchPublish(consumeOffset);
-            }));
+        PUSH_THREAD_POOL.execute(new AsyncTask() {
+            @Override
+            public void execute() {
+                BrokerTopic topic = getOrCreateTopic(message.getVariableHeader().getTopicName());
+                topic.getConsumeOffsets().values().forEach(consumeOffset -> PUSH_THREAD_POOL.execute(new AsyncTask() {
+                    @Override
+                    public void execute() {
+                        batchPublish(consumeOffset);
+                    }
+                }));
+            }
         });
     }
 
     @Override
     public void publishRetain(TopicSubscriber subscriber) {
         if (!subscriber.getSemaphore().tryAcquire()) {
+            LOGGER.error("try acquire fail");
             return;
         }
         //retain采用严格顺序publish模式
@@ -248,7 +255,13 @@ public class BrokerContextImpl implements BrokerContext {
                     if (nextMessage == null) {
                         consumeOffset.getSemaphore().release();
                     } else {
-                        batchPublish(consumeOffset);
+                        PUSH_THREAD_POOL.execute(new AsyncTask() {
+                            @Override
+                            public void execute() {
+                                batchPublish(consumeOffset);
+                            }
+                        });
+
                     }
                 }
             });
@@ -258,7 +271,7 @@ public class BrokerContextImpl implements BrokerContext {
             consumeOffset.getSemaphore().release();
         }
         //可能此时正好有新消息投递进来
-        if (messageQueue.get(nextConsumerOffset) != null) {
+        if (!consumeOffset.getMqttSession().getInflightQueue().isFull() && messageQueue.get(nextConsumerOffset) != null) {
             batchPublish(consumeOffset);
         }
     }

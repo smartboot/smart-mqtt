@@ -28,6 +28,7 @@ public class BrokerQosPublisher extends QosPublisher {
             public void execute() {
                 if (!future.isDone()) {
                     // 如果客户端发生过断链,则 mqttSession!=session
+                    System.out.println("retry...");
                     MqttSession mqttSession = mqttContext.getSession(session.getClientId());
                     mqttSession.write(mqttMessage);
                 }

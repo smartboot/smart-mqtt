@@ -37,7 +37,7 @@ public class StoredMessage extends ToString {
         this(message.getVariableHeader().getTopicName(), message.getFixedHeader().getQosLevel(), message.getPayload(), message.getFixedHeader().isRetain(), clientId, offset);
     }
 
-    public StoredMessage(String topic, MqttQoS mqttQoS, byte[] payload, boolean retained, String clientID, long offset) {
+    private StoredMessage(String topic, MqttQoS mqttQoS, byte[] payload, boolean retained, String clientID, long offset) {
         this.mqttQoS = mqttQoS;
         this.payload = payload;
         this.topic = topic;

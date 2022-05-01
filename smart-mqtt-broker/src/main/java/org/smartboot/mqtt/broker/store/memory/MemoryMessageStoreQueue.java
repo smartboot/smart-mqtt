@@ -14,26 +14,28 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class MemoryMessageStoreQueue implements MessageQueue {
     private static final Logger LOGGER = LoggerFactory.getLogger(MemoryMessageStoreQueue.class);
-    private final StoredMessage[] store = new StoredMessage[64];
+    private final StoredMessage[] store = new StoredMessage[2];
     private final AtomicLong putOffset = new AtomicLong(-1);
-    private long latestOffset = -1;
 
     public synchronized StoredMessage put(String clientId, MqttPublishMessage msg) {
         StoredMessage stored = new StoredMessage(msg, clientId, putOffset.incrementAndGet());
-        latestOffset = stored.getOffset();
-        System.out.println("存储消息:" + stored.getOffset());
+        LOGGER.info("store message, offset:{}", stored.getOffset());
         store[(int) (stored.getOffset() % store.length)] = stored;
         return stored;
     }
 
     @Override
     public StoredMessage get(long offset) {
-        return store[(int) (offset % store.length)];
+        StoredMessage storedMessage = store[(int) (offset % store.length)];
+        if (storedMessage == null) {
+            return null;
+        }
+        return storedMessage.getOffset() == offset ? storedMessage : null;
     }
 
     @Override
     public long getLatestOffset() {
-        return latestOffset;
+        return putOffset.get();
     }
 
 }
