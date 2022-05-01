@@ -130,7 +130,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         });
         //如果客户端提供的 ClientId 为零字节且清理会话标志为 0，
         // 服务端必须发送返回码为 0x02（表示标识符不合格）的 CONNACK 报文响应客户端的 CONNECT 报文，然后关闭网络连接
-        ValidateUtils.isTrue(connectVariableHeader.isCleanSession() || StringUtils.isBlank(clientId), "", () -> {
+        ValidateUtils.isTrue(connectVariableHeader.isCleanSession() || !StringUtils.isBlank(clientId), "", () -> {
             MqttConnAckMessage connAckMessage = connFailAck(CONNECTION_REFUSED_IDENTIFIER_REJECTED);
             session.write(connAckMessage);
             session.disconnect();
