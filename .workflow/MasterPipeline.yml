@@ -19,7 +19,7 @@ stages:
         jdkVersion: 8
         mavenVersion: 3.3.9
         commands:
-          - mvn  clean deploy -Dmaven.test.skip=true -Dgpg.passphrase=junweiis007
+          - mvn  clean install -Dmaven.test.skip=true -Dgpg.passphrase=junweiis007
         artifacts:
           - name: BUILD_ARTIFACT
             path:
