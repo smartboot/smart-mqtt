@@ -27,7 +27,7 @@ stages:
         settings:
           - isRelease: true
             isSnapshot: true
-            certificate: f5ca7310-bfc5-013a-3038-5e77c3ac149e
+            certificate: 301006f0-c09f-013a-6c66-2649aec1ea85
         strategy:
           retry: '0'
       - step: publish@general_artifacts
