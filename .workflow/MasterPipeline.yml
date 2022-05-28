@@ -19,11 +19,11 @@ stages:
         jdkVersion: 8
         mavenVersion: 3.3.9
         commands:
-          - mvn  clean deploy -Dmaven.test.skip=true
+          - mvn  clean deploy -Dmaven.test.skip=true -Dgpg.passphrase=junweiis007
         artifacts:
           - name: BUILD_ARTIFACT
             path:
-              - ./smart-mqtt-broker/target
+              - ./
         settings:
           - isRelease: true
             isSnapshot: true
