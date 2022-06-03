@@ -166,4 +166,14 @@
         <module>smart-mqtt-common</module>
         <module>smart-mqtt-client</module>
     </modules>
+    <repositories>
+        <repository>
+            <id>ossrh2</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </repository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </repositories>
 </project>
