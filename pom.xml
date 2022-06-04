@@ -15,8 +15,6 @@
 
     <properties>
         <smart.mqtt.version>0.3</smart.mqtt.version>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
         <commons.lang.version>2.6</commons.lang.version>
         <commons.clollections.version>4.3</commons.clollections.version>
         <log4j2.version>2.17.2</log4j2.version>
@@ -115,35 +113,35 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.10.1</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <release>11</release>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.0.0</version>
-                <configuration>
-                    <!-- 配置文件的路径，在style文件夹下 -->
-                    <configLocation>checkstyle.xml</configLocation>
-                    <encoding>UTF-8</encoding>
-                    <consoleOutput>true</consoleOutput>
-                    <failsOnError>true</failsOnError>
-                    <includeTestSourceDirectory>false</includeTestSourceDirectory>
-                </configuration>
-                <executions>
-                    <execution>
-                        <!-- 绑定pmd:pmd到validate生命周期，在validate时会自动进行代码规范检查 -->
-                        <id>validate</id>
-                        <phase>validate</phase>
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-checkstyle-plugin</artifactId>-->
+<!--                <version>3.0.0</version>-->
+<!--                <configuration>-->
+<!--                    &lt;!&ndash; 配置文件的路径，在style文件夹下 &ndash;&gt;-->
+<!--                    <configLocation>checkstyle.xml</configLocation>-->
+<!--                    <encoding>UTF-8</encoding>-->
+<!--                    <consoleOutput>true</consoleOutput>-->
+<!--                    <failsOnError>true</failsOnError>-->
+<!--                    <includeTestSourceDirectory>false</includeTestSourceDirectory>-->
+<!--                </configuration>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        &lt;!&ndash; 绑定pmd:pmd到validate生命周期，在validate时会自动进行代码规范检查 &ndash;&gt;-->
+<!--                        <id>validate</id>-->
+<!--                        <phase>validate</phase>-->
 
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+<!--                        <goals>-->
+<!--                            <goal>check</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
@@ -166,14 +164,4 @@
         <module>smart-mqtt-common</module>
         <module>smart-mqtt-client</module>
     </modules>
-    <repositories>
-        <repository>
-            <id>ossrh2</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </repository>
-        <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-    </repositories>
 </project>
