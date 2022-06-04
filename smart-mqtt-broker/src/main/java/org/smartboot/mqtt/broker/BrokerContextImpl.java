@@ -94,7 +94,7 @@ public class BrokerContextImpl implements BrokerContext {
     private void updateBrokerConfigure() throws IOException {
         Properties brokerProperties = new Properties();
         //加载默认配置
-        brokerProperties.load(Bootstrap.class.getClassLoader().getResourceAsStream("smart-mqtt.properties"));
+        brokerProperties.load(BrokerContextImpl.class.getClassLoader().getResourceAsStream("smart-mqtt.properties"));
         //加载自定义配置文件
         String brokerConfig = System.getProperty(BrokerConfigure.SystemProperty.BrokerConfig);
         if (StringUtils.isNotBlank(brokerConfig)) {
