@@ -24,7 +24,7 @@ public interface BrokerContext {
 
     MqttSession addSession(MqttSession session);
 
-    boolean removeSession(MqttSession session);
+    MqttSession removeSession(String clientId);
 
     MqttSession getSession(String clientId);
 

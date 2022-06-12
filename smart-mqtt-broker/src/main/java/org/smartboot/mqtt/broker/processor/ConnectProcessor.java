@@ -153,6 +153,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
             if (session.isCleanSession()) {
                 //如果清理会话（CleanSession）标志被设置为 1，客户端和服务端必须丢弃之前的任何会话并开始一个新的会话。
                 mqttSession.setCleanSession(true);
+                LOGGER.info("disconnect session:{}", mqttSession);
                 mqttSession.disconnect();
             } else {
                 //如果mqttSession#cleanSession为false，将还原会话状态
@@ -178,7 +179,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
 
         session.setClientId(clientId);
         context.addSession(session);
-//        LOGGER.info("add session for client:{}", clientId);
+        LOGGER.info("add session for client:{}", session);
     }
 
     private boolean login(BrokerContext context, MqttSession session, MqttConnectMessage msg) {
