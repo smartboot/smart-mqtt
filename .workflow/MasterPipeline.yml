@@ -1,0 +1,57 @@
+version: '1.0'
+name: master-pipeline
+displayName: MasterPipeline
+triggers:
+  trigger: auto
+  push:
+    branches:
+      include:
+        - master
+stages:
+  - name: compile
+    displayName: 编译
+    strategy: naturally
+    trigger: auto
+    steps:
+      - step: build@maven
+        name: build_maven
+        displayName: Maven 构建
+        jdkVersion: 8
+        mavenVersion: 3.3.9
+        commands:
+          - mvn  clean deploy -Dmaven.test.skip=true -Dgpg.passphrase=junweiis007
+        artifacts:
+          - name: BUILD_ARTIFACT
+            path:
+              - ./
+        settings:
+          - isRelease: true
+            isSnapshot: true
+            certificate: ossrh
+        strategy:
+          retry: '0'
+      - step: publish@general_artifacts
+        name: publish_general_artifacts
+        displayName: 上传制品
+        dependArtifact: BUILD_ARTIFACT
+        artifactName: output
+        strategy:
+          retry: '0'
+        dependsOn: build_maven
+  - name: release
+    displayName: 发布
+    strategy: naturally
+    trigger: auto
+    steps:
+      - step: publish@release_artifacts
+        name: publish_release_artifacts
+        displayName: 发布
+        dependArtifact: output
+        version: 1.0.0.0
+        autoIncrement: true
+        notify: []
+        strategy:
+          retry: '0'
+permissions:
+  - role: admin
+    members: []

@@ -34,8 +34,8 @@ public class MqttSession extends AbstractSession {
     private final Map<String, TopicSubscriber> subscribers = new ConcurrentHashMap<>();
 
     private final BrokerContext mqttContext;
+    private final InflightQueue inflightQueue;
     private String username;
-
     /**
      * 已授权
      */
@@ -44,10 +44,7 @@ public class MqttSession extends AbstractSession {
      * 遗嘱消息
      */
     private MqttPublishMessage willMessage;
-
     private boolean cleanSession;
-
-    private final InflightQueue inflightQueue;
 
     public MqttSession(BrokerContext mqttContext, AioSession session, QosPublisher qosPublisher) {
         super(qosPublisher);
@@ -92,8 +89,12 @@ public class MqttSession extends AbstractSession {
 //            mqttContext.publish( willMessage.getVariableHeader().getTopicName());
         }
         subscribers.keySet().forEach(this::unsubscribe);
-        boolean flag = mqttContext.removeSession(this);
-//        LOGGER.info("remove content session success:{}", flag);
+        MqttSession removeSession = mqttContext.removeSession(this.getClientId());
+        if (removeSession != null && removeSession != this) {
+            LOGGER.error("remove old session success:{}", removeSession);
+            removeSession.disconnect();
+        }
+        LOGGER.info("remove mqttSession success:{}", removeSession);
         disconnect = true;
         session.close(false);
     }

@@ -117,6 +117,19 @@ public class BrokerConfigure {
         this.maxInflight = maxInflight;
     }
 
+    @Override
+    public String toString() {
+        return "BrokerConfigure{" +
+                "properties=" + properties +
+                ", host='" + host + '\'' +
+                ", port=" + port +
+                ", maxKeepAliveTime=" + maxKeepAliveTime +
+                ", pushThreadNum=" + pushThreadNum +
+                ", noConnectIdleTimeout=" + noConnectIdleTimeout +
+                ", maxInflight=" + maxInflight +
+                '}';
+    }
+
     public interface SystemProperty {
         /**
          * broker自定义配置文件

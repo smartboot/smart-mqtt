@@ -104,7 +104,7 @@ public class BrokerContextImpl implements BrokerContext {
     private void updateBrokerConfigure() throws IOException {
         Properties brokerProperties = new Properties();
         //加载默认配置
-        brokerProperties.load(Bootstrap.class.getClassLoader().getResourceAsStream("smart-mqtt.properties"));
+        brokerProperties.load(this.getClass().getResourceAsStream("/smart-mqtt.properties"));
         //加载自定义配置文件
         String brokerConfig = System.getProperty(BrokerConfigure.SystemProperty.BrokerConfig);
         if (StringUtils.isNotBlank(brokerConfig)) {
@@ -122,6 +122,8 @@ public class BrokerContextImpl implements BrokerContext {
         brokerConfigure.setPort(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.PORT, BrokerConfigure.SystemPropertyDefaultValue.PORT)));
         brokerConfigure.setNoConnectIdleTimeout(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.CONNECT_IDLE_TIMEOUT, BrokerConfigure.SystemPropertyDefaultValue.CONNECT_TIMEOUT)));
         brokerConfigure.setMaxInflight(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.MAX_INFLIGHT, BrokerConfigure.SystemPropertyDefaultValue.MAX_INFLIGHT)));
+
+        System.out.println("brokerConfigure: "+brokerConfigure);
     }
 
     /**
@@ -169,12 +171,8 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     @Override
-    public boolean removeSession(MqttSession session) {
-        if (session.getClientId() != null) {
-            return grantSessions.remove(session.getClientId(), session);
-        } else {
-            return false;
-        }
+    public MqttSession removeSession(String clientId) {
+        return grantSessions.remove(clientId);
     }
 
     @Override
