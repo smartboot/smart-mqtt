@@ -13,4 +13,5 @@ public interface TopicEventListener extends EventListener {
     void onTopicCreate(BrokerTopic topic);
 
     void onPublish(MqttPublishMessage message);
+
 }

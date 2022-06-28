@@ -1,7 +1,6 @@
 package org.smartboot.mqtt.common.util;
 
 import org.smartboot.mqtt.common.MqttMessageBuilders;
-import org.smartboot.mqtt.common.StoredMessage;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
@@ -26,8 +25,8 @@ public class MqttUtil {
         return false;
     }
 
-    public static MqttPublishMessage createPublishMessage(int packetId, StoredMessage storedMessage, MqttQoS subscribeQos) {
-        return MqttMessageBuilders.publish().payload(storedMessage.getPayload()).qos(subscribeQos).packetId(packetId).topicName(storedMessage.getTopic()).build();
+    public static MqttPublishMessage createPublishMessage(int packetId, String topic, MqttQoS subscribeQos, byte[] payload) {
+        return MqttMessageBuilders.publish().payload(payload).qos(subscribeQos).packetId(packetId).topicName(topic).build();
     }
 
     public static String createClientId() {

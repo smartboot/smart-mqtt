@@ -1,10 +1,10 @@
 package org.smartboot.mqtt.broker.plugin.provider;
 
+import org.smartboot.mqtt.broker.persistence.MemoryPersistenceProvider;
+import org.smartboot.mqtt.broker.persistence.PersistenceProvider;
 import org.smartboot.mqtt.broker.plugin.provider.mock.MockClientAuthorizeProvider;
-import org.smartboot.mqtt.broker.plugin.provider.mock.MockRetainMessageProvider;
 import org.smartboot.mqtt.broker.plugin.provider.mock.MockTopicFilterProvider;
 import org.smartboot.mqtt.broker.store.SessionStateProvider;
-import org.smartboot.mqtt.broker.store.memory.MemoryMessageStoreProvider;
 import org.smartboot.mqtt.broker.store.memory.MemorySessionStateProvider;
 
 /**
@@ -14,10 +14,10 @@ import org.smartboot.mqtt.broker.store.memory.MemorySessionStateProvider;
 public class Providers {
     private TopicFilterProvider topicFilterProvider = new MockTopicFilterProvider();
     private ClientAuthorizeProvider clientAuthorizeProvider = new MockClientAuthorizeProvider();
-    private MessageStoreProvider messageStoreProvider = new MemoryMessageStoreProvider();
     private SessionStateProvider sessionStateProvider = new MemorySessionStateProvider();
 
-    private RetainMessageProvider retainMessageProvider = new MockRetainMessageProvider();
+    private PersistenceProvider retainMessageProvider = new MemoryPersistenceProvider();
+    private PersistenceProvider persistenceProvider = new MemoryPersistenceProvider();
 
     public TopicFilterProvider getTopicFilterProvider() {
         return topicFilterProvider;
@@ -35,13 +35,6 @@ public class Providers {
         this.clientAuthorizeProvider = clientAuthorizeProvider;
     }
 
-    public MessageStoreProvider getMessageStoreProvider() {
-        return messageStoreProvider;
-    }
-
-    public void setMessageStoreProvider(MessageStoreProvider messageStoreProvider) {
-        this.messageStoreProvider = messageStoreProvider;
-    }
 
     public SessionStateProvider getSessionStateProvider() {
         return sessionStateProvider;
@@ -51,11 +44,20 @@ public class Providers {
         this.sessionStateProvider = sessionStateProvider;
     }
 
-    public RetainMessageProvider getRetainMessageProvider() {
+    public PersistenceProvider getRetainMessageProvider() {
         return retainMessageProvider;
     }
 
-    public void setRetainMessageProvider(RetainMessageProvider retainMessageProvider) {
+    public void setRetainMessageProvider(PersistenceProvider retainMessageProvider) {
         this.retainMessageProvider = retainMessageProvider;
     }
+
+    public PersistenceProvider getPersistenceProvider() {
+        return persistenceProvider;
+    }
+
+    public void setPersistenceProvider(PersistenceProvider persistenceProvider) {
+        this.persistenceProvider = persistenceProvider;
+    }
+
 }

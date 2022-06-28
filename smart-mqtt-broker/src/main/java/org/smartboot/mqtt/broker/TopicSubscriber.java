@@ -34,8 +34,14 @@ public class TopicSubscriber {
      * retain的消费点位，防止重连后的retain消息被重复消费
      */
     private long retainConsumerOffset;
+    private long retainConsumerTimestamp;
 
     private final Semaphore semaphore = new Semaphore(1);
+
+    /**
+     * 最近一次订阅时间
+     */
+    private final long latestSubscribeTime = System.currentTimeMillis();
 
     public TopicSubscriber(BrokerTopic topic, MqttSession session, MqttQoS mqttQoS, long nextConsumerOffset, long retainConsumerOffset) {
         this.topic = topic;
@@ -69,6 +75,14 @@ public class TopicSubscriber {
         return nextConsumerOffset;
     }
 
+    public long getRetainConsumerTimestamp() {
+        return retainConsumerTimestamp;
+    }
+
+    public void setRetainConsumerTimestamp(long retainConsumerTimestamp) {
+        this.retainConsumerTimestamp = retainConsumerTimestamp;
+    }
+
     public void setNextConsumerOffset(long nextConsumerOffset) {
         this.nextConsumerOffset = nextConsumerOffset;
         //retain点位保持同步，防止断链重连后消息被重复消费
@@ -85,5 +99,9 @@ public class TopicSubscriber {
 
     public void setRetainConsumerOffset(long retainConsumerOffset) {
         this.retainConsumerOffset = retainConsumerOffset;
+    }
+
+    public long getLatestSubscribeTime() {
+        return latestSubscribeTime;
     }
 }

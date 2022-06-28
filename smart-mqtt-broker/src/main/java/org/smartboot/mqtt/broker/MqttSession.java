@@ -2,16 +2,21 @@ package org.smartboot.mqtt.broker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.broker.persistence.Message;
+import org.smartboot.mqtt.broker.persistence.PersistenceProvider;
 import org.smartboot.mqtt.broker.store.SessionState;
 import org.smartboot.mqtt.common.AbstractSession;
+import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.QosPublisher;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
+import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.socket.transport.AioSession;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 
 /**
  * 会话，客户端和服务端之间的状态交互。
@@ -83,7 +88,8 @@ public class MqttSession extends AbstractSession {
 
         if (willMessage != null) {
             //非正常中断，推送遗嘱消息
-            mqttContext.publish(this, willMessage);
+            mqttContext.getMessageBus().publish(willMessage);
+//            mqttContext.publish( willMessage.getVariableHeader().getTopicName());
         }
         subscribers.keySet().forEach(this::unsubscribe);
         boolean flag = mqttContext.removeSession(this);
@@ -142,5 +148,55 @@ public class MqttSession extends AbstractSession {
 
     public Collection<TopicSubscriber> getSubscribers() {
         return subscribers.values();
+    }
+
+    public void batchPublish(TopicSubscriber consumeOffset, ExecutorService executorService) {
+        if (!consumeOffset.getSemaphore().tryAcquire()) {
+            return;
+        }
+        long nextConsumerOffset = consumeOffset.getNextConsumerOffset();
+        PersistenceProvider persistenceProvider = mqttContext.getProviders().getPersistenceProvider();
+
+        while (!consumeOffset.getMqttSession().getInflightQueue().isFull()) {
+            Message eventMessage = persistenceProvider.get(consumeOffset.getTopic().getTopic(), nextConsumerOffset);
+            if (eventMessage == null) {
+                break;
+            }
+            nextConsumerOffset++;
+            MqttSession mqttSession = consumeOffset.getMqttSession();
+            MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(mqttSession.newPacketId(), eventMessage.getTopic(), consumeOffset.getMqttQoS(), eventMessage.getPayload());
+            InflightQueue inflightQueue = mqttSession.getInflightQueue();
+            int index = inflightQueue.add(publishMessage, eventMessage.getOffset());
+            LOGGER.info("push {}", eventMessage.getOffset());
+            mqttSession.publish(publishMessage, packetId -> {
+                //最早发送的消息若收到响应，则更新点位
+                boolean done = inflightQueue.commit(index, offset -> consumeOffset.setNextConsumerOffset(offset + 1));
+                if (done) {
+                    consumeOffset.setRetainConsumerTimestamp(eventMessage.getCreateTime());
+                    inflightQueue.clear();
+                    //本批次全部处理完毕
+                    Message nextMessage = persistenceProvider.get(consumeOffset.getTopic().getTopic(), consumeOffset.getNextConsumerOffset());
+                    if (nextMessage == null) {
+                        consumeOffset.getSemaphore().release();
+                    } else {
+                        executorService.execute(new AsyncTask() {
+                            @Override
+                            public void execute() {
+                                batchPublish(consumeOffset, executorService);
+                            }
+                        });
+
+                    }
+                }
+            });
+        }
+        //无可publish的消息
+        if (nextConsumerOffset == consumeOffset.getNextConsumerOffset()) {
+            consumeOffset.getSemaphore().release();
+        }
+        //可能此时正好有新消息投递进来
+        if (!consumeOffset.getMqttSession().getInflightQueue().isFull() && persistenceProvider.get(consumeOffset.getTopic().getTopic(), nextConsumerOffset) != null) {
+            batchPublish(consumeOffset, executorService);
+        }
     }
 }

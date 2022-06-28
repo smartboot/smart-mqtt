@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
  * @version V1.0 , 2022/4/25
  */
 public class BrokerQosPublisher extends QosPublisher {
-    private BrokerContext mqttContext;
+    private final BrokerContext mqttContext;
 
     public BrokerQosPublisher(BrokerContext mqttContext) {
         this.mqttContext = mqttContext;

@@ -46,7 +46,9 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
     }
 
     private void processQos0(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
-        context.publish(session, mqttPublishMessage);
+//        context.publish(session, mqttPublishMessage);
+        // 消息投递至消息总线
+        context.getMessageBus().publish(mqttPublishMessage);
     }
 
     private void processQos1(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
@@ -57,8 +59,10 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
         MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(messageId);
         session.write(pubAckMessage);
 
-        // 发送给subscribe
-        context.publish(session, mqttPublishMessage);
+        // 消息投递至消息总线
+        context.getMessageBus().publish(mqttPublishMessage);
+//        context.getListeners().getTopicEventListeners().forEach(topicEventListener -> topicEventListener.onReceive(context, session, mqttPublishMessage));
+//        context.publish(session, mqttPublishMessage);
     }
 
     private void processQos2(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
@@ -68,8 +72,8 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
             //发送pubRel消息。
             MqttPubCompMessage pubRelMessage = new MqttPubCompMessage(message.getVariableHeader().getPacketId());
             session.write(pubRelMessage);
-            // 发送给subscribe
-            context.publish(session, mqttPublishMessage);
+            // 消息投递至消息总线
+            context.getMessageBus().publish(mqttPublishMessage);
         });
     }
 }

@@ -1,12 +1,13 @@
 package org.smartboot.mqtt.broker;
 
+import org.smartboot.mqtt.broker.eventbus.MessageBus;
 import org.smartboot.mqtt.broker.listener.BrokerListeners;
 import org.smartboot.mqtt.broker.plugin.provider.Providers;
-import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.EventListener;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
@@ -41,18 +42,13 @@ public interface BrokerContext {
      */
     Collection<BrokerTopic> getTopics();
 
-
     /**
-     * 发送消息至订阅者
-     */
-    void publish(MqttSession session, MqttPublishMessage message);
-
-    /**
-     * 推送retain消息至客户端
+     * 获取消息总线
      *
-     * @param session
+     * @return
      */
-    void publishRetain(TopicSubscriber session);
+    MessageBus getMessageBus();
+
 
     ScheduledExecutorService getKeepAliveThreadPool();
 
@@ -63,4 +59,6 @@ public interface BrokerContext {
     BrokerListeners getListeners();
 
     void addEvent(EventListener eventListener);
+
+    ExecutorService pushExecutorService();
 }

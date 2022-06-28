@@ -1,15 +1,14 @@
-package org.smartboot.mqtt.common;
+package org.smartboot.mqtt.broker.eventbus;
 
+import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 /**
- * 服务端存储的消息
- *
- * @author 三刀
- * @version V1.0 , 2018/5/3
+ * @author 三刀（zhengjunweimail@163.com）
+ * @version V1.0 , 2022/6/24
  */
-public class StoredMessage extends ToString {
+public class EventMessage extends ToString {
     /**
      * 消息等级
      */
@@ -25,24 +24,23 @@ public class StoredMessage extends ToString {
 
     private final boolean retained;
     /**
-     * 消息的发送方
-     */
-    private final String clientID;
-    /**
      * 存储的消息偏移量
      */
     private final long offset;
 
-    public StoredMessage(MqttPublishMessage message, String clientId, long offset) {
-        this(message.getVariableHeader().getTopicName(), message.getFixedHeader().getQosLevel(), message.getPayload(), message.getFixedHeader().isRetain(), clientId, offset);
+    public EventMessage(EventMessage eventMessage, long offset) {
+        this(eventMessage.topic, eventMessage.mqttQoS, eventMessage.payload, eventMessage.retained, offset);
     }
 
-    private StoredMessage(String topic, MqttQoS mqttQoS, byte[] payload, boolean retained, String clientID, long offset) {
+    public EventMessage(MqttPublishMessage message, long offset) {
+        this(message.getVariableHeader().getTopicName(), message.getFixedHeader().getQosLevel(), message.getPayload(), message.getFixedHeader().isRetain(), offset);
+    }
+
+    private EventMessage(String topic, MqttQoS mqttQoS, byte[] payload, boolean retained, long offset) {
         this.mqttQoS = mqttQoS;
         this.payload = payload;
         this.topic = topic;
         this.retained = retained;
-        this.clientID = clientID;
         this.offset = offset;
     }
 
@@ -63,13 +61,7 @@ public class StoredMessage extends ToString {
     }
 
 
-    public String getClientID() {
-        return clientID;
-    }
-
-
     public long getOffset() {
         return offset;
     }
-
 }

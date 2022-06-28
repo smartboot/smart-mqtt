@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.broker.listener;
+package org.smartboot.mqtt.broker.listener.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

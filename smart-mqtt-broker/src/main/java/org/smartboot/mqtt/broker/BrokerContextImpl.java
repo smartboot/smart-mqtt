@@ -3,20 +3,20 @@ package org.smartboot.mqtt.broker;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.broker.eventbus.EventBusImpl;
+import org.smartboot.mqtt.broker.eventbus.EventMessage;
+import org.smartboot.mqtt.broker.eventbus.MessageBus;
+import org.smartboot.mqtt.broker.eventbus.subscribe.PersistenceSubscriber;
+import org.smartboot.mqtt.broker.eventbus.subscribe.PushTriggerSubscriber;
+import org.smartboot.mqtt.broker.eventbus.subscribe.RetainPersistenceSubscriber;
 import org.smartboot.mqtt.broker.listener.BrokerLifecycleListener;
 import org.smartboot.mqtt.broker.listener.BrokerListeners;
-import org.smartboot.mqtt.broker.listener.ConnectIdleTimeListener;
-import org.smartboot.mqtt.broker.listener.MessageLoggerListener;
 import org.smartboot.mqtt.broker.listener.TopicEventListener;
+import org.smartboot.mqtt.broker.listener.impl.ConnectIdleTimeListener;
+import org.smartboot.mqtt.broker.listener.impl.MessageLoggerListener;
 import org.smartboot.mqtt.broker.plugin.Plugin;
 import org.smartboot.mqtt.broker.plugin.provider.Providers;
-import org.smartboot.mqtt.broker.store.MessageQueue;
-import org.smartboot.mqtt.common.AsyncTask;
-import org.smartboot.mqtt.common.InflightQueue;
-import org.smartboot.mqtt.common.StoredMessage;
-import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.listener.MqttSessionListener;
-import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
@@ -47,6 +47,7 @@ public class BrokerContextImpl implements BrokerContext {
      * 通过鉴权的连接会话
      */
     private final ConcurrentMap<String, MqttSession> grantSessions = new ConcurrentHashMap<>();
+    private ExecutorService pushThreadPool;
     /**
      *
      */
@@ -61,10 +62,9 @@ public class BrokerContextImpl implements BrokerContext {
      * ACK超时监听
      */
     private final ScheduledExecutorService ACK_TIMEOUT_MONITOR_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
-    /**
-     * Push线程池
-     */
-    private final ExecutorService PUSH_THREAD_POOL = Executors.newFixedThreadPool(brokerConfigure.getPushThreadNum());
+
+
+    private final MessageBus messageBus = new EventBusImpl();
 
     private final List<Plugin> plugins = new ArrayList<>();
     private final Providers providers = new Providers();
@@ -76,10 +76,20 @@ public class BrokerContextImpl implements BrokerContext {
 
     @Override
     public void init() throws IOException {
+        pushThreadPool = Executors.newFixedThreadPool(getBrokerConfigure().getPushThreadNum());
         updateBrokerConfigure();
         //注册Listener
         addEvent(new ConnectIdleTimeListener(brokerConfigure));
         addEvent(new MessageLoggerListener());
+
+        //消费retain消息
+        getMessageBus().subscribe(new RetainPersistenceSubscriber(this), EventMessage::isRetained);
+
+        //消息持久化
+        getMessageBus().subscribe(new PersistenceSubscriber(this));
+
+        // 推送消息
+        getMessageBus().subscribe(new PushTriggerSubscriber(this));
 
         server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(), new MqttBrokerMessageProcessor(this));
         server.setBannerEnabled(false);
@@ -154,6 +164,11 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     @Override
+    public MessageBus getMessageBus() {
+        return messageBus;
+    }
+
+    @Override
     public boolean removeSession(MqttSession session) {
         if (session.getClientId() != null) {
             return grantSessions.remove(session.getClientId(), session);
@@ -167,114 +182,6 @@ public class BrokerContextImpl implements BrokerContext {
         return grantSessions.get(clientId);
     }
 
-    @Override
-    public void publish(MqttSession session, MqttPublishMessage message) {
-        listeners.getTopicEventListeners().forEach(event -> event.onPublish(message));
-        StoredMessage storedMessage = providers.getMessageStoreProvider().storeMessage(session.getClientId(), message);
-        /**
-         * 如果服务端收到一条保留（RETAIN）标志为 1 的 QoS 0 消息，它必须丢弃之前为那个主题保留
-         * 的任何消息。它应该将这个新的 QoS 0 消息当作那个主题的新保留消息，但是任何时候都可以选择丢弃它
-         * 如果这种情况发生了，那个主题将没有保留消息
-         */
-        if (message.getFixedHeader().isRetain()) {
-            if (message.getFixedHeader().getQosLevel() == MqttQoS.AT_MOST_ONCE) {
-                providers.getRetainMessageProvider().cleanTopic(message.getVariableHeader().getTopicName());
-            }
-            providers.getRetainMessageProvider().storeRetainMessage(storedMessage);
-        }
-
-        PUSH_THREAD_POOL.execute(new AsyncTask() {
-            @Override
-            public void execute() {
-                BrokerTopic topic = getOrCreateTopic(message.getVariableHeader().getTopicName());
-                topic.getConsumeOffsets().values().forEach(consumeOffset -> PUSH_THREAD_POOL.execute(new AsyncTask() {
-                    @Override
-                    public void execute() {
-                        batchPublish(consumeOffset);
-                    }
-                }));
-            }
-        });
-    }
-
-    @Override
-    public void publishRetain(TopicSubscriber subscriber) {
-        if (!subscriber.getSemaphore().tryAcquire()) {
-            LOGGER.error("try acquire fail");
-            return;
-        }
-        //retain采用严格顺序publish模式
-        PUSH_THREAD_POOL.execute(new AsyncTask() {
-            @Override
-            public void execute() {
-                AsyncTask task = this;
-                StoredMessage storedMessage = providers.getRetainMessageProvider().get(subscriber.getTopic().getTopic(), subscriber.getRetainConsumerOffset(), subscriber.getNextConsumerOffset());
-                if (storedMessage == null) {
-                    subscriber.getSemaphore().release();
-                    batchPublish(subscriber);
-                    return;
-                }
-                MqttSession session = subscriber.getMqttSession();
-                MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(session.newPacketId(), storedMessage, subscriber.getMqttQoS());
-                InflightQueue inflightQueue = session.getInflightQueue();
-                int index = inflightQueue.add(publishMessage, storedMessage.getOffset());
-                session.publish(publishMessage, packetId -> {
-                    LOGGER.info("publish retain to client:{} success ,message:{} ", session.getClientId(), publishMessage);
-                    inflightQueue.commit(index, subscriber::setRetainConsumerOffset);
-                    inflightQueue.clear();
-                    //本批次全部处理完毕
-                    PUSH_THREAD_POOL.execute(task);
-                });
-            }
-        });
-    }
-
-    private void batchPublish(TopicSubscriber consumeOffset) {
-        if (!consumeOffset.getSemaphore().tryAcquire()) {
-            return;
-        }
-        long nextConsumerOffset = consumeOffset.getNextConsumerOffset();
-        MessageQueue messageQueue = providers.getMessageStoreProvider().getStoreQueue(consumeOffset.getTopic().getTopic());
-        while (!consumeOffset.getMqttSession().getInflightQueue().isFull()) {
-            StoredMessage storedMessage = messageQueue.get(nextConsumerOffset);
-            if (storedMessage == null) {
-                break;
-            }
-            nextConsumerOffset++;
-            MqttSession mqttSession = consumeOffset.getMqttSession();
-            MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(mqttSession.newPacketId(), storedMessage, consumeOffset.getMqttQoS());
-            InflightQueue inflightQueue = mqttSession.getInflightQueue();
-            int index = inflightQueue.add(publishMessage, storedMessage.getOffset());
-            mqttSession.publish(publishMessage, packetId -> {
-                //最早发送的消息若收到响应，则更新点位
-                boolean done = inflightQueue.commit(index, offset -> consumeOffset.setNextConsumerOffset(offset + 1));
-                if (done) {
-                    inflightQueue.clear();
-                    //本批次全部处理完毕
-                    StoredMessage nextMessage = messageQueue.get(consumeOffset.getNextConsumerOffset());
-                    if (nextMessage == null) {
-                        consumeOffset.getSemaphore().release();
-                    } else {
-                        PUSH_THREAD_POOL.execute(new AsyncTask() {
-                            @Override
-                            public void execute() {
-                                batchPublish(consumeOffset);
-                            }
-                        });
-
-                    }
-                }
-            });
-        }
-        //无可publish的消息
-        if (nextConsumerOffset == consumeOffset.getNextConsumerOffset()) {
-            consumeOffset.getSemaphore().release();
-        }
-        //可能此时正好有新消息投递进来
-        if (!consumeOffset.getMqttSession().getInflightQueue().isFull() && messageQueue.get(nextConsumerOffset) != null) {
-            batchPublish(consumeOffset);
-        }
-    }
 
     @Override
     public ScheduledExecutorService getKeepAliveThreadPool() {
@@ -302,6 +209,11 @@ public class BrokerContextImpl implements BrokerContext {
         if (eventListener instanceof MqttSessionListener) {
             listeners.getSessionListeners().add((MqttSessionListener<MqttSession>) eventListener);
         }
+    }
+
+    @Override
+    public ExecutorService pushExecutorService() {
+        return pushThreadPool;
     }
 
     @Override
