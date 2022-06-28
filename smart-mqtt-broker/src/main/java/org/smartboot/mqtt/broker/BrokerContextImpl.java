@@ -3,16 +3,16 @@ package org.smartboot.mqtt.broker;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.eventbus.EventBusImpl;
-import org.smartboot.mqtt.broker.eventbus.EventMessage;
-import org.smartboot.mqtt.broker.eventbus.MessageBus;
-import org.smartboot.mqtt.broker.eventbus.subscribe.PersistenceAndPushSubscriber;
-import org.smartboot.mqtt.broker.eventbus.subscribe.RetainPersistenceSubscriber;
 import org.smartboot.mqtt.broker.listener.BrokerLifecycleListener;
 import org.smartboot.mqtt.broker.listener.BrokerListeners;
 import org.smartboot.mqtt.broker.listener.TopicEventListener;
 import org.smartboot.mqtt.broker.listener.impl.ConnectIdleTimeListener;
 import org.smartboot.mqtt.broker.listener.impl.MessageLoggerListener;
+import org.smartboot.mqtt.broker.messagebus.Message;
+import org.smartboot.mqtt.broker.messagebus.MessageBus;
+import org.smartboot.mqtt.broker.messagebus.MessageBusImpl;
+import org.smartboot.mqtt.broker.messagebus.subscribe.PersistenceAndPushSubscriber;
+import org.smartboot.mqtt.broker.messagebus.subscribe.RetainPersistenceSubscriber;
 import org.smartboot.mqtt.broker.plugin.Plugin;
 import org.smartboot.mqtt.broker.plugin.provider.Providers;
 import org.smartboot.mqtt.common.AsyncTask;
@@ -64,7 +64,7 @@ public class BrokerContextImpl implements BrokerContext {
     private final ScheduledExecutorService ACK_TIMEOUT_MONITOR_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
 
 
-    private final MessageBus messageBus = new EventBusImpl();
+    private final MessageBus messageBus = new MessageBusImpl();
 
     private final List<Plugin> plugins = new ArrayList<>();
     private final Providers providers = new Providers();
@@ -83,7 +83,7 @@ public class BrokerContextImpl implements BrokerContext {
         addEvent(new MessageLoggerListener());
 
         //消费retain消息
-        getMessageBus().subscribe(new RetainPersistenceSubscriber(this), EventMessage::isRetained);
+        getMessageBus().subscribe(new RetainPersistenceSubscriber(this), Message::isRetained);
 
         //消息持久化
         getMessageBus().subscribe(new PersistenceAndPushSubscriber(this));

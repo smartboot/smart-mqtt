@@ -1,7 +1,7 @@
-package org.smartboot.mqtt.broker.eventbus.subscribe;
+package org.smartboot.mqtt.broker.messagebus.subscribe;
 
 import org.smartboot.mqtt.broker.BrokerContext;
-import org.smartboot.mqtt.broker.eventbus.EventMessage;
+import org.smartboot.mqtt.broker.messagebus.Message;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 
 /**
@@ -16,7 +16,7 @@ public class RetainPersistenceSubscriber extends AbstractSubscriber {
     }
 
     @Override
-    public void subscribe(EventMessage message) {
+    public void subscribe(Message message) {
         /*
          * 如果服务端收到一条保留（RETAIN）标志为 1 的 QoS 0 消息，它必须丢弃之前为那个主题保留
          * 的任何消息。它应该将这个新的 QoS 0 消息当作那个主题的新保留消息，但是任何时候都可以选择丢弃它

@@ -1,6 +1,6 @@
 package org.smartboot.mqtt.broker.persistence;
 
-import org.smartboot.mqtt.broker.eventbus.EventMessage;
+import org.smartboot.mqtt.broker.messagebus.Message;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -11,11 +11,14 @@ public interface PersistenceProvider {
     /**
      * 保存消息
      */
-    void doSave(EventMessage message);
+    void doSave(Message message);
 
+    /**
+     * 删除指定topic的所有消息
+     */
     void delete(String topic);
 
-    Message get(String topic, long startOffset);
+    org.smartboot.mqtt.broker.persistence.Message get(String topic, long startOffset);
 
     long getOldestOffset(String topic);
 

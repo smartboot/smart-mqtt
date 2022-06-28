@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.broker.eventbus;
+package org.smartboot.mqtt.broker.messagebus;
 
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
@@ -14,11 +14,11 @@ public interface MessageBus {
 
     void subscribe(Subscriber subscriber);
 
-    void subscribe(Subscriber subscriber, EventFilter filter);
+    void subscribe(Subscriber subscriber, MessageFilter filter);
 
     /**
      * 发布消息至总线
      */
-    EventMessage publish(MqttPublishMessage storedMessage);
+    Message publish(MqttPublishMessage storedMessage);
 
 }

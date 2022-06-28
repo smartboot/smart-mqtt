@@ -2,7 +2,7 @@ package org.smartboot.mqtt.broker.persistence;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.eventbus.EventMessage;
+import org.smartboot.mqtt.broker.messagebus.Message;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -12,17 +12,17 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 class MemoryMessageStoreQueue {
     private static final Logger LOGGER = LoggerFactory.getLogger(MemoryMessageStoreQueue.class);
-    private final Message[] store = new Message[64];
+    private final org.smartboot.mqtt.broker.persistence.Message[] store = new org.smartboot.mqtt.broker.persistence.Message[64];
     private final AtomicLong putOffset = new AtomicLong(-1);
 
-    public void put(EventMessage msg) {
-        Message message = new Message(msg, putOffset.incrementAndGet());
+    public void put(Message msg) {
+        org.smartboot.mqtt.broker.persistence.Message message = new org.smartboot.mqtt.broker.persistence.Message(msg, putOffset.incrementAndGet());
 //        LOGGER.info("store message, offset:{}", msg.getOffset());
         store[(int) (msg.getOffset() % store.length)] = message;
     }
 
-    public Message get(long offset) {
-        Message storedMessage = store[(int) (offset % store.length)];
+    public org.smartboot.mqtt.broker.persistence.Message get(long offset) {
+        org.smartboot.mqtt.broker.persistence.Message storedMessage = store[(int) (offset % store.length)];
         if (storedMessage == null) {
             return null;
         }

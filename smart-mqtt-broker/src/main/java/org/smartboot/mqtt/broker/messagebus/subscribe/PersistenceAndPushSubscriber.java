@@ -1,7 +1,7 @@
-package org.smartboot.mqtt.broker.eventbus.subscribe;
+package org.smartboot.mqtt.broker.messagebus.subscribe;
 
 import org.smartboot.mqtt.broker.BrokerContext;
-import org.smartboot.mqtt.broker.eventbus.EventMessage;
+import org.smartboot.mqtt.broker.messagebus.Message;
 
 /**
  * 消息持久化并推送给订阅了该Topic的客户端
@@ -16,7 +16,7 @@ public class PersistenceAndPushSubscriber extends AbstractSubscriber {
     }
 
     @Override
-    public void subscribe(EventMessage message) {
+    public void subscribe(Message message) {
         brokerContext.getProviders().getPersistenceProvider().doSave(message);
         brokerContext.batchPublish(message.getTopic());
     }

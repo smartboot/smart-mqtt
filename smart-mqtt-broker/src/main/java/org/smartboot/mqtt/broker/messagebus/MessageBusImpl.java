@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.broker.eventbus;
+package org.smartboot.mqtt.broker.messagebus;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,10 +13,10 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/4/4
  */
-public class EventBusImpl implements MessageBus {
-    private static final Logger LOGGER = LoggerFactory.getLogger(EventBusImpl.class);
+public class MessageBusImpl implements MessageBus {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageBusImpl.class);
     private final ExecutorService executorService = Executors.newCachedThreadPool();
-    private final EventMessage[] busQueue = new EventMessage[64];
+    private final Message[] busQueue = new Message[64];
     private final AtomicLong putOffset = new AtomicLong(-1);
     private boolean running = true;
 
@@ -26,7 +26,7 @@ public class EventBusImpl implements MessageBus {
     }
 
     @Override
-    public void subscribe(Subscriber subscriber, EventFilter filter) {
+    public void subscribe(Subscriber subscriber, MessageFilter filter) {
         System.out.println("subscribe");
         executorService.execute(new AsyncTask() {
             @Override
@@ -35,7 +35,7 @@ public class EventBusImpl implements MessageBus {
                 //获取最新点位
                 long offset = putOffset.get();
                 while (running) {
-                    EventMessage storedMessage = getNextEventMessage(++offset);
+                    Message storedMessage = getNextEventMessage(++offset);
                     if (storedMessage == null) {
                         offset = putOffset.get();
                         try {
@@ -53,8 +53,8 @@ public class EventBusImpl implements MessageBus {
         });
     }
 
-    private EventMessage getNextEventMessage(long offset) {
-        EventMessage storedMessage = busQueue[(int) (offset % busQueue.length)];
+    private Message getNextEventMessage(long offset) {
+        Message storedMessage = busQueue[(int) (offset % busQueue.length)];
         if (storedMessage == null) {
             return null;
         }
@@ -62,8 +62,8 @@ public class EventBusImpl implements MessageBus {
     }
 
     @Override
-    public EventMessage publish(MqttPublishMessage storedMessage) {
-        EventMessage stored = new EventMessage(storedMessage, putOffset.incrementAndGet());
+    public Message publish(MqttPublishMessage storedMessage) {
+        Message stored = new Message(storedMessage, putOffset.incrementAndGet());
         busQueue[(int) (stored.getOffset() % busQueue.length)] = stored;
         return stored;
     }

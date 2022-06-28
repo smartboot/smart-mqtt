@@ -1,7 +1,7 @@
-package org.smartboot.mqtt.broker.eventbus.subscribe;
+package org.smartboot.mqtt.broker.messagebus.subscribe;
 
 import org.smartboot.mqtt.broker.BrokerContext;
-import org.smartboot.mqtt.broker.eventbus.Subscriber;
+import org.smartboot.mqtt.broker.messagebus.Subscriber;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）

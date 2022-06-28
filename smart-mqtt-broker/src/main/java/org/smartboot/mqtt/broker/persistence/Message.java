@@ -1,6 +1,5 @@
 package org.smartboot.mqtt.broker.persistence;
 
-import org.smartboot.mqtt.broker.eventbus.EventMessage;
 import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 
@@ -33,11 +32,11 @@ public class Message extends ToString {
      */
     private final long createTime = System.currentTimeMillis();
 
-    public Message(EventMessage eventMessage, long offset) {
-        this.mqttQoS = eventMessage.getMqttQoS();
-        this.payload = eventMessage.getPayload();
-        this.retained = eventMessage.isRetained();
-        this.topic = eventMessage.getTopic();
+    public Message(org.smartboot.mqtt.broker.messagebus.Message message, long offset) {
+        this.mqttQoS = message.getMqttQoS();
+        this.payload = message.getPayload();
+        this.retained = message.isRetained();
+        this.topic = message.getTopic();
         this.offset = offset;
     }
 

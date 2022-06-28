@@ -1,7 +1,7 @@
 package org.smartboot.mqtt.broker;
 
-import org.smartboot.mqtt.broker.eventbus.MessageBus;
 import org.smartboot.mqtt.broker.listener.BrokerListeners;
+import org.smartboot.mqtt.broker.messagebus.MessageBus;
 import org.smartboot.mqtt.broker.plugin.provider.Providers;
 
 import java.io.IOException;
