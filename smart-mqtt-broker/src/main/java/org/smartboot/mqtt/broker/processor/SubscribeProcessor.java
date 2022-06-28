@@ -59,10 +59,6 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
     }
 
     private void publishRetain(BrokerContext brokerContext, TopicSubscriber subscriber) {
-        if (!subscriber.getSemaphore().tryAcquire()) {
-            LOGGER.error("try acquire fail");
-            return;
-        }
         //retain采用严格顺序publish模式
         brokerContext.pushExecutorService().execute(new AsyncTask() {
             @Override
@@ -72,7 +68,6 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
                 if (storedMessage == null || storedMessage.getCreateTime() > subscriber.getLatestSubscribeTime()) {
                     //完成retain消息的消费，正式开始监听Topic
                     subscriber.getMqttSession().subscribeTopic(subscriber);
-                    subscriber.getSemaphore().release();
                     subscriber.getMqttSession().batchPublish(subscriber, brokerContext.pushExecutorService());
                     return;
                 }

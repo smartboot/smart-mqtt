@@ -6,8 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.eventbus.EventBusImpl;
 import org.smartboot.mqtt.broker.eventbus.EventMessage;
 import org.smartboot.mqtt.broker.eventbus.MessageBus;
-import org.smartboot.mqtt.broker.eventbus.subscribe.PersistenceSubscriber;
-import org.smartboot.mqtt.broker.eventbus.subscribe.PushTriggerSubscriber;
+import org.smartboot.mqtt.broker.eventbus.subscribe.PersistenceAndPushSubscriber;
 import org.smartboot.mqtt.broker.eventbus.subscribe.RetainPersistenceSubscriber;
 import org.smartboot.mqtt.broker.listener.BrokerLifecycleListener;
 import org.smartboot.mqtt.broker.listener.BrokerListeners;
@@ -16,6 +15,7 @@ import org.smartboot.mqtt.broker.listener.impl.ConnectIdleTimeListener;
 import org.smartboot.mqtt.broker.listener.impl.MessageLoggerListener;
 import org.smartboot.mqtt.broker.plugin.Plugin;
 import org.smartboot.mqtt.broker.plugin.provider.Providers;
+import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.listener.MqttSessionListener;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.MqttUtil;
@@ -86,10 +86,10 @@ public class BrokerContextImpl implements BrokerContext {
         getMessageBus().subscribe(new RetainPersistenceSubscriber(this), EventMessage::isRetained);
 
         //消息持久化
-        getMessageBus().subscribe(new PersistenceSubscriber(this));
+        getMessageBus().subscribe(new PersistenceAndPushSubscriber(this));
 
         // 推送消息
-        getMessageBus().subscribe(new PushTriggerSubscriber(this));
+//        getMessageBus().subscribe(new PushTriggerSubscriber(this));
 
         server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(), new MqttBrokerMessageProcessor(this));
         server.setBannerEnabled(false);
@@ -123,7 +123,7 @@ public class BrokerContextImpl implements BrokerContext {
         brokerConfigure.setNoConnectIdleTimeout(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.CONNECT_IDLE_TIMEOUT, BrokerConfigure.SystemPropertyDefaultValue.CONNECT_TIMEOUT)));
         brokerConfigure.setMaxInflight(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.MAX_INFLIGHT, BrokerConfigure.SystemPropertyDefaultValue.MAX_INFLIGHT)));
 
-        System.out.println("brokerConfigure: "+brokerConfigure);
+        System.out.println("brokerConfigure: " + brokerConfigure);
     }
 
     /**
@@ -207,6 +207,18 @@ public class BrokerContextImpl implements BrokerContext {
         if (eventListener instanceof MqttSessionListener) {
             listeners.getSessionListeners().add((MqttSessionListener<MqttSession>) eventListener);
         }
+    }
+
+    public void batchPublish(String topicName) {
+        BrokerTopic topic = getOrCreateTopic(topicName);
+        topic.getConsumeOffsets().values().stream()
+                .filter(consumeOffset -> consumeOffset.getSemaphore().availablePermits() > 0)
+                .forEach(consumeOffset -> pushThreadPool.execute(new AsyncTask() {
+                    @Override
+                    public void execute() {
+                        consumeOffset.getMqttSession().batchPublish(consumeOffset, pushThreadPool);
+                    }
+                }));
     }
 
     @Override

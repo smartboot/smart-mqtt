@@ -152,23 +152,30 @@ public class MqttSession extends AbstractSession {
     }
 
     public void batchPublish(TopicSubscriber consumeOffset, ExecutorService executorService) {
-        if (!consumeOffset.getSemaphore().tryAcquire()) {
-            return;
+        if (consumeOffset.getSemaphore().availablePermits() > 1) {
+            LOGGER.error("invalid semaphore:{}", consumeOffset.getSemaphore().availablePermits());
         }
+        if (consumeOffset.getSemaphore().tryAcquire()) {
+            publish0(consumeOffset, executorService);
+        }
+    }
+
+    private void publish0(TopicSubscriber consumeOffset, ExecutorService executorService) {
         long nextConsumerOffset = consumeOffset.getNextConsumerOffset();
         PersistenceProvider persistenceProvider = mqttContext.getProviders().getPersistenceProvider();
+        int count = 0;
 
         while (!consumeOffset.getMqttSession().getInflightQueue().isFull()) {
-            Message eventMessage = persistenceProvider.get(consumeOffset.getTopic().getTopic(), nextConsumerOffset);
+            Message eventMessage = persistenceProvider.get(consumeOffset.getTopic().getTopic(), nextConsumerOffset + count);
             if (eventMessage == null) {
                 break;
             }
-            nextConsumerOffset++;
+            count++;
             MqttSession mqttSession = consumeOffset.getMqttSession();
             MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(mqttSession.newPacketId(), eventMessage.getTopic(), consumeOffset.getMqttQoS(), eventMessage.getPayload());
             InflightQueue inflightQueue = mqttSession.getInflightQueue();
             int index = inflightQueue.add(publishMessage, eventMessage.getOffset());
-            LOGGER.info("push {}", eventMessage.getOffset());
+            LOGGER.info("push {} hashCode:{}", eventMessage.getOffset(), eventMessage.hashCode());
             mqttSession.publish(publishMessage, packetId -> {
                 //最早发送的消息若收到响应，则更新点位
                 boolean done = inflightQueue.commit(index, offset -> consumeOffset.setNextConsumerOffset(offset + 1));
@@ -183,7 +190,7 @@ public class MqttSession extends AbstractSession {
                         executorService.execute(new AsyncTask() {
                             @Override
                             public void execute() {
-                                batchPublish(consumeOffset, executorService);
+                                publish0(consumeOffset, executorService);
                             }
                         });
 
@@ -192,7 +199,7 @@ public class MqttSession extends AbstractSession {
             });
         }
         //无可publish的消息
-        if (nextConsumerOffset == consumeOffset.getNextConsumerOffset()) {
+        if (count == 0) {
             consumeOffset.getSemaphore().release();
         }
         //可能此时正好有新消息投递进来

@@ -61,4 +61,6 @@ public interface BrokerContext {
     void addEvent(EventListener eventListener);
 
     ExecutorService pushExecutorService();
+
+    void batchPublish(String topic);
 }
