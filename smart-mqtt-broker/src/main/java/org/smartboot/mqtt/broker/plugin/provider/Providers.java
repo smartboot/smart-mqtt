@@ -4,8 +4,8 @@ import org.smartboot.mqtt.broker.persistence.MemoryPersistenceProvider;
 import org.smartboot.mqtt.broker.persistence.PersistenceProvider;
 import org.smartboot.mqtt.broker.plugin.provider.mock.MockClientAuthorizeProvider;
 import org.smartboot.mqtt.broker.plugin.provider.mock.MockTopicFilterProvider;
-import org.smartboot.mqtt.broker.store.SessionStateProvider;
-import org.smartboot.mqtt.broker.store.memory.MemorySessionStateProvider;
+import org.smartboot.mqtt.broker.session.SessionStateProvider;
+import org.smartboot.mqtt.broker.session.memory.MemorySessionStateProvider;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）

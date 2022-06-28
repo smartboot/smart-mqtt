@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.broker.store;
+package org.smartboot.mqtt.broker.session;
 
 import org.smartboot.mqtt.broker.TopicSubscriber;
 import org.smartboot.mqtt.common.AckMessage;

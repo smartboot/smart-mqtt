@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.persistence.Message;
 import org.smartboot.mqtt.broker.persistence.PersistenceProvider;
-import org.smartboot.mqtt.broker.store.SessionState;
+import org.smartboot.mqtt.broker.session.SessionState;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
