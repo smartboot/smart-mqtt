@@ -23,6 +23,9 @@ public class MessageToMessageBusSubscriber implements Subscriber<EventObject<Mqt
     @Override
     public void subscribe(EventType<EventObject<MqttPublishMessage>> eventType, EventObject<MqttPublishMessage> object) {
         Message message = brokerContext.getMessageBus().publish(object.getObject());
+        //持久化消息
         brokerContext.getProviders().getPersistenceProvider().doSave(message);
+        //推送至客户端
+        brokerContext.batchPublish(message.getTopic());
     }
 }

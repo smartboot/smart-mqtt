@@ -10,7 +10,6 @@ import org.smartboot.mqtt.broker.messagebus.Message;
 import org.smartboot.mqtt.broker.messagebus.MessageBus;
 import org.smartboot.mqtt.broker.messagebus.MessageBusImpl;
 import org.smartboot.mqtt.broker.messagebus.Subscriber;
-import org.smartboot.mqtt.broker.messagebus.subscribe.PushSubscriber;
 import org.smartboot.mqtt.broker.messagebus.subscribe.RetainPersistenceSubscriber;
 import org.smartboot.mqtt.broker.plugin.Plugin;
 import org.smartboot.mqtt.broker.plugin.provider.Providers;
@@ -90,9 +89,6 @@ public class BrokerContextImpl implements BrokerContext {
         //消费retain消息
         Subscriber retainPersistenceSubscriber = new RetainPersistenceSubscriber(this);
         messageBus.subscribe(retainPersistenceSubscriber, Message::isRetained);
-
-        // 推送消息
-        messageBus.subscribe(new PushSubscriber(this));
 
         server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(), new MqttBrokerMessageProcessor(this));
         server.setBannerEnabled(false);
@@ -219,6 +215,7 @@ public class BrokerContextImpl implements BrokerContext {
     @Override
     public void destroy() {
         LOGGER.info("destroy broker...");
+        messageBus.publish(MessageBus.END_MESSAGE);
         eventBus.publish(ServerEventType.BROKER_DESTROY, this);
         server.shutdown();
     }

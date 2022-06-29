@@ -18,6 +18,7 @@ public class MessageBusImpl implements MessageBus {
     private final ExecutorService executorService = Executors.newCachedThreadPool();
     private final Message[] busQueue = new Message[64];
     private final AtomicLong putOffset = new AtomicLong(-1);
+    private boolean running = true;
 
     @Override
     public void subscribe(Subscriber subscriber) {
@@ -32,7 +33,7 @@ public class MessageBusImpl implements MessageBus {
                 LOGGER.info("{} subscribe messageBus...", subscriber);
                 //获取最新点位
                 long offset = putOffset.get();
-                while (Thread.interrupted()) {
+                while (running) {
                     Message storedMessage = getNextEventMessage(++offset);
                     if (storedMessage == null) {
                         offset = putOffset.get();
@@ -62,6 +63,10 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public Message publish(MqttPublishMessage storedMessage) {
+        if (storedMessage == MessageBus.END_MESSAGE) {
+            running = false;
+            return null;
+        }
         Message stored = new Message(storedMessage, putOffset.incrementAndGet());
         busQueue[(int) (stored.getOffset() % busQueue.length)] = stored;
         return stored;

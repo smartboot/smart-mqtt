@@ -9,6 +9,10 @@ import org.smartboot.mqtt.common.message.MqttPublishMessage;
  * @version V1.0 , 2022/4/4
  */
 public interface MessageBus {
+    /**
+     * 最后一个消息
+     */
+    MqttPublishMessage END_MESSAGE = new MqttPublishMessage(null);
 
     void subscribe(Subscriber subscriber);
 
