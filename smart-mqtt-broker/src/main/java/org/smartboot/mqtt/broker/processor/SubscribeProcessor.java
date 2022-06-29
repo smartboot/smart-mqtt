@@ -5,9 +5,10 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.TopicSubscriber;
-import org.smartboot.mqtt.broker.persistence.Message;
+import org.smartboot.mqtt.broker.persistence.message.Message;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
+import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttSubAckMessage;
 import org.smartboot.mqtt.common.message.MqttSubAckPayload;
@@ -41,8 +42,7 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
                 TopicSubscriber consumeOffset = new TopicSubscriber(topic, session, mqttTopicSubscription.getQualityOfService(), latestOffset + 1, retainOldestOffset);
                 //一个新的订阅建立时，对每个匹配的主题名，如果存在最近保留的消息，它必须被发送给这个订阅者
                 publishRetain(context, consumeOffset);
-                context.getListeners().getBrokerLifecycleListeners()
-                        .forEach(brokerLifecycleListener -> brokerLifecycleListener.onSubscribe(consumeOffset));
+                context.getEventBus().publish(EventType.SUBSCRIBE, session);
             }).value();
         }
 

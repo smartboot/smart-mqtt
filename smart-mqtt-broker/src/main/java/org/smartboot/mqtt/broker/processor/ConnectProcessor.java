@@ -6,13 +6,14 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.TopicSubscriber;
-import org.smartboot.mqtt.broker.session.SessionState;
-import org.smartboot.mqtt.broker.session.SessionStateProvider;
+import org.smartboot.mqtt.broker.persistence.session.SessionState;
+import org.smartboot.mqtt.broker.persistence.session.SessionStateProvider;
 import org.smartboot.mqtt.common.MqttMessageBuilders;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttProtocolEnum;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
+import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttConnAckVariableHeader;
@@ -62,6 +63,8 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         // 如果服务端没有已保存的会话状态，它必须将 CONNACK 报文中的当前会话设置为 0。还需要将 CONNACK 报文中的返回码设置为 0
         MqttConnAckMessage mqttConnAckMessage = connAck(MqttConnectReturnCode.CONNECTION_ACCEPTED, !mqttConnectMessage.getVariableHeader().isCleanSession());
         session.write(mqttConnAckMessage);
+
+        context.getEventBus().publish(EventType.CONNECT, session);
         LOGGER.info("CONNECT message processed CId={}", session.getClientId());
     }
 

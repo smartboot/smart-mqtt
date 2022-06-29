@@ -1,32 +1,30 @@
-package org.smartboot.mqtt.broker.listener.impl;
+package org.smartboot.mqtt.broker.eventbus;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerConfigure;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.common.AsyncTask;
-import org.smartboot.mqtt.common.listener.MqttSessionListener;
+import org.smartboot.mqtt.common.eventbus.EventType;
+import org.smartboot.mqtt.common.eventbus.Subscriber;
 import org.smartboot.socket.util.QuickTimerTask;
 
 import java.util.concurrent.TimeUnit;
 
 /**
- * 网络连接建立后，如果服务端在合理的时间内没有收到 CONNECT 报文，服务端应该关闭这个连接。
- *
  * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2022/4/17
+ * @version V1.0 , 2022/6/29
  */
-public class ConnectIdleTimeListener implements MqttSessionListener<MqttSession> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ConnectIdleTimeListener.class);
+public class ConnectIdleTimeMonitorSubscriber implements Subscriber<MqttSession> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConnectIdleTimeMonitorSubscriber.class);
     private final BrokerConfigure configure;
 
-    public ConnectIdleTimeListener(BrokerConfigure configure) {
+    public ConnectIdleTimeMonitorSubscriber(BrokerConfigure configure) {
         this.configure = configure;
     }
 
     @Override
-    public void onSessionCreate(MqttSession session) {
-//        LOGGER.info("注册Connect超时监听");
+    public void subscribe(EventType<MqttSession> eventType, MqttSession session) {
         QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(new AsyncTask() {
             @Override
             public void execute() {

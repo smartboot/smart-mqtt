@@ -18,7 +18,6 @@ public class MessageBusImpl implements MessageBus {
     private final ExecutorService executorService = Executors.newCachedThreadPool();
     private final Message[] busQueue = new Message[64];
     private final AtomicLong putOffset = new AtomicLong(-1);
-    private boolean running = true;
 
     @Override
     public void subscribe(Subscriber subscriber) {
@@ -27,14 +26,13 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public void subscribe(Subscriber subscriber, MessageFilter filter) {
-        System.out.println("subscribe");
         executorService.execute(new AsyncTask() {
             @Override
             public void execute() {
-                System.out.println("execute...");
+                LOGGER.info("{} subscribe messageBus...", subscriber);
                 //获取最新点位
                 long offset = putOffset.get();
-                while (running) {
+                while (Thread.interrupted()) {
                     Message storedMessage = getNextEventMessage(++offset);
                     if (storedMessage == null) {
                         offset = putOffset.get();
@@ -49,6 +47,7 @@ public class MessageBusImpl implements MessageBus {
                         subscriber.subscribe(storedMessage);
                     }
                 }
+                LOGGER.info("{} unSubscribe messageBus...", subscriber);
             }
         });
     }

@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.broker.persistence;
+package org.smartboot.mqtt.broker.persistence.message;
 
 import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.enums.MqttQoS;

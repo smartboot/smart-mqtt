@@ -11,6 +11,8 @@ import org.smartboot.mqtt.broker.processor.PublishProcessor;
 import org.smartboot.mqtt.broker.processor.SubscribeProcessor;
 import org.smartboot.mqtt.broker.processor.UnSubscribeProcessor;
 import org.smartboot.mqtt.common.QosPublisher;
+import org.smartboot.mqtt.common.eventbus.EventObject;
+import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.exception.MqttProcessException;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttDisconnectMessage;
@@ -72,7 +74,7 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
         MqttProcessor processor = processorMap.get(msg.getClass());
         if (processor != null) {
             MqttSession mqttSession = onlineSessions.get(session.getSessionID());
-            mqttSession.getListeners().forEach(listener -> listener.onMessageReceived(mqttSession, msg));
+            mqttContext.getEventBus().publish(EventType.RECEIVE_MESSAGE, EventObject.newEventObject(mqttSession, msg));
             mqttSession.setLatestReceiveMessageTime(System.currentTimeMillis());
             processor.process(mqttContext, mqttSession, msg);
         } else {
@@ -85,12 +87,6 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
         switch (stateMachineEnum) {
             case NEW_SESSION:
                 MqttSession mqttSession = new MqttSession(mqttContext, session, qosPublisher);
-                //注册MqttSessionListener
-                mqttContext.getListeners().getSessionListeners().forEach(listener -> {
-                    mqttSession.addListener(listener);
-                    listener.onSessionCreate(mqttSession);
-                });
-
                 onlineSessions.put(session.getSessionID(), mqttSession);
                 break;
             case SESSION_CLOSED:

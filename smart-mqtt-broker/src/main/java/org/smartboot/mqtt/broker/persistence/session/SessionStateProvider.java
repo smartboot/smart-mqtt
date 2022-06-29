@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.broker.session;
+package org.smartboot.mqtt.broker.persistence.session;
 
 /**
  * 会话状态Provider

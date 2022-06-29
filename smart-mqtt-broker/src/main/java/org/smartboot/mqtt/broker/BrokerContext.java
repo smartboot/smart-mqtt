@@ -1,12 +1,11 @@
 package org.smartboot.mqtt.broker;
 
-import org.smartboot.mqtt.broker.listener.BrokerListeners;
 import org.smartboot.mqtt.broker.messagebus.MessageBus;
 import org.smartboot.mqtt.broker.plugin.provider.Providers;
+import org.smartboot.mqtt.common.eventbus.EventBus;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.EventListener;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -49,6 +48,12 @@ public interface BrokerContext {
      */
     MessageBus getMessageBus();
 
+    /**
+     * 获取事件总线
+     *
+     * @return
+     */
+    EventBus getEventBus();
 
     ScheduledExecutorService getKeepAliveThreadPool();
 
@@ -56,9 +61,6 @@ public interface BrokerContext {
 
     Providers getProviders();
 
-    BrokerListeners getListeners();
-
-    void addEvent(EventListener eventListener);
 
     ExecutorService pushExecutorService();
 

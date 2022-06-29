@@ -13,4 +13,5 @@ public abstract class AbstractSubscriber implements Subscriber {
     public AbstractSubscriber(BrokerContext brokerContext) {
         this.brokerContext = brokerContext;
     }
+
 }

@@ -2,7 +2,9 @@ package org.smartboot.mqtt.common;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.common.listener.MqttSessionListener;
+import org.smartboot.mqtt.common.eventbus.EventBus;
+import org.smartboot.mqtt.common.eventbus.EventObject;
+import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
@@ -10,8 +12,6 @@ import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.transport.AioSession;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -33,7 +33,7 @@ public abstract class AbstractSession {
      * 用于生成当前会话的报文标识符
      */
     private final AtomicInteger packetIdCreator = new AtomicInteger(1);
-    private final List<MqttSessionListener> listeners = new ArrayList<>();
+    private final EventBus eventBus;
     protected String clientId;
     protected AioSession session;
     /**
@@ -50,8 +50,9 @@ public abstract class AbstractSession {
      */
     protected boolean disconnect = false;
 
-    public AbstractSession(QosPublisher publisher) {
+    public AbstractSession(QosPublisher publisher, EventBus eventBus) {
         this.qosPublisher = publisher;
+        this.eventBus = eventBus;
     }
 
     public final synchronized void write(MqttPacketIdentifierMessage mqttMessage, Consumer<? extends MqttPacketIdentifierMessage> consumer) {
@@ -72,7 +73,7 @@ public abstract class AbstractSession {
     public final synchronized void write(MqttMessage mqttMessage) {
         try {
             ValidateUtils.isTrue(!disconnect, "已断开连接,无法发送消息");
-            listeners.forEach(listener -> listener.onMessageWrite(AbstractSession.this, mqttMessage));
+            eventBus.publish(EventType.WRITE_MESSAGE, EventObject.newEventObject(this, mqttMessage));
             mqttMessage.writeTo(session.writeBuffer());
             session.writeBuffer().flush();
             latestSendMessageTime = System.currentTimeMillis();
@@ -137,12 +138,9 @@ public abstract class AbstractSession {
         return packageId;
     }
 
-    public List<MqttSessionListener> getListeners() {
-        return listeners;
-    }
 
-    public void addListener(MqttSessionListener listener) {
-        listeners.add(listener);
+    public EventBus getEventBus() {
+        return eventBus;
     }
 
     /**

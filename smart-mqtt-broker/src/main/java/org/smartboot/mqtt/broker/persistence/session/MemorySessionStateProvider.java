@@ -1,7 +1,4 @@
-package org.smartboot.mqtt.broker.session.memory;
-
-import org.smartboot.mqtt.broker.session.SessionState;
-import org.smartboot.mqtt.broker.session.SessionStateProvider;
+package org.smartboot.mqtt.broker.persistence.session;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

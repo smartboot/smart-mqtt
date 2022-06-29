@@ -2,13 +2,15 @@ package org.smartboot.mqtt.broker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.persistence.Message;
-import org.smartboot.mqtt.broker.persistence.PersistenceProvider;
-import org.smartboot.mqtt.broker.session.SessionState;
+import org.smartboot.mqtt.broker.eventbus.ServerEventType;
+import org.smartboot.mqtt.broker.persistence.message.Message;
+import org.smartboot.mqtt.broker.persistence.message.PersistenceProvider;
+import org.smartboot.mqtt.broker.persistence.session.SessionState;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.QosPublisher;
+import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.socket.transport.AioSession;
@@ -47,10 +49,11 @@ public class MqttSession extends AbstractSession {
     private boolean cleanSession;
 
     public MqttSession(BrokerContext mqttContext, AioSession session, QosPublisher qosPublisher) {
-        super(qosPublisher);
+        super(qosPublisher, mqttContext.getEventBus());
         this.mqttContext = mqttContext;
         this.session = session;
         this.inflightQueue = new InflightQueue(mqttContext.getBrokerConfigure().getMaxInflight());
+        mqttContext.getEventBus().publish(ServerEventType.SESSION_CREATE, this);
     }
 
 
@@ -97,6 +100,7 @@ public class MqttSession extends AbstractSession {
         LOGGER.info("remove mqttSession success:{}", removeSession);
         disconnect = true;
         session.close(false);
+        mqttContext.getEventBus().publish(EventType.DISCONNECT, this);
     }
 
     public void setClientId(String clientId) {
@@ -197,6 +201,7 @@ public class MqttSession extends AbstractSession {
                     }
                 }
             });
+            mqttContext.getEventBus().publish(EventType.PUSH_PUBLISH_MESSAGE, this);
         }
         //无可publish的消息
         if (count == 0) {

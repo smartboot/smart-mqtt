@@ -7,6 +7,8 @@ import org.smartboot.mqtt.client.processor.MqttAckProcessor;
 import org.smartboot.mqtt.client.processor.MqttPingRespProcessor;
 import org.smartboot.mqtt.client.processor.MqttProcessor;
 import org.smartboot.mqtt.client.processor.PublishProcessor;
+import org.smartboot.mqtt.common.eventbus.EventObject;
+import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPingRespMessage;
@@ -46,7 +48,7 @@ public class MqttClientProcessor extends AbstractMessageProcessor<MqttMessage> {
 
     @Override
     public void process0(AioSession session, MqttMessage msg) {
-        mqttClient.getListeners().forEach(listener -> listener.onMessageReceived(mqttClient, msg));
+        mqttClient.getEventBus().publish(EventType.RECEIVE_MESSAGE, EventObject.newEventObject(mqttClient, msg));
         MqttProcessor processor = processorMap.get(msg.getClass());
 //        LOGGER.info("receive msg:{}", msg);
         if (processor != null) {

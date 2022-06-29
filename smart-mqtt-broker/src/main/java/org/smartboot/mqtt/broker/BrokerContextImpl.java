@@ -3,20 +3,22 @@ package org.smartboot.mqtt.broker;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.listener.BrokerLifecycleListener;
-import org.smartboot.mqtt.broker.listener.BrokerListeners;
-import org.smartboot.mqtt.broker.listener.TopicEventListener;
-import org.smartboot.mqtt.broker.listener.impl.ConnectIdleTimeListener;
-import org.smartboot.mqtt.broker.listener.impl.MessageLoggerListener;
+import org.smartboot.mqtt.broker.eventbus.ConnectIdleTimeMonitorSubscriber;
+import org.smartboot.mqtt.broker.eventbus.MessageToMessageBusSubscriber;
+import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.broker.messagebus.Message;
 import org.smartboot.mqtt.broker.messagebus.MessageBus;
 import org.smartboot.mqtt.broker.messagebus.MessageBusImpl;
-import org.smartboot.mqtt.broker.messagebus.subscribe.PersistenceAndPushSubscriber;
+import org.smartboot.mqtt.broker.messagebus.Subscriber;
+import org.smartboot.mqtt.broker.messagebus.subscribe.PushSubscriber;
 import org.smartboot.mqtt.broker.messagebus.subscribe.RetainPersistenceSubscriber;
 import org.smartboot.mqtt.broker.plugin.Plugin;
 import org.smartboot.mqtt.broker.plugin.provider.Providers;
 import org.smartboot.mqtt.common.AsyncTask;
-import org.smartboot.mqtt.common.listener.MqttSessionListener;
+import org.smartboot.mqtt.common.eventbus.EventBus;
+import org.smartboot.mqtt.common.eventbus.EventBusImpl;
+import org.smartboot.mqtt.common.eventbus.EventType;
+import org.smartboot.mqtt.common.eventbus.subscriber.MessageLoggerSubscriber;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
@@ -26,8 +28,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.EventListener;
 import java.util.List;
 import java.util.Properties;
 import java.util.ServiceLoader;
@@ -66,9 +68,10 @@ public class BrokerContextImpl implements BrokerContext {
 
     private final MessageBus messageBus = new MessageBusImpl();
 
+    private final EventBus eventBus = new EventBusImpl(ServerEventType.types());
+
     private final List<Plugin> plugins = new ArrayList<>();
     private final Providers providers = new Providers();
-    private final BrokerListeners listeners = new BrokerListeners();
     /**
      * Broker Server
      */
@@ -78,18 +81,18 @@ public class BrokerContextImpl implements BrokerContext {
     public void init() throws IOException {
         pushThreadPool = Executors.newFixedThreadPool(getBrokerConfigure().getPushThreadNum());
         updateBrokerConfigure();
+        eventBus.subscribe(ServerEventType.RECEIVE_PUBLISH_MESSAGE, new MessageToMessageBusSubscriber(this));
         //注册Listener
-        addEvent(new ConnectIdleTimeListener(brokerConfigure));
-        addEvent(new MessageLoggerListener());
+        eventBus.subscribe(ServerEventType.SESSION_CREATE, new ConnectIdleTimeMonitorSubscriber(brokerConfigure));
+        //订阅 IO消息
+        eventBus.subscribe(Arrays.asList(EventType.RECEIVE_MESSAGE, EventType.WRITE_MESSAGE), new MessageLoggerSubscriber());
 
         //消费retain消息
-        getMessageBus().subscribe(new RetainPersistenceSubscriber(this), Message::isRetained);
-
-        //消息持久化
-        getMessageBus().subscribe(new PersistenceAndPushSubscriber(this));
+        Subscriber retainPersistenceSubscriber = new RetainPersistenceSubscriber(this);
+        messageBus.subscribe(retainPersistenceSubscriber, Message::isRetained);
 
         // 推送消息
-//        getMessageBus().subscribe(new PushTriggerSubscriber(this));
+        messageBus.subscribe(new PushSubscriber(this));
 
         server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(), new MqttBrokerMessageProcessor(this));
         server.setBannerEnabled(false);
@@ -98,7 +101,7 @@ public class BrokerContextImpl implements BrokerContext {
         //启动keepalive监听线程
 
         loadAndInstallPlugins();
-        listeners.getBrokerLifecycleListeners().forEach(listener -> listener.onStarted(this));
+        eventBus.publish(ServerEventType.BROKER_STARTED, this);
     }
 
     private void updateBrokerConfigure() throws IOException {
@@ -155,7 +158,7 @@ public class BrokerContextImpl implements BrokerContext {
         return topicMap.computeIfAbsent(topic, topicName -> {
             ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topicName), "invalid topicName: " + topicName);
             BrokerTopic newTopic = new BrokerTopic(topicName);
-            listeners.getTopicEventListeners().forEach(event -> event.onTopicCreate(newTopic));
+            eventBus.publish(ServerEventType.TOPIC_CREATE, newTopic);
             return newTopic;
         });
     }
@@ -168,6 +171,11 @@ public class BrokerContextImpl implements BrokerContext {
     @Override
     public MessageBus getMessageBus() {
         return messageBus;
+    }
+
+    @Override
+    public EventBus getEventBus() {
+        return eventBus;
     }
 
     @Override
@@ -191,24 +199,6 @@ public class BrokerContextImpl implements BrokerContext {
         return providers;
     }
 
-    @Override
-    public BrokerListeners getListeners() {
-        return listeners;
-    }
-
-    @Override
-    public void addEvent(EventListener eventListener) {
-        if (eventListener instanceof TopicEventListener) {
-            listeners.getTopicEventListeners().add((TopicEventListener) eventListener);
-        }
-        if (eventListener instanceof BrokerLifecycleListener) {
-            listeners.getBrokerLifecycleListeners().add((BrokerLifecycleListener) eventListener);
-        }
-        if (eventListener instanceof MqttSessionListener) {
-            listeners.getSessionListeners().add((MqttSessionListener<MqttSession>) eventListener);
-        }
-    }
-
     public void batchPublish(String topicName) {
         BrokerTopic topic = getOrCreateTopic(topicName);
         topic.getConsumeOffsets().values().stream()
@@ -229,7 +219,7 @@ public class BrokerContextImpl implements BrokerContext {
     @Override
     public void destroy() {
         LOGGER.info("destroy broker...");
-        listeners.getBrokerLifecycleListeners().forEach(listener -> listener.onDestroy(this));
+        eventBus.publish(ServerEventType.BROKER_DESTROY, this);
         server.shutdown();
     }
 }

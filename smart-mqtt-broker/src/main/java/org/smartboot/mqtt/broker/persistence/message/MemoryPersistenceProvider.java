@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.broker.persistence;
+package org.smartboot.mqtt.broker.persistence.message;
 
 import org.smartboot.mqtt.broker.messagebus.Message;
 
@@ -25,7 +25,7 @@ public class MemoryPersistenceProvider implements PersistenceProvider {
 
 
     @Override
-    public org.smartboot.mqtt.broker.persistence.Message get(String topic, long startOffset) {
+    public org.smartboot.mqtt.broker.persistence.message.Message get(String topic, long startOffset) {
         return getStoreQueue(topic).get(startOffset);
     }
 

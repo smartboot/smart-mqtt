@@ -8,7 +8,8 @@ import org.smartboot.mqtt.common.AckMessage;
 import org.smartboot.mqtt.common.MqttMessageBuilders;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttQoS;
-import org.smartboot.mqtt.common.listener.MqttSessionListener;
+import org.smartboot.mqtt.common.eventbus.EventBusImpl;
+import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttConnectPayload;
@@ -74,24 +75,19 @@ public class MqttClient extends AbstractSession {
     private boolean pingTimeout = false;
 
     public MqttClient(String host, int port, String clientId) {
-        super(new ClientQosPublisher());
+        super(new ClientQosPublisher(), new EventBusImpl(EventType.types()));
         clientConfigure.setHost(host);
         clientConfigure.setPort(port);
         this.clientId = clientId;
         //ping-pong消息超时监听
-        addListener(new MqttSessionListener<MqttClient>() {
-            @Override
-            public void onMessageReceived(MqttClient mqttClient, MqttMessage mqttMessage) {
-                if (mqttMessage instanceof MqttPingRespMessage) {
-                    pingTimeout = false;
-                }
+        getEventBus().subscribe(EventType.RECEIVE_MESSAGE, (eventType, object) -> {
+            if (object.getObject() instanceof MqttPingRespMessage) {
+                pingTimeout = false;
             }
-
-            @Override
-            public void onMessageWrite(MqttClient session, MqttMessage mqttMessage) {
-                if (mqttMessage instanceof MqttPingReqMessage) {
-                    pingTimeout = true;
-                }
+        });
+        getEventBus().subscribe(EventType.WRITE_MESSAGE, (eventType, object) -> {
+            if (object.getObject() instanceof MqttPingReqMessage) {
+                pingTimeout = true;
             }
         });
     }

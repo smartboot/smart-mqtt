@@ -1,11 +1,11 @@
 package org.smartboot.mqtt.broker.plugin.provider;
 
-import org.smartboot.mqtt.broker.persistence.MemoryPersistenceProvider;
-import org.smartboot.mqtt.broker.persistence.PersistenceProvider;
+import org.smartboot.mqtt.broker.persistence.message.MemoryPersistenceProvider;
+import org.smartboot.mqtt.broker.persistence.message.PersistenceProvider;
+import org.smartboot.mqtt.broker.persistence.session.MemorySessionStateProvider;
+import org.smartboot.mqtt.broker.persistence.session.SessionStateProvider;
 import org.smartboot.mqtt.broker.plugin.provider.mock.MockClientAuthorizeProvider;
 import org.smartboot.mqtt.broker.plugin.provider.mock.MockTopicFilterProvider;
-import org.smartboot.mqtt.broker.session.SessionStateProvider;
-import org.smartboot.mqtt.broker.session.memory.MemorySessionStateProvider;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）

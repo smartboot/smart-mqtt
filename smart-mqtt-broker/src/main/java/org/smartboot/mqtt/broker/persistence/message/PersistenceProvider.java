@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.broker.persistence;
+package org.smartboot.mqtt.broker.persistence.message;
 
 import org.smartboot.mqtt.broker.messagebus.Message;
 
@@ -18,7 +18,7 @@ public interface PersistenceProvider {
      */
     void delete(String topic);
 
-    org.smartboot.mqtt.broker.persistence.Message get(String topic, long startOffset);
+    org.smartboot.mqtt.broker.persistence.message.Message get(String topic, long startOffset);
 
     long getOldestOffset(String topic);
 
