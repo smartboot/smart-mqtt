@@ -176,7 +176,7 @@ public class BrokerContextImpl implements BrokerContext {
         brokerConfigure.setNoConnectIdleTimeout(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.CONNECT_IDLE_TIMEOUT, BrokerConfigure.SystemPropertyDefaultValue.CONNECT_TIMEOUT)));
         brokerConfigure.setMaxInflight(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.MAX_INFLIGHT, BrokerConfigure.SystemPropertyDefaultValue.MAX_INFLIGHT)));
 
-        System.out.println("brokerConfigure: " + brokerConfigure);
+//        System.out.println("brokerConfigure: " + brokerConfigure);
     }
 
     /**
