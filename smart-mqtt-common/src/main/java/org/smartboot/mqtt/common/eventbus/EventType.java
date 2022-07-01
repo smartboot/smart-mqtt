@@ -26,9 +26,6 @@ public class EventType<T> {
      */
     public static final EventType<AbstractSession> PUSH_PUBLISH_MESSAGE = new EventType<>();
 
-    //客户端订阅消息
-    public static final EventType<AbstractSession> SUBSCRIBE = new EventType<>();
-
     /**
      * 接收到客户端发送的任何消息
      */

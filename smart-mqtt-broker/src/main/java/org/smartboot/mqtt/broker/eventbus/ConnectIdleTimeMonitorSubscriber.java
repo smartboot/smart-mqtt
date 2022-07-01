@@ -5,17 +5,19 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerConfigure;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.common.AsyncTask;
+import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
 import org.smartboot.mqtt.common.eventbus.EventType;
-import org.smartboot.mqtt.common.eventbus.Subscriber;
 import org.smartboot.socket.util.QuickTimerTask;
 
 import java.util.concurrent.TimeUnit;
 
 /**
+ * 客户端与Broker建立连接后需要在特定时长内完成鉴权认证，否则需要及时断开网络连接
+ *
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/6/29
  */
-public class ConnectIdleTimeMonitorSubscriber implements Subscriber<MqttSession> {
+public class ConnectIdleTimeMonitorSubscriber implements EventBusSubscriber<MqttSession> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectIdleTimeMonitorSubscriber.class);
     private final BrokerConfigure configure;
 

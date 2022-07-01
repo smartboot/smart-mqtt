@@ -5,16 +5,11 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.TopicSubscriber;
-import org.smartboot.mqtt.broker.persistence.message.PersistenceMessage;
-import org.smartboot.mqtt.common.AsyncTask;
-import org.smartboot.mqtt.common.InflightQueue;
-import org.smartboot.mqtt.common.eventbus.EventType;
-import org.smartboot.mqtt.common.message.MqttPublishMessage;
+import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.common.message.MqttSubAckMessage;
 import org.smartboot.mqtt.common.message.MqttSubAckPayload;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
-import org.smartboot.mqtt.common.util.MqttUtil;
 
 /**
  * 客户端订阅消息
@@ -41,9 +36,8 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
                 //以当前消息队列的最新点位为起始点位
                 TopicSubscriber consumeOffset = new TopicSubscriber(topic, session, mqttTopicSubscription.getQualityOfService(), latestOffset + 1, retainOldestOffset);
                 consumeOffset.getMqttSession().subscribeTopic(consumeOffset);
-                //一个新的订阅建立时，对每个匹配的主题名，如果存在最近保留的消息，它必须被发送给这个订阅者
-                publishRetain(context, consumeOffset);
-                context.getEventBus().publish(EventType.SUBSCRIBE, session);
+
+                context.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, consumeOffset);
             }).value();
         }
 
@@ -59,31 +53,4 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
         session.write(mqttSubAckMessage);
     }
 
-    private void publishRetain(BrokerContext brokerContext, TopicSubscriber subscriber) {
-        //retain采用严格顺序publish模式
-        brokerContext.pushExecutorService().execute(new AsyncTask() {
-            @Override
-            public void execute() {
-                AsyncTask task = this;
-                PersistenceMessage storedMessage = brokerContext.getProviders().getRetainMessageProvider().get(subscriber.getTopic().getTopic(), subscriber.getRetainConsumerOffset());
-                if (storedMessage == null || storedMessage.getCreateTime() > subscriber.getLatestSubscribeTime()) {
-                    //完成retain消息的消费，正式开始监听Topic
-
-                    subscriber.getMqttSession().batchPublish(subscriber, brokerContext.pushExecutorService());
-                    return;
-                }
-                MqttSession session = subscriber.getMqttSession();
-                MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(session.newPacketId(), storedMessage.getTopic(), subscriber.getMqttQoS(), storedMessage.getPayload());
-                InflightQueue inflightQueue = session.getInflightQueue();
-                int index = inflightQueue.add(publishMessage, storedMessage.getOffset());
-                session.publish(publishMessage, packetId -> {
-                    LOGGER.info("publish retain to client:{} success ,message:{} ", session.getClientId(), publishMessage);
-                    inflightQueue.commit(index, subscriber::setRetainConsumerOffset);
-                    inflightQueue.clear();
-                    //本批次全部处理完毕
-                    brokerContext.pushExecutorService().execute(task);
-                });
-            }
-        });
-    }
 }

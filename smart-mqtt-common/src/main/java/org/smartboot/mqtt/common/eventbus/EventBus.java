@@ -8,9 +8,9 @@ import java.util.List;
  */
 public interface EventBus {
 
-    <T> void subscribe(EventType<T> type, Subscriber<T> subscriber);
+    <T> void subscribe(EventType<T> type, EventBusSubscriber<T> subscriber);
 
-    <T> void subscribe(List<EventType<T>> types, Subscriber<T> subscriber);
+    <T> void subscribe(List<EventType<T>> types, EventBusSubscriber<T> subscriber);
 
 
     /**

@@ -8,8 +8,8 @@ import org.smartboot.mqtt.broker.plugin.provider.TopicFilterProvider;
 import org.smartboot.mqtt.broker.plugin.provider.TopicTokenUtil;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
 import org.smartboot.mqtt.common.eventbus.EventType;
-import org.smartboot.mqtt.common.eventbus.Subscriber;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,7 +21,7 @@ import java.util.function.Consumer;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/6/30
  */
-public class TopicFilterSubscriber implements Subscriber<BrokerTopic>, TopicFilterProvider {
+public class TopicFilterSubscriber implements EventBusSubscriber<BrokerTopic>, TopicFilterProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger(TopicFilterSubscriber.class);
     /**
      * 通配符注册的监听事件

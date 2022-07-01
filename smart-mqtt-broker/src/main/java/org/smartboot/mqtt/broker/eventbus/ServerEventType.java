@@ -3,6 +3,7 @@ package org.smartboot.mqtt.broker.eventbus;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.BrokerTopic;
 import org.smartboot.mqtt.broker.MqttSession;
+import org.smartboot.mqtt.broker.TopicSubscriber;
 import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
@@ -38,6 +39,11 @@ public class ServerEventType<T> extends EventType<T> {
      * Broker接收到客户端发送过来的消息
      */
     public static final ServerEventType<EventObject<MqttPublishMessage>> RECEIVE_PUBLISH_MESSAGE = new ServerEventType<>();
+
+    /**
+     * 客户端订阅Topic
+     */
+    public static final ServerEventType<TopicSubscriber> SUBSCRIBE_TOPIC = new ServerEventType<>();
 
     /**
      * 这行神奇的代码不要动

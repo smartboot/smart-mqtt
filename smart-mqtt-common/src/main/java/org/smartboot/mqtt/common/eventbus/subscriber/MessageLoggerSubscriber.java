@@ -2,9 +2,9 @@ package org.smartboot.mqtt.common.eventbus.subscriber;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
 import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
-import org.smartboot.mqtt.common.eventbus.Subscriber;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPingReqMessage;
 
@@ -12,7 +12,7 @@ import org.smartboot.mqtt.common.message.MqttPingReqMessage;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/6/29
  */
-public class MessageLoggerSubscriber implements Subscriber<EventObject<MqttMessage>> {
+public class MessageLoggerSubscriber implements EventBusSubscriber<EventObject<MqttMessage>> {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageLoggerSubscriber.class);
 
     @Override

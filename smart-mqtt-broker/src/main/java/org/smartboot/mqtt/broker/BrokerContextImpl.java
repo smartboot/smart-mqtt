@@ -12,13 +12,17 @@ import org.smartboot.mqtt.broker.messagebus.MessageBus;
 import org.smartboot.mqtt.broker.messagebus.MessageBusImpl;
 import org.smartboot.mqtt.broker.messagebus.Subscriber;
 import org.smartboot.mqtt.broker.messagebus.subscribe.RetainPersistenceSubscriber;
+import org.smartboot.mqtt.broker.persistence.message.PersistenceMessage;
 import org.smartboot.mqtt.broker.plugin.Plugin;
 import org.smartboot.mqtt.broker.plugin.provider.Providers;
 import org.smartboot.mqtt.common.AsyncTask;
+import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.eventbus.EventBus;
 import org.smartboot.mqtt.common.eventbus.EventBusImpl;
+import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.eventbus.subscriber.MessageLoggerSubscriber;
+import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
@@ -82,18 +86,10 @@ public class BrokerContextImpl implements BrokerContext {
     public void init() throws IOException {
         pushThreadPool = Executors.newFixedThreadPool(getBrokerConfigure().getPushThreadNum());
         updateBrokerConfigure();
-        eventBus.subscribe(ServerEventType.RECEIVE_PUBLISH_MESSAGE, new MessageToMessageBusSubscriber(this));
-        //注册Listener
-        eventBus.subscribe(ServerEventType.SESSION_CREATE, new ConnectIdleTimeMonitorSubscriber(brokerConfigure));
-        TopicFilterSubscriber topicFilterSubscriber = new TopicFilterSubscriber();
-        providers.setTopicFilterProvider(topicFilterSubscriber);
-        eventBus.subscribe(ServerEventType.TOPIC_CREATE, topicFilterSubscriber);
-        //订阅 IO消息
-        eventBus.subscribe(Arrays.asList(EventType.RECEIVE_MESSAGE, EventType.WRITE_MESSAGE), new MessageLoggerSubscriber());
 
-        //消费retain消息
-        Subscriber retainPersistenceSubscriber = new RetainPersistenceSubscriber(this);
-        messageBus.subscribe(retainPersistenceSubscriber, Message::isRetained);
+        subscribeEventBus();
+
+        subscribeMessageBus();
 
         server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(), new MqttBrokerMessageProcessor(this));
         server.setBannerEnabled(false);
@@ -103,6 +99,62 @@ public class BrokerContextImpl implements BrokerContext {
 
         loadAndInstallPlugins();
         eventBus.publish(ServerEventType.BROKER_STARTED, this);
+    }
+
+    /**
+     * 订阅消息总线
+     */
+    private void subscribeMessageBus() {
+        //消费retain消息
+        Subscriber retainPersistenceSubscriber = new RetainPersistenceSubscriber(this);
+        messageBus.subscribe(retainPersistenceSubscriber, Message::isRetained);
+    }
+
+    /**
+     * 订阅事件总线
+     */
+    private void subscribeEventBus() {
+        eventBus.subscribe(ServerEventType.RECEIVE_PUBLISH_MESSAGE, new MessageToMessageBusSubscriber(this));
+        //连接鉴权超时监控
+        eventBus.subscribe(ServerEventType.SESSION_CREATE, new ConnectIdleTimeMonitorSubscriber(brokerConfigure));
+
+        TopicFilterSubscriber topicFilterSubscriber = new TopicFilterSubscriber();
+        providers.setTopicFilterProvider(topicFilterSubscriber);
+        eventBus.subscribe(ServerEventType.TOPIC_CREATE, topicFilterSubscriber);
+
+        //一个新的订阅建立时，对每个匹配的主题名，如果存在最近保留的消息，它必须被发送给这个订阅者
+        eventBus.subscribe(ServerEventType.SUBSCRIBE_TOPIC, new EventBusSubscriber<TopicSubscriber>() {
+            @Override
+            public void subscribe(EventType<TopicSubscriber> eventType, TopicSubscriber subscriber) {
+                //retain采用严格顺序publish模式
+                pushThreadPool.execute(new AsyncTask() {
+                    @Override
+                    public void execute() {
+                        AsyncTask task = this;
+                        PersistenceMessage storedMessage = providers.getRetainMessageProvider().get(subscriber.getTopic().getTopic(), subscriber.getRetainConsumerOffset());
+                        if (storedMessage == null || storedMessage.getCreateTime() > subscriber.getLatestSubscribeTime()) {
+                            //完成retain消息的消费，正式开始监听Topic
+
+                            subscriber.getMqttSession().batchPublish(subscriber, pushThreadPool);
+                            return;
+                        }
+                        MqttSession session = subscriber.getMqttSession();
+                        MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(session.newPacketId(), storedMessage.getTopic(), subscriber.getMqttQoS(), storedMessage.getPayload());
+                        InflightQueue inflightQueue = session.getInflightQueue();
+                        int index = inflightQueue.add(publishMessage, storedMessage.getOffset());
+                        session.publish(publishMessage, packetId -> {
+                            LOGGER.info("publish retain to client:{} success ,message:{} ", session.getClientId(), publishMessage);
+                            inflightQueue.commit(index, subscriber::setRetainConsumerOffset);
+                            inflightQueue.clear();
+                            //本批次全部处理完毕
+                            pushThreadPool.execute(task);
+                        });
+                    }
+                });
+            }
+        });
+        //打印消息日志
+        eventBus.subscribe(Arrays.asList(EventType.RECEIVE_MESSAGE, EventType.WRITE_MESSAGE), new MessageLoggerSubscriber());
     }
 
     private void updateBrokerConfigure() throws IOException {

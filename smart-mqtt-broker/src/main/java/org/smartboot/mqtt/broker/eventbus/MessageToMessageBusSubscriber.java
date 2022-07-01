@@ -3,9 +3,9 @@ package org.smartboot.mqtt.broker.eventbus;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.BrokerTopic;
 import org.smartboot.mqtt.broker.messagebus.Message;
+import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
 import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
-import org.smartboot.mqtt.common.eventbus.Subscriber;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 /**
@@ -14,7 +14,7 @@ import org.smartboot.mqtt.common.message.MqttPublishMessage;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/6/29
  */
-public class MessageToMessageBusSubscriber implements Subscriber<EventObject<MqttPublishMessage>> {
+public class MessageToMessageBusSubscriber implements EventBusSubscriber<EventObject<MqttPublishMessage>> {
     private final BrokerContext brokerContext;
 
     public MessageToMessageBusSubscriber(BrokerContext brokerContext) {
