@@ -179,7 +179,6 @@ public class MqttSession extends AbstractSession {
             MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(mqttSession.newPacketId(), eventMessage.getTopic(), consumeOffset.getMqttQoS(), eventMessage.getPayload());
             InflightQueue inflightQueue = mqttSession.getInflightQueue();
             int index = inflightQueue.add(publishMessage, eventMessage.getOffset());
-            LOGGER.info("push {} hashCode:{}", eventMessage.getOffset(), eventMessage.hashCode());
             mqttSession.publish(publishMessage, packetId -> {
                 //最早发送的消息若收到响应，则更新点位
                 boolean done = inflightQueue.commit(index, offset -> consumeOffset.setNextConsumerOffset(offset + 1));

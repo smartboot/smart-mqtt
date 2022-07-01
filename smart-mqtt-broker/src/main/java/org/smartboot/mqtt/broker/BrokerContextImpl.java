@@ -21,7 +21,6 @@ import org.smartboot.mqtt.common.eventbus.EventBus;
 import org.smartboot.mqtt.common.eventbus.EventBusImpl;
 import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
 import org.smartboot.mqtt.common.eventbus.EventType;
-import org.smartboot.mqtt.common.eventbus.subscriber.MessageLoggerSubscriber;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.MqttUtil;
@@ -32,7 +31,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
@@ -95,7 +93,6 @@ public class BrokerContextImpl implements BrokerContext {
         server.setBannerEnabled(false);
         server.start();
         System.out.println(BrokerConfigure.BANNER + "\r\n :: smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
-        //启动keepalive监听线程
 
         loadAndInstallPlugins();
         eventBus.publish(ServerEventType.BROKER_STARTED, this);
@@ -154,7 +151,7 @@ public class BrokerContextImpl implements BrokerContext {
             }
         });
         //打印消息日志
-        eventBus.subscribe(Arrays.asList(EventType.RECEIVE_MESSAGE, EventType.WRITE_MESSAGE), new MessageLoggerSubscriber());
+//        eventBus.subscribe(Arrays.asList(EventType.RECEIVE_MESSAGE, EventType.WRITE_MESSAGE), new MessageLoggerSubscriber());
     }
 
     private void updateBrokerConfigure() throws IOException {

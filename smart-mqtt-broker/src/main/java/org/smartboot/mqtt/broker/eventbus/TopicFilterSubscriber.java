@@ -55,7 +55,6 @@ public class TopicFilterSubscriber implements EventBusSubscriber<BrokerTopic>, T
         wildcardsQueue.forEach((topicToken, queue) -> {
             if (TopicTokenUtil.match(pubTopic.getTopicToken(), topicToken)) {
                 for (Consumer<BrokerTopic> consumer : queue) {
-                    LOGGER.info("consumer..");
                     consumer.accept(pubTopic);
                 }
             }
