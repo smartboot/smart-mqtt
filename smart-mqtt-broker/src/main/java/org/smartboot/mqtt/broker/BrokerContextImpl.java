@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.eventbus.ConnectIdleTimeMonitorSubscriber;
 import org.smartboot.mqtt.broker.eventbus.MessageToMessageBusSubscriber;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
+import org.smartboot.mqtt.broker.eventbus.TopicFilterSubscriber;
 import org.smartboot.mqtt.broker.messagebus.Message;
 import org.smartboot.mqtt.broker.messagebus.MessageBus;
 import org.smartboot.mqtt.broker.messagebus.MessageBusImpl;
@@ -59,13 +60,14 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private final ScheduledExecutorService KEEP_ALIVE_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
 
+    private final ExecutorService MessageBusExecutorService = Executors.newCachedThreadPool();
     /**
      * ACK超时监听
      */
     private final ScheduledExecutorService ACK_TIMEOUT_MONITOR_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
 
 
-    private final MessageBus messageBus = new MessageBusImpl();
+    private final MessageBus messageBus = new MessageBusImpl(MessageBusExecutorService);
 
     private final EventBus eventBus = new EventBusImpl(ServerEventType.types());
 
@@ -83,6 +85,9 @@ public class BrokerContextImpl implements BrokerContext {
         eventBus.subscribe(ServerEventType.RECEIVE_PUBLISH_MESSAGE, new MessageToMessageBusSubscriber(this));
         //注册Listener
         eventBus.subscribe(ServerEventType.SESSION_CREATE, new ConnectIdleTimeMonitorSubscriber(brokerConfigure));
+        TopicFilterSubscriber topicFilterSubscriber = new TopicFilterSubscriber();
+        providers.setTopicFilterProvider(topicFilterSubscriber);
+        eventBus.subscribe(ServerEventType.TOPIC_CREATE, topicFilterSubscriber);
         //订阅 IO消息
         eventBus.subscribe(Arrays.asList(EventType.RECEIVE_MESSAGE, EventType.WRITE_MESSAGE), new MessageLoggerSubscriber());
 
@@ -195,8 +200,8 @@ public class BrokerContextImpl implements BrokerContext {
         return providers;
     }
 
-    public void batchPublish(String topicName) {
-        BrokerTopic topic = getOrCreateTopic(topicName);
+    public void batchPublish(BrokerTopic topic) {
+
         topic.getConsumeOffsets().values().stream()
                 .filter(consumeOffset -> consumeOffset.getSemaphore().availablePermits() > 0)
                 .forEach(consumeOffset -> pushThreadPool.execute(new AsyncTask() {
@@ -217,6 +222,7 @@ public class BrokerContextImpl implements BrokerContext {
         LOGGER.info("destroy broker...");
         messageBus.publish(MessageBus.END_MESSAGE);
         eventBus.publish(ServerEventType.BROKER_DESTROY, this);
+        MessageBusExecutorService.shutdown();
         server.shutdown();
     }
 }

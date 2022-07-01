@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.TopicSubscriber;
-import org.smartboot.mqtt.broker.persistence.message.Message;
+import org.smartboot.mqtt.broker.persistence.message.PersistenceMessage;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.eventbus.EventType;
@@ -35,11 +35,12 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
         int i = 0;
         for (MqttTopicSubscription mqttTopicSubscription : mqttSubscribeMessage.getMqttSubscribePayload().getTopicSubscriptions()) {
             qosArray[i++] = context.getProviders().getTopicFilterProvider().match(mqttTopicSubscription, context, topic -> {
-//                LOGGER.info("topicFilter:{} subscribe topic:{} success!", mqttTopicSubscription.topicFilter(), topic.getTopic());
+                LOGGER.info("topicFilter:{} subscribe topic:{} success!", mqttTopicSubscription.getTopicFilter(), topic.getTopic());
                 long latestOffset = context.getProviders().getPersistenceProvider().getLatestOffset(topic.getTopic());
                 long retainOldestOffset = context.getProviders().getRetainMessageProvider().getOldestOffset(topic.getTopic());
                 //以当前消息队列的最新点位为起始点位
                 TopicSubscriber consumeOffset = new TopicSubscriber(topic, session, mqttTopicSubscription.getQualityOfService(), latestOffset + 1, retainOldestOffset);
+                consumeOffset.getMqttSession().subscribeTopic(consumeOffset);
                 //一个新的订阅建立时，对每个匹配的主题名，如果存在最近保留的消息，它必须被发送给这个订阅者
                 publishRetain(context, consumeOffset);
                 context.getEventBus().publish(EventType.SUBSCRIBE, session);
@@ -64,10 +65,10 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
             @Override
             public void execute() {
                 AsyncTask task = this;
-                Message storedMessage = brokerContext.getProviders().getRetainMessageProvider().get(subscriber.getTopic().getTopic(), subscriber.getRetainConsumerOffset());
+                PersistenceMessage storedMessage = brokerContext.getProviders().getRetainMessageProvider().get(subscriber.getTopic().getTopic(), subscriber.getRetainConsumerOffset());
                 if (storedMessage == null || storedMessage.getCreateTime() > subscriber.getLatestSubscribeTime()) {
                     //完成retain消息的消费，正式开始监听Topic
-                    subscriber.getMqttSession().subscribeTopic(subscriber);
+
                     subscriber.getMqttSession().batchPublish(subscriber, brokerContext.pushExecutorService());
                     return;
                 }

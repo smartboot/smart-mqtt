@@ -3,7 +3,7 @@ package org.smartboot.mqtt.broker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
-import org.smartboot.mqtt.broker.persistence.message.Message;
+import org.smartboot.mqtt.broker.persistence.message.PersistenceMessage;
 import org.smartboot.mqtt.broker.persistence.message.PersistenceProvider;
 import org.smartboot.mqtt.broker.persistence.session.SessionState;
 import org.smartboot.mqtt.common.AbstractSession;
@@ -170,7 +170,7 @@ public class MqttSession extends AbstractSession {
         int count = 0;
 
         while (!consumeOffset.getMqttSession().getInflightQueue().isFull()) {
-            Message eventMessage = persistenceProvider.get(consumeOffset.getTopic().getTopic(), nextConsumerOffset + count);
+            PersistenceMessage eventMessage = persistenceProvider.get(consumeOffset.getTopic().getTopic(), nextConsumerOffset + count);
             if (eventMessage == null) {
                 break;
             }
@@ -187,7 +187,7 @@ public class MqttSession extends AbstractSession {
                     consumeOffset.setRetainConsumerTimestamp(eventMessage.getCreateTime());
                     inflightQueue.clear();
                     //本批次全部处理完毕
-                    Message nextMessage = persistenceProvider.get(consumeOffset.getTopic().getTopic(), consumeOffset.getNextConsumerOffset());
+                    PersistenceMessage nextMessage = persistenceProvider.get(consumeOffset.getTopic().getTopic(), consumeOffset.getNextConsumerOffset());
                     if (nextMessage == null) {
                         consumeOffset.getSemaphore().release();
                     } else {

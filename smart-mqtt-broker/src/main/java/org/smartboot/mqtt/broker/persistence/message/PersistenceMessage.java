@@ -7,7 +7,7 @@ import org.smartboot.mqtt.common.enums.MqttQoS;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/6/24
  */
-public class Message extends ToString {
+public class PersistenceMessage extends ToString {
     /**
      * 消息等级
      */
@@ -32,7 +32,7 @@ public class Message extends ToString {
      */
     private final long createTime = System.currentTimeMillis();
 
-    public Message(org.smartboot.mqtt.broker.messagebus.Message message, long offset) {
+    public PersistenceMessage(org.smartboot.mqtt.broker.messagebus.Message message, long offset) {
         this.mqttQoS = message.getMqttQoS();
         this.payload = message.getPayload();
         this.retained = message.isRetained();

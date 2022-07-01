@@ -12,17 +12,17 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 class MemoryMessageStoreQueue {
     private static final Logger LOGGER = LoggerFactory.getLogger(MemoryMessageStoreQueue.class);
-    private final org.smartboot.mqtt.broker.persistence.message.Message[] store = new org.smartboot.mqtt.broker.persistence.message.Message[64];
+    private final PersistenceMessage[] store = new PersistenceMessage[64];
     private final AtomicLong putOffset = new AtomicLong(-1);
 
     public void put(Message msg) {
-        org.smartboot.mqtt.broker.persistence.message.Message message = new org.smartboot.mqtt.broker.persistence.message.Message(msg, putOffset.incrementAndGet());
+        PersistenceMessage message = new PersistenceMessage(msg, putOffset.incrementAndGet());
 //        LOGGER.info("store message, offset:{}", msg.getOffset());
-        store[(int) (msg.getOffset() % store.length)] = message;
+        store[(int) (message.getOffset() % store.length)] = message;
     }
 
-    public org.smartboot.mqtt.broker.persistence.message.Message get(long offset) {
-        org.smartboot.mqtt.broker.persistence.message.Message storedMessage = store[(int) (offset % store.length)];
+    public PersistenceMessage get(long offset) {
+        PersistenceMessage storedMessage = store[(int) (offset % store.length)];
         if (storedMessage == null) {
             return null;
         }

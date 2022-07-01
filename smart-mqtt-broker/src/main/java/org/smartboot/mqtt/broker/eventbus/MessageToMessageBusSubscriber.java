@@ -1,6 +1,7 @@
 package org.smartboot.mqtt.broker.eventbus;
 
 import org.smartboot.mqtt.broker.BrokerContext;
+import org.smartboot.mqtt.broker.BrokerTopic;
 import org.smartboot.mqtt.broker.messagebus.Message;
 import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
@@ -22,10 +23,12 @@ public class MessageToMessageBusSubscriber implements Subscriber<EventObject<Mqt
 
     @Override
     public void subscribe(EventType<EventObject<MqttPublishMessage>> eventType, EventObject<MqttPublishMessage> object) {
+        //进入到消息总线前要先确保BrokerTopic已创建
+        BrokerTopic topic = brokerContext.getOrCreateTopic(object.getObject().getVariableHeader().getTopicName());
         Message message = brokerContext.getMessageBus().publish(object.getObject());
         //持久化消息
         brokerContext.getProviders().getPersistenceProvider().doSave(message);
         //推送至客户端
-        brokerContext.batchPublish(message.getTopic());
+        brokerContext.batchPublish(topic);
     }
 }

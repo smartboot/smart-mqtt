@@ -6,7 +6,6 @@ import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -15,10 +14,14 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class MessageBusImpl implements MessageBus {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageBusImpl.class);
-    private final ExecutorService executorService = Executors.newCachedThreadPool();
+    private final ExecutorService executorService;
     private final Message[] busQueue = new Message[64];
     private final AtomicLong putOffset = new AtomicLong(-1);
     private boolean running = true;
+
+    public MessageBusImpl(ExecutorService executorService) {
+        this.executorService = executorService;
+    }
 
     @Override
     public void subscribe(Subscriber subscriber) {
