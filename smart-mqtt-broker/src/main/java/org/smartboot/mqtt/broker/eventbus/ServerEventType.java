@@ -46,6 +46,11 @@ public class ServerEventType<T> extends EventType<T> {
     public static final ServerEventType<TopicSubscriber> SUBSCRIBE_TOPIC = new ServerEventType<>();
 
     /**
+     * 客户端连接
+     */
+    public static final ServerEventType<MqttSession> CONNECT = new ServerEventType<>();
+
+    /**
      * 这行神奇的代码不要动
      *
      * @return
