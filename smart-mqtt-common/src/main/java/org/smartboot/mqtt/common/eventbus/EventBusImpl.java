@@ -23,6 +23,7 @@ public class EventBusImpl implements EventBus {
 
     @Override
     public <T> void subscribe(EventType<T> type, EventBusSubscriber<T> subscriber) {
+        LOGGER.info("subscribe eventbus, type: {} ,subscriber: {}", type, subscriber);
         lists[type.getIndex()].add(subscriber);
     }
 

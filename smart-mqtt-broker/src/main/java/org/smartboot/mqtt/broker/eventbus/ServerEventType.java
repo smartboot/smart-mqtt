@@ -6,6 +6,7 @@ import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.TopicSubscriber;
 import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
+import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 import java.util.List;
@@ -19,36 +20,40 @@ public class ServerEventType<T> extends EventType<T> {
     /**
      * Broker服务启动成功
      */
-    public static final ServerEventType<BrokerContext> BROKER_STARTED = new ServerEventType<>();
+    public static final ServerEventType<BrokerContext> BROKER_STARTED = new ServerEventType<>("brokerStarted");
 
     /**
      * 停止Broker服务
      */
-    public static final ServerEventType<BrokerContext> BROKER_DESTROY = new ServerEventType<>();
+    public static final ServerEventType<BrokerContext> BROKER_DESTROY = new ServerEventType<>("brokerDestroy");
     /**
      * 创建MqttSession对象
      */
-    public static final ServerEventType<MqttSession> SESSION_CREATE = new ServerEventType<>();
+    public static final ServerEventType<MqttSession> SESSION_CREATE = new ServerEventType<>("sessionCreate");
 
     /**
      * 创建新Topic
      */
-    public static final ServerEventType<BrokerTopic> TOPIC_CREATE = new ServerEventType<>();
+    public static final ServerEventType<BrokerTopic> TOPIC_CREATE = new ServerEventType<>("topicCreate");
 
     /**
      * Broker接收到客户端发送过来的消息
      */
-    public static final ServerEventType<EventObject<MqttPublishMessage>> RECEIVE_PUBLISH_MESSAGE = new ServerEventType<>();
+    public static final ServerEventType<EventObject<MqttPublishMessage>> RECEIVE_PUBLISH_MESSAGE = new ServerEventType<>("receivePublishMessage");
 
     /**
      * 客户端订阅Topic
      */
-    public static final ServerEventType<TopicSubscriber> SUBSCRIBE_TOPIC = new ServerEventType<>();
+    public static final ServerEventType<TopicSubscriber> SUBSCRIBE_TOPIC = new ServerEventType<>("subscribeTopic");
 
     /**
      * 客户端连接
      */
-    public static final ServerEventType<MqttSession> CONNECT = new ServerEventType<>();
+    public static final ServerEventType<org.smartboot.mqtt.broker.eventbus.EventObject<MqttConnectMessage>> CONNECT = new ServerEventType<>("connect");
+
+    protected ServerEventType(String name) {
+        super(name);
+    }
 
     /**
      * 这行神奇的代码不要动

@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.TopicSubscriber;
+import org.smartboot.mqtt.broker.eventbus.EventObject;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.broker.persistence.session.SessionState;
 import org.smartboot.mqtt.broker.persistence.session.SessionStateProvider;
@@ -23,8 +24,6 @@ import org.smartboot.mqtt.common.message.MqttConnectVariableHeader;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
-
-import java.util.concurrent.TimeUnit;
 
 import static org.smartboot.mqtt.common.enums.MqttConnectReturnCode.*;
 
@@ -50,9 +49,6 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         //清理会话
         refreshSession(context, session, mqttConnectMessage);
 
-        //保持连接状态监听
-        initializeKeepAliveTimeout(context, session, mqttConnectMessage);
-
         //存储遗嘱消息
         storeWillMessage(session, mqttConnectMessage);
 
@@ -64,36 +60,10 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         MqttConnAckMessage mqttConnAckMessage = connAck(MqttConnectReturnCode.CONNECTION_ACCEPTED, !mqttConnectMessage.getVariableHeader().isCleanSession());
         session.write(mqttConnAckMessage);
 
-        context.getEventBus().publish(ServerEventType.CONNECT, session);
+        context.getEventBus().publish(ServerEventType.CONNECT, EventObject.newEventObject(session, mqttConnectMessage));
         LOGGER.info("CONNECT message processed CId={}", session.getClientId());
     }
 
-    private void initializeKeepAliveTimeout(BrokerContext context, MqttSession session, MqttConnectMessage mqttConnectMessage) {
-        //如果保持连接的值非零，并且服务端在一点五倍的保持连接时间内没有收到客户端的控制报文，
-        // 它必须断开客户端的网络连接，认为网络连接已断开.
-        int timeout = mqttConnectMessage.getVariableHeader().keepAliveTimeSeconds() * 1000;
-        if (timeout > 0) {
-            timeout += timeout >> 1;
-        }
-        final long finalTimeout = (timeout == 0 || timeout > context.getBrokerConfigure().getMaxKeepAliveTime()) ? context.getBrokerConfigure().getMaxKeepAliveTime() : timeout;
-        context.getKeepAliveThreadPool().schedule(new Runnable() {
-            @Override
-            public void run() {
-                if (session.isDisconnect()) {
-                    LOGGER.warn("session:{} is closed, quit keepalive monitor.", session.getClientId());
-                    return;
-                }
-                long remainingTime = finalTimeout + session.getLatestReceiveMessageTime() - System.currentTimeMillis();
-                if (remainingTime > 0) {
-//                    LOGGER.info("continue monitor, wait:{},current:{} latestReceiveTime:{} timeout:{}", remainingTime, System.currentTimeMillis(), session.getLatestReceiveMessageSecondTime(), finalTimeout);
-                    context.getKeepAliveThreadPool().schedule(this, remainingTime, TimeUnit.MILLISECONDS);
-                } else {
-                    LOGGER.info("session:{} keepalive timeout,current:{} latestReceiveTime:{} timeout:{}", session.getClientId(), System.currentTimeMillis(), session.getLatestReceiveMessageTime(), finalTimeout);
-                    session.disconnect();
-                }
-            }
-        }, finalTimeout, TimeUnit.MILLISECONDS);
-    }
 
     private void checkMessage(MqttSession session, MqttConnectMessage mqttConnectMessage) {
         MqttConnectVariableHeader connectVariableHeader = mqttConnectMessage.getVariableHeader();
