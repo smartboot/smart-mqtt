@@ -26,7 +26,6 @@ public class KeepAliveMonitorSubscriber implements EventBusSubscriber<EventObjec
     public void subscribe(EventType<EventObject<MqttConnectMessage>> eventType, EventObject<MqttConnectMessage> object) {
         //如果保持连接的值非零，并且服务端在一点五倍的保持连接时间内没有收到客户端的控制报文，
         // 它必须断开客户端的网络连接，认为网络连接已断开.
-        System.out.println(object.getObject().getVariableHeader().keepAliveTimeSeconds());
         int timeout = object.getObject().getVariableHeader().keepAliveTimeSeconds() * 1000;
         if (timeout > 0) {
             timeout += timeout >> 1;
