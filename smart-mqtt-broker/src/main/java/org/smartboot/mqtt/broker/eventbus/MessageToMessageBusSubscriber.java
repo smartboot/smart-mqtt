@@ -4,7 +4,6 @@ import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.BrokerTopic;
 import org.smartboot.mqtt.broker.messagebus.Message;
 import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
-import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 

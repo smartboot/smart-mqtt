@@ -4,7 +4,6 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.eventbus.ConnectIdleTimeMonitorSubscriber;
-import org.smartboot.mqtt.broker.eventbus.KeepAliveMonitorSubscriber;
 import org.smartboot.mqtt.broker.eventbus.MessageToMessageBusSubscriber;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.broker.eventbus.TopicFilterSubscriber;
@@ -91,7 +90,7 @@ public class BrokerContextImpl implements BrokerContext {
         subscribeMessageBus();
 
         server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(), new MqttBrokerMessageProcessor(this));
-        server.setBannerEnabled(false);
+        server.setBannerEnabled(false).setReadBufferSize(1024 * 1024);
         server.start();
         System.out.println(BrokerConfigure.BANNER + "\r\n :: smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
 
@@ -116,7 +115,7 @@ public class BrokerContextImpl implements BrokerContext {
         //连接鉴权超时监控
         eventBus.subscribe(ServerEventType.SESSION_CREATE, new ConnectIdleTimeMonitorSubscriber(brokerConfigure));
         //保持连接状态监听,长时间没有消息通信将断开连接
-        eventBus.subscribe(ServerEventType.CONNECT, new KeepAliveMonitorSubscriber(this));
+//        eventBus.subscribe(ServerEventType.CONNECT, new KeepAliveMonitorSubscriber(this));
 
         TopicFilterSubscriber topicFilterSubscriber = new TopicFilterSubscriber();
         providers.setTopicFilterProvider(topicFilterSubscriber);
@@ -207,6 +206,7 @@ public class BrokerContextImpl implements BrokerContext {
         return grantSessions.putIfAbsent(session.getClientId(), session);
     }
 
+    @Override
     public BrokerTopic getOrCreateTopic(String topic) {
         return topicMap.computeIfAbsent(topic, topicName -> {
             ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topicName), "invalid topicName: " + topicName);

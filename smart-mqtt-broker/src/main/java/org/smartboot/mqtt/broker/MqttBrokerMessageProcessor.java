@@ -98,6 +98,8 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
                     ((MqttProcessException) throwable).getCallback().run();
                 }
                 break;
+            default:
+                break;
         }
         if (throwable != null) {
             throwable.printStackTrace();
