@@ -4,7 +4,6 @@ import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.BrokerTopic;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.TopicSubscriber;
-import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
@@ -49,7 +48,7 @@ public class ServerEventType<T> extends EventType<T> {
     /**
      * 客户端连接
      */
-    public static final ServerEventType<org.smartboot.mqtt.broker.eventbus.EventObject<MqttConnectMessage>> CONNECT = new ServerEventType<>("connect");
+    public static final ServerEventType<EventObject<MqttConnectMessage>> CONNECT = new ServerEventType<>("connect");
 
     protected ServerEventType(String name) {
         super(name);
