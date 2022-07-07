@@ -207,6 +207,7 @@ public class BrokerContextImpl implements BrokerContext {
         return grantSessions.putIfAbsent(session.getClientId(), session);
     }
 
+    @Override
     public BrokerTopic getOrCreateTopic(String topic) {
         return topicMap.computeIfAbsent(topic, topicName -> {
             ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topicName), "invalid topicName: " + topicName);
