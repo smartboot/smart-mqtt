@@ -25,11 +25,6 @@
           <groupId>org.apache.commons</groupId>
           <artifactId>commons-collections4</artifactId>
       </dependency>
-
-      <dependency>
-          <groupId>com.alibaba</groupId>
-          <artifactId>fastjson</artifactId>
-      </dependency>
   </dependencies>
 
 </project>

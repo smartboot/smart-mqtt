@@ -1,6 +1,5 @@
 package org.smartboot.mqtt.common.message;
 
-import com.alibaba.fastjson.annotation.JSONField;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.socket.transport.WriteBuffer;
 import org.smartboot.socket.util.DecoderException;
@@ -13,7 +12,6 @@ import java.nio.ByteBuffer;
  * @version V1.0 , 2018/4/22
  */
 public class MqttPublishMessage extends MqttVariableMessage<MqttPublishVariableHeader> {
-    @JSONField(ordinal = 2)
     private byte[] payload;
 
     public MqttPublishMessage(MqttFixedHeader mqttFixedHeader) {

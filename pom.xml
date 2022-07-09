@@ -12,7 +12,6 @@
         <smart-socket.version>1.6.0</smart-socket.version>
         <commons.lang.version>2.6</commons.lang.version>
         <commons.clollections.version>4.3</commons.clollections.version>
-        <fastjson.version>2.0.8</fastjson.version>
         <junit.version>4.13.2</junit.version>
     </properties>
     <dependencyManagement>
@@ -46,11 +45,6 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-collections4</artifactId>
                 <version>${commons.clollections.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.alibaba</groupId>
-                <artifactId>fastjson</artifactId>
-                <version>${fastjson.version}</version>
             </dependency>
             <dependency>
                 <groupId>junit</groupId>

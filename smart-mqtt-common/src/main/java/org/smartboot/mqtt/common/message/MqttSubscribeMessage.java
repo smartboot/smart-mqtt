@@ -1,6 +1,5 @@
 package org.smartboot.mqtt.common.message;
 
-import com.alibaba.fastjson.annotation.JSONField;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.transport.WriteBuffer;
@@ -17,7 +16,6 @@ import java.util.List;
  */
 public class MqttSubscribeMessage extends MqttPacketIdentifierMessage {
 
-    @JSONField(ordinal = 2)
     private MqttSubscribePayload mqttSubscribePayload;
 
     public MqttSubscribeMessage(MqttFixedHeader mqttFixedHeader) {

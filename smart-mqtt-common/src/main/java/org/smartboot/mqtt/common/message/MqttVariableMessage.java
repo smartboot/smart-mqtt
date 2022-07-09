@@ -1,6 +1,5 @@
 package org.smartboot.mqtt.common.message;
 
-import com.alibaba.fastjson.annotation.JSONField;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -10,7 +9,6 @@ public abstract class MqttVariableMessage<T extends MqttVariableHeader> extends 
     /**
      * 可变报头
      */
-    @JSONField(ordinal = 1)
     private T variableHeader;
 
     public MqttVariableMessage(MqttFixedHeader mqttFixedHeader) {
