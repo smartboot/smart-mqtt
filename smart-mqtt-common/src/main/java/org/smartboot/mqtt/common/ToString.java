@@ -1,6 +1,7 @@
 package org.smartboot.mqtt.common;
 
-import com.alibaba.fastjson.JSON;
+
+import com.alibaba.fastjson2.JSON;
 
 /**
  * @author 三刀

@@ -12,7 +12,7 @@
         <smart-socket.version>1.6.0</smart-socket.version>
         <commons.lang.version>2.6</commons.lang.version>
         <commons.clollections.version>4.3</commons.clollections.version>
-        <fastjson.version>2.0.5</fastjson.version>
+        <fastjson.version>2.0.8</fastjson.version>
         <junit.version>4.13.2</junit.version>
     </properties>
     <dependencyManagement>
@@ -76,7 +76,7 @@
         <repository>
             <id>alimaven</id>
             <name>aliyun maven</name>
-            <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+            <url>https://maven.aliyun.com/repository/public</url>
         </repository>
         <repository>
             <id>sonatype-nexus-snapshots</id>
@@ -88,7 +88,7 @@
         <pluginRepository>
             <id>alimaven</id>
             <name>aliyun maven</name>
-            <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+            <url>https://maven.aliyun.com/repository/public</url>
         </pluginRepository>
         <pluginRepository>
             <id>sonatype-nexus-snapshots</id>
