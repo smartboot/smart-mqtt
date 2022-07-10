@@ -158,6 +158,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
     private boolean login(BrokerContext context, MqttSession session, MqttConnectMessage msg) {
         boolean ok = context.getProviders().getClientAuthorizeProvider().auth(msg.getPayload().userName(), msg.getPayload().clientIdentifier(), msg.getPayload().passwordInBytes());
         session.setAuthorized(ok);
+        session.setUsername(msg.getPayload().userName());
         return true;
     }
 

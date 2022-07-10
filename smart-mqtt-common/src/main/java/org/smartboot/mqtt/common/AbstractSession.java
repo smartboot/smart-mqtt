@@ -12,6 +12,7 @@ import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.transport.AioSession;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -138,6 +139,9 @@ public abstract class AbstractSession {
         return packageId;
     }
 
+    public InetSocketAddress getRemoteAddress() throws IOException {
+        return session.getRemoteAddress();
+    }
 
     public EventBus getEventBus() {
         return eventBus;
