@@ -46,6 +46,11 @@ public class ServerEventType<T> extends EventType<T> {
     public static final ServerEventType<TopicSubscriber> SUBSCRIBE_TOPIC = new ServerEventType<>("subscribeTopic");
 
     /**
+     * 客户端订阅Topic
+     */
+    public static final ServerEventType<TopicSubscriber> SUBSCRIBE_RE_TOPIC = new ServerEventType<>("subscribeReTopic");
+
+    /**
      * 客户端连接
      */
     public static final ServerEventType<EventObject<MqttConnectMessage>> CONNECT = new ServerEventType<>("connect");

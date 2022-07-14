@@ -3,8 +3,8 @@ package org.smartboot.mqtt.common.eventbus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -17,7 +17,7 @@ public class EventBusImpl implements EventBus {
     public EventBusImpl(List<EventType<?>> supportTypes) {
         lists = new List[supportTypes.size()];
         for (EventType<?> eventTypeEnum : supportTypes) {
-            lists[eventTypeEnum.getIndex()] = new ArrayList<>();
+            lists[eventTypeEnum.getIndex()] = new CopyOnWriteArrayList<>();
         }
     }
 
@@ -37,12 +37,22 @@ public class EventBusImpl implements EventBus {
 
     @Override
     public <T> void publish(EventType<T> eventType, T object) {
-        for (EventBusSubscriber<T> subscriber : lists[eventType.getIndex()]) {
+        List<EventBusSubscriber> list = lists[eventType.getIndex()];
+        boolean remove = false;
+        for (EventBusSubscriber<T> subscriber : list) {
             try {
-                subscriber.subscribe(eventType, object);
+                if (subscriber.enable()) {
+                    subscriber.subscribe(eventType, object);
+                } else {
+                    remove = true;
+                }
             } catch (Throwable throwable) {
                 LOGGER.error("", throwable);
             }
+        }
+        if (remove) {
+            System.out.println("remove subscribe");
+            list.removeIf(eventBusSubscriber -> !eventBusSubscriber.enable());
         }
     }
 }

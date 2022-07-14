@@ -1,6 +1,6 @@
 package org.smartboot.mqtt.broker.persistence.session;
 
-import org.smartboot.mqtt.broker.TopicSubscriber;
+import org.smartboot.mqtt.broker.TopicFilterSubscriber;
 import org.smartboot.mqtt.common.AckMessage;
 
 import java.util.ArrayList;
@@ -14,13 +14,13 @@ import java.util.Map;
  */
 public class SessionState {
     protected final Map<Integer, AckMessage> responseConsumers = new HashMap<>();
-    private final List<TopicSubscriber> subscribers = new ArrayList<>();
+    private final List<TopicFilterSubscriber> subscribers = new ArrayList<>();
 
     public Map<Integer, AckMessage> getResponseConsumers() {
         return responseConsumers;
     }
 
-    public List<TopicSubscriber> getSubscribers() {
+    public List<TopicFilterSubscriber> getSubscribers() {
         return subscribers;
     }
 }

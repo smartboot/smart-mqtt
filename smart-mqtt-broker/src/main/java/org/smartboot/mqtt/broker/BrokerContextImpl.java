@@ -3,10 +3,8 @@ package org.smartboot.mqtt.broker;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.eventbus.ConnectIdleTimeMonitorSubscriber;
 import org.smartboot.mqtt.broker.eventbus.MessageToMessageBusSubscriber;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
-import org.smartboot.mqtt.broker.eventbus.TopicFilterSubscriber;
 import org.smartboot.mqtt.broker.messagebus.Message;
 import org.smartboot.mqtt.broker.messagebus.MessageBus;
 import org.smartboot.mqtt.broker.messagebus.MessageBusImpl;
@@ -113,13 +111,10 @@ public class BrokerContextImpl implements BrokerContext {
     private void subscribeEventBus() {
         eventBus.subscribe(ServerEventType.RECEIVE_PUBLISH_MESSAGE, new MessageToMessageBusSubscriber(this));
         //连接鉴权超时监控
-        eventBus.subscribe(ServerEventType.SESSION_CREATE, new ConnectIdleTimeMonitorSubscriber(brokerConfigure));
+//        eventBus.subscribe(ServerEventType.SESSION_CREATE, new ConnectIdleTimeMonitorSubscriber(brokerConfigure));
         //保持连接状态监听,长时间没有消息通信将断开连接
 //        eventBus.subscribe(ServerEventType.CONNECT, new KeepAliveMonitorSubscriber(this));
 
-        TopicFilterSubscriber topicFilterSubscriber = new TopicFilterSubscriber();
-        providers.setTopicFilterProvider(topicFilterSubscriber);
-        eventBus.subscribe(ServerEventType.TOPIC_CREATE, topicFilterSubscriber);
 
         //一个新的订阅建立时，对每个匹配的主题名，如果存在最近保留的消息，它必须被发送给这个订阅者
         eventBus.subscribe(ServerEventType.SUBSCRIBE_TOPIC, new EventBusSubscriber<TopicSubscriber>() {

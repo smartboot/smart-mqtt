@@ -8,11 +8,12 @@ import org.smartboot.mqtt.common.util.ValidateUtils;
  */
 public class TopicToken {
     private final String node;
-
+    private String topicFilter;
     private TopicToken nextNode;
 
     public TopicToken(String node) {
         this(node, 0);
+        this.topicFilter = node;
     }
 
     public TopicToken(String node, int offset) {
@@ -31,6 +32,10 @@ public class TopicToken {
 
     public String getNode() {
         return node;
+    }
+
+    public String getTopicFilter() {
+        return topicFilter;
     }
 
     public TopicToken getNextNode() {

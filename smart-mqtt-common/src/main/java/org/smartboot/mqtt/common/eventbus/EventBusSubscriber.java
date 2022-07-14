@@ -6,4 +6,8 @@ package org.smartboot.mqtt.common.eventbus;
  */
 public interface EventBusSubscriber<T> {
     void subscribe(EventType<T> eventType, T object);
+
+    default boolean enable() {
+        return true;
+    }
 }

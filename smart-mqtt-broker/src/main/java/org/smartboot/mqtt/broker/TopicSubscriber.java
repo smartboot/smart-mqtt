@@ -1,5 +1,6 @@
 package org.smartboot.mqtt.broker;
 
+import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 
 import java.util.concurrent.Semaphore;
@@ -20,10 +21,6 @@ public class TopicSubscriber {
      * 服务端向客户端发送应用消息所允许的最大 QoS 等级
      */
     private final MqttQoS mqttQoS;
-    /**
-     * 是否可用
-     */
-    private boolean enable = true;
 
     /**
      * 期望消费的点位
@@ -43,6 +40,8 @@ public class TopicSubscriber {
      */
     private final long latestSubscribeTime = System.currentTimeMillis();
 
+    private TopicToken topicFilterToken;
+
     public TopicSubscriber(BrokerTopic topic, MqttSession session, MqttQoS mqttQoS, long nextConsumerOffset, long retainConsumerOffset) {
         this.topic = topic;
         this.mqttSession = session;
@@ -57,14 +56,6 @@ public class TopicSubscriber {
 
     public MqttSession getMqttSession() {
         return mqttSession;
-    }
-
-    public boolean isEnable() {
-        return enable;
-    }
-
-    public void setEnable(boolean enable) {
-        this.enable = enable;
     }
 
     public MqttQoS getMqttQoS() {
@@ -103,5 +94,13 @@ public class TopicSubscriber {
 
     public long getLatestSubscribeTime() {
         return latestSubscribeTime;
+    }
+
+    public TopicToken getTopicFilterToken() {
+        return topicFilterToken;
+    }
+
+    public void setTopicFilterToken(TopicToken topicFilterToken) {
+        this.topicFilterToken = topicFilterToken;
     }
 }

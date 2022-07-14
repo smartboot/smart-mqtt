@@ -3,13 +3,20 @@ package org.smartboot.mqtt.broker.processor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
+import org.smartboot.mqtt.broker.BrokerTopic;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.TopicSubscriber;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
+import org.smartboot.mqtt.broker.plugin.provider.TopicTokenUtil;
+import org.smartboot.mqtt.common.TopicToken;
+import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
+import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttSubAckMessage;
 import org.smartboot.mqtt.common.message.MqttSubAckPayload;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
+
+import java.util.function.Consumer;
 
 /**
  * 客户端订阅消息
@@ -29,16 +36,19 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
         int[] qosArray = new int[mqttSubscribeMessage.getMqttSubscribePayload().getTopicSubscriptions().size()];
         int i = 0;
         for (MqttTopicSubscription mqttTopicSubscription : mqttSubscribeMessage.getMqttSubscribePayload().getTopicSubscriptions()) {
-            qosArray[i++] = context.getProviders().getTopicFilterProvider().match(mqttTopicSubscription, context, topic -> {
+            TopicToken topicToken = new TopicToken(mqttTopicSubscription.getTopicFilter());
+            match(session, topicToken, context, topic -> {
                 LOGGER.info("topicFilter:{} subscribe topic:{} success!", mqttTopicSubscription.getTopicFilter(), topic.getTopic());
                 long latestOffset = context.getProviders().getPersistenceProvider().getLatestOffset(topic.getTopic());
                 long retainOldestOffset = context.getProviders().getRetainMessageProvider().getOldestOffset(topic.getTopic());
                 //以当前消息队列的最新点位为起始点位
                 TopicSubscriber consumeOffset = new TopicSubscriber(topic, session, mqttTopicSubscription.getQualityOfService(), latestOffset + 1, retainOldestOffset);
-                consumeOffset.getMqttSession().subscribeTopic(consumeOffset);
+                consumeOffset.setTopicFilterToken(topicToken);
+                session.subscribeTopic(consumeOffset);
 
                 context.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, consumeOffset);
-            }).value();
+            });
+            qosArray[i++] = mqttTopicSubscription.getQualityOfService().value();
         }
 
 
@@ -51,6 +61,37 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
         // 返回码的顺序必须和 SUBSCRIBE 报文中主题过滤器的顺序相同
         mqttSubAckMessage.setMqttSubAckPayload(new MqttSubAckPayload(qosArray));
         session.write(mqttSubAckMessage);
+    }
+
+    public void match(MqttSession session, TopicToken topicToken, BrokerContext context, Consumer<BrokerTopic> consumer) {
+        //精准匹配
+        if (!topicToken.isWildcards()) {
+            BrokerTopic topic = context.getOrCreateTopic(topicToken.getTopicFilter());//可能会先触发TopicFilterSubscriber.subscribe
+            consumer.accept(topic);
+            return;
+        }
+
+        //通配符匹配存量Topic
+        for (BrokerTopic topic : context.getTopics()) {
+            if (TopicTokenUtil.match(topic.getTopicToken(), topicToken)) {
+                consumer.accept(topic);
+            }
+        }
+
+        //通配符匹配增量Topic
+        context.getEventBus().subscribe(ServerEventType.TOPIC_CREATE, new EventBusSubscriber<>() {
+            @Override
+            public boolean enable() {
+                return !session.isDisconnect();
+            }
+
+            @Override
+            public void subscribe(EventType<BrokerTopic> eventType, BrokerTopic object) {
+                if (TopicTokenUtil.match(object.getTopicToken(), topicToken)) {
+                    consumer.accept(object);
+                }
+            }
+        });
     }
 
 }

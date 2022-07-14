@@ -73,7 +73,7 @@ public abstract class AbstractSession {
 
     public final synchronized void write(MqttMessage mqttMessage) {
         try {
-            ValidateUtils.isTrue(!disconnect, "已断开连接,无法发送消息");
+            ValidateUtils.isTrue(!disconnect, "已断开连接,无法发送消息:"+this);
             eventBus.publish(EventType.WRITE_MESSAGE, EventObject.newEventObject(this, mqttMessage));
             mqttMessage.writeTo(session.writeBuffer());
             session.writeBuffer().flush();

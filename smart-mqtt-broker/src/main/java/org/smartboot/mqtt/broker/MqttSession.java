@@ -13,9 +13,9 @@ import org.smartboot.mqtt.common.QosPublisher;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.util.MqttUtil;
+import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.transport.AioSession;
 
-import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -33,7 +33,7 @@ public class MqttSession extends AbstractSession {
     /**
      * 当前连接订阅的Topic的消费信息
      */
-    private final Map<String, TopicSubscriber> subscribers = new ConcurrentHashMap<>();
+    private final Map<String, TopicFilterSubscriber> subscribers = new ConcurrentHashMap<>();
 
     private final BrokerContext mqttContext;
     private final InflightQueue inflightQueue;
@@ -69,7 +69,7 @@ public class MqttSession extends AbstractSession {
         this.cleanSession = cleanSession;
     }
 
-    public void disconnect() {
+    public synchronized void disconnect() {
         if (isDisconnect()) {
             return;
         }
@@ -81,8 +81,9 @@ public class MqttSession extends AbstractSession {
                 // 如果这些消息匹配断开连接时客户端的任何订阅
                 SessionState sessionState = new SessionState();
                 sessionState.getResponseConsumers().putAll(responseConsumers);
-                subscribers.values().forEach(topicSubscriber -> sessionState.getSubscribers().add(new TopicSubscriber(topicSubscriber.getTopic(), null, topicSubscriber.getMqttQoS(), topicSubscriber.getNextConsumerOffset(), topicSubscriber.getRetainConsumerOffset())));
-                mqttContext.getProviders().getSessionStateProvider().store(clientId, sessionState);
+                //todo
+//                subscribers.values().forEach(topicSubscriber -> sessionState.getSubscribers().add(new TopicSubscriber(topicSubscriber.getTopic(), null, topicSubscriber.getMqttQoS(), topicSubscriber.getNextConsumerOffset(), topicSubscriber.getRetainConsumerOffset())));
+//                mqttContext.getProviders().getSessionStateProvider().store(clientId, sessionState);
             }
         }
 
@@ -99,8 +100,11 @@ public class MqttSession extends AbstractSession {
         }
         LOGGER.info("remove mqttSession success:{}", removeSession);
         disconnect = true;
-        session.close(false);
-        mqttContext.getEventBus().publish(EventType.DISCONNECT, this);
+        try {
+            session.close(false);
+        } finally {
+            mqttContext.getEventBus().publish(EventType.DISCONNECT, this);
+        }
     }
 
     public void setClientId(String clientId) {
@@ -122,20 +126,34 @@ public class MqttSession extends AbstractSession {
      * 新订阅的主题过滤器和之前订阅的相同，但是它的最大 QoS 值可以不同。
      */
     public synchronized void subscribeTopic(TopicSubscriber subscription) {
-
-        unsubscribe(subscription.getTopic().getTopic());
-        subscribers.put(subscription.getTopic().getTopic(), subscription);
-        subscription.getTopic().getConsumeOffsets().put(this, subscription);
+        ValidateUtils.isTrue(!disconnect,"session has closed,can not subscribe topic");
+        unsubscribe0(subscription.getTopic().getTopic());
+        TopicFilterSubscriber topicFilterSubscriber = subscribers.get(subscription.getTopicFilterToken().getTopicFilter());
+        if (topicFilterSubscriber == null) {
+            topicFilterSubscriber = new TopicFilterSubscriber(subscription.getTopicFilterToken(),subscription.getMqttQoS(), subscription);
+            subscribers.put(subscription.getTopicFilterToken().getTopicFilter(), topicFilterSubscriber);
+        } else {
+            topicFilterSubscriber.getTopicSubscribers().put(subscription.getTopic().getTopic(), subscription);
+        }
+        TopicSubscriber preTopicSubscriber = subscription.getTopic().getConsumeOffsets().put(this, subscription);
+        if (preTopicSubscriber != null) {
+            LOGGER.error("invalid state...");
+        }
 //        LOGGER.info("subscribe topic:{} success, clientId:{}", subscription.getTopic(), clientId);
     }
 
-    public void unsubscribe(String topic) {
-        TopicSubscriber oldOffset = subscribers.remove(topic);
-        if (oldOffset != null) {
-            oldOffset.setEnable(false);
-            oldOffset.getTopic().getConsumeOffsets().remove(oldOffset.getMqttSession());
-//            LOGGER.info("unsubscribe topic:{} success,oldClientId:{} ,currentClientId:{}", topic, oldOffset.getMqttSession().clientId, clientId);
-        }
+    private void unsubscribe0(String topic) {
+        subscribers.values().forEach(topicFilterSubscriber -> {
+            TopicSubscriber oldOffset= topicFilterSubscriber.getTopicSubscribers().remove(topic);
+            if (oldOffset != null) {
+                TopicSubscriber consumerOffset = oldOffset.getTopic().getConsumeOffsets().remove(this);
+                LOGGER.info("unsubscribe topic:{} {},", topic, oldOffset == consumerOffset ? "success" : "fail");
+            }
+        });
+    }
+
+    public void unsubscribe(String topicFilter) {
+        subscribers.remove(topicFilter).getTopicSubscribers().keySet().forEach(this::unsubscribe0);
     }
 
 
@@ -149,10 +167,6 @@ public class MqttSession extends AbstractSession {
 
     public void setWillMessage(MqttPublishMessage willMessage) {
         this.willMessage = willMessage;
-    }
-
-    public Collection<TopicSubscriber> getSubscribers() {
-        return subscribers.values();
     }
 
     public void batchPublish(TopicSubscriber consumeOffset, ExecutorService executorService) {
