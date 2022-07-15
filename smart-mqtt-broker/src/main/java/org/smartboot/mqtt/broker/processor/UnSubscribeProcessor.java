@@ -29,7 +29,7 @@ public class UnSubscribeProcessor extends AuthorizedMqttProcessor<MqttUnsubscrib
                 .forEach(session::unsubscribe);
 
         //当前是否存在符合条件的通配符匹配
-
+        session.resubscribe();
 
         //取消订阅确认
         MqttUnsubAckMessage mqttSubAckMessage = new MqttUnsubAckMessage(unsubscribeMessage.getVariableHeader().getPacketId());
