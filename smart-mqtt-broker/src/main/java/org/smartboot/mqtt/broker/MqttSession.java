@@ -162,7 +162,6 @@ public class MqttSession extends AbstractSession {
     }
 
     private void subscribeSuccess(MqttQoS mqttQoS, TopicToken topicToken, BrokerTopic topic) {
-        LOGGER.info("topicFilter:{} subscribe topic:{} success!", topicToken.getTopicFilter(), topic.getTopic());
         long latestOffset = mqttContext.getProviders().getPersistenceProvider().getLatestOffset(topic.getTopic());
         long retainOldestOffset = mqttContext.getProviders().getRetainMessageProvider().getOldestOffset(topic.getTopic());
         //以当前消息队列的最新点位为起始点位
@@ -173,7 +172,16 @@ public class MqttSession extends AbstractSession {
         // 那么必须使用新的订阅彻底替换现存的订阅。
         // 新订阅的主题过滤器和之前订阅的相同，但是它的最大 QoS 值可以不同。
         ValidateUtils.isTrue(!disconnect, "session has closed,can not subscribe topic");
-        unsubscribe0(subscription.getTopic().getTopic());
+
+        LOGGER.info("find same topic:{}", topic.getTopic());
+        subscribers.values().forEach(topicFilterSubscriber -> {
+            TopicSubscriber oldOffset = topicFilterSubscriber.getTopicSubscribers().remove(topic.getTopic());
+            if (oldOffset != null) {
+                TopicSubscriber consumerOffset = oldOffset.getTopic().getConsumeOffsets().remove(this);
+                LOGGER.info("remove topic:{} {},", topic, oldOffset == consumerOffset ? "success" : "fail");
+            }
+        });
+
         TopicFilterSubscriber topicFilterSubscriber = subscribers.get(subscription.getTopicFilterToken().getTopicFilter());
         if (topicFilterSubscriber == null) {
             topicFilterSubscriber = new TopicFilterSubscriber(subscription.getTopicFilterToken(), subscription.getMqttQoS(), subscription);
@@ -184,21 +192,13 @@ public class MqttSession extends AbstractSession {
         TopicSubscriber preTopicSubscriber = subscription.getTopic().getConsumeOffsets().put(this, subscription);
         if (preTopicSubscriber != null) {
             LOGGER.error("invalid state...");
+        }else{
+            LOGGER.info("new subscribe topic:{} success by topicFilter:{}",subscription.getTopic().getTopic(),subscription.getTopicFilterToken().getTopicFilter());
         }
 
         mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, subscription);
     }
 
-    private void unsubscribe0(String topic) {
-        LOGGER.info("will remove topic:{}", topic);
-        subscribers.values().forEach(topicFilterSubscriber -> {
-            TopicSubscriber oldOffset = topicFilterSubscriber.getTopicSubscribers().remove(topic);
-            if (oldOffset != null) {
-                TopicSubscriber consumerOffset = oldOffset.getTopic().getConsumeOffsets().remove(this);
-                LOGGER.info("unsubscribe topic:{} {},", topic, oldOffset == consumerOffset ? "success" : "fail");
-            }
-        });
-    }
 
     public void resubscribe() {
         subscribers.values().forEach(subscriber -> subscribe0(subscriber.getTopicFilterToken().getTopicFilter(), subscriber.getMqttQoS(), false));
