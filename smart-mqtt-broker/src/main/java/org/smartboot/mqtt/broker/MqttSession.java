@@ -123,7 +123,7 @@ public class MqttSession extends AbstractSession {
         this.username = username;
     }
 
-    public synchronized void subscribe(String topicFilter, MqttQoS mqttQoS) {
+    public void subscribe(String topicFilter, MqttQoS mqttQoS) {
         subscribe0(topicFilter, mqttQoS, true);
     }
 
@@ -144,11 +144,18 @@ public class MqttSession extends AbstractSession {
         }
 
         //通配符匹配增量Topic
+        if (!subscribers.containsKey(topicFilter)) {
+            subscribers.put(topicFilter, new TopicFilterSubscriber(topicToken, mqttQoS));
+        }
         if (monitor) {
             mqttContext.getEventBus().subscribe(ServerEventType.TOPIC_CREATE, new EventBusSubscriber<>() {
                 @Override
                 public boolean enable() {
-                    return !disconnect && subscribers.containsKey(topicFilter);
+                    boolean enable = !disconnect && subscribers.containsKey(topicFilter);
+                    if (!enable) {
+                        LOGGER.info("current event is disable,quit topic:{} monitor", topicFilter);
+                    }
+                    return enable;
                 }
 
                 @Override
@@ -192,8 +199,8 @@ public class MqttSession extends AbstractSession {
         TopicSubscriber preTopicSubscriber = subscription.getTopic().getConsumeOffsets().put(this, subscription);
         if (preTopicSubscriber != null) {
             LOGGER.error("invalid state...");
-        }else{
-            LOGGER.info("new subscribe topic:{} success by topicFilter:{}",subscription.getTopic().getTopic(),subscription.getTopicFilterToken().getTopicFilter());
+        } else {
+            LOGGER.info("new subscribe topic:{} success by topicFilter:{}", subscription.getTopic().getTopic(), subscription.getTopicFilterToken().getTopicFilter());
         }
 
         mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, subscription);

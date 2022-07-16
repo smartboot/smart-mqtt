@@ -20,14 +20,12 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
 
     @Override
     public void process0(BrokerContext context, MqttSession session, MqttSubscribeMessage mqttSubscribeMessage) {
-//        LOGGER.info("receive subscribe message:{}", mqttSubscribeMessage);
-
         //有效载荷包含一个返回码清单。每个返回码对应等待确认的 SUBSCRIBE 报文中的一个主题过滤器。
         // 返回码的顺序必须和 SUBSCRIBE 报文中主题过滤器的顺序相同
         int[] qosArray = new int[mqttSubscribeMessage.getMqttSubscribePayload().getTopicSubscriptions().size()];
         int i = 0;
         for (MqttTopicSubscription mqttTopicSubscription : mqttSubscribeMessage.getMqttSubscribePayload().getTopicSubscriptions()) {
-            session.subscribe(mqttTopicSubscription.getTopicFilter(),mqttTopicSubscription.getQualityOfService());
+            session.subscribe(mqttTopicSubscription.getTopicFilter(), mqttTopicSubscription.getQualityOfService());
             qosArray[i++] = mqttTopicSubscription.getQualityOfService().value();
         }
 
@@ -42,7 +40,4 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
         mqttSubAckMessage.setMqttSubAckPayload(new MqttSubAckPayload(qosArray));
         session.write(mqttSubAckMessage);
     }
-
-
-
 }

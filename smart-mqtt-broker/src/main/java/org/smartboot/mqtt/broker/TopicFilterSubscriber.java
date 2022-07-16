@@ -22,10 +22,14 @@ public class TopicFilterSubscriber {
      */
     private final Map<String, TopicSubscriber> topicSubscribers;
 
-    public TopicFilterSubscriber(TopicToken topicFilterToken, MqttQoS mqttQoS, TopicSubscriber topicSubscriber) {
+    public TopicFilterSubscriber(TopicToken topicFilterToken, MqttQoS mqttQoS) {
         this.topicFilterToken = topicFilterToken;
         this.mqttQoS = mqttQoS;
-        topicSubscribers = new HashMap<>();
+        this.topicSubscribers=new HashMap<>();
+    }
+
+    public TopicFilterSubscriber(TopicToken topicFilterToken, MqttQoS mqttQoS, TopicSubscriber topicSubscriber) {
+        this(topicFilterToken,mqttQoS);
         topicSubscribers.put(topicSubscriber.getTopic().getTopic(), topicSubscriber);
     }
 
