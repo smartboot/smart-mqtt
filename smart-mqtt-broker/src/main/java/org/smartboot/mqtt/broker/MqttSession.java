@@ -206,7 +206,7 @@ public class MqttSession extends AbstractSession {
         if (preTopicSubscriber != null) {
             LOGGER.error("invalid state...");
         } else {
-            LOGGER.info("new subscribe topic:{} success by topicFilter:{}", subscription.getTopic().getTopic(), subscription.getTopicFilterToken().getTopicFilter());
+            LOGGER.debug("new subscribe topic:{} success by topicFilter:{}", subscription.getTopic().getTopic(), subscription.getTopicFilterToken().getTopicFilter());
         }
 
         return subscription;

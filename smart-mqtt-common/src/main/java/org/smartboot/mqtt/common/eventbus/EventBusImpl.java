@@ -23,7 +23,7 @@ public class EventBusImpl implements EventBus {
 
     @Override
     public <T> void subscribe(EventType<T> type, EventBusSubscriber<T> subscriber) {
-        LOGGER.info("subscribe eventbus, type: {} ,subscriber: {}", type, subscriber);
+        LOGGER.debug("subscribe eventbus, type: {} ,subscriber: {}", type, subscriber);
         lists[type.getIndex()].add(subscriber);
     }
 
@@ -51,7 +51,6 @@ public class EventBusImpl implements EventBus {
             }
         }
         if (remove) {
-            System.out.println("remove subscribe");
             list.removeIf(eventBusSubscriber -> !eventBusSubscriber.enable());
         }
     }
