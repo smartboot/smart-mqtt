@@ -3,6 +3,9 @@ package org.smartboot.mqtt.broker;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.broker.eventbus.ConnectAuthenticationSubscriber;
+import org.smartboot.mqtt.broker.eventbus.ConnectIdleTimeMonitorSubscriber;
+import org.smartboot.mqtt.broker.eventbus.KeepAliveMonitorSubscriber;
 import org.smartboot.mqtt.broker.eventbus.MessageToMessageBusSubscriber;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.broker.messagebus.Message;
@@ -111,13 +114,15 @@ public class BrokerContextImpl implements BrokerContext {
     private void subscribeEventBus() {
         eventBus.subscribe(ServerEventType.RECEIVE_PUBLISH_MESSAGE, new MessageToMessageBusSubscriber(this));
         //连接鉴权超时监控
-//        eventBus.subscribe(ServerEventType.SESSION_CREATE, new ConnectIdleTimeMonitorSubscriber(brokerConfigure));
+        eventBus.subscribe(ServerEventType.SESSION_CREATE, new ConnectIdleTimeMonitorSubscriber(this));
+        //连接鉴权
+        eventBus.subscribe(ServerEventType.CONNECT,new ConnectAuthenticationSubscriber(this));
         //保持连接状态监听,长时间没有消息通信将断开连接
-//        eventBus.subscribe(ServerEventType.CONNECT, new KeepAliveMonitorSubscriber(this));
+        eventBus.subscribe(ServerEventType.CONNECT, new KeepAliveMonitorSubscriber(this));
 
 
         //一个新的订阅建立时，对每个匹配的主题名，如果存在最近保留的消息，它必须被发送给这个订阅者
-        eventBus.subscribe(ServerEventType.SUBSCRIBE_TOPIC, new EventBusSubscriber<TopicSubscriber>() {
+        eventBus.subscribe(ServerEventType.SUBSCRIBE_TOPIC, new EventBusSubscriber<>() {
             @Override
             public void subscribe(EventType<TopicSubscriber> eventType, TopicSubscriber subscriber) {
                 //retain采用严格顺序publish模式
@@ -172,6 +177,8 @@ public class BrokerContextImpl implements BrokerContext {
         brokerConfigure.setPort(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.PORT, BrokerConfigure.SystemPropertyDefaultValue.PORT)));
         brokerConfigure.setNoConnectIdleTimeout(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.CONNECT_IDLE_TIMEOUT, BrokerConfigure.SystemPropertyDefaultValue.CONNECT_TIMEOUT)));
         brokerConfigure.setMaxInflight(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.MAX_INFLIGHT, BrokerConfigure.SystemPropertyDefaultValue.MAX_INFLIGHT)));
+        brokerConfigure.setUsername(brokerProperties.getProperty(BrokerConfigure.SystemProperty.USERNAME));
+        brokerConfigure.setPassword(brokerProperties.getProperty(BrokerConfigure.SystemProperty.PASSWORD));
 
 //        System.out.println("brokerConfigure: " + brokerConfigure);
     }

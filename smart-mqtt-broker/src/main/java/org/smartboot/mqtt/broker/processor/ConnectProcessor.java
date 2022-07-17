@@ -42,14 +42,14 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         //服务端必须按照 3.1 节的要求验证 CONNECT 报文，如果报文不符合规范，服务端不发送CONNACK 报文直接关闭网络连接
         checkMessage(session, mqttConnectMessage);
 
-        //身份验证
-        ValidateUtils.isTrue(login(context, session, mqttConnectMessage), "login fail", session::disconnect);
 
         //清理会话
         refreshSession(context, session, mqttConnectMessage);
 
         //存储遗嘱消息
         storeWillMessage(session, mqttConnectMessage);
+
+        context.getEventBus().publish(ServerEventType.CONNECT, EventObject.newEventObject(session, mqttConnectMessage));
 
         //如果服务端收到清理会话（CleanSession）标志为 1 的连接，除了将 CONNACK 报文中的返回码设置为 0 之外，
         // 还必须将 CONNACK 报文中的当前会话设置（Session Present）标志为 0。
@@ -59,7 +59,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         MqttConnAckMessage mqttConnAckMessage = connAck(MqttConnectReturnCode.CONNECTION_ACCEPTED, !mqttConnectMessage.getVariableHeader().isCleanSession());
         session.write(mqttConnAckMessage);
 
-        context.getEventBus().publish(ServerEventType.CONNECT, EventObject.newEventObject(session, mqttConnectMessage));
+
         LOGGER.info("CONNECT message processed CId={}", session.getClientId());
     }
 
@@ -153,13 +153,6 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         session.setClientId(clientId);
         context.addSession(session);
         LOGGER.info("add session for client:{}", session);
-    }
-
-    private boolean login(BrokerContext context, MqttSession session, MqttConnectMessage msg) {
-        boolean ok = context.getProviders().getClientAuthorizeProvider().auth(msg.getPayload().userName(), msg.getPayload().clientIdentifier(), msg.getPayload().passwordInBytes());
-        session.setAuthorized(ok);
-        session.setUsername(msg.getPayload().userName());
-        return true;
     }
 
     private void storeWillMessage(MqttSession session, MqttConnectMessage msg) {

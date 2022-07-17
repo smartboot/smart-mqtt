@@ -61,6 +61,16 @@ public class BrokerConfigure {
      */
     private int maxInflight;
 
+    /**
+     * 客户端连接鉴权账号
+     */
+    private String username;
+
+    /**
+     * 客户端连接鉴权密码
+     */
+    private String password;
+
     public int getPort() {
         return port;
     }
@@ -117,6 +127,22 @@ public class BrokerConfigure {
         this.maxInflight = maxInflight;
     }
 
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     @Override
     public String toString() {
         return "BrokerConfigure{" +
@@ -153,6 +179,16 @@ public class BrokerConfigure {
          * 最大飞行窗口
          */
         String MAX_INFLIGHT = "broker.maxInflight";
+
+        /**
+         * 客户端连接鉴权账号
+         */
+        String USERNAME = "broker.username";
+
+        /**
+         * 客户端连接鉴权密码
+         */
+        String PASSWORD = "broker.password";
         /**
          * 集群节点数量上限
          */
