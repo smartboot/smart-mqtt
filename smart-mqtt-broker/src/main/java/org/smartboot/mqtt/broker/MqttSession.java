@@ -85,9 +85,8 @@ public class MqttSession extends AbstractSession {
                 // 如果这些消息匹配断开连接时客户端的任何订阅
                 SessionState sessionState = new SessionState();
                 sessionState.getResponseConsumers().putAll(responseConsumers);
-                //todo
-//                subscribers.values().forEach(topicSubscriber -> sessionState.getSubscribers().add(new TopicSubscriber(topicSubscriber.getTopic(), null, topicSubscriber.getMqttQoS(), topicSubscriber.getNextConsumerOffset(), topicSubscriber.getRetainConsumerOffset())));
-//                mqttContext.getProviders().getSessionStateProvider().store(clientId, sessionState);
+                subscribers.values().forEach(topicSubscriber -> sessionState.getSubscribers().put(topicSubscriber.getTopicFilterToken().getTopicFilter(), topicSubscriber.getMqttQoS()));
+                mqttContext.getProviders().getSessionStateProvider().store(clientId, sessionState);
             }
         }
 

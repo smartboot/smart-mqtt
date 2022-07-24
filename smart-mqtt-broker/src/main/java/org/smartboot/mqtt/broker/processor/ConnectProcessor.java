@@ -135,10 +135,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
                 SessionState sessionState = sessionStateProvider.get(clientId);
                 if (sessionState != null) {
                     session.getResponseConsumers().putAll(sessionState.getResponseConsumers());
-                    //todo 根据topicFilter重新订阅
-//                    sessionState.getSubscribers().forEach(topicSubscriber -> {
-//                        session.subscribeTopic(new TopicSubscriber(topicSubscriber.getTopic(), session, topicSubscriber.getMqttQoS(), topicSubscriber.getNextConsumerOffset(), topicSubscriber.getRetainConsumerOffset()));
-//                    });
+                    sessionState.getSubscribers().forEach(session::subscribe);
                     //客户端设置清理会话（CleanSession）标志为 0 重连时，客户端和服务端必须使用原始的报文标识符重发
                     //任何未确认的 PUBLISH 报文（如果 QoS>0）和 PUBREL 报文 [MQTT-4.4.0-1]。这是唯一要求客户端或
                     //服务端重发消息的情况。
