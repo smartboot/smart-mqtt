@@ -40,6 +40,11 @@ public class BrokerConfigure {
      * 端口号
      */
     private int port;
+
+    /**
+     * 线程数
+     */
+    private int threadNum;
     /**
      * 默认的客户端keep-alive超时时间.
      * 保持连接的实际值是由应用指定的，一般是几分钟。允许的最大值是 18 小时 12 分 15 秒。
@@ -143,6 +148,14 @@ public class BrokerConfigure {
         this.password = password;
     }
 
+    public int getThreadNum() {
+        return threadNum;
+    }
+
+    public void setThreadNum(int threadNum) {
+        this.threadNum = threadNum;
+    }
+
     @Override
     public String toString() {
         return "BrokerConfigure{" +
@@ -169,6 +182,11 @@ public class BrokerConfigure {
          * broker服务端口号
          */
         String PORT = "broker.port";
+
+        /**
+         * broker线程数
+         */
+        String THREAD_NUM = "broker.threadNum";
 
         /**
          * connect默认超时时间
@@ -200,5 +218,6 @@ public class BrokerConfigure {
         String CONNECT_TIMEOUT = "5";
 
         String MAX_INFLIGHT = "8";
+
     }
 }

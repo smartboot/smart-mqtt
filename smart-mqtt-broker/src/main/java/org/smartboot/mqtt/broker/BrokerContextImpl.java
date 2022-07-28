@@ -91,7 +91,9 @@ public class BrokerContextImpl implements BrokerContext {
         subscribeMessageBus();
 
         server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(), new MqttBrokerMessageProcessor(this));
-        server.setBannerEnabled(false).setReadBufferSize(1024 * 1024);
+        server.setBannerEnabled(false)
+                .setReadBufferSize(1024 * 1024)
+                .setThreadNum(brokerConfigure.getThreadNum());
         server.start();
         System.out.println(BrokerConfigure.BANNER + "\r\n :: smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
 
@@ -116,7 +118,7 @@ public class BrokerContextImpl implements BrokerContext {
         //连接鉴权超时监控
         eventBus.subscribe(ServerEventType.SESSION_CREATE, new ConnectIdleTimeMonitorSubscriber(this));
         //连接鉴权
-        eventBus.subscribe(ServerEventType.CONNECT,new ConnectAuthenticationSubscriber(this));
+        eventBus.subscribe(ServerEventType.CONNECT, new ConnectAuthenticationSubscriber(this));
         //保持连接状态监听,长时间没有消息通信将断开连接
         eventBus.subscribe(ServerEventType.CONNECT, new KeepAliveMonitorSubscriber(this));
 
@@ -179,6 +181,7 @@ public class BrokerContextImpl implements BrokerContext {
         brokerConfigure.setMaxInflight(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.MAX_INFLIGHT, BrokerConfigure.SystemPropertyDefaultValue.MAX_INFLIGHT)));
         brokerConfigure.setUsername(brokerProperties.getProperty(BrokerConfigure.SystemProperty.USERNAME));
         brokerConfigure.setPassword(brokerProperties.getProperty(BrokerConfigure.SystemProperty.PASSWORD));
+        brokerConfigure.setThreadNum(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.THREAD_NUM, String.valueOf(Runtime.getRuntime().availableProcessors()))));
 
 //        System.out.println("brokerConfigure: " + brokerConfigure);
     }
