@@ -24,24 +24,24 @@ public class Message extends ToString {
 
     private final boolean retained;
     /**
-     * 存储的消息偏移量
+     * 消息总线中存储的消息偏移量
      */
-    private final long offset;
+    private final long busOffset;
 
-    public Message(Message message, long offset) {
-        this(message.topic, message.mqttQoS, message.payload, message.retained, offset);
+    public Message(Message message, long busOffset) {
+        this(message.topic, message.mqttQoS, message.payload, message.retained, busOffset);
     }
 
-    public Message(MqttPublishMessage message, long offset) {
-        this(message.getVariableHeader().getTopicName(), message.getFixedHeader().getQosLevel(), message.getPayload(), message.getFixedHeader().isRetain(), offset);
+    public Message(MqttPublishMessage message, long busOffset) {
+        this(message.getVariableHeader().getTopicName(), message.getFixedHeader().getQosLevel(), message.getPayload(), message.getFixedHeader().isRetain(), busOffset);
     }
 
-    private Message(String topic, MqttQoS mqttQoS, byte[] payload, boolean retained, long offset) {
+    private Message(String topic, MqttQoS mqttQoS, byte[] payload, boolean retained, long busOffset) {
         this.mqttQoS = mqttQoS;
         this.payload = payload;
         this.topic = topic;
         this.retained = retained;
-        this.offset = offset;
+        this.busOffset = busOffset;
     }
 
     public MqttQoS getMqttQoS() {
@@ -61,7 +61,7 @@ public class Message extends ToString {
     }
 
 
-    public long getOffset() {
-        return offset;
+    public long getBusOffset() {
+        return busOffset;
     }
 }

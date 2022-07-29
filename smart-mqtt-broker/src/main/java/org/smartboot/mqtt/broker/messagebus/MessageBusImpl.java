@@ -61,7 +61,7 @@ public class MessageBusImpl implements MessageBus {
         if (storedMessage == null) {
             return null;
         }
-        return storedMessage.getOffset() == offset ? storedMessage : null;
+        return storedMessage.getBusOffset() == offset ? storedMessage : null;
     }
 
     @Override
@@ -71,7 +71,7 @@ public class MessageBusImpl implements MessageBus {
             return null;
         }
         Message stored = new Message(storedMessage, putOffset.incrementAndGet());
-        busQueue[(int) (stored.getOffset() % busQueue.length)] = stored;
+        busQueue[(int) (stored.getBusOffset() % busQueue.length)] = stored;
         return stored;
     }
 }
