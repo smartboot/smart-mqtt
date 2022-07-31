@@ -42,14 +42,17 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         //服务端必须按照 3.1 节的要求验证 CONNECT 报文，如果报文不符合规范，服务端不发送CONNACK 报文直接关闭网络连接
         checkMessage(session, mqttConnectMessage);
 
+        // 先进行认证
+        context.getEventBus().publish(ServerEventType.CONNECT, EventObject.newEventObject(session, mqttConnectMessage));
+        if (!session.isAuthorized()) {
+            throw new IllegalStateException("Authorization failed");
+        }
 
         //清理会话
         refreshSession(context, session, mqttConnectMessage);
 
         //存储遗嘱消息
         storeWillMessage(session, mqttConnectMessage);
-
-        context.getEventBus().publish(ServerEventType.CONNECT, EventObject.newEventObject(session, mqttConnectMessage));
 
         //如果服务端收到清理会话（CleanSession）标志为 1 的连接，除了将 CONNACK 报文中的返回码设置为 0 之外，
         // 还必须将 CONNACK 报文中的当前会话设置（Session Present）标志为 0。
