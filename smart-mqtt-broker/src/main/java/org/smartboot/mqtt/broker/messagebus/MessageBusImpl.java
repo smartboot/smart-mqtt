@@ -65,12 +65,12 @@ public class MessageBusImpl implements MessageBus {
     }
 
     @Override
-    public Message publish(MqttPublishMessage storedMessage) {
-        if (storedMessage == MessageBus.END_MESSAGE) {
+    public Message publish(MqttPublishMessage publishMessage) {
+        if (publishMessage == MessageBus.END_MESSAGE) {
             running = false;
             return null;
         }
-        Message stored = new Message(storedMessage, putOffset.incrementAndGet());
+        Message stored = new Message(publishMessage, putOffset.incrementAndGet());
         busQueue[(int) (stored.getBusOffset() % busQueue.length)] = stored;
         return stored;
     }
