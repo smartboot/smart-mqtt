@@ -47,7 +47,7 @@ public class EventBusImpl implements EventBus {
                     remove = true;
                 }
             } catch (Throwable throwable) {
-                LOGGER.error("", throwable);
+                LOGGER.error("publish event error", throwable);
             }
         }
         if (remove) {
