@@ -153,7 +153,7 @@ public class MqttSession extends AbstractSession {
             subscribers.put(topicFilter, new TopicFilterSubscriber(topicToken, mqttQoS));
         }
         if (newSubscribe) {
-            mqttContext.getEventBus().subscribe(ServerEventType.TOPIC_CREATE, new EventBusSubscriber<>() {
+            mqttContext.getEventBus().subscribe(ServerEventType.TOPIC_CREATE, new EventBusSubscriber<BrokerTopic>() {
                 @Override
                 public boolean enable() {
                     boolean enable = !disconnect && subscribers.containsKey(topicFilter);

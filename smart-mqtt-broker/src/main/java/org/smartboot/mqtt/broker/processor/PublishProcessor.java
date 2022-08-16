@@ -48,9 +48,8 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
     }
 
     private void processQos0(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
-//        context.publish(session, mqttPublishMessage);
         // 消息投递至消息总线
-        context.getEventBus().publish(ServerEventType.RECEIVE_PUBLISH_MESSAGE, EventObject.newEventObject(session,mqttPublishMessage));
+        context.getEventBus().publish(ServerEventType.RECEIVE_PUBLISH_MESSAGE, EventObject.newEventObject(session, mqttPublishMessage));
     }
 
     private void processQos1(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
@@ -62,12 +61,12 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
         session.write(pubAckMessage);
 
         // 消息投递至消息总线
-        context.getEventBus().publish(ServerEventType.RECEIVE_PUBLISH_MESSAGE, EventObject.newEventObject(session,mqttPublishMessage));
-//        context.getListeners().getTopicEventListeners().forEach(topicEventListener -> topicEventListener.onReceive(context, session, mqttPublishMessage));
-//        context.publish(session, mqttPublishMessage);
+        context.getEventBus().publish(ServerEventType.RECEIVE_PUBLISH_MESSAGE, EventObject.newEventObject(session, mqttPublishMessage));
     }
 
     private void processQos2(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
+        //暂存publishMessage
+
         MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(mqttPublishMessage.getVariableHeader().getPacketId());
         //响应监听
         session.write(pubRecMessage, (Consumer<MqttPubRelMessage>) message -> {
@@ -75,7 +74,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
             MqttPubCompMessage pubRelMessage = new MqttPubCompMessage(message.getVariableHeader().getPacketId());
             session.write(pubRelMessage);
             // 消息投递至消息总线
-            context.getEventBus().publish(ServerEventType.RECEIVE_PUBLISH_MESSAGE, EventObject.newEventObject(session,mqttPublishMessage));
+            context.getEventBus().publish(ServerEventType.RECEIVE_PUBLISH_MESSAGE, EventObject.newEventObject(session, mqttPublishMessage));
         });
     }
 }

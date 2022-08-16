@@ -124,7 +124,7 @@ public class BrokerContextImpl implements BrokerContext {
 
 
         //一个新的订阅建立时，对每个匹配的主题名，如果存在最近保留的消息，它必须被发送给这个订阅者
-        eventBus.subscribe(ServerEventType.SUBSCRIBE_TOPIC, new EventBusSubscriber<>() {
+        eventBus.subscribe(ServerEventType.SUBSCRIBE_TOPIC, new EventBusSubscriber<TopicSubscriber>() {
             @Override
             public void subscribe(EventType<TopicSubscriber> eventType, TopicSubscriber subscriber) {
                 //retain采用严格顺序publish模式
