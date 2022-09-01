@@ -145,7 +145,7 @@ public class BrokerContextImpl implements BrokerContext {
                         int index = inflightQueue.add(publishMessage, storedMessage.getOffset());
                         session.publish(publishMessage, packetId -> {
                             LOGGER.info("publish retain to client:{} success ,message:{} ", session.getClientId(), publishMessage);
-                            inflightQueue.commit(index, subscriber::setRetainConsumerOffset);
+                            inflightQueue.commit(index, offset -> subscriber.setRetainConsumerOffset(offset + 1));
                             inflightQueue.clear();
                             //本批次全部处理完毕
                             pushThreadPool.execute(task);
