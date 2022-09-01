@@ -238,6 +238,10 @@ public class BrokerContextImpl implements BrokerContext {
 
     @Override
     public MqttSession removeSession(String clientId) {
+        if (StringUtils.isBlank(clientId)) {
+            LOGGER.warn("clientId is blank, ignore remove grantSession");
+            return null;
+        }
         return grantSessions.remove(clientId);
     }
 
