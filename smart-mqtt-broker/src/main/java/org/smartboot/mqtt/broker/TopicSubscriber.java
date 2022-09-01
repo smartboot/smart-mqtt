@@ -76,8 +76,6 @@ public class TopicSubscriber {
 
     public void setNextConsumerOffset(long nextConsumerOffset) {
         this.nextConsumerOffset = nextConsumerOffset;
-        //retain点位保持同步，防止断链重连后消息被重复消费
-        this.retainConsumerOffset = nextConsumerOffset;
     }
 
     public Semaphore getSemaphore() {

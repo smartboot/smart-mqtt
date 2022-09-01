@@ -20,6 +20,7 @@ import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.transport.AioSession;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -174,11 +175,17 @@ public class MqttSession extends AbstractSession {
         }
     }
 
+    private Map<BrokerTopic, Long> offsetCache = new HashMap<>();
+
     private TopicSubscriber subscribeSuccess(MqttQoS mqttQoS, TopicToken topicToken, BrokerTopic topic) {
         long latestOffset = mqttContext.getProviders().getPersistenceProvider().getLatestOffset(topic.getTopic());
-        long retainOldestOffset = mqttContext.getProviders().getRetainMessageProvider().getOldestOffset(topic.getTopic());
+        Long retainOffset = offsetCache.get(topic);
+        long oldestRetainOffset = mqttContext.getProviders().getRetainMessageProvider().getOldestOffset(topic.getTopic());
+        if (retainOffset == null || retainOffset < oldestRetainOffset) {
+            retainOffset = oldestRetainOffset;
+        }
         //以当前消息队列的最新点位为起始点位
-        TopicSubscriber subscription = new TopicSubscriber(topic, this, mqttQoS, latestOffset + 1, retainOldestOffset);
+        TopicSubscriber subscription = new TopicSubscriber(topic, this, mqttQoS, latestOffset + 1, retainOffset);
         subscription.setTopicFilterToken(topicToken);
         // 如果服务端收到一个 SUBSCRIBE 报文，
         //报文的主题过滤器与一个现存订阅的主题过滤器相同，
@@ -220,6 +227,7 @@ public class MqttSession extends AbstractSession {
         subscribers.remove(topicFilter).getTopicSubscribers()
                 .values().forEach(subscriber -> {
                     TopicSubscriber removeSubscriber = subscriber.getTopic().getConsumeOffsets().remove(this);
+                    offsetCache.put(subscriber.getTopic(), subscriber.getRetainConsumerOffset());
                     if (subscriber == removeSubscriber) {
                         LOGGER.info("remove subscriber:{} success!", subscriber.getTopic().getTopic());
                     } else {
