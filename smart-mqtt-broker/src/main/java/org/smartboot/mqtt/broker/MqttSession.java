@@ -175,11 +175,15 @@ public class MqttSession extends AbstractSession {
         }
     }
 
-    private Map<BrokerTopic, Long> offsetCache = new HashMap<>();
+    /**
+     * retain消息消费点位记录
+     */
+    private final Map<BrokerTopic, Long> retainOffsetCache = new HashMap<>();
 
     private TopicSubscriber subscribeSuccess(MqttQoS mqttQoS, TopicToken topicToken, BrokerTopic topic) {
         long latestOffset = mqttContext.getProviders().getPersistenceProvider().getLatestOffset(topic.getTopic());
-        Long retainOffset = offsetCache.get(topic);
+        // retain消费点位优先以缓存为准
+        Long retainOffset = retainOffsetCache.get(topic);
         long oldestRetainOffset = mqttContext.getProviders().getRetainMessageProvider().getOldestOffset(topic.getTopic());
         if (retainOffset == null || retainOffset < oldestRetainOffset) {
             retainOffset = oldestRetainOffset;
@@ -227,7 +231,7 @@ public class MqttSession extends AbstractSession {
         subscribers.remove(topicFilter).getTopicSubscribers()
                 .values().forEach(subscriber -> {
                     TopicSubscriber removeSubscriber = subscriber.getTopic().getConsumeOffsets().remove(this);
-                    offsetCache.put(subscriber.getTopic(), subscriber.getRetainConsumerOffset());
+                    retainOffsetCache.put(subscriber.getTopic(), subscriber.getRetainConsumerOffset());
                     if (subscriber == removeSubscriber) {
                         LOGGER.info("remove subscriber:{} success!", subscriber.getTopic().getTopic());
                     } else {
@@ -264,20 +268,25 @@ public class MqttSession extends AbstractSession {
         int count = 0;
 
         while (!consumeOffset.getMqttSession().getInflightQueue().isFull()) {
-            PersistenceMessage eventMessage = persistenceProvider.get(consumeOffset.getTopic().getTopic(), nextConsumerOffset + count);
-            if (eventMessage == null) {
+            PersistenceMessage persistenceMessage = persistenceProvider.get(consumeOffset.getTopic().getTopic(), nextConsumerOffset + count);
+            if (persistenceMessage == null) {
                 break;
             }
             count++;
             MqttSession mqttSession = consumeOffset.getMqttSession();
-            MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(mqttSession.newPacketId(), eventMessage.getTopic(), consumeOffset.getMqttQoS(), eventMessage.getPayload());
+            MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(mqttSession.newPacketId(), persistenceMessage.getTopic(), consumeOffset.getMqttQoS(), persistenceMessage.getPayload());
             InflightQueue inflightQueue = mqttSession.getInflightQueue();
-            int index = inflightQueue.add(publishMessage, eventMessage.getOffset());
+            int index = inflightQueue.add(publishMessage, persistenceMessage.getOffset());
             mqttSession.publish(publishMessage, packetId -> {
                 //最早发送的消息若收到响应，则更新点位
-                boolean done = inflightQueue.commit(index, offset -> consumeOffset.setNextConsumerOffset(offset + 1));
+                boolean done = inflightQueue.commit(index, offset -> {
+                    consumeOffset.setNextConsumerOffset(offset + 1);
+                    if(persistenceMessage.isRetained()){
+                        consumeOffset.setRetainConsumerOffset(consumeOffset.getRetainConsumerOffset()+1);
+                    }
+                });
                 if (done) {
-                    consumeOffset.setRetainConsumerTimestamp(eventMessage.getCreateTime());
+                    consumeOffset.setRetainConsumerTimestamp(persistenceMessage.getCreateTime());
                     inflightQueue.clear();
                     //本批次全部处理完毕
                     PersistenceMessage nextMessage = persistenceProvider.get(consumeOffset.getTopic().getTopic(), consumeOffset.getNextConsumerOffset());

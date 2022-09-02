@@ -135,7 +135,6 @@ public class BrokerContextImpl implements BrokerContext {
                         PersistenceMessage storedMessage = providers.getRetainMessageProvider().get(subscriber.getTopic().getTopic(), subscriber.getRetainConsumerOffset());
                         if (storedMessage == null || storedMessage.getCreateTime() > subscriber.getLatestSubscribeTime()) {
                             //完成retain消息的消费，正式开始监听Topic
-
                             subscriber.getMqttSession().batchPublish(subscriber, pushThreadPool);
                             return;
                         }
