@@ -11,5 +11,6 @@ RUN mv smart-mqtt-broker-bin-${VERSION} smart-mqtt
 FROM openjdk:8-alpine3.9
 WORKDIR /
 COPY --from=download /smart-mqtt /smart-mqtt
+ENV PATH /smart-mqtt/bin:$PATH
 EXPOSE 1883
-ENTRYPOINT ["sh","/smart-mqtt/bin/start.sh"]
+ENTRYPOINT ["smart-mqtt.sh"]

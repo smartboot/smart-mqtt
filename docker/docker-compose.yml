@@ -14,7 +14,7 @@ services:
     restart: always
     security_opt:
       - no-new-privileges:true
-    user: 2002:2001
+    user: root:root
     logging:
       driver: "json-file"
       options:
