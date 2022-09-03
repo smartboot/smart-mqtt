@@ -1,0 +1,23 @@
+networks:
+  mqtt-network:
+    driver: bridge
+services:
+  smart-mqtt:
+    container_name: smart-mqtt
+    hostname: smart-mqtt
+    image: smartboot/smart-mqtt:0.6
+    networks:
+      mqtt-network: null
+    ports:
+      - 1883:1883/tcp
+    read_only: true
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    user: 2002:2001
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "1"
+version: '3.7'
