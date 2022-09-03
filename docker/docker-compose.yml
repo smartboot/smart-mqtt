@@ -1,13 +1,8 @@
-networks:
-  mqtt-network:
-    driver: bridge
 services:
   smart-mqtt:
     container_name: smart-mqtt
     hostname: smart-mqtt
     image: smartboot/smart-mqtt:0.6
-    networks:
-      mqtt-network: null
     ports:
       - 1883:1883/tcp
     read_only: true
