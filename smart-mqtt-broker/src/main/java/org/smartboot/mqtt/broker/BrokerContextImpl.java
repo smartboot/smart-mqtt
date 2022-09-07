@@ -206,8 +206,8 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     @Override
-    public MqttSession addSession(MqttSession session) {
-        return grantSessions.putIfAbsent(session.getClientId(), session);
+    public void addSession(MqttSession session) {
+        grantSessions.putIfAbsent(session.getClientId(), session);
     }
 
     @Override
@@ -261,7 +261,6 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     public void batchPublish(BrokerTopic topic) {
-
         topic.getConsumeOffsets().values().stream()
                 .filter(consumeOffset -> consumeOffset.getSemaphore().availablePermits() > 0)
                 .forEach(consumeOffset -> pushThreadPool.execute(new AsyncTask() {
@@ -270,11 +269,6 @@ public class BrokerContextImpl implements BrokerContext {
                         consumeOffset.getMqttSession().batchPublish(consumeOffset, pushThreadPool);
                     }
                 }));
-    }
-
-    @Override
-    public ExecutorService pushExecutorService() {
-        return pushThreadPool;
     }
 
     @Override

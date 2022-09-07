@@ -1,17 +1,12 @@
 package org.smartboot.mqtt.broker.persistence.message;
 
 import org.smartboot.mqtt.common.ToString;
-import org.smartboot.mqtt.common.enums.MqttQoS;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/6/24
  */
 public class PersistenceMessage extends ToString {
-    /**
-     * 消息等级
-     */
-    private final MqttQoS mqttQoS;
     /**
      * 负载数据
      */
@@ -33,15 +28,10 @@ public class PersistenceMessage extends ToString {
     private final long createTime = System.currentTimeMillis();
 
     public PersistenceMessage(org.smartboot.mqtt.broker.messagebus.Message message, long offset) {
-        this.mqttQoS = message.getMqttQoS();
         this.payload = message.getPayload();
         this.retained = message.isRetained();
         this.topic = message.getTopic();
         this.offset = offset;
-    }
-
-    public MqttQoS getMqttQoS() {
-        return mqttQoS;
     }
 
     public byte[] getPayload() {

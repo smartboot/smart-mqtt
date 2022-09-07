@@ -6,7 +6,6 @@ import org.smartboot.mqtt.common.eventbus.EventBus;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
@@ -22,7 +21,7 @@ public interface BrokerContext {
 
     BrokerConfigure getBrokerConfigure();
 
-    MqttSession addSession(MqttSession session);
+    void addSession(MqttSession session);
 
     MqttSession removeSession(String clientId);
 
@@ -61,8 +60,6 @@ public interface BrokerContext {
 
     Providers getProviders();
 
-
-    ExecutorService pushExecutorService();
 
     void batchPublish(BrokerTopic topic);
 }

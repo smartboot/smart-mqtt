@@ -25,7 +25,7 @@ public class BrokerConfigure {
     /**
      * 当前smart-mqtt
      */
-    public static final String VERSION = "v0.6";
+    public static final String VERSION = "v0.7-SNAPSHOT";
 
 
     /**
