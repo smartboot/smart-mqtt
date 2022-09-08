@@ -267,7 +267,7 @@ public class MqttSession extends AbstractSession {
         PersistenceProvider persistenceProvider = mqttContext.getProviders().getPersistenceProvider();
         int count = 0;
 
-        while (!consumeOffset.getMqttSession().getInflightQueue().isFull()) {
+        while (consumeOffset.getMqttSession().getInflightQueue().notFull()) {
             PersistenceMessage persistenceMessage = persistenceProvider.get(consumeOffset.getTopic().getTopic(), nextConsumerOffset + count);
             if (persistenceMessage == null) {
                 break;
@@ -310,7 +310,7 @@ public class MqttSession extends AbstractSession {
             consumeOffset.getSemaphore().release();
         }
         //可能此时正好有新消息投递进来
-        if (!consumeOffset.getMqttSession().getInflightQueue().isFull() && persistenceProvider.get(consumeOffset.getTopic().getTopic(), nextConsumerOffset) != null) {
+        if (consumeOffset.getMqttSession().getInflightQueue().notFull() && persistenceProvider.get(consumeOffset.getTopic().getTopic(), nextConsumerOffset) != null) {
             batchPublish(consumeOffset, executorService);
         }
     }

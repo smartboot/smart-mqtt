@@ -12,8 +12,10 @@ import org.smartboot.mqtt.common.message.MqttPingRespMessage;
  * @version V1.0 , 2018/4/25
  */
 public class PingReqProcessor extends AuthorizedMqttProcessor<MqttPingReqMessage> {
+    private static final MqttPingRespMessage RESP_MESSAGE = new MqttPingRespMessage();
+
     @Override
     public void process0(BrokerContext context, MqttSession session, MqttPingReqMessage msg) {
-        session.write(new MqttPingRespMessage());
+        session.write(RESP_MESSAGE);
     }
 }

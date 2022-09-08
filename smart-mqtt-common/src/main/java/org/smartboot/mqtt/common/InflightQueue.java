@@ -49,7 +49,7 @@ public class InflightQueue {
         count = 0;
     }
 
-    public boolean isFull() {
-        return count == queue.length;
+    public boolean notFull() {
+        return count != queue.length;
     }
 }

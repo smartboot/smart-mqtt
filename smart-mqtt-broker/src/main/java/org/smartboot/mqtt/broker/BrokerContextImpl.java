@@ -169,6 +169,13 @@ public class BrokerContextImpl implements BrokerContext {
             FileInputStream fileInputStream = new FileInputStream(file);
             brokerProperties.load(fileInputStream);
         }
+        //系统环境变量
+        BrokerConfigure.SystemEnvironments.forEach((env, pro) -> {
+            String value = System.getenv(env);
+            if (value != null) {
+                brokerProperties.setProperty(pro, value);
+            }
+        });
         //系统属性优先级最高
         System.getProperties().stringPropertyNames().forEach(name -> brokerProperties.setProperty(name, System.getProperty(name)));
 

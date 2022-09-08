@@ -12,7 +12,7 @@ import java.util.Map;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/7/13
  */
-public class TopicFilterSubscriber {
+class TopicFilterSubscriber {
     private final TopicToken topicFilterToken;
 
     private final MqttQoS mqttQoS;
@@ -25,11 +25,11 @@ public class TopicFilterSubscriber {
     public TopicFilterSubscriber(TopicToken topicFilterToken, MqttQoS mqttQoS) {
         this.topicFilterToken = topicFilterToken;
         this.mqttQoS = mqttQoS;
-        this.topicSubscribers=new HashMap<>();
+        this.topicSubscribers = new HashMap<>();
     }
 
     public TopicFilterSubscriber(TopicToken topicFilterToken, MqttQoS mqttQoS, TopicSubscriber topicSubscriber) {
-        this(topicFilterToken,mqttQoS);
+        this(topicFilterToken, mqttQoS);
         topicSubscribers.put(topicSubscriber.getTopic().getTopic(), topicSubscriber);
     }
 

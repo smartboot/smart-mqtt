@@ -101,6 +101,5 @@
         <module>smart-mqtt-broker</module>
         <module>smart-mqtt-common</module>
         <module>smart-mqtt-client</module>
-        <module>plugins</module>
     </modules>
 </project>

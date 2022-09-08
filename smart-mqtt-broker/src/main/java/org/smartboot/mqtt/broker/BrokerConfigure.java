@@ -1,5 +1,7 @@
 package org.smartboot.mqtt.broker;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -27,6 +29,13 @@ public class BrokerConfigure {
      */
     public static final String VERSION = "v0.7-SNAPSHOT";
 
+    static final Map<String, String> SystemEnvironments = new HashMap<>();
+
+    {
+        SystemEnvironments.put(convertToEnvironment(SystemProperty.HOST), SystemProperty.HOST);
+        SystemEnvironments.put(convertToEnvironment(SystemProperty.PORT), SystemProperty.PORT);
+        SystemEnvironments.put(convertToEnvironment(SystemProperty.THREAD_NUM), SystemProperty.THREAD_NUM);
+    }
 
     /**
      * 自定义配置
@@ -167,6 +176,10 @@ public class BrokerConfigure {
                 ", noConnectIdleTimeout=" + noConnectIdleTimeout +
                 ", maxInflight=" + maxInflight +
                 '}';
+    }
+
+    private String convertToEnvironment(String property) {
+        return property.replace(".", "_").toUpperCase();
     }
 
     public interface SystemProperty {
