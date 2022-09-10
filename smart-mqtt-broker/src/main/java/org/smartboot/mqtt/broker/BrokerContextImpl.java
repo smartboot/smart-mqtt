@@ -72,6 +72,7 @@ public class BrokerContextImpl implements BrokerContext {
      * Broker Server
      */
     private AioQuickServer server;
+    private BufferPagePool pagePool;
 
     @Override
     public void init() throws IOException {
@@ -84,14 +85,20 @@ public class BrokerContextImpl implements BrokerContext {
 
         loadAndInstallPlugins();
 
-        BufferPagePool pagePool = new BufferPagePool(1024 * 1024, brokerConfigure.getThreadNum(), true);
-        server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(), new MqttBrokerMessageProcessor(this));
-        server.setBannerEnabled(false)
-                .setReadBufferSize(4 * 1024)
-                .setBufferPagePool(pagePool)
-                .setThreadNum(brokerConfigure.getThreadNum());
-        server.start();
-        System.out.println(BrokerConfigure.BANNER + "\r\n :: smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
+        try {
+            pagePool = new BufferPagePool(1024 * 1024, brokerConfigure.getThreadNum(), true);
+            server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(), new MqttBrokerMessageProcessor(this));
+            server.setBannerEnabled(false)
+                    .setReadBufferSize(4 * 1024)
+                    .setBufferPagePool(pagePool)
+                    .setThreadNum(brokerConfigure.getThreadNum());
+            server.start();
+            System.out.println(BrokerConfigure.BANNER + "\r\n :: smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
+        } catch (Exception e) {
+            destroy();
+            throw e;
+        }
+
 
         eventBus.publish(ServerEventType.BROKER_STARTED, this);
     }
@@ -280,5 +287,6 @@ public class BrokerContextImpl implements BrokerContext {
         eventBus.publish(ServerEventType.BROKER_DESTROY, this);
         MessageBusExecutorService.shutdown();
         server.shutdown();
+        pagePool.release();
     }
 }
