@@ -89,7 +89,7 @@ public class BrokerContextImpl implements BrokerContext {
         BufferPagePool pagePool = new BufferPagePool(1024 * 1024, brokerConfigure.getThreadNum(), true);
         server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(), new MqttBrokerMessageProcessor(this));
         server.setBannerEnabled(false)
-                .setReadBufferSize(1024)
+                .setReadBufferSize(4*1024)
                 .setBufferPagePool(pagePool)
                 .setThreadNum(brokerConfigure.getThreadNum());
         server.start();

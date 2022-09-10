@@ -26,6 +26,7 @@ import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.socket.StateMachineEnum;
+import org.smartboot.socket.extension.plugins.MonitorPlugin;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioSession;
 
@@ -66,7 +67,7 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
     public MqttBrokerMessageProcessor(BrokerContext mqttContext) {
         this.mqttContext = mqttContext;
         qosPublisher = new BrokerQosPublisher(mqttContext);
-//        addPlugin(new MonitorPlugin<>(5));
+        addPlugin(new MonitorPlugin<>(5));
     }
 
     @Override
@@ -101,8 +102,8 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
             default:
                 break;
         }
-//        if (throwable != null) {
-//            throwable.printStackTrace();
-//        }
+        if (throwable != null) {
+            throwable.printStackTrace();
+        }
     }
 }
