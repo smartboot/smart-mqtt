@@ -32,7 +32,6 @@ public class BrokerConfigure {
     static final Map<String, String> SystemEnvironments = new HashMap<>();
 
     {
-        SystemEnvironments.put(convertToEnvironment(SystemProperty.HOST), SystemProperty.HOST);
         SystemEnvironments.put(convertToEnvironment(SystemProperty.PORT), SystemProperty.PORT);
         SystemEnvironments.put(convertToEnvironment(SystemProperty.THREAD_NUM), SystemProperty.THREAD_NUM);
     }

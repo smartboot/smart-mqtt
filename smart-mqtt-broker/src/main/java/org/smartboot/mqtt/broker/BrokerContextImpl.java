@@ -86,6 +86,8 @@ public class BrokerContextImpl implements BrokerContext {
 
         subscribeMessageBus();
 
+        loadAndInstallPlugins();
+
         BufferPagePool pagePool = new BufferPagePool(1024 * 1024, brokerConfigure.getThreadNum(), true);
         server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(), new MqttBrokerMessageProcessor(this));
         server.setBannerEnabled(false)
@@ -95,7 +97,6 @@ public class BrokerContextImpl implements BrokerContext {
         server.start();
         System.out.println(BrokerConfigure.BANNER + "\r\n :: smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
 
-        loadAndInstallPlugins();
         eventBus.publish(ServerEventType.BROKER_STARTED, this);
     }
 
