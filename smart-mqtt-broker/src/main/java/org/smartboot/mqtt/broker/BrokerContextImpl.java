@@ -26,6 +26,7 @@ import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
+import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.transport.AioQuickServer;
 
 import java.io.File;
@@ -52,7 +53,6 @@ public class BrokerContextImpl implements BrokerContext {
      * 通过鉴权的连接会话
      */
     private final ConcurrentMap<String, MqttSession> grantSessions = new ConcurrentHashMap<>();
-    private ExecutorService pushThreadPool;
     /**
      *
      */
@@ -62,20 +62,16 @@ public class BrokerContextImpl implements BrokerContext {
      * Keep-Alive监听线程
      */
     private final ScheduledExecutorService KEEP_ALIVE_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
-
     private final ExecutorService MessageBusExecutorService = Executors.newCachedThreadPool();
     /**
      * ACK超时监听
      */
     private final ScheduledExecutorService ACK_TIMEOUT_MONITOR_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
-
-
     private final MessageBus messageBus = new MessageBusImpl(MessageBusExecutorService);
-
     private final EventBus eventBus = new EventBusImpl(ServerEventType.types());
-
     private final List<Plugin> plugins = new ArrayList<>();
     private final Providers providers = new Providers();
+    private ExecutorService pushThreadPool;
     /**
      * Broker Server
      */
@@ -90,9 +86,11 @@ public class BrokerContextImpl implements BrokerContext {
 
         subscribeMessageBus();
 
+        BufferPagePool pagePool = new BufferPagePool(1024 * 1024, brokerConfigure.getThreadNum(), true);
         server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(), new MqttBrokerMessageProcessor(this));
         server.setBannerEnabled(false)
-                .setReadBufferSize(1024 * 1024)
+                .setReadBufferSize(1024)
+                .setBufferPagePool(pagePool)
                 .setThreadNum(brokerConfigure.getThreadNum());
         server.start();
         System.out.println(BrokerConfigure.BANNER + "\r\n :: smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");

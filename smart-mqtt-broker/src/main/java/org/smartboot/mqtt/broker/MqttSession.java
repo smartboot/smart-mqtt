@@ -102,7 +102,7 @@ public class MqttSession extends AbstractSession {
             LOGGER.error("remove old session success:{}", removeSession);
             removeSession.disconnect();
         }
-        LOGGER.info("remove mqttSession success:{}", removeSession);
+        LOGGER.debug("remove mqttSession success:{}", removeSession);
         disconnect = true;
         try {
             session.close(false);

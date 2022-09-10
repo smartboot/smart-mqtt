@@ -29,7 +29,7 @@ public class ConfiguredAuthenticationServiceImpl implements AuthenticationServic
 
 
         if (StringUtils.isEmpty(configuredPassword) || StringUtils.isEmpty(configuredUsername)) {
-            LOGGER.info("no-auth success, ip:{} clientId: {}, username: {}", host, session.getClientId(), username);
+            LOGGER.debug("no-auth success, ip:{} clientId: {}, username: {}", host, session.getClientId(), username);
             return true;
         }
 

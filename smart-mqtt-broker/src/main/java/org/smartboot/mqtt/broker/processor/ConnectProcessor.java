@@ -63,7 +63,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         session.write(mqttConnAckMessage);
 
 
-        LOGGER.info("CONNECT message processed CId={}", session.getClientId());
+        LOGGER.debug("CONNECT message processed CId={}", session.getClientId());
     }
 
 
@@ -152,7 +152,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
 
         session.setClientId(clientId);
         context.addSession(session);
-        LOGGER.info("add session for client:{}", session);
+        LOGGER.debug("add session for client:{}", session);
     }
 
     private void storeWillMessage(MqttSession session, MqttConnectMessage msg) {

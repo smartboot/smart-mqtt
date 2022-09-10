@@ -36,7 +36,7 @@ public class KeepAliveMonitorSubscriber implements EventBusSubscriber<EventObjec
             @Override
             public void run() {
                 if (session.isDisconnect()) {
-                    LOGGER.warn("session:{} is closed, quit keepalive monitor.", session.getClientId());
+                    LOGGER.debug("session:{} is closed, quit keepalive monitor.", session.getClientId());
                     return;
                 }
                 long remainingTime = finalTimeout + session.getLatestReceiveMessageTime() - System.currentTimeMillis();
@@ -44,7 +44,7 @@ public class KeepAliveMonitorSubscriber implements EventBusSubscriber<EventObjec
 //                    LOGGER.info("continue monitor, wait:{},current:{} latestReceiveTime:{} timeout:{}", remainingTime, System.currentTimeMillis(), session.getLatestReceiveMessageTime(), finalTimeout);
                     context.getKeepAliveThreadPool().schedule(this, remainingTime, TimeUnit.MILLISECONDS);
                 } else {
-                    LOGGER.info("session:{} keepalive timeout,current:{} latestReceiveTime:{} timeout:{}", session.getClientId(), System.currentTimeMillis(), session.getLatestReceiveMessageTime(), finalTimeout);
+                    LOGGER.debug("session:{} keepalive timeout,current:{} latestReceiveTime:{} timeout:{}", session.getClientId(), System.currentTimeMillis(), session.getLatestReceiveMessageTime(), finalTimeout);
                     session.disconnect();
                 }
             }
