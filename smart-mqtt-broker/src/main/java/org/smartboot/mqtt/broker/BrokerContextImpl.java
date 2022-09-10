@@ -63,10 +63,6 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private final ScheduledExecutorService KEEP_ALIVE_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
     private final ExecutorService MessageBusExecutorService = Executors.newCachedThreadPool();
-    /**
-     * ACK超时监听
-     */
-    private final ScheduledExecutorService ACK_TIMEOUT_MONITOR_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
     private final MessageBus messageBus = new MessageBusImpl(MessageBusExecutorService);
     private final EventBus eventBus = new EventBusImpl(ServerEventType.types());
     private final List<Plugin> plugins = new ArrayList<>();
@@ -91,7 +87,7 @@ public class BrokerContextImpl implements BrokerContext {
         BufferPagePool pagePool = new BufferPagePool(1024 * 1024, brokerConfigure.getThreadNum(), true);
         server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(), new MqttBrokerMessageProcessor(this));
         server.setBannerEnabled(false)
-                .setReadBufferSize(4*1024)
+                .setReadBufferSize(4 * 1024)
                 .setBufferPagePool(pagePool)
                 .setThreadNum(brokerConfigure.getThreadNum());
         server.start();
