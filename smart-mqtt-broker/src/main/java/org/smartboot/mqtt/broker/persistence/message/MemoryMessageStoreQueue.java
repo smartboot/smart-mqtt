@@ -2,7 +2,7 @@ package org.smartboot.mqtt.broker.persistence.message;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.messagebus.Message;
+import org.smartboot.mqtt.broker.Message;
 
 import java.util.concurrent.atomic.AtomicLong;
 

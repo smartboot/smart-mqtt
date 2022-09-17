@@ -93,7 +93,7 @@ public class MqttSession extends AbstractSession {
 
         if (willMessage != null) {
             //非正常中断，推送遗嘱消息
-            mqttContext.getMessageBus().publish(willMessage);
+            mqttContext.getMessageBus().producer(new Message(willMessage));
 //            mqttContext.publish( willMessage.getVariableHeader().getTopicName());
         }
         subscribers.keySet().forEach(this::unsubscribe);
@@ -281,8 +281,8 @@ public class MqttSession extends AbstractSession {
                 //最早发送的消息若收到响应，则更新点位
                 boolean done = inflightQueue.commit(index, offset -> {
                     consumeOffset.setNextConsumerOffset(offset + 1);
-                    if(persistenceMessage.isRetained()){
-                        consumeOffset.setRetainConsumerOffset(consumeOffset.getRetainConsumerOffset()+1);
+                    if (persistenceMessage.isRetained()) {
+                        consumeOffset.setRetainConsumerOffset(consumeOffset.getRetainConsumerOffset() + 1);
                     }
                 });
                 if (done) {

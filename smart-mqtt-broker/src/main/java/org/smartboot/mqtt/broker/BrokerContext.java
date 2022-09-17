@@ -1,6 +1,6 @@
 package org.smartboot.mqtt.broker;
 
-import org.smartboot.mqtt.broker.messagebus.MessageBus;
+import org.smartboot.mqtt.broker.eventbus.messagebus.MessageBus;
 import org.smartboot.mqtt.broker.plugin.provider.Providers;
 import org.smartboot.mqtt.common.eventbus.EventBus;
 

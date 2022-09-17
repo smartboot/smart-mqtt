@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.broker.messagebus;
+package org.smartboot.mqtt.broker;
 
 import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.enums.MqttQoS;
@@ -23,25 +23,20 @@ public class Message extends ToString {
     private final String topic;
 
     private final boolean retained;
-    /**
-     * 消息总线中存储的消息偏移量
-     */
-    private final long busOffset;
 
-    public Message(Message message, long busOffset) {
-        this(message.topic, message.mqttQoS, message.payload, message.retained, busOffset);
+    public Message(Message message) {
+        this(message.topic, message.mqttQoS, message.payload, message.retained);
     }
 
-    public Message(MqttPublishMessage message, long busOffset) {
-        this(message.getVariableHeader().getTopicName(), message.getFixedHeader().getQosLevel(), message.getPayload(), message.getFixedHeader().isRetain(), busOffset);
+    public Message(MqttPublishMessage message) {
+        this(message.getVariableHeader().getTopicName(), message.getFixedHeader().getQosLevel(), message.getPayload(), message.getFixedHeader().isRetain());
     }
 
-    private Message(String topic, MqttQoS mqttQoS, byte[] payload, boolean retained, long busOffset) {
+    private Message(String topic, MqttQoS mqttQoS, byte[] payload, boolean retained) {
         this.mqttQoS = mqttQoS;
         this.payload = payload;
         this.topic = topic;
         this.retained = retained;
-        this.busOffset = busOffset;
     }
 
     public MqttQoS getMqttQoS() {
@@ -61,7 +56,4 @@ public class Message extends ToString {
     }
 
 
-    public long getBusOffset() {
-        return busOffset;
-    }
 }

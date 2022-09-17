@@ -6,13 +6,10 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.eventbus.ConnectAuthenticationSubscriber;
 import org.smartboot.mqtt.broker.eventbus.ConnectIdleTimeMonitorSubscriber;
 import org.smartboot.mqtt.broker.eventbus.KeepAliveMonitorSubscriber;
-import org.smartboot.mqtt.broker.eventbus.MessageToMessageBusSubscriber;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
-import org.smartboot.mqtt.broker.messagebus.Message;
-import org.smartboot.mqtt.broker.messagebus.MessageBus;
-import org.smartboot.mqtt.broker.messagebus.MessageBusImpl;
-import org.smartboot.mqtt.broker.messagebus.Subscriber;
-import org.smartboot.mqtt.broker.messagebus.subscribe.RetainPersistenceSubscriber;
+import org.smartboot.mqtt.broker.eventbus.messagebus.MessageBus;
+import org.smartboot.mqtt.broker.eventbus.messagebus.MessageBusSubscriber;
+import org.smartboot.mqtt.broker.eventbus.messagebus.consumer.RetainPersistenceConsumer;
 import org.smartboot.mqtt.broker.persistence.message.PersistenceMessage;
 import org.smartboot.mqtt.broker.plugin.Plugin;
 import org.smartboot.mqtt.broker.plugin.provider.Providers;
@@ -62,8 +59,8 @@ public class BrokerContextImpl implements BrokerContext {
      * Keep-Alive监听线程
      */
     private final ScheduledExecutorService KEEP_ALIVE_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
-    private final ExecutorService MessageBusExecutorService = Executors.newCachedThreadPool();
-    private final MessageBus messageBus = new MessageBusImpl(MessageBusExecutorService);
+    private final ExecutorService messageBusExecutorService = Executors.newCachedThreadPool();
+    private final MessageBus messageBusSubscriber = new MessageBusSubscriber(this);
     private final EventBus eventBus = new EventBusImpl(ServerEventType.types());
     private final List<Plugin> plugins = new ArrayList<>();
     private final Providers providers = new Providers();
@@ -94,6 +91,14 @@ public class BrokerContextImpl implements BrokerContext {
                     .setThreadNum(brokerConfigure.getThreadNum());
             server.start();
             System.out.println(BrokerConfigure.BANNER + "\r\n :: smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
+            System.out.println("❤️Gitee: https://gitee.com/smartboot/smart-mqtt");
+            System.out.println("Github: https://github.com/smartboot/smart-mqtt");
+            if (StringUtils.isBlank(brokerConfigure.getHost())) {
+                System.out.println("\uD83C\uDF89start smart-mqtt success! [port:" + brokerConfigure.getPort() + "]");
+            } else {
+                System.out.println("\uD83C\uDF89start smart-mqtt success! [host:" + brokerConfigure.getHost() + " port:" + brokerConfigure.getPort() + "]");
+            }
+
         } catch (Exception e) {
             destroy();
             throw e;
@@ -108,15 +113,14 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private void subscribeMessageBus() {
         //消费retain消息
-        Subscriber retainPersistenceSubscriber = new RetainPersistenceSubscriber(this);
-        messageBus.subscribe(retainPersistenceSubscriber, Message::isRetained);
+        messageBusSubscriber.consumer(new RetainPersistenceConsumer(this), Message::isRetained);
     }
 
     /**
      * 订阅事件总线
      */
     private void subscribeEventBus() {
-        eventBus.subscribe(ServerEventType.RECEIVE_PUBLISH_MESSAGE, new MessageToMessageBusSubscriber(this));
+        eventBus.subscribe(ServerEventType.RECEIVE_PUBLISH_MESSAGE, messageBusSubscriber);
         //连接鉴权超时监控
         eventBus.subscribe(ServerEventType.SESSION_CREATE, new ConnectIdleTimeMonitorSubscriber(this));
         //连接鉴权
@@ -236,7 +240,7 @@ public class BrokerContextImpl implements BrokerContext {
 
     @Override
     public MessageBus getMessageBus() {
-        return messageBus;
+        return messageBusSubscriber;
     }
 
     @Override
@@ -283,9 +287,8 @@ public class BrokerContextImpl implements BrokerContext {
     @Override
     public void destroy() {
         LOGGER.info("destroy broker...");
-        messageBus.publish(MessageBus.END_MESSAGE);
         eventBus.publish(ServerEventType.BROKER_DESTROY, this);
-        MessageBusExecutorService.shutdown();
+        messageBusExecutorService.shutdown();
         server.shutdown();
         pagePool.release();
     }

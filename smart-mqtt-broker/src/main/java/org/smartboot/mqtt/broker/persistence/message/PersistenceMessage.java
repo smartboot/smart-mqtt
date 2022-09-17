@@ -1,5 +1,6 @@
 package org.smartboot.mqtt.broker.persistence.message;
 
+import org.smartboot.mqtt.broker.Message;
 import org.smartboot.mqtt.common.ToString;
 
 /**
@@ -27,7 +28,7 @@ public class PersistenceMessage extends ToString {
      */
     private final long createTime = System.currentTimeMillis();
 
-    public PersistenceMessage(org.smartboot.mqtt.broker.messagebus.Message message, long offset) {
+    public PersistenceMessage(Message message, long offset) {
         this.payload = message.getPayload();
         this.retained = message.isRetained();
         this.topic = message.getTopic();

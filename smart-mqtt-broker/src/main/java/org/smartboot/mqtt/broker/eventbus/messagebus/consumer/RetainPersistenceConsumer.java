@@ -1,9 +1,9 @@
-package org.smartboot.mqtt.broker.messagebus.subscribe;
+package org.smartboot.mqtt.broker.eventbus.messagebus.consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
-import org.smartboot.mqtt.broker.messagebus.Message;
+import org.smartboot.mqtt.broker.Message;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 
 /**
@@ -12,15 +12,15 @@ import org.smartboot.mqtt.common.enums.MqttQoS;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/6/25
  */
-public class RetainPersistenceSubscriber extends AbstractSubscriber {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RetainPersistenceSubscriber.class);
+public class RetainPersistenceConsumer extends AbstractConsumer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RetainPersistenceConsumer.class);
 
-    public RetainPersistenceSubscriber(BrokerContext brokerContext) {
+    public RetainPersistenceConsumer(BrokerContext brokerContext) {
         super(brokerContext);
     }
 
     @Override
-    public void subscribe(Message message) {
+    public void accept(Message message) {
         if (!message.isRetained()) {
             return;
         }
@@ -42,4 +42,6 @@ public class RetainPersistenceSubscriber extends AbstractSubscriber {
         }
         brokerContext.getProviders().getRetainMessageProvider().doSave(message);
     }
+
+
 }

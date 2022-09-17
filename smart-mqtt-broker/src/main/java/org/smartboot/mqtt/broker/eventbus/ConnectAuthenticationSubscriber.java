@@ -1,13 +1,11 @@
 package org.smartboot.mqtt.broker.eventbus;
 
-import org.apache.commons.lang.StringUtils;
 import org.smartboot.mqtt.broker.AuthenticationService;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.ConfiguredAuthenticationServiceImpl;
 import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
-import org.smartboot.mqtt.common.util.ValidateUtils;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
