@@ -30,11 +30,15 @@ public class MessageBusSubscriber implements MessageBus {
         //进入到消息总线前要先确保BrokerTopic已创建
         BrokerTopic topic = brokerContext.getOrCreateTopic(object.getObject().getVariableHeader().getTopicName());
         Message message = new Message(object.getObject());
-        brokerContext.getMessageBus().producer(message);
-        //持久化消息
-        brokerContext.getProviders().getPersistenceProvider().doSave(message);
-        //推送至客户端
-        brokerContext.batchPublish(topic);
+        try {
+            //持久化消息
+            brokerContext.getProviders().getPersistenceProvider().doSave(message);
+
+            brokerContext.getMessageBus().producer(message);
+        } finally {
+            //推送至客户端
+            brokerContext.batchPublish(topic);
+        }
     }
 
     private final List<Consumer<Message>> messageBuses = new ArrayList<>();
