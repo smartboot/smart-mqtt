@@ -1,10 +1,15 @@
+networks:
+  mqtt-network:
+    driver: bridge
 services:
   smart-mqtt:
     container_name: smart-mqtt
     hostname: smart-mqtt
-    image: smartboot/smart-mqtt:latest
-    ports:
-      - 1883:1883/tcp
+    image: smartboot/smart-mqtt:0.8
+    networks:
+      mqtt-network: null
+#    ports:
+#      - 1883:1883/tcp
     read_only: true
     restart: always
     security_opt:
@@ -15,4 +20,40 @@ services:
       options:
         max-size: "100m"
         max-file: "1"
+#  emqx:
+#    container_name: emqx
+#    hostname: emqx-mqtt
+#    image: emqx/emqx:latest
+#    networks:
+#      mqtt-network: null
+#    read_only: true
+#    restart: always
+#    security_opt:
+#      - no-new-privileges:true
+#    user: root:root
+#    logging:
+#      driver: "json-file"
+#      options:
+#        max-size: "100m"
+#        max-file: "1"
+
+  emq-bench:
+    depends_on:
+      - smart-mqtt
+    image: emqx/emqtt-bench
+    read_only: true
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    user: root:root
+    networks:
+      mqtt-network: null
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "1"
+#    command: pub --host smart-mqtt -c 50000 -I 0 -t bench/%i -p 1883 -u mica -P mica -s 1024 -V 4
+    command: conn --host smart-mqtt  -c 50000 -i 10 -V 4
+
 version: '3.7'
