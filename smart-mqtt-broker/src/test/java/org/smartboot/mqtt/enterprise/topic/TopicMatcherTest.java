@@ -2,9 +2,9 @@ package org.smartboot.mqtt.enterprise.topic;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartboot.mqtt.broker.plugin.provider.TopicTokenUtil;
 import org.smartboot.mqtt.common.Topic;
 import org.smartboot.mqtt.common.TopicToken;
+import org.smartboot.mqtt.common.util.TopicTokenUtil;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）

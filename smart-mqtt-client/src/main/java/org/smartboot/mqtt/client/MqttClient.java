@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.AckMessage;
 import org.smartboot.mqtt.common.MqttMessageBuilders;
+import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.eventbus.EventBusImpl;
@@ -27,7 +28,6 @@ import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.mqtt.common.message.WillMessage;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.ValidateUtils;
-import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioQuickClient;
 import org.smartboot.socket.util.QuickTimerTask;
@@ -35,6 +35,7 @@ import org.smartboot.socket.util.QuickTimerTask;
 import java.io.IOException;
 import java.nio.channels.AsynchronousChannelGroup;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -62,10 +63,11 @@ public class MqttClient extends AbstractSession {
      */
     private final Map<String, Subscribe> subscribes = new ConcurrentHashMap<>();
 
+    private final List<TopicToken> wildcardsToken = new LinkedList<>();
+
     private AioQuickClient client;
 
     private AsynchronousChannelGroup asynchronousChannelGroup;
-    private BufferPagePool bufferPagePool;
     private boolean connected = false;
 
     /**
@@ -242,6 +244,7 @@ public class MqttClient extends AbstractSession {
             ValidateUtils.isTrue(mqttMessage instanceof MqttUnsubAckMessage, "uncorrected message type.");
             for (String unsubscribedTopic : unsubscribedTopics) {
                 subscribes.remove(unsubscribedTopic);
+                wildcardsToken.removeIf(topicToken -> StringUtils.equals(unsubscribedTopic, topicToken.getTopicFilter()));
             }
         }));
         write(unsubscribedMessage);
@@ -285,6 +288,11 @@ public class MqttClient extends AbstractSession {
                 clientConfigure.getTopicListener().subscribe(subscription.getTopicFilter(), subscription.getQualityOfService() == MqttQoS.FAILURE ? MqttQoS.FAILURE : minQos);
                 if (subscription.getQualityOfService() != MqttQoS.FAILURE) {
                     subscribes.put(subscription.getTopicFilter(), new Subscribe(subscription.getTopicFilter(), minQos, consumer));
+                    //缓存统配匹配的topic
+                    TopicToken topicToken = new TopicToken(subscription.getTopicFilter());
+                    if (topicToken.isWildcards()) {
+                        wildcardsToken.add(topicToken);
+                    }
                 } else {
                     LOGGER.error("subscribe topic:{} fail", subscription.getTopicFilter());
                 }
@@ -333,6 +341,10 @@ public class MqttClient extends AbstractSession {
 
     public Map<String, Subscribe> getSubscribes() {
         return subscribes;
+    }
+
+    public List<TopicToken> getWildcardsToken() {
+        return wildcardsToken;
     }
 
     /**

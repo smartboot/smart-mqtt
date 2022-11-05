@@ -6,7 +6,6 @@ import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.broker.persistence.message.PersistenceMessage;
 import org.smartboot.mqtt.broker.persistence.message.PersistenceProvider;
 import org.smartboot.mqtt.broker.persistence.session.SessionState;
-import org.smartboot.mqtt.broker.plugin.provider.TopicTokenUtil;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
@@ -17,6 +16,7 @@ import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.util.MqttUtil;
+import org.smartboot.mqtt.common.util.TopicTokenUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.transport.AioSession;
 

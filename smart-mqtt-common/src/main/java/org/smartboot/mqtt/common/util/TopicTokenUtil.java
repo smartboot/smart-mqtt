@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.broker.plugin.provider;
+package org.smartboot.mqtt.common.util;
 
 import org.apache.commons.lang.StringUtils;
 import org.smartboot.mqtt.common.TopicToken;

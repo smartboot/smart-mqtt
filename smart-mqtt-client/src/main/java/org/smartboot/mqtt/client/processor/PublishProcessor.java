@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.client.MqttClient;
 import org.smartboot.mqtt.client.Subscribe;
+import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
 import org.smartboot.mqtt.common.message.MqttPubCompMessage;
@@ -11,6 +12,7 @@ import org.smartboot.mqtt.common.message.MqttPubRecMessage;
 import org.smartboot.mqtt.common.message.MqttPubRelMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttPublishVariableHeader;
+import org.smartboot.mqtt.common.util.TopicTokenUtil;
 
 import java.util.function.Consumer;
 
@@ -51,10 +53,21 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
     private void processPublishMessage(MqttPublishMessage mqttPublishMessage, MqttClient mqttClient) {
         MqttPublishVariableHeader header = mqttPublishMessage.getVariableHeader();
         Subscribe subscribe = mqttClient.getSubscribes().get(header.getTopicName());
+
+        //尝试通配符匹配
+        if (subscribe == null) {
+            subscribe = matchWildcardsSubscribe(mqttClient, header.getTopicName());
+        }
         // If unsubscribed, maybe null.
         if (subscribe != null && !subscribe.getUnsubscribed()) {
             subscribe.getConsumer().accept(mqttClient, mqttPublishMessage);
         }
+    }
+
+    private static Subscribe matchWildcardsSubscribe(MqttClient mqttClient, String topicName) {
+        TopicToken publicTopicToken = new TopicToken(topicName);
+        TopicToken matchToken = mqttClient.getWildcardsToken().stream().filter(topicToken -> TopicTokenUtil.match(publicTopicToken, topicToken)).findFirst().orElse(null);
+        return matchToken != null ? mqttClient.getSubscribes().get(matchToken.getTopicFilter()) : null;
     }
 
     private void processQos1(MqttClient mqttClient, MqttPublishMessage mqttPublishMessage) {
