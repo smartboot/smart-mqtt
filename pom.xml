@@ -4,12 +4,12 @@
     <groupId>org.smartboot.mqtt</groupId>
     <artifactId>smart-mqtt</artifactId>
     <name>smart-mqtt</name>
-    <version>0.7</version>
+    <version>0.8-SNAPSHOT</version>
     <modelVersion>4.0.0</modelVersion>
 
     <properties>
-        <smart.mqtt.version>0.7</smart.mqtt.version>
-        <smart-socket.version>1.5.20</smart-socket.version>
+        <smart.mqtt.version>0.8-SNAPSHOT</smart.mqtt.version>
+        <smart-socket.version>1.5.23</smart-socket.version>
         <commons.lang.version>2.6</commons.lang.version>
         <commons.clollections.version>4.3</commons.clollections.version>
         <junit.version>4.13.2</junit.version>
@@ -54,18 +54,146 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <url>http://git.oschina.net/smartboot/smart-http</url>
+
+    <!-- 项目团队 -->
+    <developers>
+        <developer>
+            <id>Seer</id>
+            <name>三刀</name>
+            <email>zhengjunweimail@163.com</email>
+            <roles>
+                <role>smart-mqtt作者</role>
+            </roles>
+            <url>https://git.oschina.net/smartdms/</url>
+            <timezone>GMT+8</timezone>
+            <properties>
+                <picUrl>https://git.oschina.net/uploads/75/351975_smartdms.jpg</picUrl>
+            </properties>
+            <organization>smartboot</organization>
+            <organizationUrl>https://gitee.com/smartboot</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <url>http://git.oschina.net/smartboot/smart-mqtt</url>
+        <connection>scm:git:https://git.oschina.net/smartboot/smart-mqtt.git</connection>
+        <developerConnection>scm:git:ssh://git.oschina.net:smartboot/smart-mqtt.git</developerConnection>
+        <tag>master</tag>
+    </scm>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.10.1</version>
+                <artifactId>maven-plugin-plugin</artifactId>
                 <configuration>
-                    <target>1.8</target>
+                    <!-- Needed for Java 5 annotation based configuration, for some reason. -->
+                    <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
                     <source>1.8</source>
+                    <target>1.8</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <!--                        <phase>verify</phase>-->
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <useReleaseProfile>false</useReleaseProfile>
+                    <releaseProfiles>release</releaseProfiles>
+                    <goals>deploy</goals>
                 </configuration>
             </plugin>
         </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-plugin-plugin</artifactId>
+                    <version>3.4</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.10.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <version>1.6.7</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>2.2.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>1.5</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>2.5</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
     <repositories>
         <repository>
