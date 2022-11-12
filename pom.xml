@@ -83,6 +83,13 @@
         <tag>master</tag>
     </scm>
 
+    <licenses>
+        <license>
+            <name>GNU Affero General Public License version 3</name>
+            <url>https://opensource.org/licenses/AGPL-3.0</url>
+        </license>
+    </licenses>
+
     <distributionManagement>
         <snapshotRepository>
             <id>ossrh</id>
@@ -125,6 +132,24 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <!--<links>https://docs.oracle.com/javase/7/docs/api/</links>-->
+                    <aggregate>true</aggregate>
+                    <show>public</show>
+                    <additionalparam>-Xdoclint:none</additionalparam>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
                 <executions>
                     <execution>
@@ -141,8 +166,8 @@
                 <executions>
                     <execution>
                         <id>sign-artifacts</id>
-                        <!--                        <phase>verify</phase>-->
-                        <phase>deploy</phase>
+                                                <phase>verify</phase>
+<!--                        <phase>deploy</phase>-->
                         <goals>
                             <goal>sign</goal>
                         </goals>
@@ -176,6 +201,11 @@
                     <groupId>org.sonatype.plugins</groupId>
                     <artifactId>nexus-staging-maven-plugin</artifactId>
                     <version>1.6.7</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.9.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
