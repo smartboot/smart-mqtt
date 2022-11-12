@@ -73,7 +73,12 @@ public class MqttClient extends AbstractSession {
     /**
      * connect ack 回调
      */
-    private Consumer<MqttConnAckMessage> consumer;
+    private Consumer<MqttConnAckMessage> connectConsumer;
+
+    /**
+     * 重连Consumer
+     */
+    private Consumer<MqttConnAckMessage> reconnectConsumer;
     private boolean pingTimeout = false;
 
     public MqttClient(String host, int port, String clientId) {
@@ -120,7 +125,7 @@ public class MqttClient extends AbstractSession {
 //            bufferPagePool = new BufferPagePool(1024 * 1024 * 2, 10, true);
 //        }
         //设置 connect ack 回调事件
-        this.consumer = mqttConnAckMessage -> {
+        this.connectConsumer = mqttConnAckMessage -> {
             if (!clientConfigure.isAutomaticReconnect()) {
                 gcConfigure();
             }
@@ -132,6 +137,10 @@ public class MqttClient extends AbstractSession {
                 while ((runnable = registeredTasks.poll()) != null) {
                     runnable.run();
                 }
+                //重连情况下重新触发订阅逻辑
+                subscribes.forEach((k, v) -> {
+                    subscribe(k, v.getQoS(), v.getConsumer());
+                });
             }
             //客户端设置清理会话（CleanSession）标志为 0 重连时，客户端和服务端必须使用原始的报文标识符重发
             //任何未确认的 PUBLISH 报文（如果 QoS>0）和 PUBREL 报文 [MQTT-4.4.0-1]。这是唯一要求客户端或
@@ -156,7 +165,7 @@ public class MqttClient extends AbstractSession {
                     if (session.isInvalid()) {
                         if (clientConfigure.isAutomaticReconnect()) {
                             LOGGER.warn("mqtt client is disconnect, try to reconnect...");
-                            connect(asynchronousChannelGroup, consumer);
+                            connect(asynchronousChannelGroup, reconnectConsumer == null ? consumer : reconnectConsumer);
                         }
                         return;
                     }
@@ -303,7 +312,7 @@ public class MqttClient extends AbstractSession {
     }
 
     public void notifyResponse(MqttConnAckMessage connAckMessage) {
-        consumer.accept(connAckMessage);
+        connectConsumer.accept(connAckMessage);
     }
 
 
@@ -362,4 +371,7 @@ public class MqttClient extends AbstractSession {
         client.shutdown();
     }
 
+    public void setReconnectConsumer(Consumer<MqttConnAckMessage> reconnectConsumer) {
+        this.reconnectConsumer = reconnectConsumer;
+    }
 }
