@@ -27,7 +27,7 @@ public class BrokerConfigure {
     /**
      * 当前smart-mqtt
      */
-    public static final String VERSION = "v0.8-SNAPSHOT";
+    public static final String VERSION = "v0.8";
 
     static final Map<String, String> SystemEnvironments = new HashMap<>();
 
