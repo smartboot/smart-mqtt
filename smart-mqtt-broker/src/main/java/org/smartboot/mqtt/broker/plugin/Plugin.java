@@ -67,4 +67,11 @@ public abstract class Plugin {
             throw new IllegalStateException("plugin [ " + pluginName() + " ] has installed!");
         }
     }
+
+    /**
+     * 插件排序值，数值小的被优先加载
+     */
+    public int order() {
+        return 0;
+    }
 }

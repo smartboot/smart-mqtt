@@ -31,6 +31,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
 import java.util.ServiceLoader;
@@ -207,7 +208,7 @@ public class BrokerContextImpl implements BrokerContext {
             plugins.add(plugin);
         }
         //安装插件
-        plugins.forEach(plugin -> {
+        plugins.stream().sorted(Comparator.comparingInt(Plugin::order)).forEach(plugin -> {
             LOGGER.info("install plugin: " + plugin.pluginName());
             plugin.install(this);
         });
