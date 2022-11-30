@@ -164,16 +164,14 @@ public class BrokerContextImpl implements BrokerContext {
 
     private void updateBrokerConfigure() throws IOException {
         //加载自定义配置文件
-        String brokerConfig = System.getProperty(BrokerConfigure.SystemProperty.BrokerConfig);
-        if (StringUtils.isNotBlank(brokerConfig)) {
-            File file = new File(brokerConfig);
-            ValidateUtils.isTrue(file.isFile(), "文件不存在");
+        File file = getConfigFile();
+        if (file != null) {
             Yaml yaml = new Yaml();
             FileInputStream fileInputStream = new FileInputStream(file);
             brokerConfigure = yaml.loadAs(fileInputStream, BrokerConfigure.class);
         }
 
-        Properties brokerProperties=new Properties();
+        Properties brokerProperties = new Properties();
         //系统环境变量
         BrokerConfigure.SystemEnvironments.forEach((env, pro) -> {
             String value = System.getenv(env);
@@ -279,6 +277,17 @@ public class BrokerContextImpl implements BrokerContext {
                 consumeOffset.getMqttSession().batchPublish(consumeOffset, pushThreadPool);
             }
         }));
+    }
+
+    @Override
+    public File getConfigFile() {
+        String brokerConfig = System.getProperty(BrokerConfigure.SystemProperty.BrokerConfig);
+        if (StringUtils.isBlank(brokerConfig)) {
+            return null;
+        }
+        File file = new File(brokerConfig);
+        ValidateUtils.isTrue(file.isFile(), "文件不存在");
+        return file;
     }
 
     @Override
