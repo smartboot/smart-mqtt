@@ -25,6 +25,7 @@ import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.transport.AioQuickServer;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -55,7 +56,7 @@ public class BrokerContextImpl implements BrokerContext {
      *
      */
     private final ConcurrentMap<String, BrokerTopic> topicMap = new ConcurrentHashMap<>();
-    private final BrokerConfigure brokerConfigure = new BrokerConfigure();
+    private BrokerConfigure brokerConfigure = new BrokerConfigure();
     /**
      * Keep-Alive监听线程
      */
@@ -86,10 +87,7 @@ public class BrokerContextImpl implements BrokerContext {
         try {
             pagePool = new BufferPagePool(1024 * 1024, brokerConfigure.getThreadNum(), true);
             server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(), new MqttBrokerMessageProcessor(this));
-            server.setBannerEnabled(false)
-                    .setReadBufferSize(4 * 1024)
-                    .setBufferPagePool(pagePool)
-                    .setThreadNum(brokerConfigure.getThreadNum());
+            server.setBannerEnabled(false).setReadBufferSize(4 * 1024).setBufferPagePool(pagePool).setThreadNum(brokerConfigure.getThreadNum());
             server.start();
             System.out.println(BrokerConfigure.BANNER + "\r\n :: smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
             System.out.println("❤️Gitee: https://gitee.com/smartboot/smart-mqtt");
@@ -165,17 +163,17 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     private void updateBrokerConfigure() throws IOException {
-        Properties brokerProperties = new Properties();
-        //加载默认配置
-        brokerProperties.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("smart-mqtt.properties"));
         //加载自定义配置文件
         String brokerConfig = System.getProperty(BrokerConfigure.SystemProperty.BrokerConfig);
         if (StringUtils.isNotBlank(brokerConfig)) {
             File file = new File(brokerConfig);
             ValidateUtils.isTrue(file.isFile(), "文件不存在");
+            Yaml yaml = new Yaml();
             FileInputStream fileInputStream = new FileInputStream(file);
-            brokerProperties.load(fileInputStream);
+            brokerConfigure = yaml.loadAs(fileInputStream, BrokerConfigure.class);
         }
+
+        Properties brokerProperties=new Properties();
         //系统环境变量
         BrokerConfigure.SystemEnvironments.forEach((env, pro) -> {
             String value = System.getenv(env);
@@ -275,14 +273,12 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     public void batchPublish(BrokerTopic topic) {
-        topic.getConsumeOffsets().values().stream()
-                .filter(consumeOffset -> consumeOffset.getSemaphore().availablePermits() > 0)
-                .forEach(consumeOffset -> pushThreadPool.execute(new AsyncTask() {
-                    @Override
-                    public void execute() {
-                        consumeOffset.getMqttSession().batchPublish(consumeOffset, pushThreadPool);
-                    }
-                }));
+        topic.getConsumeOffsets().values().stream().filter(consumeOffset -> consumeOffset.getSemaphore().availablePermits() > 0).forEach(consumeOffset -> pushThreadPool.execute(new AsyncTask() {
+            @Override
+            public void execute() {
+                consumeOffset.getMqttSession().batchPublish(consumeOffset, pushThreadPool);
+            }
+        }));
     }
 
     @Override

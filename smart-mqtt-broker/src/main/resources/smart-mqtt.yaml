@@ -1,0 +1,9 @@
+broker:
+  port: 1883
+  threadNum: 16
+  maxInflight: 8
+  retryInterval: 30
+  username:
+  password:
+  connect:
+    idleTimeout: 5000

@@ -47,12 +47,12 @@ public class BrokerConfigure {
     /**
      * 端口号
      */
-    private int port;
+    private int port = 1883;
 
     /**
      * 线程数
      */
-    private int threadNum;
+    private int threadNum = Runtime.getRuntime().availableProcessors();
     /**
      * 默认的客户端keep-alive超时时间.
      * 保持连接的实际值是由应用指定的，一般是几分钟。允许的最大值是 18 小时 12 分 15 秒。
