@@ -5,7 +5,7 @@ services:
   smart-mqtt:
     container_name: smart-mqtt
     hostname: smart-mqtt
-    image: smartboot/smart-mqtt:0.8
+    image: smartboot/smart-mqtt:0.9
     networks:
       mqtt-network: null
 #    ports:
