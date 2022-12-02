@@ -230,7 +230,11 @@ public class MqttSession extends AbstractSession {
     }
 
     public void unsubscribe(String topicFilter) {
-        subscribers.remove(topicFilter).getTopicSubscribers()
+        TopicFilterSubscriber filterSubscriber = subscribers.remove(topicFilter);
+        if (filterSubscriber == null) {
+            return;
+        }
+        filterSubscriber.getTopicSubscribers()
                 .values().forEach(subscriber -> {
                     TopicSubscriber removeSubscriber = subscriber.getTopic().getConsumeOffsets().remove(this);
                     retainOffsetCache.put(subscriber.getTopic(), subscriber.getRetainConsumerOffset());
