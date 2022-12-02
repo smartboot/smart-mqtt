@@ -1,8 +1,8 @@
 package org.smartboot.mqtt.common.message;
 
+import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.util.ValidateUtils;
-import org.smartboot.socket.transport.WriteBuffer;
 import org.smartboot.socket.util.BufferUtils;
 
 import java.io.IOException;
@@ -52,7 +52,7 @@ public class MqttSubscribeMessage extends MqttPacketIdentifierMessage {
     }
 
     @Override
-    public void writeTo(WriteBuffer writeBuffer) throws IOException {
+    public void writeTo(MqttWriter mqttWriter) throws IOException {
         int length = 2;
         List<byte[]> topicFilters = new ArrayList<>(mqttSubscribePayload.getTopicSubscriptions().size());
         for (MqttTopicSubscription topicSubscription : mqttSubscribePayload.getTopicSubscriptions()) {
@@ -60,13 +60,13 @@ public class MqttSubscribeMessage extends MqttPacketIdentifierMessage {
             topicFilters.add(bytes);
             length += 1 + bytes.length;
         }
-        writeBuffer.writeByte(getFixedHeaderByte1(fixedHeader));
-        writeBuffer.write(encodeMBI(length));
-        writeBuffer.writeShort((short) getVariableHeader().getPacketId());
+        mqttWriter.writeByte(getFixedHeaderByte1(fixedHeader));
+        mqttWriter.write(encodeMBI(length));
+        mqttWriter.writeShort((short) getVariableHeader().getPacketId());
         int i = 0;
         for (MqttTopicSubscription topicSubscription : mqttSubscribePayload.getTopicSubscriptions()) {
-            writeBuffer.write(topicFilters.get(i++));
-            writeBuffer.writeByte((byte) topicSubscription.getQualityOfService().value());
+            mqttWriter.write(topicFilters.get(i++));
+            mqttWriter.writeByte((byte) topicSubscription.getQualityOfService().value());
         }
     }
 }

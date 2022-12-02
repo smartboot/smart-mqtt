@@ -1,7 +1,5 @@
 package org.smartboot.mqtt.common.message;
 
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 

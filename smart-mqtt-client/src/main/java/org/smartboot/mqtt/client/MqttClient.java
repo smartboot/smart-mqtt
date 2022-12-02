@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.AckMessage;
+import org.smartboot.mqtt.common.DefaultMqttWriter;
 import org.smartboot.mqtt.common.MqttMessageBuilders;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
@@ -187,6 +188,7 @@ public class MqttClient extends AbstractSession {
 //            client.setBufferPagePool(bufferPagePool);
             client.setWriteBuffer(1024 * 1024, 10);
             session = client.start(asynchronousChannelGroup);
+            mqttWriter = new DefaultMqttWriter(session.writeBuffer());
 
             MqttConnectVariableHeader variableHeader = new MqttConnectVariableHeader(clientConfigure.getMqttVersion(), StringUtils.isNotBlank(clientConfigure.getUserName()), clientConfigure.getPassword() != null, clientConfigure.getWillMessage(), clientConfigure.isCleanSession(), clientConfigure.getKeepAliveInterval());
             String willTopic = null;

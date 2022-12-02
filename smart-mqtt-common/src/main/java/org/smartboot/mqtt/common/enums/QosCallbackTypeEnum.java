@@ -10,7 +10,7 @@ public enum QosCallbackTypeEnum {
     /**
      * QosLevel 1. (server -> client)
      */
-    PUBACK(1,  MqttMessageType.PUBACK.value(), 0, null),
+    PUBACK(1, MqttMessageType.PUBACK.value(), 0, null),
 
     /*
      * PUBLISH QosLevel 2 (client -> server)
@@ -20,7 +20,7 @@ public enum QosCallbackTypeEnum {
     /**
      * QosLevel 2 (server -> client)
      */
-    PUBREC(2, MqttMessageType.PUBREC.value(),  0, null),
+    PUBREC(2, MqttMessageType.PUBREC.value(), 0, null),
 
     /**
      * QosLevel 2 (client -> server)

@@ -1,7 +1,7 @@
 package org.smartboot.mqtt.common.message;
 
+import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.util.ValidateUtils;
-import org.smartboot.socket.transport.WriteBuffer;
 import org.smartboot.socket.util.BufferUtils;
 
 import java.io.IOException;
@@ -89,7 +89,7 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
     }
 
     @Override
-    public void writeTo(WriteBuffer writeBuffer) throws IOException {
+    public void writeTo(MqttWriter mqttWriter) throws IOException {
         MqttConnectVariableHeader variableHeader = getVariableHeader();
         //VariableHeader
         byte[] clientIdBytes = encodeUTF8(mqttConnectPayload.clientIdentifier());
@@ -116,8 +116,8 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
 
 
         //第一部分：固定报头
-        writeBuffer.writeByte(getFixedHeaderByte1(fixedHeader));
-        writeBuffer.write(encodeMBI(remainingLength));
+        mqttWriter.writeByte(getFixedHeaderByte1(fixedHeader));
+        mqttWriter.write(encodeMBI(remainingLength));
 
 
         //第二部分：可变报头，10字节
@@ -125,10 +125,10 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
         byte[] nameBytes = variableHeader.protocolName().getBytes(StandardCharsets.UTF_8);
         ValidateUtils.isTrue(nameBytes.length == 4, "invalid protocol name");
         byte versionByte = variableHeader.getProtocolLevel();
-        writeBuffer.writeShort((short) nameBytes.length);
-        writeBuffer.write(nameBytes);
+        mqttWriter.writeShort((short) nameBytes.length);
+        mqttWriter.write(nameBytes);
         //协议级别
-        writeBuffer.writeByte(versionByte);
+        mqttWriter.writeByte(versionByte);
         //连接标志
         byte connectFlag = 0x00;
         if (variableHeader.hasUserName()) {
@@ -147,28 +147,28 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
         if (variableHeader.isCleanSession()) {
             connectFlag |= 0x02;
         }
-        writeBuffer.writeByte(connectFlag);
+        mqttWriter.writeByte(connectFlag);
         //保持连接
-        writeBuffer.writeShort((short) variableHeader.keepAliveTimeSeconds());
+        mqttWriter.writeShort((short) variableHeader.keepAliveTimeSeconds());
 
         //第三部分：有效载荷
         //客户端标识符 (ClientId) 必须存在而且必须是 CONNECT 报文有效载荷的第一个字段
-        writeBuffer.write(clientIdBytes);
+        mqttWriter.write(clientIdBytes);
 
         //遗嘱
         if (willTopicBytes != null) {
-            writeBuffer.write(willTopicBytes);
-            writeBuffer.writeShort((short) mqttConnectPayload.willMessageInBytes().length);
-            writeBuffer.write(mqttConnectPayload.willMessageInBytes());
+            mqttWriter.write(willTopicBytes);
+            mqttWriter.writeShort((short) mqttConnectPayload.willMessageInBytes().length);
+            mqttWriter.write(mqttConnectPayload.willMessageInBytes());
         }
         //用户名
         if (userNameBytes != null) {
-            writeBuffer.write(userNameBytes);
+            mqttWriter.write(userNameBytes);
         }
         //密码
         if (mqttConnectPayload.passwordInBytes() != null) {
-            writeBuffer.writeShort((short) mqttConnectPayload.passwordInBytes().length);
-            writeBuffer.write(mqttConnectPayload.passwordInBytes());
+            mqttWriter.writeShort((short) mqttConnectPayload.passwordInBytes().length);
+            mqttWriter.write(mqttConnectPayload.passwordInBytes());
         }
     }
 

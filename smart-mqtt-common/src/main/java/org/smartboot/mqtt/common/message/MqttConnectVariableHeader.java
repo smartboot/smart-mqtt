@@ -1,5 +1,3 @@
-
-
 package org.smartboot.mqtt.common.message;
 
 

@@ -1,6 +1,6 @@
 package org.smartboot.mqtt.common.message;
 
-import org.smartboot.socket.transport.WriteBuffer;
+import org.smartboot.mqtt.common.MqttWriter;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -36,11 +36,11 @@ public class MqttPacketIdentifierMessage extends MqttVariableMessage<MqttPacketI
 
 
     @Override
-    public void writeTo(WriteBuffer writeBuffer) throws IOException {
+    public void writeTo(MqttWriter mqttWriter) throws IOException {
         MqttPacketIdVariableHeader variableHeader = getVariableHeader();
         int variableHeaderBufferSize = 2; // variable part only has a message id
-        writeBuffer.writeByte(getFixedHeaderByte1(fixedHeader));
-        writeVariableLengthInt(writeBuffer, variableHeaderBufferSize);
-        writeBuffer.writeShort((short) variableHeader.getPacketId());
+        mqttWriter.writeByte(getFixedHeaderByte1(fixedHeader));
+        writeVariableLengthInt(mqttWriter, variableHeaderBufferSize);
+        mqttWriter.writeShort((short) variableHeader.getPacketId());
     }
 }

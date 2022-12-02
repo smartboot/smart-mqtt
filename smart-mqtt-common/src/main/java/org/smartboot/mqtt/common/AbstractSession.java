@@ -50,6 +50,7 @@ public abstract class AbstractSession {
      * 是否正常断开连接
      */
     protected boolean disconnect = false;
+    protected MqttWriter mqttWriter;
 
     public AbstractSession(QosPublisher publisher, EventBus eventBus) {
         this.qosPublisher = publisher;
@@ -73,10 +74,10 @@ public abstract class AbstractSession {
 
     public final synchronized void write(MqttMessage mqttMessage) {
         try {
-            ValidateUtils.isTrue(!disconnect, "已断开连接,无法发送消息:"+this);
+            ValidateUtils.isTrue(!disconnect, "已断开连接,无法发送消息:" + this);
             eventBus.publish(EventType.WRITE_MESSAGE, EventObject.newEventObject(this, mqttMessage));
-            mqttMessage.writeTo(session.writeBuffer());
-            session.writeBuffer().flush();
+            mqttMessage.writeTo(mqttWriter);
+            mqttWriter.flush();
             latestSendMessageTime = System.currentTimeMillis();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -85,9 +86,6 @@ public abstract class AbstractSession {
 
     /**
      * 若发送的Qos为0，则回调的consumer packetId为0
-     *
-     * @param message
-     * @param consumer
      */
     public void publish(MqttPublishMessage message, Consumer<Integer> consumer) {
 //        LOGGER.info("publish to client:{}, topic:{} packetId:{}", clientId, message.getMqttPublishVariableHeader().topicName(), message.getMqttPublishVariableHeader().packetId());

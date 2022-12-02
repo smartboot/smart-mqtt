@@ -72,6 +72,7 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private AioQuickServer server;
     private BufferPagePool pagePool;
+    private final MqttBrokerMessageProcessor processor = new MqttBrokerMessageProcessor(this);
 
     @Override
     public void init() throws IOException {
@@ -86,8 +87,8 @@ public class BrokerContextImpl implements BrokerContext {
 
         try {
             pagePool = new BufferPagePool(1024 * 1024, brokerConfigure.getThreadNum(), true);
-            server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(), new MqttBrokerMessageProcessor(this));
-            server.setBannerEnabled(false).setReadBufferSize(4 * 1024).setBufferPagePool(pagePool).setThreadNum(brokerConfigure.getThreadNum());
+            server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(), processor);
+            server.setBannerEnabled(false).setReadBufferSize(brokerConfigure.getReadBufferSize()).setBufferPagePool(pagePool).setThreadNum(brokerConfigure.getThreadNum());
             server.start();
             System.out.println(BrokerConfigure.BANNER + "\r\n :: smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
             System.out.println("❤️Gitee: https://gitee.com/smartboot/smart-mqtt");
@@ -288,6 +289,11 @@ public class BrokerContextImpl implements BrokerContext {
         File file = new File(brokerConfig);
         ValidateUtils.isTrue(file.isFile(), "文件不存在");
         return file;
+    }
+
+    @Override
+    public MqttBrokerMessageProcessor getMessageProcessor() {
+        return processor;
     }
 
     @Override

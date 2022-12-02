@@ -49,6 +49,8 @@ public class BrokerConfigure {
      */
     private int port = 1883;
 
+    private int readBufferSize = 4 * 1024;
+
     /**
      * 线程数
      */
@@ -164,6 +166,14 @@ public class BrokerConfigure {
         this.threadNum = threadNum;
     }
 
+    public int getReadBufferSize() {
+        return readBufferSize;
+    }
+
+    public void setReadBufferSize(int readBufferSize) {
+        this.readBufferSize = readBufferSize;
+    }
+
     @Override
     public String toString() {
         return "BrokerConfigure{" +
@@ -227,7 +237,7 @@ public class BrokerConfigure {
 
     interface SystemPropertyDefaultValue {
         String PORT = "1883";
-        String CONNECT_TIMEOUT = "5";
+        String CONNECT_TIMEOUT = "5000";
 
         String MAX_INFLIGHT = "8";
 

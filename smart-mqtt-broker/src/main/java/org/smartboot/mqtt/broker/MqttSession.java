@@ -9,6 +9,7 @@ import org.smartboot.mqtt.broker.persistence.session.SessionState;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
+import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.QosPublisher;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
@@ -53,10 +54,11 @@ public class MqttSession extends AbstractSession {
     private MqttPublishMessage willMessage;
     private boolean cleanSession;
 
-    public MqttSession(BrokerContext mqttContext, AioSession session, QosPublisher qosPublisher) {
+    public MqttSession(BrokerContext mqttContext, AioSession session, QosPublisher qosPublisher, MqttWriter mqttWriter) {
         super(qosPublisher, mqttContext.getEventBus());
         this.mqttContext = mqttContext;
         this.session = session;
+        this.mqttWriter = mqttWriter;
         this.inflightQueue = new InflightQueue(mqttContext.getBrokerConfigure().getMaxInflight());
         mqttContext.getEventBus().publish(ServerEventType.SESSION_CREATE, this);
     }

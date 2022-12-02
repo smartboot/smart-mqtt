@@ -68,4 +68,6 @@ public interface BrokerContext {
      * 获取配置文件
      */
     File getConfigFile();
+
+    MqttBrokerMessageProcessor getMessageProcessor();
 }

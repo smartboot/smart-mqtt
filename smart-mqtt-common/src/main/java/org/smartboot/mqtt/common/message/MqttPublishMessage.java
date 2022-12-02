@@ -1,7 +1,7 @@
 package org.smartboot.mqtt.common.message;
 
+import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.util.MqttUtil;
-import org.smartboot.socket.transport.WriteBuffer;
 import org.smartboot.socket.util.DecoderException;
 
 import java.io.IOException;
@@ -54,18 +54,18 @@ public class MqttPublishMessage extends MqttVariableMessage<MqttPublishVariableH
     }
 
     @Override
-    public void writeTo(WriteBuffer writeBuffer) throws IOException {
+    public void writeTo(MqttWriter mqttWriter) throws IOException {
         MqttPublishVariableHeader variableHeader = getVariableHeader();
         byte[] topicBytes = encodeUTF8(variableHeader.getTopicName());
         boolean hasPacketId = fixedHeader.getQosLevel().value() > 0;
-        writeBuffer.writeByte(getFixedHeaderByte1(fixedHeader));
-        writeBuffer.write(encodeMBI(topicBytes.length + (hasPacketId ? 2 : 0) + payload.length));
+        mqttWriter.writeByte(getFixedHeaderByte1(fixedHeader));
+        mqttWriter.write(encodeMBI(topicBytes.length + (hasPacketId ? 2 : 0) + payload.length));
 
-        writeBuffer.write(topicBytes);
+        mqttWriter.write(topicBytes);
         if (hasPacketId) {
-            writeBuffer.writeShort((short) variableHeader.getPacketId());
+            mqttWriter.writeShort((short) variableHeader.getPacketId());
         }
-        writeBuffer.write(payload);
+        mqttWriter.write(payload);
     }
 
     public byte[] getPayload() {

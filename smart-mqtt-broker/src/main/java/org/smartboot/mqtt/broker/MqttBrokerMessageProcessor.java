@@ -10,6 +10,7 @@ import org.smartboot.mqtt.broker.processor.PingReqProcessor;
 import org.smartboot.mqtt.broker.processor.PublishProcessor;
 import org.smartboot.mqtt.broker.processor.SubscribeProcessor;
 import org.smartboot.mqtt.broker.processor.UnSubscribeProcessor;
+import org.smartboot.mqtt.common.DefaultMqttWriter;
 import org.smartboot.mqtt.common.QosPublisher;
 import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
@@ -87,7 +88,7 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
     public void stateEvent0(AioSession session, StateMachineEnum stateMachineEnum, Throwable throwable) {
         switch (stateMachineEnum) {
             case NEW_SESSION:
-                MqttSession mqttSession = new MqttSession(mqttContext, session, qosPublisher);
+                MqttSession mqttSession = new MqttSession(mqttContext, session, qosPublisher, new DefaultMqttWriter(session.writeBuffer()));
                 onlineSessions.put(session.getSessionID(), mqttSession);
                 break;
             case SESSION_CLOSED:
@@ -105,5 +106,13 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
         if (throwable != null) {
             throwable.printStackTrace();
         }
+    }
+
+    public Map<String, MqttSession> getOnlineSessions() {
+        return onlineSessions;
+    }
+
+    public QosPublisher getQosPublisher() {
+        return qosPublisher;
     }
 }

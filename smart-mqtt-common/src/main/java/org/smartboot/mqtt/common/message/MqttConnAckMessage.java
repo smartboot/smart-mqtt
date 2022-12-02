@@ -1,7 +1,7 @@
 package org.smartboot.mqtt.common.message;
 
+import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
-import org.smartboot.socket.transport.WriteBuffer;
 import org.smartboot.socket.util.BufferUtils;
 
 import java.nio.ByteBuffer;
@@ -29,12 +29,12 @@ public class MqttConnAckMessage extends MqttVariableMessage<MqttConnAckVariableH
     }
 
     @Override
-    public void writeTo(WriteBuffer writeBuffer) {
+    public void writeTo(MqttWriter mqttWriter) {
         MqttConnAckVariableHeader variableHeader = getVariableHeader();
-        writeBuffer.writeByte(getFixedHeaderByte1(fixedHeader));
-        writeBuffer.writeByte((byte) 2);
-        writeBuffer.writeByte((byte) (variableHeader.isSessionPresent() ? 0x01 : 0x00));
-        writeBuffer.writeByte(variableHeader.connectReturnCode().getCode());
+        mqttWriter.writeByte(getFixedHeaderByte1(fixedHeader));
+        mqttWriter.writeByte((byte) 2);
+        mqttWriter.writeByte((byte) (variableHeader.isSessionPresent() ? 0x01 : 0x00));
+        mqttWriter.writeByte(variableHeader.connectReturnCode().getCode());
     }
 
 }

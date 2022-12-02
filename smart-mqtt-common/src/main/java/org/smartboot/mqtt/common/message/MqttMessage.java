@@ -1,8 +1,8 @@
 package org.smartboot.mqtt.common.message;
 
+import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.exception.MqttProcessException;
-import org.smartboot.socket.transport.WriteBuffer;
 import org.smartboot.socket.util.BufferUtils;
 import org.smartboot.socket.util.DecoderException;
 
@@ -149,7 +149,7 @@ public class MqttMessage extends ToString {
 
     }
 
-    public void writeTo(WriteBuffer page) throws IOException {
+    public void writeTo(MqttWriter mqttWriter) throws IOException {
         throw new UnsupportedOperationException();
     }
 
@@ -208,7 +208,7 @@ public class MqttMessage extends ToString {
         return count;
     }
 
-    protected final void writeVariableLengthInt(WriteBuffer buf, int num) {
+    protected final void writeVariableLengthInt(MqttWriter buf, int num) {
         do {
             int digit = num % 128;
             num /= 128;

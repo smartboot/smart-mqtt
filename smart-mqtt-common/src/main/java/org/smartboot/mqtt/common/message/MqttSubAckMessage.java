@@ -1,6 +1,6 @@
 package org.smartboot.mqtt.common.message;
 
-import org.smartboot.socket.transport.WriteBuffer;
+import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.socket.util.BufferUtils;
 
 import java.io.IOException;
@@ -38,15 +38,15 @@ public class MqttSubAckMessage extends MqttPacketIdentifierMessage {
     }
 
     @Override
-    public void writeTo(WriteBuffer writeBuffer) throws IOException {
+    public void writeTo(MqttWriter mqttWriter) throws IOException {
         int variableHeaderBufferSize = 2;
         int payloadBufferSize = mqttSubAckPayload.grantedQoSLevels().size();
         int variablePartSize = variableHeaderBufferSize + payloadBufferSize;
-        writeBuffer.writeByte(getFixedHeaderByte1(fixedHeader));
-        writeVariableLengthInt(writeBuffer, variablePartSize);
-        writeBuffer.writeShort((short) getVariableHeader().getPacketId());
+        mqttWriter.writeByte(getFixedHeaderByte1(fixedHeader));
+        writeVariableLengthInt(mqttWriter, variablePartSize);
+        mqttWriter.writeShort((short) getVariableHeader().getPacketId());
         for (int qos : mqttSubAckPayload.grantedQoSLevels()) {
-            writeBuffer.writeByte((byte) qos);
+            mqttWriter.writeByte((byte) qos);
         }
     }
 

@@ -1,6 +1,6 @@
 package org.smartboot.mqtt.common.message;
 
-import org.smartboot.socket.transport.WriteBuffer;
+import org.smartboot.mqtt.common.MqttWriter;
 
 /**
  * @author 三刀
@@ -11,8 +11,8 @@ public class OnlyFixedHeaderMessage extends MqttMessage {
         super(mqttFixedHeader);
     }
 
-    public final void writeTo(WriteBuffer writeBuffer) {
-        writeBuffer.writeByte(getFixedHeaderByte1(fixedHeader));
-        writeBuffer.writeByte((byte) 0);
+    public final void writeTo(MqttWriter mqttWriter) {
+        mqttWriter.writeByte(getFixedHeaderByte1(fixedHeader));
+        mqttWriter.writeByte((byte) 0);
     }
 }
