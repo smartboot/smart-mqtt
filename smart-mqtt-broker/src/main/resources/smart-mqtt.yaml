@@ -1,5 +1,5 @@
 broker:
-  port: 1883
+  port: 1887
   threadNum: 16
   maxInflight: 8
   retryInterval: 30
@@ -7,3 +7,11 @@ broker:
   password:
   connect:
     idleTimeout: 5000
+
+plugins:
+  - websocket:
+      port: 1884
+  - kafka-bridge:
+  - mqtt-bridge:
+
+  - redis-bridge:

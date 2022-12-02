@@ -25,10 +25,8 @@ import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.transport.AioQuickServer;
-import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -167,9 +165,7 @@ public class BrokerContextImpl implements BrokerContext {
         //加载自定义配置文件
         File file = getConfigFile();
         if (file != null) {
-            Yaml yaml = new Yaml();
-            FileInputStream fileInputStream = new FileInputStream(file);
-            brokerConfigure = yaml.loadAs(fileInputStream, BrokerConfigure.class);
+            brokerConfigure = MqttUtil.getConfig(file, "$.broker", BrokerConfigure.class);
         }
 
         Properties brokerProperties = new Properties();
