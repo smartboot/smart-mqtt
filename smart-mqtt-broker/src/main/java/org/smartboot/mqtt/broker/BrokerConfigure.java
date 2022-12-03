@@ -64,7 +64,7 @@ public class BrokerConfigure {
      * 网络连接建立后，如果服务端在合理的时间内没有收到 CONNECT 报文，服务端应该关闭这个连接。
      * 单位：毫秒
      */
-    private int noConnectIdleTimeout;
+    private int noConnectIdleTimeout = 5000;
 
     /**
      *
@@ -219,13 +219,5 @@ public class BrokerConfigure {
          * 集群节点数量上限
          */
         String CLUSTER_NODE_LIMIT = "cluster.node.limit";
-    }
-
-    interface SystemPropertyDefaultValue {
-        String PORT = "1883";
-        String CONNECT_TIMEOUT = "5000";
-
-        String MAX_INFLIGHT = "8";
-
     }
 }
