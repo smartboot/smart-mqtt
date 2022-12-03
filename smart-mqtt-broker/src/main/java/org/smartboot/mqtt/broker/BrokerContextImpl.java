@@ -30,9 +30,10 @@ import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.transport.AioQuickServer;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -297,19 +298,22 @@ public class BrokerContextImpl implements BrokerContext {
         }
     }
 
-    public void loadYamlConfig() {
+    public void loadYamlConfig() throws IOException {
         String brokerConfig = System.getProperty(BrokerConfigure.SystemProperty.BrokerConfig);
+        InputStream inputStream = null;
+
         if (StringUtils.isBlank(brokerConfig)) {
-            return;
+            inputStream = BrokerContext.class.getClassLoader().getResourceAsStream("smart-mqtt.yaml");
+            LOGGER.info("load internal yaml config.");
+        } else {
+            inputStream = Files.newInputStream(Paths.get(brokerConfig));
+            LOGGER.info("load external yaml config.");
         }
-        File yamlFile = new File(brokerConfig);
-        ValidateUtils.isTrue(yamlFile.isFile(), "yaml file is not exists!");
-        try (FileInputStream fileInputStream = new FileInputStream(yamlFile);) {
-            Yaml yaml = new Yaml();
-            Object object = yaml.load(fileInputStream);
-            configJson = JSONObject.toJSONString(object);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        Yaml yaml = new Yaml();
+        Object object = yaml.load(inputStream);
+        configJson = JSONObject.toJSONString(object);
+        if (inputStream != null) {
+            inputStream.close();
         }
     }
 
