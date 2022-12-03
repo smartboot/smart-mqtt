@@ -2,7 +2,6 @@ package org.smartboot.mqtt.broker;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * broker服务配置
@@ -36,10 +35,6 @@ public class BrokerConfigure {
         SystemEnvironments.put(convertToEnvironment(SystemProperty.THREAD_NUM), SystemProperty.THREAD_NUM);
     }
 
-    /**
-     * 自定义配置
-     */
-    private final Properties properties = new Properties();
     /**
      * 地址
      */
@@ -110,14 +105,6 @@ public class BrokerConfigure {
         this.pushThreadNum = pushThreadNum;
     }
 
-    public Properties getProperties() {
-        return properties;
-    }
-
-    public void setProperty(String name, String value) {
-        properties.setProperty(name, value);
-    }
-
     public String getHost() {
         return host;
     }
@@ -177,7 +164,6 @@ public class BrokerConfigure {
     @Override
     public String toString() {
         return "BrokerConfigure{" +
-                "properties=" + properties +
                 ", host='" + host + '\'' +
                 ", port=" + port +
                 ", maxKeepAliveTime=" + maxKeepAliveTime +

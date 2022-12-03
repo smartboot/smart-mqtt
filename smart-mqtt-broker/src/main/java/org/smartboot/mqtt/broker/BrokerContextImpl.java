@@ -188,15 +188,28 @@ public class BrokerContextImpl implements BrokerContext {
         //系统属性优先级最高
         System.getProperties().stringPropertyNames().forEach(name -> brokerProperties.setProperty(name, System.getProperty(name)));
 
-        brokerProperties.stringPropertyNames().forEach(name -> brokerConfigure.setProperty(name, brokerProperties.getProperty(name)));
+        if (brokerProperties.contains(BrokerConfigure.SystemProperty.HOST)) {
+            brokerConfigure.setHost(brokerProperties.getProperty(BrokerConfigure.SystemProperty.HOST));
+        }
+        if (brokerProperties.contains(BrokerConfigure.SystemProperty.PORT)) {
+            brokerConfigure.setPort(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.PORT)));
+        }
+        if (brokerProperties.contains(BrokerConfigure.SystemProperty.CONNECT_IDLE_TIMEOUT)) {
+            brokerConfigure.setNoConnectIdleTimeout(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.CONNECT_IDLE_TIMEOUT)));
+        }
+        if (brokerProperties.contains(BrokerConfigure.SystemProperty.MAX_INFLIGHT)) {
+            brokerConfigure.setMaxInflight(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.MAX_INFLIGHT)));
+        }
+        if (brokerProperties.contains(BrokerConfigure.SystemProperty.USERNAME)) {
+            brokerConfigure.setUsername(brokerProperties.getProperty(BrokerConfigure.SystemProperty.USERNAME));
+        }
+        if (brokerProperties.contains(BrokerConfigure.SystemProperty.PASSWORD)) {
+            brokerConfigure.setPassword(brokerProperties.getProperty(BrokerConfigure.SystemProperty.PASSWORD));
+        }
+        if (brokerProperties.contains(BrokerConfigure.SystemProperty.THREAD_NUM)) {
+            brokerConfigure.setThreadNum(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.THREAD_NUM)));
+        }
 
-        brokerConfigure.setHost(brokerProperties.getProperty(BrokerConfigure.SystemProperty.HOST));
-        brokerConfigure.setPort(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.PORT, BrokerConfigure.SystemPropertyDefaultValue.PORT)));
-        brokerConfigure.setNoConnectIdleTimeout(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.CONNECT_IDLE_TIMEOUT, BrokerConfigure.SystemPropertyDefaultValue.CONNECT_TIMEOUT)));
-        brokerConfigure.setMaxInflight(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.MAX_INFLIGHT, BrokerConfigure.SystemPropertyDefaultValue.MAX_INFLIGHT)));
-        brokerConfigure.setUsername(brokerProperties.getProperty(BrokerConfigure.SystemProperty.USERNAME));
-        brokerConfigure.setPassword(brokerProperties.getProperty(BrokerConfigure.SystemProperty.PASSWORD));
-        brokerConfigure.setThreadNum(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.THREAD_NUM, String.valueOf(Runtime.getRuntime().availableProcessors()))));
 
 //        System.out.println("brokerConfigure: " + brokerConfigure);
     }
