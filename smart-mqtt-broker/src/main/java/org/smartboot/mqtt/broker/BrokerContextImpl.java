@@ -188,25 +188,25 @@ public class BrokerContextImpl implements BrokerContext {
         //系统属性优先级最高
         System.getProperties().stringPropertyNames().forEach(name -> brokerProperties.setProperty(name, System.getProperty(name)));
 
-        if (brokerProperties.contains(BrokerConfigure.SystemProperty.HOST)) {
+        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.HOST)) {
             brokerConfigure.setHost(brokerProperties.getProperty(BrokerConfigure.SystemProperty.HOST));
         }
-        if (brokerProperties.contains(BrokerConfigure.SystemProperty.PORT)) {
+        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.PORT)) {
             brokerConfigure.setPort(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.PORT)));
         }
-        if (brokerProperties.contains(BrokerConfigure.SystemProperty.CONNECT_IDLE_TIMEOUT)) {
+        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.CONNECT_IDLE_TIMEOUT)) {
             brokerConfigure.setNoConnectIdleTimeout(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.CONNECT_IDLE_TIMEOUT)));
         }
-        if (brokerProperties.contains(BrokerConfigure.SystemProperty.MAX_INFLIGHT)) {
+        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.MAX_INFLIGHT)) {
             brokerConfigure.setMaxInflight(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.MAX_INFLIGHT)));
         }
-        if (brokerProperties.contains(BrokerConfigure.SystemProperty.USERNAME)) {
+        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.USERNAME)) {
             brokerConfigure.setUsername(brokerProperties.getProperty(BrokerConfigure.SystemProperty.USERNAME));
         }
-        if (brokerProperties.contains(BrokerConfigure.SystemProperty.PASSWORD)) {
+        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.PASSWORD)) {
             brokerConfigure.setPassword(brokerProperties.getProperty(BrokerConfigure.SystemProperty.PASSWORD));
         }
-        if (brokerProperties.contains(BrokerConfigure.SystemProperty.THREAD_NUM)) {
+        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.THREAD_NUM)) {
             brokerConfigure.setThreadNum(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.THREAD_NUM)));
         }
 
