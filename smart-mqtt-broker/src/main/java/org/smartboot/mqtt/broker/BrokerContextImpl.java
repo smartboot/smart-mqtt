@@ -1,5 +1,8 @@
 package org.smartboot.mqtt.broker;
 
+import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson2.JSONPath;
+import com.alibaba.fastjson2.JSONReader;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,8 +28,10 @@ import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.transport.AioQuickServer;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -72,6 +77,9 @@ public class BrokerContextImpl implements BrokerContext {
     private BufferPagePool pagePool;
     private final MqttBrokerMessageProcessor processor = new MqttBrokerMessageProcessor(this);
 
+    //配置文件内容
+    private String configJson;
+
     @Override
     public void init() throws IOException {
         pushThreadPool = Executors.newFixedThreadPool(getBrokerConfigure().getPushThreadNum());
@@ -104,6 +112,8 @@ public class BrokerContextImpl implements BrokerContext {
 
 
         eventBus.publish(ServerEventType.BROKER_STARTED, this);
+        //释放内存
+        configJson = null;
     }
 
     /**
@@ -163,10 +173,8 @@ public class BrokerContextImpl implements BrokerContext {
 
     private void updateBrokerConfigure() throws IOException {
         //加载自定义配置文件
-        File file = getConfigFile();
-        if (file != null) {
-            brokerConfigure = MqttUtil.getConfig(file, "$.broker", BrokerConfigure.class);
-        }
+        loadYamlConfig();
+        brokerConfigure = parseConfig("$.broker", BrokerConfigure.class);
 
         Properties brokerProperties = new Properties();
         //系统环境变量
@@ -276,15 +284,33 @@ public class BrokerContextImpl implements BrokerContext {
         }));
     }
 
+
     @Override
-    public File getConfigFile() {
-        String brokerConfig = System.getProperty(BrokerConfigure.SystemProperty.BrokerConfig);
-        if (StringUtils.isBlank(brokerConfig)) {
+    public <T> T parseConfig(String path, Class<T> clazz) {
+        JSONPath jsonPath = JSONPath.of(path);
+        JSONReader parser = JSONReader.of(configJson);
+        Object result = jsonPath.extract(parser);
+        if (result instanceof JSONObject) {
+            return ((JSONObject) result).to(clazz);
+        } else {
             return null;
         }
-        File file = new File(brokerConfig);
-        ValidateUtils.isTrue(file.isFile(), "文件不存在");
-        return file;
+    }
+
+    public void loadYamlConfig() {
+        String brokerConfig = System.getProperty(BrokerConfigure.SystemProperty.BrokerConfig);
+        if (StringUtils.isBlank(brokerConfig)) {
+            return;
+        }
+        File yamlFile = new File(brokerConfig);
+        ValidateUtils.isTrue(yamlFile.isFile(), "yaml file is not exists!");
+        try (FileInputStream fileInputStream = new FileInputStream(yamlFile);) {
+            Yaml yaml = new Yaml();
+            Object object = yaml.load(fileInputStream);
+            configJson = JSONObject.toJSONString(object);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

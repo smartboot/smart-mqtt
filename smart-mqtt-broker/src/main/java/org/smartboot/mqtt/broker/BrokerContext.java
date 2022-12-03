@@ -4,7 +4,6 @@ import org.smartboot.mqtt.broker.eventbus.messagebus.MessageBus;
 import org.smartboot.mqtt.broker.plugin.provider.Providers;
 import org.smartboot.mqtt.common.eventbus.EventBus;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.ScheduledExecutorService;
@@ -65,9 +64,9 @@ public interface BrokerContext {
     void batchPublish(BrokerTopic topic);
 
     /**
-     * 获取配置文件
+     * 解析配置文件
      */
-    File getConfigFile();
+    <T> T parseConfig(String path, Class<T> clazz);
 
     MqttBrokerMessageProcessor getMessageProcessor();
 }
