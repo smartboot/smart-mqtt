@@ -1,5 +1,5 @@
 broker:
-  port: 1887
+  port: 1883
   threadNum: 16
   maxInflight: 8
   retryInterval: 30
