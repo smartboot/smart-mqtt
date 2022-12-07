@@ -11,8 +11,6 @@ public interface EventBus {
     <T> void subscribe(EventType<T> type, EventBusSubscriber<T> subscriber);
 
     <T> void subscribe(List<EventType<T>> types, EventBusSubscriber<T> subscriber);
-
-
     /**
      * 发布消息至总线
      */

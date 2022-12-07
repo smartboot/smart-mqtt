@@ -9,6 +9,15 @@ smart-mqtt 底层通信采用了异步非阻塞通信框架 smart-socket，现�
 - 2019~2021年，项目基本处于停更状态，期间重心在于提升底层通信框架 smart-socket 的性能。
 - 2022年，重启 smart-mqtt。基本完成 mqtt  broker 和 client 的功能开发。
 
+## 产品特色
+
+- 国产血统：从底层通信（smart-socket）直至应用层 Broker 服务（smart-mqtt）皆为自研。
+- 开箱即用：零配置即可启动 MQTT Broker 服务。
+- 灵活扩展：通过插件机制，提供高度自由的定制化能力。
+- 高能低耗：运用设计和算法技巧充分发挥硬件能力。
+- 极致轻量：极少的外部依赖，发行包不足 3MB。
+
+
 ## 推荐阅读
 - [加入企业支持计划](https://smartboot.gitee.io/smart-mqtt/)
 - [快速上手](https://smartboot.gitee.io/smart-mqtt/quickstart.html)

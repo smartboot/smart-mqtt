@@ -68,8 +68,10 @@ public abstract class AbstractSession {
 
     public final void notifyResponse(MqttPacketIdentifierMessage message) {
         AckMessage ackMessage = responseConsumers.remove(message.getVariableHeader().getPacketId());
-        ackMessage.setDone(true);
-        ackMessage.getConsumer().accept(message);
+        if(ackMessage!=null){
+            ackMessage.setDone(true);
+            ackMessage.getConsumer().accept(message);
+        }
     }
 
     public final synchronized void write(MqttMessage mqttMessage) {
