@@ -342,5 +342,8 @@ public class BrokerContextImpl implements BrokerContext {
         messageBusExecutorService.shutdown();
         server.shutdown();
         pagePool.release();
+        //卸载插件
+        plugins.forEach(Plugin::uninstall);
+        plugins.clear();
     }
 }
