@@ -7,6 +7,7 @@ import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.Protocol;
 import org.smartboot.socket.transport.AioSession;
 import org.smartboot.socket.util.BufferUtils;
@@ -81,8 +82,7 @@ public class MqttProtocol implements Protocol<MqttMessage> {
                     }
                     buffer.mark();
 
-                    MqttFixedHeader mqttFixedHeader =
-                            new MqttFixedHeader(messageType, dupFlag, MqttQoS.valueOf(qosLevel), retain, remainingLength);
+                    MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(messageType, dupFlag, MqttQoS.valueOf(qosLevel), retain, remainingLength);
                     MqttCodecUtil.resetUnusedFields(mqttFixedHeader);
 //                    switch (mqttFixedHeader.getMessageType()) {
 //                        case PUBREL:
@@ -103,13 +103,37 @@ public class MqttProtocol implements Protocol<MqttMessage> {
 
             case READ_VARIABLE_HEADER:
                 try {
-                    if (unit.mqttMessage.getFixedHeader().remainingLength() > maxBytesInMessage) {
-                        throw new DecoderException("too large message: " + unit.mqttMessage.getFixedHeader().remainingLength() + " bytes");
+                    int remainingLength = unit.mqttMessage.getFixedHeader().remainingLength();
+                    if (remainingLength > maxBytesInMessage) {
+                        throw new DecoderException("too large message: " + remainingLength + " bytes");
                     }
-                    if (buffer.remaining() < unit.mqttMessage.getFixedHeader().remainingLength()) {
+                    ByteBuffer payloadBuffer;
+                    if (remainingLength > buffer.capacity()) {
+                        if (unit.disposableBuffer == null) {
+                            payloadBuffer = unit.disposableBuffer = ByteBuffer.allocate(remainingLength);
+                        } else {
+                            payloadBuffer = unit.disposableBuffer;
+                            payloadBuffer.compact();
+                        }
+
+                        if (payloadBuffer.remaining() >= buffer.remaining()) {
+                            payloadBuffer.put(buffer);
+                        } else {
+                            int limit = buffer.limit();
+                            buffer.limit(buffer.position() + payloadBuffer.remaining());
+                            payloadBuffer.put(buffer);
+                            buffer.limit(limit);
+                        }
+                        payloadBuffer.flip();
+                    } else {
+                        payloadBuffer = buffer;
+                    }
+
+                    if (payloadBuffer.remaining() < remainingLength) {
                         break;
                     }
-                    unit.mqttMessage.decodeVariableHeader(buffer);
+                    unit.mqttMessage.decodeVariableHeader(payloadBuffer);
+
 
                     unit.state = READ_PAYLOAD;
 
@@ -124,7 +148,14 @@ public class MqttProtocol implements Protocol<MqttMessage> {
             case READ_PAYLOAD:
 
                 try {
-                    unit.mqttMessage.decodePlayLoad(buffer);
+                    if (unit.disposableBuffer == null) {
+                        unit.mqttMessage.decodePlayLoad(buffer);
+                    } else {
+                        unit.mqttMessage.decodePlayLoad(unit.disposableBuffer);
+                        ValidateUtils.isTrue(unit.disposableBuffer.remaining() == 0, "decode error");
+                        unit.disposableBuffer = null;
+                    }
+
                     unit.state = FINISH;
                     break;
                 } catch (Exception cause) {
@@ -147,15 +178,13 @@ public class MqttProtocol implements Protocol<MqttMessage> {
 
 
     enum DecoderState {
-        READ_FIXED_HEADER,
-        READ_VARIABLE_HEADER,
-        READ_PAYLOAD,
-        FINISH,
+        READ_FIXED_HEADER, READ_VARIABLE_HEADER, READ_PAYLOAD, FINISH,
     }
 
     class DecodeUnit {
         DecoderState state;
         MqttMessage mqttMessage;
-        int remaining;
+
+        ByteBuffer disposableBuffer;
     }
 }
