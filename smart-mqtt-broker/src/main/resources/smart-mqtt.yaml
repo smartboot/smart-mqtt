@@ -3,6 +3,10 @@ broker:
   threadNum: 16
   maxInflight: 8
   retryInterval: 30
+  # 限制单个MQTT消息包的最大字节数。
+  maxPacketSize: 1048576
+  # 读缓冲区大小
+  readBufferSize: 4096
   username:
   password:
   connect:

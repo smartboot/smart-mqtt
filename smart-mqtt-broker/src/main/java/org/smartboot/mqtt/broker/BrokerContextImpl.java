@@ -94,7 +94,7 @@ public class BrokerContextImpl implements BrokerContext {
 
         try {
             pagePool = new BufferPagePool(1024 * 1024, brokerConfigure.getThreadNum(), true);
-            server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(), processor);
+            server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(brokerConfigure.getMaxPacketSize()), processor);
             server.setBannerEnabled(false).setReadBufferSize(brokerConfigure.getReadBufferSize()).setBufferPagePool(pagePool).setThreadNum(brokerConfigure.getThreadNum());
             server.start();
             System.out.println(BrokerConfigure.BANNER + "\r\n :: smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");

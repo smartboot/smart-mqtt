@@ -47,6 +47,11 @@ public class BrokerConfigure {
     private int readBufferSize = 4 * 1024;
 
     /**
+     * MQTT最大报文限制字节数
+     */
+    private int maxPacketSize;
+
+    /**
      * 线程数
      */
     private int threadNum = Runtime.getRuntime().availableProcessors();
@@ -159,6 +164,14 @@ public class BrokerConfigure {
 
     public void setReadBufferSize(int readBufferSize) {
         this.readBufferSize = readBufferSize;
+    }
+
+    public int getMaxPacketSize() {
+        return maxPacketSize;
+    }
+
+    public void setMaxPacketSize(int maxPacketSize) {
+        this.maxPacketSize = maxPacketSize;
     }
 
     @Override
