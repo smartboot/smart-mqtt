@@ -44,6 +44,9 @@ public class BrokerConfigure {
      */
     private int port = 1883;
 
+    /**
+     * 读缓冲区大小
+     */
     private int readBufferSize = 4 * 1024;
 
     /**
