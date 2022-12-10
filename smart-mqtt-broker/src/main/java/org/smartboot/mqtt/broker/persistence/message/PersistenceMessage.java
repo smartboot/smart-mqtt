@@ -1,7 +1,7 @@
 package org.smartboot.mqtt.broker.persistence.message;
 
-import org.smartboot.mqtt.broker.Message;
 import org.smartboot.mqtt.common.ToString;
+import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -28,10 +28,10 @@ public class PersistenceMessage extends ToString {
      */
     private final long createTime = System.currentTimeMillis();
 
-    public PersistenceMessage(Message message, long offset) {
+    public PersistenceMessage(MqttPublishMessage message, long offset) {
         this.payload = message.getPayload();
-        this.retained = message.isRetained();
-        this.topic = message.getTopic();
+        this.retained = message.getFixedHeader().isRetain();
+        this.topic = message.getVariableHeader().getTopicName();
         this.offset = offset;
     }
 

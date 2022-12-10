@@ -1,11 +1,9 @@
 package org.smartboot.mqtt.broker.eventbus.messagebus;
 
-import org.smartboot.mqtt.broker.Message;
-import org.smartboot.mqtt.broker.eventbus.EventObject;
-import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
+import org.smartboot.mqtt.broker.BrokerContext;
+import org.smartboot.mqtt.broker.eventbus.messagebus.consumer.Consumer;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
@@ -14,12 +12,12 @@ import java.util.function.Predicate;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/4/4
  */
-public interface MessageBus extends EventBusSubscriber<EventObject<MqttPublishMessage>> {
+public interface MessageBus {
 
     /**
      * 订阅消息总线消费者
      */
-    void consumer(Consumer<Message> consumer);
+    void consumer(Consumer consumer);
 
     /**
      * 订阅消息总线消费者
@@ -27,11 +25,11 @@ public interface MessageBus extends EventBusSubscriber<EventObject<MqttPublishMe
      * @param consumer  消费者
      * @param predicate 消费条件
      */
-    void consumer(Consumer<Message> consumer, Predicate<Message> predicate);
+    void consumer(Consumer consumer, Predicate<MqttPublishMessage> predicate);
 
     /**
-     * 发布消息至总线
+     * 发布消息至总线触发消费
      */
-    void producer(Message storedMessage);
+    void consume(BrokerContext brokerContext, MqttPublishMessage storedMessage);
 
 }

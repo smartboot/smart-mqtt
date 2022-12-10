@@ -2,7 +2,7 @@ package org.smartboot.mqtt.broker.persistence.message;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.Message;
+import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -15,7 +15,7 @@ class MemoryMessageStoreQueue {
     private final PersistenceMessage[] store = new PersistenceMessage[64];
     private final AtomicLong putOffset = new AtomicLong(-1);
 
-    public void put(Message msg) {
+    public void put(MqttPublishMessage msg) {
         PersistenceMessage message = new PersistenceMessage(msg, putOffset.incrementAndGet());
 //        LOGGER.info("store message, offset:{}", msg.getOffset());
         store[(int) (message.getOffset() % store.length)] = message;

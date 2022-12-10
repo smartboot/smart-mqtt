@@ -61,8 +61,6 @@ public interface BrokerContext {
     Providers getProviders();
 
 
-    void batchPublish(BrokerTopic topic);
-
     /**
      * 解析配置文件
      */

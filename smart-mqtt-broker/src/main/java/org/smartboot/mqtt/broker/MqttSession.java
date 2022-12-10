@@ -3,11 +3,8 @@ package org.smartboot.mqtt.broker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
-import org.smartboot.mqtt.broker.persistence.message.PersistenceMessage;
-import org.smartboot.mqtt.broker.persistence.message.PersistenceProvider;
 import org.smartboot.mqtt.broker.persistence.session.SessionState;
 import org.smartboot.mqtt.common.AbstractSession;
-import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.QosPublisher;
@@ -16,7 +13,6 @@ import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
-import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.TopicTokenUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.transport.AioSession;
@@ -24,7 +20,6 @@ import org.smartboot.socket.transport.AioSession;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
 
 /**
  * 会话，客户端和服务端之间的状态交互。
@@ -95,7 +90,7 @@ public class MqttSession extends AbstractSession {
 
         if (willMessage != null) {
             //非正常中断，推送遗嘱消息
-            mqttContext.getMessageBus().producer(new Message(willMessage));
+            mqttContext.getMessageBus().consume(mqttContext, willMessage);
 //            mqttContext.publish( willMessage.getVariableHeader().getTopicName());
         }
         subscribers.keySet().forEach(this::unsubscribe);
@@ -259,65 +254,5 @@ public class MqttSession extends AbstractSession {
         this.willMessage = willMessage;
     }
 
-    public void batchPublish(TopicSubscriber consumeOffset, ExecutorService executorService) {
-        if (consumeOffset.getSemaphore().availablePermits() > 1) {
-            LOGGER.error("invalid semaphore:{}", consumeOffset.getSemaphore().availablePermits());
-        }
-        if (consumeOffset.getSemaphore().tryAcquire()) {
-            publish0(consumeOffset, executorService);
-        }
-    }
 
-    private void publish0(TopicSubscriber consumeOffset, ExecutorService executorService) {
-        long nextConsumerOffset = consumeOffset.getNextConsumerOffset();
-        PersistenceProvider persistenceProvider = mqttContext.getProviders().getPersistenceProvider();
-        int count = 0;
-
-        while (consumeOffset.getMqttSession().getInflightQueue().notFull()) {
-            PersistenceMessage persistenceMessage = persistenceProvider.get(consumeOffset.getTopic().getTopic(), nextConsumerOffset + count);
-            if (persistenceMessage == null) {
-                break;
-            }
-            count++;
-            MqttSession mqttSession = consumeOffset.getMqttSession();
-            MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(mqttSession.newPacketId(), persistenceMessage.getTopic(), consumeOffset.getMqttQoS(), persistenceMessage.getPayload());
-            InflightQueue inflightQueue = mqttSession.getInflightQueue();
-            int index = inflightQueue.add(publishMessage, persistenceMessage.getOffset());
-            mqttSession.publish(publishMessage, packetId -> {
-                //最早发送的消息若收到响应，则更新点位
-                boolean done = inflightQueue.commit(index, offset -> {
-                    consumeOffset.setNextConsumerOffset(offset + 1);
-                    if (persistenceMessage.isRetained()) {
-                        consumeOffset.setRetainConsumerOffset(consumeOffset.getRetainConsumerOffset() + 1);
-                    }
-                });
-                if (done) {
-                    consumeOffset.setRetainConsumerTimestamp(persistenceMessage.getCreateTime());
-                    inflightQueue.clear();
-                    //本批次全部处理完毕
-                    PersistenceMessage nextMessage = persistenceProvider.get(consumeOffset.getTopic().getTopic(), consumeOffset.getNextConsumerOffset());
-                    if (nextMessage == null) {
-                        consumeOffset.getSemaphore().release();
-                    } else {
-                        executorService.execute(new AsyncTask() {
-                            @Override
-                            public void execute() {
-                                publish0(consumeOffset, executorService);
-                            }
-                        });
-
-                    }
-                }
-            });
-            mqttContext.getEventBus().publish(EventType.PUSH_PUBLISH_MESSAGE, this);
-        }
-        //无可publish的消息
-        if (count == 0) {
-            consumeOffset.getSemaphore().release();
-        }
-        //可能此时正好有新消息投递进来
-        if (consumeOffset.getMqttSession().getInflightQueue().notFull() && persistenceProvider.get(consumeOffset.getTopic().getTopic(), nextConsumerOffset) != null) {
-            batchPublish(consumeOffset, executorService);
-        }
-    }
 }

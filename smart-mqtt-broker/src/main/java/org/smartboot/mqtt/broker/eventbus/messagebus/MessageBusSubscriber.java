@@ -1,15 +1,11 @@
 package org.smartboot.mqtt.broker.eventbus.messagebus;
 
 import org.smartboot.mqtt.broker.BrokerContext;
-import org.smartboot.mqtt.broker.BrokerTopic;
-import org.smartboot.mqtt.broker.Message;
-import org.smartboot.mqtt.broker.eventbus.EventObject;
-import org.smartboot.mqtt.common.eventbus.EventType;
+import org.smartboot.mqtt.broker.eventbus.messagebus.consumer.Consumer;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
@@ -19,46 +15,28 @@ import java.util.function.Predicate;
  * @version V1.0 , 2022/6/29
  */
 public class MessageBusSubscriber implements MessageBus {
-    private final BrokerContext brokerContext;
 
-    public MessageBusSubscriber(BrokerContext brokerContext) {
-        this.brokerContext = brokerContext;
+    /**
+     * 消息总线消费者
+     */
+    private final List<Consumer> messageBuses = new ArrayList<>();
+
+    @Override
+    public void consumer(Consumer consumer) {
+        messageBuses.add(consumer);
     }
 
     @Override
-    public void subscribe(EventType<EventObject<MqttPublishMessage>> eventType, EventObject<MqttPublishMessage> object) {
-        //进入到消息总线前要先确保BrokerTopic已创建
-        BrokerTopic topic = brokerContext.getOrCreateTopic(object.getObject().getVariableHeader().getTopicName());
-        Message message = new Message(object.getObject());
-        try {
-            //持久化消息
-            brokerContext.getProviders().getPersistenceProvider().doSave(message);
-
-            brokerContext.getMessageBus().producer(message);
-        } finally {
-            //推送至客户端
-            brokerContext.batchPublish(topic);
-        }
-    }
-
-    private final List<Consumer<Message>> messageBuses = new ArrayList<>();
-
-    @Override
-    public void consumer(Consumer<Message> consumer) {
-        consumer(consumer, message -> true);
-    }
-
-    @Override
-    public void consumer(Consumer<Message> consumer, Predicate<Message> filter) {
-        messageBuses.add(message -> {
-            if (filter.test(message)) {
-                consumer.accept(message);
+    public void consumer(Consumer consumer, Predicate<MqttPublishMessage> filter) {
+        consumer((brokerContext, publishMessage) -> {
+            if (filter.test(publishMessage)) {
+                consumer.consume(brokerContext, publishMessage);
             }
         });
     }
 
     @Override
-    public void producer(Message message) {
-        messageBuses.forEach(messageConsumer -> messageConsumer.accept(message));
+    public void consume(BrokerContext brokerContext, MqttPublishMessage message) {
+        messageBuses.forEach(messageConsumer -> messageConsumer.consume(brokerContext, message));
     }
 }

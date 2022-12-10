@@ -66,7 +66,7 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private final ScheduledExecutorService KEEP_ALIVE_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
     private final ExecutorService messageBusExecutorService = Executors.newCachedThreadPool();
-    private final MessageBus messageBusSubscriber = new MessageBusSubscriber(this);
+    private final MessageBus messageBusSubscriber = new MessageBusSubscriber();
     private final EventBus eventBus = new EventBusImpl(ServerEventType.types());
     private final List<Plugin> plugins = new ArrayList<>();
     private final Providers providers = new Providers();
@@ -121,15 +121,26 @@ public class BrokerContextImpl implements BrokerContext {
      * 订阅消息总线
      */
     private void subscribeMessageBus() {
+        //持久化消息
+        messageBusSubscriber.consumer((brokerContext, publishMessage) -> providers.getPersistenceProvider().doSave(publishMessage));
         //消费retain消息
-        messageBusSubscriber.consumer(new RetainPersistenceConsumer(this), Message::isRetained);
+        messageBusSubscriber.consumer(new RetainPersistenceConsumer(), mqttPublishMessage -> mqttPublishMessage.getFixedHeader().isRetain());
     }
 
     /**
      * 订阅事件总线
      */
     private void subscribeEventBus() {
-        eventBus.subscribe(ServerEventType.RECEIVE_PUBLISH_MESSAGE, messageBusSubscriber);
+        eventBus.subscribe(ServerEventType.RECEIVE_PUBLISH_MESSAGE, (eventType, publishMessage) -> {
+            //进入到消息总线前要先确保BrokerTopic已创建
+            BrokerTopic topic = getOrCreateTopic(publishMessage.getVariableHeader().getTopicName());
+            try {
+                //触发消息总线
+                messageBusSubscriber.consume(this, publishMessage);
+            } finally {
+                eventBus.publish(ServerEventType.MESSAGE_BUS_CONSUMED, topic);
+            }
+        });
         //连接鉴权超时监控
         eventBus.subscribe(ServerEventType.SESSION_CREATE, new ConnectIdleTimeMonitorSubscriber(this));
         //连接鉴权
@@ -137,12 +148,20 @@ public class BrokerContextImpl implements BrokerContext {
         //保持连接状态监听,长时间没有消息通信将断开连接
         eventBus.subscribe(ServerEventType.CONNECT, new KeepAliveMonitorSubscriber(this));
 
+        //消息总线消费完成，触发消息推送
+        eventBus.subscribe(ServerEventType.MESSAGE_BUS_CONSUMED, (eventType, brokerTopic) -> brokerTopic.getConsumeOffsets().values().stream()
+                .filter(consumeOffset -> consumeOffset.getSemaphore().availablePermits() > 0)
+                .forEach(consumeOffset -> pushThreadPool.execute(new AsyncTask() {
+                    @Override
+                    public void execute() {
+                        consumeOffset.batchPublish(BrokerContextImpl.this, pushThreadPool);
+                    }
+                })));
 
         //一个新的订阅建立时，对每个匹配的主题名，如果存在最近保留的消息，它必须被发送给这个订阅者
         eventBus.subscribe(ServerEventType.SUBSCRIBE_TOPIC, new EventBusSubscriber<TopicSubscriber>() {
             @Override
             public void subscribe(EventType<TopicSubscriber> eventType, TopicSubscriber subscriber) {
-                //retain采用严格顺序publish模式
                 pushThreadPool.execute(new AsyncTask() {
                     @Override
                     public void execute() {
@@ -150,9 +169,10 @@ public class BrokerContextImpl implements BrokerContext {
                         PersistenceMessage storedMessage = providers.getRetainMessageProvider().get(subscriber.getTopic().getTopic(), subscriber.getRetainConsumerOffset());
                         if (storedMessage == null || storedMessage.getCreateTime() > subscriber.getLatestSubscribeTime()) {
                             //完成retain消息的消费，正式开始监听Topic
-                            subscriber.getMqttSession().batchPublish(subscriber, pushThreadPool);
+                            subscriber.batchPublish(BrokerContextImpl.this, pushThreadPool);
                             return;
                         }
+                        //retain采用严格顺序publish模式
                         MqttSession session = subscriber.getMqttSession();
                         MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(session.newPacketId(), storedMessage.getTopic(), subscriber.getMqttQoS(), storedMessage.getPayload());
                         InflightQueue inflightQueue = session.getInflightQueue();
@@ -287,15 +307,6 @@ public class BrokerContextImpl implements BrokerContext {
     @Override
     public Providers getProviders() {
         return providers;
-    }
-
-    public void batchPublish(BrokerTopic topic) {
-        topic.getConsumeOffsets().values().stream().filter(consumeOffset -> consumeOffset.getSemaphore().availablePermits() > 0).forEach(consumeOffset -> pushThreadPool.execute(new AsyncTask() {
-            @Override
-            public void execute() {
-                consumeOffset.getMqttSession().batchPublish(consumeOffset, pushThreadPool);
-            }
-        }));
     }
 
 

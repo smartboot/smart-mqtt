@@ -1,6 +1,6 @@
 package org.smartboot.mqtt.broker.persistence.message;
 
-import org.smartboot.mqtt.broker.Message;
+import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 /**
  * 消息持久化Provider
@@ -13,7 +13,7 @@ public interface PersistenceProvider {
     /**
      * 保存消息
      */
-    void doSave(Message message);
+    void doSave(MqttPublishMessage message);
 
     /**
      * 删除指定topic的所有消息

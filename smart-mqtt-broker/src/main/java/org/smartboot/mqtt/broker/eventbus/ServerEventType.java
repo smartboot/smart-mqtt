@@ -38,7 +38,7 @@ public class ServerEventType<T> extends EventType<T> {
     /**
      * Broker接收到客户端发送过来的消息
      */
-    public static final ServerEventType<EventObject<MqttPublishMessage>> RECEIVE_PUBLISH_MESSAGE = new ServerEventType<>("receivePublishMessage");
+    public static final ServerEventType<MqttPublishMessage> RECEIVE_PUBLISH_MESSAGE = new ServerEventType<>("receivePublishMessage");
 
     /**
      * 客户端订阅Topic
@@ -49,6 +49,11 @@ public class ServerEventType<T> extends EventType<T> {
      * 客户端订阅Topic
      */
     public static final ServerEventType<TopicSubscriber> SUBSCRIBE_RE_TOPIC = new ServerEventType<>("subscribeReTopic");
+
+    /**
+     * 消息总线消费完成
+     */
+    public static final ServerEventType<BrokerTopic> MESSAGE_BUS_CONSUMED = new ServerEventType<>("messageBusProduced");
 
     /**
      * 客户端连接
