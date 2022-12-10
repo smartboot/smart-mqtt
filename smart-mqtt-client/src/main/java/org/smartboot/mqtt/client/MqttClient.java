@@ -29,6 +29,7 @@ import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.mqtt.common.message.WillMessage;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.ValidateUtils;
+import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioQuickClient;
 import org.smartboot.socket.util.QuickTimerTask;
@@ -121,7 +122,18 @@ public class MqttClient extends AbstractSession {
         });
     }
 
+
+    public void connect(AsynchronousChannelGroup asynchronousChannelGroup, BufferPagePool bufferPagePool) {
+        connect(asynchronousChannelGroup, bufferPagePool, connAckMessage -> {
+        });
+    }
+
+
     public void connect(AsynchronousChannelGroup asynchronousChannelGroup, Consumer<MqttConnAckMessage> consumer) {
+        connect(asynchronousChannelGroup, null, consumer);
+    }
+
+    public void connect(AsynchronousChannelGroup asynchronousChannelGroup, BufferPagePool bufferPagePool, Consumer<MqttConnAckMessage> consumer) {
 //        if (bufferPagePool == null) {
 //            bufferPagePool = new BufferPagePool(1024 * 1024 * 2, 10, true);
 //        }
@@ -185,7 +197,9 @@ public class MqttClient extends AbstractSession {
 //        messageProcessor.addPlugin(new StreamMonitorPlugin<>());
         client = new AioQuickClient(clientConfigure.getHost(), clientConfigure.getPort(), new MqttProtocol(), messageProcessor);
         try {
-//            client.setBufferPagePool(bufferPagePool);
+            if (bufferPagePool != null) {
+                client.setBufferPagePool(bufferPagePool);
+            }
             client.setWriteBuffer(1024 * 1024, 10);
             session = client.start(asynchronousChannelGroup);
             mqttWriter = new DefaultMqttWriter(session.writeBuffer());
