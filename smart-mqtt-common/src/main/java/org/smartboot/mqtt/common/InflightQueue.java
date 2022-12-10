@@ -12,7 +12,7 @@ import java.util.function.Consumer;
 public class InflightQueue {
     private final MqttPublishMessage[] queue;
     private final long[] offsets;
-    private int count;
+    private int index;
 
     private int expectIndex = 0;
 
@@ -23,9 +23,9 @@ public class InflightQueue {
     }
 
     public int add(MqttPublishMessage mqttMessage, long offset) {
-        queue[count] = mqttMessage;
-        offsets[count] = offset;
-        return count++;
+        queue[index] = mqttMessage;
+        offsets[index] = offset;
+        return index++;
     }
 
     public synchronized boolean commit(int commitIndex, Consumer<Long> consumer) {
@@ -35,21 +35,21 @@ public class InflightQueue {
             return false;
         }
         long offset = offsets[expectIndex++];
-        while (expectIndex < count && offsets[expectIndex] < 0) {
+        while (expectIndex < index && offsets[expectIndex] < 0) {
             offset = -offsets[expectIndex];
             offsets[expectIndex] = 0;
             queue[expectIndex++] = null;
         }
         consumer.accept(offset);
-        return expectIndex == count;
+        return expectIndex == index;
     }
 
     public void clear() {
         expectIndex = 0;
-        count = 0;
+        index = 0;
     }
 
     public boolean notFull() {
-        return count != queue.length;
+        return index < queue.length;
     }
 }

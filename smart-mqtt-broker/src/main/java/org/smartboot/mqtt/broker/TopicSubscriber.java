@@ -66,59 +66,54 @@ public class TopicSubscriber {
             LOGGER.error("invalid semaphore:{}", semaphore.availablePermits());
         }
         if (semaphore.tryAcquire()) {
-            publish0(brokerContext, pushExecutor);
+            try {
+                while (mqttSession.getInflightQueue().notFull()) {
+                    publish0(brokerContext, pushExecutor);
+                }
+            } finally {
+                semaphore.release();
+            }
+
+            //可能此时正好有新消息投递进来
+            if (mqttSession.getInflightQueue().notFull() && brokerContext.getProviders().getPersistenceProvider().get(topic.getTopic(), nextConsumerOffset) != null) {
+                batchPublish(brokerContext, pushExecutor);
+            }
         }
     }
 
-    private void publish0(BrokerContext mqttContext, ExecutorService executorService) {
-        PersistenceProvider persistenceProvider = mqttContext.getProviders().getPersistenceProvider();
-        int count = 0;
-
-        while (mqttSession.getInflightQueue().notFull()) {
-            PersistenceMessage persistenceMessage = persistenceProvider.get(topic.getTopic(), nextConsumerOffset + count);
-            if (persistenceMessage == null) {
-                break;
-            }
-            count++;
-            MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(mqttSession.newPacketId(), persistenceMessage.getTopic(), mqttQoS, persistenceMessage.getPayload());
-            InflightQueue inflightQueue = mqttSession.getInflightQueue();
-            int index = inflightQueue.add(publishMessage, persistenceMessage.getOffset());
-            mqttSession.publish(publishMessage, packetId -> {
-                //最早发送的消息若收到响应，则更新点位
-                boolean done = inflightQueue.commit(index, offset -> {
-                    setNextConsumerOffset(offset + 1);
-                    if (persistenceMessage.isRetained()) {
-                        setRetainConsumerOffset(getRetainConsumerOffset() + 1);
-                    }
-                });
-                if (done) {
-                    setRetainConsumerTimestamp(persistenceMessage.getCreateTime());
-                    inflightQueue.clear();
-                    //本批次全部处理完毕
-                    PersistenceMessage nextMessage = persistenceProvider.get(topic.getTopic(), getNextConsumerOffset());
-                    if (nextMessage == null) {
-                        semaphore.release();
-                    } else {
-                        executorService.execute(new AsyncTask() {
-                            @Override
-                            public void execute() {
-                                publish0(mqttContext, executorService);
-                            }
-                        });
-
-                    }
+    private void publish0(BrokerContext brokerContext, ExecutorService pushExecutor) {
+        PersistenceProvider persistenceProvider = brokerContext.getProviders().getPersistenceProvider();
+        PersistenceMessage persistenceMessage = persistenceProvider.get(topic.getTopic(), nextConsumerOffset);
+        if (persistenceMessage == null) {
+            return;
+        }
+        MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(mqttSession.newPacketId(), persistenceMessage.getTopic(), mqttQoS, persistenceMessage.getPayload());
+        InflightQueue inflightQueue = mqttSession.getInflightQueue();
+        int index = inflightQueue.add(publishMessage, persistenceMessage.getOffset());
+        mqttSession.publish(publishMessage, packetId -> {
+            //最早发送的消息若收到响应，则更新点位
+            boolean done = inflightQueue.commit(index, offset -> {
+                setNextConsumerOffset(offset + 1);
+                if (persistenceMessage.isRetained()) {
+                    setRetainConsumerOffset(getRetainConsumerOffset() + 1);
                 }
             });
-            mqttContext.getEventBus().publish(EventType.PUSH_PUBLISH_MESSAGE, mqttSession);
-        }
-        //无可publish的消息
-        if (count == 0) {
-            semaphore.release();
-        }
-        //可能此时正好有新消息投递进来
-        if (mqttSession.getInflightQueue().notFull() && persistenceProvider.get(topic.getTopic(), nextConsumerOffset) != null) {
-            batchPublish(mqttContext, executorService);
-        }
+            if (done) {
+                setRetainConsumerTimestamp(persistenceMessage.getCreateTime());
+                inflightQueue.clear();
+                //本批次全部处理完毕
+                PersistenceMessage nextMessage = persistenceProvider.get(topic.getTopic(), getNextConsumerOffset());
+                if (nextMessage != null) {
+                    pushExecutor.execute(new AsyncTask() {
+                        @Override
+                        public void execute() {
+                            batchPublish(brokerContext, pushExecutor);
+                        }
+                    });
+                }
+            }
+        });
+        brokerContext.getEventBus().publish(EventType.PUSH_PUBLISH_MESSAGE, mqttSession);
     }
 
     public BrokerTopic getTopic() {

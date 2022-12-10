@@ -68,7 +68,7 @@ public abstract class AbstractSession {
 
     public final void notifyResponse(MqttPacketIdentifierMessage message) {
         AckMessage ackMessage = responseConsumers.remove(message.getVariableHeader().getPacketId());
-        if(ackMessage!=null){
+        if (ackMessage != null) {
             ackMessage.setDone(true);
             ackMessage.getConsumer().accept(message);
         }
@@ -76,7 +76,11 @@ public abstract class AbstractSession {
 
     public final synchronized void write(MqttMessage mqttMessage) {
         try {
-            ValidateUtils.isTrue(!disconnect, "已断开连接,无法发送消息:" + this);
+            if (disconnect) {
+                this.disconnect();
+                ValidateUtils.throwException("已断开连接,无法发送消息:", null);
+            }
+
             eventBus.publish(EventType.WRITE_MESSAGE, EventObject.newEventObject(this, mqttMessage));
             mqttMessage.writeTo(mqttWriter);
             mqttWriter.flush();
