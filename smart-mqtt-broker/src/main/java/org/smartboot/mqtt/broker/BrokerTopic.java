@@ -4,6 +4,7 @@ import org.smartboot.mqtt.common.Topic;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Broker端的Topic
@@ -16,6 +17,8 @@ public class BrokerTopic extends Topic {
      * 当前订阅的消费者
      */
     private final Map<MqttSession, TopicSubscriber> consumeOffsets = new ConcurrentHashMap<>();
+    private final AtomicInteger version = new AtomicInteger();
+    private boolean pushing;
 
     public BrokerTopic(String topic) {
         super(topic);
@@ -25,4 +28,15 @@ public class BrokerTopic extends Topic {
         return consumeOffsets;
     }
 
+    public AtomicInteger getVersion() {
+        return version;
+    }
+
+    public boolean isPushing() {
+        return pushing;
+    }
+
+    public void setPushing(boolean pushing) {
+        this.pushing = pushing;
+    }
 }

@@ -4,16 +4,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.persistence.message.PersistenceMessage;
 import org.smartboot.mqtt.broker.persistence.message.PersistenceProvider;
-import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.util.MqttUtil;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Semaphore;
 
 /**
  * Topic订阅者
@@ -44,14 +40,15 @@ public class TopicSubscriber {
     private long retainConsumerOffset;
     private long retainConsumerTimestamp;
 
-    private final Semaphore semaphore = new Semaphore(1);
-
     /**
      * 最近一次订阅时间
      */
     private final long latestSubscribeTime = System.currentTimeMillis();
 
     private TopicToken topicFilterToken;
+    private int pushVersion;
+
+    private boolean ready = false;
 
     public TopicSubscriber(BrokerTopic topic, MqttSession session, MqttQoS mqttQoS, long nextConsumerOffset, long retainConsumerOffset) {
         this.topic = topic;
@@ -61,27 +58,15 @@ public class TopicSubscriber {
         this.retainConsumerOffset = retainConsumerOffset;
     }
 
-    public void batchPublish(BrokerContext brokerContext, ExecutorService pushExecutor) {
-        if (semaphore.availablePermits() > 1) {
-            LOGGER.error("invalid semaphore:{}", semaphore.availablePermits());
-        }
-        if (semaphore.tryAcquire()) {
-            try {
-                while (mqttSession.getInflightQueue().notFull()) {
-                    publish0(brokerContext, pushExecutor);
-                }
-            } finally {
-                semaphore.release();
-            }
-
-            //可能此时正好有新消息投递进来
-            if (mqttSession.getInflightQueue().notFull() && brokerContext.getProviders().getPersistenceProvider().get(topic.getTopic(), nextConsumerOffset) != null) {
-                batchPublish(brokerContext, pushExecutor);
-            }
-        }
+    public void batchPublish(BrokerContext brokerContext) {
+        publish0(brokerContext, 0);
     }
 
-    private void publish0(BrokerContext brokerContext, ExecutorService pushExecutor) {
+    private void publish0(BrokerContext brokerContext, int depth) {
+        if (depth > 16) {
+//            System.out.println("退出递归...");
+            return;
+        }
         PersistenceProvider persistenceProvider = brokerContext.getProviders().getPersistenceProvider();
         PersistenceMessage persistenceMessage = persistenceProvider.get(topic.getTopic(), nextConsumerOffset);
         if (persistenceMessage == null) {
@@ -89,31 +74,38 @@ public class TopicSubscriber {
         }
         MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(mqttSession.newPacketId(), persistenceMessage.getTopic(), mqttQoS, persistenceMessage.getPayload());
         InflightQueue inflightQueue = mqttSession.getInflightQueue();
-        int index = inflightQueue.add(publishMessage, persistenceMessage.getOffset());
+        int index = inflightQueue.offer(publishMessage, persistenceMessage.getOffset());
+        // 飞行队列已满
+        if (index == -1) {
+//            System.out.println("queue is full...");
+            return;
+        }
+        long start = System.currentTimeMillis();
         mqttSession.publish(publishMessage, packetId -> {
             //最早发送的消息若收到响应，则更新点位
-            boolean done = inflightQueue.commit(index, offset -> {
-                setNextConsumerOffset(offset + 1);
-                if (persistenceMessage.isRetained()) {
-                    setRetainConsumerOffset(getRetainConsumerOffset() + 1);
-                }
-            });
-            if (done) {
-                setRetainConsumerTimestamp(persistenceMessage.getCreateTime());
-                inflightQueue.clear();
-                //本批次全部处理完毕
-                PersistenceMessage nextMessage = persistenceProvider.get(topic.getTopic(), getNextConsumerOffset());
-                if (nextMessage != null) {
-                    pushExecutor.execute(new AsyncTask() {
-                        @Override
-                        public void execute() {
-                            batchPublish(brokerContext, pushExecutor);
-                        }
-                    });
-                }
+            long offset = inflightQueue.commit(index);
+            if (offset == -1) {
+                return;
+            }
+            setNextConsumerOffset(offset + 1);
+            if (persistenceMessage.isRetained()) {
+                setRetainConsumerOffset(getRetainConsumerOffset() + 1);
+            }
+            setRetainConsumerTimestamp(persistenceMessage.getCreateTime());
+            //本批次全部处理完毕
+            int version = topic.getVersion().get();
+            PersistenceMessage nextMessage = persistenceProvider.get(topic.getTopic(), getNextConsumerOffset());
+            if (nextMessage == null) {
+                pushVersion = version;
             }
         });
+        long cost = System.currentTimeMillis() - start;
+        if (cost > 100) {
+            System.out.println("cost..." + cost);
+        }
         brokerContext.getEventBus().publish(EventType.PUSH_PUBLISH_MESSAGE, mqttSession);
+        //递归处理下一个消息
+        publish0(brokerContext, ++depth);
     }
 
     public BrokerTopic getTopic() {
@@ -144,10 +136,6 @@ public class TopicSubscriber {
         this.nextConsumerOffset = nextConsumerOffset;
     }
 
-    public Semaphore getSemaphore() {
-        return semaphore;
-    }
-
     public long getRetainConsumerOffset() {
         return retainConsumerOffset;
     }
@@ -166,5 +154,17 @@ public class TopicSubscriber {
 
     public void setTopicFilterToken(TopicToken topicFilterToken) {
         this.topicFilterToken = topicFilterToken;
+    }
+
+    public boolean isReady() {
+        return ready;
+    }
+
+    public void setReady(boolean ready) {
+        this.ready = ready;
+    }
+
+    public int getPushVersion() {
+        return pushVersion;
     }
 }

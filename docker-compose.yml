@@ -35,10 +35,10 @@ services:
 #        max-size: "100m"
 #        max-file: "1"
 
-  emq-bench:
+  smart-mqtt-bench:
     depends_on:
       - smart-mqtt
-    image: emqx/emqtt-bench
+    image: smartboot/smart-mqtt-bench:0.9
     read_only: true
     restart: always
     security_opt:
@@ -51,7 +51,24 @@ services:
       options:
         max-size: "100m"
         max-file: "1"
-#    command: pub --host smart-mqtt -c 50000 -I 0 -t bench/%i -p 1883 -u mica -P mica -s 1024 -V 4
-    command: conn --host smart-mqtt  -c 50000 -i 10 -V 4
+    command: java -cp smart-mqtt-bench.jar  -Dhost=smart-mqtt -Dcount=2000 org.smartboot.bench.mqtt.Connect
+#  emq-bench:
+#    depends_on:
+#      - smart-mqtt
+#    image: emqx/emqtt-bench
+#    read_only: true
+#    restart: always
+#    security_opt:
+#      - no-new-privileges:true
+#    user: root:root
+#    networks:
+#      mqtt-network: null
+#    logging:
+#      driver: "json-file"
+#      options:
+#        max-size: "100m"
+#        max-file: "1"
+##    command: pub --host smart-mqtt -c 50000 -I 0 -t bench/%i -p 1883 -u mica -P mica -s 1024 -V 4
+#    command: conn --host smart-mqtt  -c 50000 -i 10 -V 4
 
 version: '3.7'
