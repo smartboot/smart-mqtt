@@ -18,7 +18,10 @@ public class BrokerTopic extends Topic {
      */
     private final Map<MqttSession, TopicSubscriber> consumeOffsets = new ConcurrentHashMap<>();
     private final AtomicInteger version = new AtomicInteger();
-    private boolean pushing;
+    /**
+     * 当前Topic是否圈闭推送完成
+     */
+    private boolean waitingPush;
 
     public BrokerTopic(String topic) {
         super(topic);
@@ -32,11 +35,11 @@ public class BrokerTopic extends Topic {
         return version;
     }
 
-    public boolean isPushing() {
-        return pushing;
+    public boolean isWaitingPush() {
+        return waitingPush;
     }
 
-    public void setPushing(boolean pushing) {
-        this.pushing = pushing;
+    public void setWaitingPush(boolean waitingPush) {
+        this.waitingPush = waitingPush;
     }
 }

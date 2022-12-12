@@ -68,8 +68,10 @@ public class TopicSubscriber {
             return;
         }
         PersistenceProvider persistenceProvider = brokerContext.getProviders().getPersistenceProvider();
+        int version = topic.getVersion().get();
         PersistenceMessage persistenceMessage = persistenceProvider.get(topic.getTopic(), nextConsumerOffset);
         if (persistenceMessage == null) {
+            pushVersion = version;
             return;
         }
         MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(mqttSession.newPacketId(), persistenceMessage.getTopic(), mqttQoS, persistenceMessage.getPayload());
@@ -93,10 +95,10 @@ public class TopicSubscriber {
             }
             setRetainConsumerTimestamp(persistenceMessage.getCreateTime());
             //本批次全部处理完毕
-            int version = topic.getVersion().get();
+            int tVersion = topic.getVersion().get();
             PersistenceMessage nextMessage = persistenceProvider.get(topic.getTopic(), getNextConsumerOffset());
             if (nextMessage == null) {
-                pushVersion = version;
+                pushVersion = tVersion;
             }
         });
         long cost = System.currentTimeMillis() - start;

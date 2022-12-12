@@ -98,7 +98,7 @@ public class BrokerContextImpl implements BrokerContext {
                     try {
                         while (true) {
                             BrokerTopic brokerTopic = pushTopicQueue.take();
-                            brokerTopic.setPushing(false);
+                            brokerTopic.setWaitingPush(false);
                             int size = pushTopicQueue.size();
                             if (size > 1024) {
                                 System.out.println("queue:" + size);
@@ -113,12 +113,7 @@ public class BrokerContextImpl implements BrokerContext {
                             subscribers.stream().filter(topicSubscriber -> topicSubscriber.isReady() && topicSubscriber.getPushVersion() != brokerTopic.getVersion().get()).forEach(topicSubscriber -> topicSubscriber.batchPublish(BrokerContextImpl.this));
                             for (TopicSubscriber subscriber : subscribers) {
                                 if (subscriber.getPushVersion() != brokerTopic.getVersion().get()) {
-                                    synchronized (brokerTopic) {
-                                        if (!brokerTopic.isPushing()) {
-                                            brokerTopic.setPushing(true);
-                                            pushTopicQueue.put(brokerTopic);
-                                        }
-                                    }
+                                    notifyPush(brokerTopic);
                                     break;
                                 }
                             }
@@ -142,10 +137,7 @@ public class BrokerContextImpl implements BrokerContext {
         try {
             pagePool = new BufferPagePool(1024 * 1024, brokerConfigure.getThreadNum(), true);
             server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(brokerConfigure.getMaxPacketSize()), processor);
-            server.setBannerEnabled(false)
-                    .setReadBufferSize(brokerConfigure.getReadBufferSize())
-                    .setWriteBuffer(brokerConfigure.getReadBufferSize(), 128)
-                    .setBufferPagePool(pagePool).setThreadNum(brokerConfigure.getThreadNum());
+            server.setBannerEnabled(false).setReadBufferSize(brokerConfigure.getReadBufferSize()).setWriteBuffer(brokerConfigure.getReadBufferSize(), 128).setBufferPagePool(pagePool).setThreadNum(brokerConfigure.getThreadNum());
             server.start();
             System.out.println(BrokerConfigure.BANNER + "\r\n :: smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
             System.out.println("❤️Gitee: https://gitee.com/smartboot/smart-mqtt");
@@ -201,19 +193,7 @@ public class BrokerContextImpl implements BrokerContext {
         //消息总线消费完成，触发消息推送
         eventBus.subscribe(ServerEventType.MESSAGE_BUS_CONSUMED, (eventType, brokerTopic) -> {
             brokerTopic.getVersion().incrementAndGet();
-            if (!brokerTopic.isPushing()) {
-                synchronized (brokerTopic) {
-                    if (!brokerTopic.isPushing()) {
-                        brokerTopic.setPushing(true);
-                        try {
-                            pushTopicQueue.put(brokerTopic);
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                }
-
-            }
+            notifyPush(brokerTopic);
         });
 
         //一个新的订阅建立时，对每个匹配的主题名，如果存在最近保留的消息，它必须被发送给这个订阅者
@@ -228,18 +208,7 @@ public class BrokerContextImpl implements BrokerContext {
                         if (storedMessage == null || storedMessage.getCreateTime() > subscriber.getLatestSubscribeTime()) {
                             subscriber.setReady(true);
                             BrokerTopic topic = subscriber.getTopic();
-                            if (!topic.isPushing()) {
-                                synchronized (topic) {
-                                    if (!topic.isPushing()) {
-                                        try {
-                                            topic.setPushing(true);
-                                            pushTopicQueue.put(subscriber.getTopic());
-                                        } catch (InterruptedException e) {
-                                            throw new RuntimeException(e);
-                                        }
-                                    }
-                                }
-                            }
+                            notifyPush(topic);
 
                             //完成retain消息的消费，正式开始监听Topic
                             return;
@@ -266,6 +235,24 @@ public class BrokerContextImpl implements BrokerContext {
         });
         //打印消息日志
 //        eventBus.subscribe(Arrays.asList(EventType.RECEIVE_MESSAGE, EventType.WRITE_MESSAGE), new MessageLoggerSubscriber());
+    }
+
+    private void notifyPush(BrokerTopic topic) {
+        if (topic.isWaitingPush()) {
+            return;
+        }
+        synchronized (topic) {
+            //已加入推送队列
+            if (topic.isWaitingPush()) {
+                return;
+            }
+            try {
+                topic.setWaitingPush(true);
+                pushTopicQueue.put(topic);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     private void updateBrokerConfigure() throws IOException {
