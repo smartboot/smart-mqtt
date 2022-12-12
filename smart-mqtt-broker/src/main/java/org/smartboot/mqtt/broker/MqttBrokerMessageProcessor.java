@@ -68,7 +68,8 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
     public MqttBrokerMessageProcessor(BrokerContext mqttContext) {
         this.mqttContext = mqttContext;
         qosPublisher = new BrokerQosPublisher(mqttContext);
-        addPlugin(new MonitorPlugin<>());
+        addPlugin(new MonitorPlugin<>(5));
+//        addPlugin(new StreamMonitorPlugin<>());
     }
 
     @Override
