@@ -134,9 +134,6 @@ public class MqttClient extends AbstractSession {
     }
 
     public void connect(AsynchronousChannelGroup asynchronousChannelGroup, BufferPagePool bufferPagePool, Consumer<MqttConnAckMessage> consumer) {
-//        if (bufferPagePool == null) {
-//            bufferPagePool = new BufferPagePool(1024 * 1024 * 2, 10, true);
-//        }
         //设置 connect ack 回调事件
         this.connectConsumer = mqttConnAckMessage -> {
             if (!clientConfigure.isAutomaticReconnect()) {
@@ -200,7 +197,7 @@ public class MqttClient extends AbstractSession {
             if (bufferPagePool != null) {
                 client.setBufferPagePool(bufferPagePool);
             }
-            client.setWriteBuffer(1024 * 1024, 10).connectTimeout(clientConfigure.getConnectionTimeout() * 1000);
+            client.setReadBufferSize(clientConfigure.getBufferSize()).setWriteBuffer(clientConfigure.getBufferSize(), 8).connectTimeout(clientConfigure.getConnectionTimeout());
             session = client.start(asynchronousChannelGroup);
             mqttWriter = new DefaultMqttWriter(session.writeBuffer());
 

@@ -38,7 +38,7 @@ public class ServerEventType<T> extends EventType<T> {
     /**
      * Broker接收到客户端发送过来的消息
      */
-    public static final ServerEventType<MqttPublishMessage> RECEIVE_PUBLISH_MESSAGE = new ServerEventType<>("receivePublishMessage");
+    public static final ServerEventType<EventObject<MqttPublishMessage>> RECEIVE_PUBLISH_MESSAGE = new ServerEventType<>("receivePublishMessage");
 
     /**
      * 客户端订阅Topic

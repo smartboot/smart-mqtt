@@ -15,10 +15,6 @@ public class MqttClientConfigure {
      */
     public static final int KEEP_ALIVE_INTERVAL_DEFAULT = 60;
     /**
-     * The default connection timeout in seconds if one is not specified
-     */
-    public static final int CONNECTION_TIMEOUT_DEFAULT = 30;
-    /**
      * The default max inflight if one is not specified
      */
     public static final int MAX_INFLIGHT_DEFAULT = 10;
@@ -37,7 +33,11 @@ public class MqttClientConfigure {
     private boolean httpsHostnameVerificationEnabled = true;
     private HostnameVerifier sslHostnameVerifier = null;
     private boolean cleanSession = CLEAN_SESSION_DEFAULT;
-    private int connectionTimeout = CONNECTION_TIMEOUT_DEFAULT;
+    private int connectionTimeout = 5000;
+    /**
+     * IO缓冲区大小
+     */
+    private int bufferSize = 4 * 1024;
 
     private int connectAckTimeout = 5;
     private String[] serverURIs = null;
@@ -282,15 +282,6 @@ public class MqttClientConfigure {
         return connectionTimeout;
     }
 
-    /**
-     * Sets the connection timeout value. This value, measured in seconds, defines
-     * the maximum time interval the client will wait for the network connection to
-     * the MQTT server to be established. The default timeout is 30 seconds. A value
-     * of 0 disables timeout processing meaning the client will wait until the
-     * network connection is made successfully or fails.
-     *
-     * @param connectionTimeout the timeout value, measured in seconds. It must be &gt;0;
-     */
     public void setConnectionTimeout(int connectionTimeout) {
         if (connectionTimeout < 0) {
             throw new IllegalArgumentException();
@@ -637,5 +628,13 @@ public class MqttClientConfigure {
 
     public void setConnectAckTimeout(int connectAckTimeout) {
         this.connectAckTimeout = connectAckTimeout;
+    }
+
+    public int getBufferSize() {
+        return bufferSize;
+    }
+
+    public void setBufferSize(int bufferSize) {
+        this.bufferSize = bufferSize;
     }
 }

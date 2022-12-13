@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
+import org.smartboot.mqtt.broker.eventbus.EventObject;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
@@ -31,7 +32,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
         MqttQoS mqttQoS = mqttPublishMessage.getFixedHeader().getQosLevel();
         switch (mqttQoS) {
             case AT_MOST_ONCE:
-                processQos0(context, mqttPublishMessage);
+                processQos0(context, session, mqttPublishMessage);
                 break;
             case AT_LEAST_ONCE:
                 processQos1(context, session, mqttPublishMessage);
@@ -46,9 +47,9 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
 
     }
 
-    private void processQos0(BrokerContext context, MqttPublishMessage mqttPublishMessage) {
+    private void processQos0(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
         // 消息投递至消息总线
-        context.getEventBus().publish(ServerEventType.RECEIVE_PUBLISH_MESSAGE, mqttPublishMessage);
+        context.getEventBus().publish(ServerEventType.RECEIVE_PUBLISH_MESSAGE, EventObject.newEventObject(session, mqttPublishMessage));
     }
 
     private void processQos1(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
@@ -60,7 +61,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
         session.write(pubAckMessage);
 
         // 消息投递至消息总线
-        context.getEventBus().publish(ServerEventType.RECEIVE_PUBLISH_MESSAGE, mqttPublishMessage);
+        context.getEventBus().publish(ServerEventType.RECEIVE_PUBLISH_MESSAGE, EventObject.newEventObject(session, mqttPublishMessage));
     }
 
     private void processQos2(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
@@ -73,7 +74,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
             MqttPubCompMessage pubRelMessage = new MqttPubCompMessage(message.getVariableHeader().getPacketId());
             session.write(pubRelMessage);
             // 消息投递至消息总线
-            context.getEventBus().publish(ServerEventType.RECEIVE_PUBLISH_MESSAGE, mqttPublishMessage);
+            context.getEventBus().publish(ServerEventType.RECEIVE_PUBLISH_MESSAGE, EventObject.newEventObject(session, mqttPublishMessage));
         });
     }
 }

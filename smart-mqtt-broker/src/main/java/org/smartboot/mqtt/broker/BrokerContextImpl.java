@@ -195,12 +195,12 @@ public class BrokerContextImpl implements BrokerContext {
      * 订阅事件总线
      */
     private void subscribeEventBus() {
-        eventBus.subscribe(ServerEventType.RECEIVE_PUBLISH_MESSAGE, (eventType, publishMessage) -> {
+        eventBus.subscribe(ServerEventType.RECEIVE_PUBLISH_MESSAGE, (eventType, eventObject) -> {
             //进入到消息总线前要先确保BrokerTopic已创建
-            BrokerTopic topic = getOrCreateTopic(publishMessage.getVariableHeader().getTopicName());
+            BrokerTopic topic = getOrCreateTopic(eventObject.getObject().getVariableHeader().getTopicName());
             try {
                 //触发消息总线
-                messageBusSubscriber.consume(this, publishMessage);
+                messageBusSubscriber.consume(this, eventObject.getObject());
             } finally {
                 eventBus.publish(ServerEventType.MESSAGE_BUS_CONSUMED, topic);
             }
