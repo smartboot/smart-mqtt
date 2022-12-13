@@ -45,9 +45,14 @@ public class BrokerConfigure {
     private int port = 1883;
 
     /**
-     * 读缓冲区大小
+     * IO缓冲区大小
      */
-    private int readBufferSize = 4 * 1024;
+    private int bufferSize = 4 * 1024;
+
+    /**
+     * topic数量限制
+     */
+    private int topicLimit = 1024;
 
     /**
      * MQTT最大报文限制字节数
@@ -161,12 +166,12 @@ public class BrokerConfigure {
         this.threadNum = threadNum;
     }
 
-    public int getReadBufferSize() {
-        return readBufferSize;
+    public int getBufferSize() {
+        return bufferSize;
     }
 
-    public void setReadBufferSize(int readBufferSize) {
-        this.readBufferSize = readBufferSize;
+    public void setBufferSize(int bufferSize) {
+        this.bufferSize = bufferSize;
     }
 
     public int getMaxPacketSize() {
@@ -175,6 +180,14 @@ public class BrokerConfigure {
 
     public void setMaxPacketSize(int maxPacketSize) {
         this.maxPacketSize = maxPacketSize;
+    }
+
+    public int getTopicLimit() {
+        return topicLimit;
+    }
+
+    public void setTopicLimit(int topicLimit) {
+        this.topicLimit = topicLimit;
     }
 
     @Override

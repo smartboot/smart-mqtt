@@ -46,6 +46,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
@@ -74,7 +75,7 @@ public class BrokerContextImpl implements BrokerContext {
     private final Providers providers = new Providers();
     private ExecutorService pushThreadPool;
     private ExecutorService retainPushThreadPool;
-    private final BlockingQueue<BrokerTopic> pushTopicQueue = new ArrayBlockingQueue<>(2048);
+    private BlockingQueue<BrokerTopic> pushTopicQueue;
     /**
      * Broker Server
      */
@@ -88,6 +89,46 @@ public class BrokerContextImpl implements BrokerContext {
 
     @Override
     public void init() throws IOException {
+
+        updateBrokerConfigure();
+
+        subscribeEventBus();
+
+        subscribeMessageBus();
+
+        loadAndInstallPlugins();
+
+        initPushThread();
+        try {
+            pagePool = new BufferPagePool(1024 * 1024, brokerConfigure.getThreadNum(), true);
+            server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(brokerConfigure.getMaxPacketSize()), processor);
+            server.setBannerEnabled(false).setReadBufferSize(brokerConfigure.getBufferSize()).setWriteBuffer(brokerConfigure.getBufferSize(), Math.min(brokerConfigure.getMaxInflight(), 16)).setBufferPagePool(pagePool).setThreadNum(brokerConfigure.getThreadNum());
+            server.start();
+            System.out.println(BrokerConfigure.BANNER + "\r\n :: smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
+            System.out.println("❤️Gitee: https://gitee.com/smartboot/smart-mqtt");
+            System.out.println("Github: https://github.com/smartboot/smart-mqtt");
+            if (StringUtils.isBlank(brokerConfigure.getHost())) {
+                System.out.println("\uD83C\uDF89start smart-mqtt success! [port:" + brokerConfigure.getPort() + "]");
+            } else {
+                System.out.println("\uD83C\uDF89start smart-mqtt success! [host:" + brokerConfigure.getHost() + " port:" + brokerConfigure.getPort() + "]");
+            }
+
+        } catch (Exception e) {
+            destroy();
+            throw e;
+        }
+
+
+        eventBus.publish(ServerEventType.BROKER_STARTED, this);
+        //释放内存
+        configJson = null;
+    }
+
+    private void initPushThread() {
+        if (brokerConfigure.getTopicLimit() <= 0) {
+            brokerConfigure.setTopicLimit(10);
+        }
+        pushTopicQueue = brokerConfigure.getTopicLimit() <= 4096 ? new ArrayBlockingQueue<>(brokerConfigure.getTopicLimit()) : new LinkedBlockingQueue<>(brokerConfigure.getTopicLimit());
         retainPushThreadPool = Executors.newFixedThreadPool(getBrokerConfigure().getPushThreadNum());
         pushThreadPool = Executors.newFixedThreadPool(getBrokerConfigure().getPushThreadNum());
 
@@ -125,38 +166,6 @@ public class BrokerContextImpl implements BrokerContext {
                 }
             });
         }
-
-        updateBrokerConfigure();
-
-        subscribeEventBus();
-
-        subscribeMessageBus();
-
-        loadAndInstallPlugins();
-
-        try {
-            pagePool = new BufferPagePool(1024 * 1024, brokerConfigure.getThreadNum(), true);
-            server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(brokerConfigure.getMaxPacketSize()), processor);
-            server.setBannerEnabled(false).setReadBufferSize(brokerConfigure.getReadBufferSize()).setWriteBuffer(brokerConfigure.getReadBufferSize(), 128).setBufferPagePool(pagePool).setThreadNum(brokerConfigure.getThreadNum());
-            server.start();
-            System.out.println(BrokerConfigure.BANNER + "\r\n :: smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
-            System.out.println("❤️Gitee: https://gitee.com/smartboot/smart-mqtt");
-            System.out.println("Github: https://github.com/smartboot/smart-mqtt");
-            if (StringUtils.isBlank(brokerConfigure.getHost())) {
-                System.out.println("\uD83C\uDF89start smart-mqtt success! [port:" + brokerConfigure.getPort() + "]");
-            } else {
-                System.out.println("\uD83C\uDF89start smart-mqtt success! [host:" + brokerConfigure.getHost() + " port:" + brokerConfigure.getPort() + "]");
-            }
-
-        } catch (Exception e) {
-            destroy();
-            throw e;
-        }
-
-
-        eventBus.publish(ServerEventType.BROKER_STARTED, this);
-        //释放内存
-        configJson = null;
     }
 
     /**
