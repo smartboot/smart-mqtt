@@ -200,7 +200,7 @@ public class MqttClient extends AbstractSession {
             if (bufferPagePool != null) {
                 client.setBufferPagePool(bufferPagePool);
             }
-            client.setWriteBuffer(1024 * 1024, 10);
+            client.setWriteBuffer(1024 * 1024, 10).connectTimeout(clientConfigure.getConnectionTimeout() * 1000);
             session = client.start(asynchronousChannelGroup);
             mqttWriter = new DefaultMqttWriter(session.writeBuffer());
 

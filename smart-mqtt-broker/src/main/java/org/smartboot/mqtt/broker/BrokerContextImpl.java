@@ -48,6 +48,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 
 /**
  * @author 三刀
@@ -130,25 +131,37 @@ public class BrokerContextImpl implements BrokerContext {
         }
         pushTopicQueue = brokerConfigure.getTopicLimit() <= 4096 ? new ArrayBlockingQueue<>(brokerConfigure.getTopicLimit()) : new LinkedBlockingQueue<>(brokerConfigure.getTopicLimit());
         retainPushThreadPool = Executors.newFixedThreadPool(getBrokerConfigure().getPushThreadNum());
-        pushThreadPool = Executors.newFixedThreadPool(getBrokerConfigure().getPushThreadNum());
+        pushThreadPool = Executors.newFixedThreadPool(getBrokerConfigure().getPushThreadNum(), new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "pushThread");
+            }
+        });
 
         for (int i = 0; i < getBrokerConfigure().getPushThreadNum(); i++) {
             pushThreadPool.execute(new AsyncTask() {
                 @Override
                 public void execute() {
-                    try {
-                        while (true) {
-                            BrokerTopic brokerTopic = pushTopicQueue.take();
+                    while (true) {
+                        BrokerTopic brokerTopic;
+                        try {
+                            brokerTopic = pushTopicQueue.take();
                             brokerTopic.setWaitingPush(false);
+
                             int size = pushTopicQueue.size();
                             if (size > 1024) {
                                 System.out.println("queue:" + size);
                             }
-
+                            //Broker停止服务
                             if (SHUTDOWN_TOPIC == brokerTopic) {
                                 pushTopicQueue.put(SHUTDOWN_TOPIC);
                                 break;
                             }
+                        } catch (InterruptedException e) {
+                            LOGGER.error("pushTopicQueue exception", e);
+                            break;
+                        }
+                        try {
                             //存在待输出消息
                             Collection<TopicSubscriber> subscribers = brokerTopic.getConsumeOffsets().values();
                             subscribers.stream().filter(topicSubscriber -> topicSubscriber.isReady() && topicSubscriber.getPushVersion() != brokerTopic.getVersion().get()).forEach(topicSubscriber -> topicSubscriber.batchPublish(BrokerContextImpl.this));
@@ -158,11 +171,11 @@ public class BrokerContextImpl implements BrokerContext {
                                     break;
                                 }
                             }
-
+                        } catch (Exception e) {
+                            LOGGER.error("brokerTopic:{} push message exception", brokerTopic.getTopic(), e);
                         }
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
                     }
+                    System.out.println("finish push task...");
                 }
             });
         }
@@ -423,11 +436,8 @@ public class BrokerContextImpl implements BrokerContext {
         LOGGER.info("destroy broker...");
         eventBus.publish(ServerEventType.BROKER_DESTROY, this);
         messageBusExecutorService.shutdown();
-        try {
-            pushTopicQueue.put(SHUTDOWN_TOPIC);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        pushTopicQueue.offer(SHUTDOWN_TOPIC);
+        pushThreadPool.shutdown();
         server.shutdown();
         pagePool.release();
         //卸载插件
