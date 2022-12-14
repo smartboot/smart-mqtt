@@ -74,7 +74,7 @@ public abstract class AbstractSession {
         }
     }
 
-    public final synchronized void write(MqttMessage mqttMessage) {
+    public final synchronized void write(MqttMessage mqttMessage, boolean autoFlush) {
         try {
             if (disconnect) {
                 this.disconnect();
@@ -83,31 +83,45 @@ public abstract class AbstractSession {
 
             eventBus.publish(EventType.WRITE_MESSAGE, EventObject.newEventObject(this, mqttMessage));
             mqttMessage.writeTo(mqttWriter);
-            mqttWriter.flush();
+            if (autoFlush) {
+                mqttWriter.flush();
+            }
             latestSendMessageTime = System.currentTimeMillis();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
+    public final synchronized void write(MqttMessage mqttMessage) {
+        write(mqttMessage, true);
+    }
+
+    public void flush() {
+        mqttWriter.flush();
+    }
+
+    public void publish(MqttPublishMessage message, Consumer<Integer> consumer) {
+        publish(message, consumer, true);
+    }
+
     /**
      * 若发送的Qos为0，则回调的consumer packetId为0
      */
-    public void publish(MqttPublishMessage message, Consumer<Integer> consumer) {
+    public void publish(MqttPublishMessage message, Consumer<Integer> consumer, boolean autoFlush) {
 //        LOGGER.info("publish to client:{}, topic:{} packetId:{}", clientId, message.getMqttPublishVariableHeader().topicName(), message.getMqttPublishVariableHeader().packetId());
         switch (message.getFixedHeader().getQosLevel()) {
             case AT_MOST_ONCE:
                 try {
-                    write(message);
+                    write(message, autoFlush);
                 } finally {
                     consumer.accept(QOS0_PACKET_ID);
                 }
                 break;
             case AT_LEAST_ONCE:
-                qosPublisher.publishQos1(this, message, consumer);
+                qosPublisher.publishQos1(this, message, consumer, autoFlush);
                 break;
             case EXACTLY_ONCE:
-                qosPublisher.publishQos2(this, message, consumer);
+                qosPublisher.publishQos2(this, message, consumer, autoFlush);
                 break;
         }
     }

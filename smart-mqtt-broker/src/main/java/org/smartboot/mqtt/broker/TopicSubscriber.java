@@ -64,6 +64,7 @@ public class TopicSubscriber {
 
     private void publish0(BrokerContext brokerContext, int depth) {
         if (depth > 16) {
+            mqttSession.flush();
 //            System.out.println("退出递归...");
             return;
         }
@@ -72,6 +73,7 @@ public class TopicSubscriber {
         PersistenceMessage persistenceMessage = persistenceProvider.get(topic.getTopic(), nextConsumerOffset);
         if (persistenceMessage == null) {
             pushVersion = version;
+            mqttSession.flush();
             return;
         }
         MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(mqttSession.newPacketId(), persistenceMessage.getTopic(), mqttQoS, persistenceMessage.getPayload());
@@ -79,6 +81,7 @@ public class TopicSubscriber {
         int index = inflightQueue.offer(publishMessage, persistenceMessage.getOffset());
         // 飞行队列已满
         if (index == -1) {
+            mqttSession.flush();
 //            System.out.println("queue is full...");
             return;
         }
@@ -100,7 +103,7 @@ public class TopicSubscriber {
             if (nextMessage == null) {
                 pushVersion = tVersion;
             }
-        });
+        }, false);
         long cost = System.currentTimeMillis() - start;
         if (cost > 100) {
             System.out.println("cost..." + cost);

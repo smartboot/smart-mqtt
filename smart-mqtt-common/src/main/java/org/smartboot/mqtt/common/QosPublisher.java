@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 public abstract class QosPublisher {
     private static final Logger LOGGER = LoggerFactory.getLogger(QosPublisher.class);
 
-    public void publishQos1(AbstractSession session, MqttPublishMessage publishMessage, Consumer<Integer> consumer) {
+    void publishQos1(AbstractSession session, MqttPublishMessage publishMessage, Consumer<Integer> consumer, boolean autoFlush) {
         MqttQoS qos = publishMessage.getFixedHeader().getQosLevel();
         ValidateUtils.notNull(qos == MqttQoS.AT_LEAST_ONCE, "qos is null");
         CompletableFuture<Boolean> future = new CompletableFuture<>();
@@ -32,12 +32,12 @@ public abstract class QosPublisher {
             LOGGER.info("Qos1消息发送成功...");
             consumer.accept(publishMessage.getVariableHeader().getPacketId());
         }));
-        session.write(publishMessage);
+        session.write(publishMessage, autoFlush);
         //注册重试
         retry(future, session, publishMessage);
     }
 
-    public void publishQos2(AbstractSession session, MqttPublishMessage publishMessage, Consumer<Integer> consumer) {
+    void publishQos2(AbstractSession session, MqttPublishMessage publishMessage, Consumer<Integer> consumer, boolean autoFlush) {
         MqttQoS qos = publishMessage.getFixedHeader().getQosLevel();
         ValidateUtils.notNull(qos == MqttQoS.EXACTLY_ONCE, "qos is null");
         Integer cacheKey = publishMessage.getVariableHeader().getPacketId();
@@ -60,7 +60,7 @@ public abstract class QosPublisher {
             retry(pubRelFuture, session, pubRelMessage);
             session.write(pubRelMessage);
         }));
-        session.write(publishMessage);
+        session.write(publishMessage, false);
         retry(publishFuture, session, publishMessage);
     }
 
