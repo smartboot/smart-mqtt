@@ -38,7 +38,6 @@ public class TopicSubscriber {
      * retain的消费点位，防止重连后的retain消息被重复消费
      */
     private long retainConsumerOffset;
-    private long retainConsumerTimestamp;
 
     /**
      * 最近一次订阅时间
@@ -46,7 +45,7 @@ public class TopicSubscriber {
     private final long latestSubscribeTime = System.currentTimeMillis();
 
     private TopicToken topicFilterToken;
-    private int pushVersion;
+    private int pushVersion = -1;
 
     private boolean ready = false;
 
@@ -59,22 +58,22 @@ public class TopicSubscriber {
     }
 
     public void batchPublish(BrokerContext brokerContext) {
-        publish0(brokerContext, 0);
+        nextConsumerOffset = publish0(brokerContext, 0, nextConsumerOffset);
     }
 
-    private void publish0(BrokerContext brokerContext, int depth) {
-        if (depth > 16) {
-            mqttSession.flush();
-//            System.out.println("退出递归...");
-            return;
-        }
+    private long publish0(BrokerContext brokerContext, int depth, long expectConsumerOffset) {
         PersistenceProvider persistenceProvider = brokerContext.getProviders().getPersistenceProvider();
         int version = topic.getVersion().get();
-        PersistenceMessage persistenceMessage = persistenceProvider.get(topic.getTopic(), nextConsumerOffset);
+        PersistenceMessage persistenceMessage = persistenceProvider.get(topic.getTopic(), expectConsumerOffset);
         if (persistenceMessage == null) {
             pushVersion = version;
             mqttSession.flush();
-            return;
+            return expectConsumerOffset;
+        }
+        if (depth > 16) {
+            mqttSession.flush();
+//            System.out.println("退出递归...");
+            return expectConsumerOffset;
         }
         MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(mqttSession.newPacketId(), persistenceMessage.getTopic(), mqttQoS, persistenceMessage.getPayload());
         InflightQueue inflightQueue = mqttSession.getInflightQueue();
@@ -83,7 +82,7 @@ public class TopicSubscriber {
         if (index == -1) {
             mqttSession.flush();
 //            System.out.println("queue is full...");
-            return;
+            return expectConsumerOffset;
         }
         long start = System.currentTimeMillis();
         mqttSession.publish(publishMessage, packetId -> {
@@ -92,11 +91,11 @@ public class TopicSubscriber {
             if (offset == -1) {
                 return;
             }
-            setNextConsumerOffset(offset + 1);
+            commitNextConsumerOffset(offset + 1);
             if (persistenceMessage.isRetained()) {
                 setRetainConsumerOffset(getRetainConsumerOffset() + 1);
             }
-            setRetainConsumerTimestamp(persistenceMessage.getCreateTime());
+            commitRetainConsumerTimestamp(persistenceMessage.getCreateTime());
             //本批次全部处理完毕
             int tVersion = topic.getVersion().get();
             PersistenceMessage nextMessage = persistenceProvider.get(topic.getTopic(), getNextConsumerOffset());
@@ -110,7 +109,7 @@ public class TopicSubscriber {
         }
         brokerContext.getEventBus().publish(EventType.PUSH_PUBLISH_MESSAGE, mqttSession);
         //递归处理下一个消息
-        publish0(brokerContext, ++depth);
+        return publish0(brokerContext, ++depth, expectConsumerOffset + 1);
     }
 
     public BrokerTopic getTopic() {
@@ -129,16 +128,13 @@ public class TopicSubscriber {
         return nextConsumerOffset;
     }
 
-    public long getRetainConsumerTimestamp() {
-        return retainConsumerTimestamp;
+
+    public void commitRetainConsumerTimestamp(long retainConsumerTimestamp) {
+        //todo
     }
 
-    public void setRetainConsumerTimestamp(long retainConsumerTimestamp) {
-        this.retainConsumerTimestamp = retainConsumerTimestamp;
-    }
-
-    public void setNextConsumerOffset(long nextConsumerOffset) {
-        this.nextConsumerOffset = nextConsumerOffset;
+    public void commitNextConsumerOffset(long nextConsumerOffset) {
+        //todo
     }
 
     public long getRetainConsumerOffset() {

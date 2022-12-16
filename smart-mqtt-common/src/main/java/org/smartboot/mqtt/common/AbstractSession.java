@@ -97,7 +97,7 @@ public abstract class AbstractSession {
     }
 
     public synchronized void flush() {
-        if (disconnect) {
+        if (!disconnect) {
             mqttWriter.flush();
         }
     }

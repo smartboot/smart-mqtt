@@ -175,7 +175,6 @@ public class BrokerContextImpl implements BrokerContext {
                             LOGGER.error("brokerTopic:{} push message exception", brokerTopic.getTopic(), e);
                         }
                     }
-                    System.out.println("finish push task...");
                 }
             });
         }
