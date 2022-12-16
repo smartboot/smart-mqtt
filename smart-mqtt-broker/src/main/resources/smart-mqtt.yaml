@@ -1,13 +1,5 @@
 broker:
   port: 1883
-  maxInflight: 8
-  retryInterval: 30
-  maxPacketSize: 1048576
-  readBufferSize: 4096
-  username:
-  password:
-  connect:
-    idleTimeout: 5000
 
 plugins:
   - websocket:

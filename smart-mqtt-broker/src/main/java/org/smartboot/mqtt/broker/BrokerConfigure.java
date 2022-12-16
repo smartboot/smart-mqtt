@@ -82,7 +82,7 @@ public class BrokerConfigure {
     /**
      *
      */
-    private int maxInflight;
+    private int maxInflight = 8;
 
     /**
      * 客户端连接鉴权账号

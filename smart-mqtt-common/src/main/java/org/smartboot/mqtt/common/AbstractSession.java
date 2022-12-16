@@ -96,8 +96,10 @@ public abstract class AbstractSession {
         write(mqttMessage, true);
     }
 
-    public void flush() {
-        mqttWriter.flush();
+    public synchronized void flush() {
+        if (disconnect) {
+            mqttWriter.flush();
+        }
     }
 
     public void publish(MqttPublishMessage message, Consumer<Integer> consumer) {
