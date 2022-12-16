@@ -78,7 +78,7 @@ public abstract class AbstractSession {
         try {
             if (disconnect) {
                 this.disconnect();
-                ValidateUtils.throwException("已断开连接,无法发送消息:", null);
+                ValidateUtils.isTrue(false, "已断开连接,无法发送消息");
             }
 
             eventBus.publish(EventType.WRITE_MESSAGE, EventObject.newEventObject(this, mqttMessage));
