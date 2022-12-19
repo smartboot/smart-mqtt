@@ -30,6 +30,7 @@ import org.smartboot.mqtt.common.message.WillMessage;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.buffer.BufferPagePool;
+import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioQuickClient;
 import org.smartboot.socket.util.QuickTimerTask;
@@ -45,7 +46,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -103,12 +103,12 @@ public class MqttClient extends AbstractSession {
 
     public void connect() {
         try {
-            asynchronousChannelGroup = AsynchronousChannelGroup.withFixedThreadPool(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
-                private AtomicInteger index = new AtomicInteger(1);
+            asynchronousChannelGroup = new EnhanceAsynchronousChannelProvider().openAsynchronousChannelGroup(2, new ThreadFactory() {
+                private int i = 0;
 
                 @Override
                 public Thread newThread(Runnable r) {
-                    return new Thread(r, "ClientGroup" + index.getAndIncrement());
+                    return new Thread(r, "mqtt-client-" + MqttClient.this.hashCode() + "-" + (i++));
                 }
             });
         } catch (IOException e) {

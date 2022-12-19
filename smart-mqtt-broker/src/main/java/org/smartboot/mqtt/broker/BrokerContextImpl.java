@@ -132,9 +132,11 @@ public class BrokerContextImpl implements BrokerContext {
         pushTopicQueue = brokerConfigure.getTopicLimit() <= 4096 ? new ArrayBlockingQueue<>(brokerConfigure.getTopicLimit()) : new LinkedBlockingQueue<>(brokerConfigure.getTopicLimit());
         retainPushThreadPool = Executors.newFixedThreadPool(getBrokerConfigure().getPushThreadNum());
         pushThreadPool = Executors.newFixedThreadPool(getBrokerConfigure().getPushThreadNum(), new ThreadFactory() {
+            int index = 0;
+
             @Override
             public Thread newThread(Runnable r) {
-                return new Thread(r, "pushThread");
+                return new Thread(r, "broker-push-" + (index++));
             }
         });
 
@@ -146,7 +148,6 @@ public class BrokerContextImpl implements BrokerContext {
                         BrokerTopic brokerTopic;
                         try {
                             brokerTopic = pushTopicQueue.take();
-                            brokerTopic.setWaitingPush(false);
 
                             int size = pushTopicQueue.size();
                             if (size > 1024) {
@@ -165,6 +166,7 @@ public class BrokerContextImpl implements BrokerContext {
                             //存在待输出消息
                             Collection<TopicSubscriber> subscribers = brokerTopic.getConsumeOffsets().values();
                             subscribers.stream().filter(topicSubscriber -> topicSubscriber.isReady() && topicSubscriber.getPushVersion() != brokerTopic.getVersion().get()).forEach(topicSubscriber -> topicSubscriber.batchPublish(BrokerContextImpl.this));
+                            brokerTopic.setPushing(false);
                             for (TopicSubscriber subscriber : subscribers) {
                                 if (subscriber.getPushVersion() != brokerTopic.getVersion().get()) {
                                     notifyPush(brokerTopic);
@@ -259,16 +261,16 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     private void notifyPush(BrokerTopic topic) {
-        if (topic.isWaitingPush()) {
+        if (topic.isPushing()) {
             return;
         }
         synchronized (topic) {
             //已加入推送队列
-            if (topic.isWaitingPush()) {
+            if (topic.isPushing()) {
                 return;
             }
             try {
-                topic.setWaitingPush(true);
+                topic.setPushing(true);
                 pushTopicQueue.put(topic);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);

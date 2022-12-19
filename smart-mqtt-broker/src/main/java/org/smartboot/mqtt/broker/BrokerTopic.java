@@ -21,7 +21,7 @@ public class BrokerTopic extends Topic {
     /**
      * 当前Topic是否圈闭推送完成
      */
-    private boolean waitingPush;
+    private boolean pushing;
 
     public BrokerTopic(String topic) {
         super(topic);
@@ -35,11 +35,11 @@ public class BrokerTopic extends Topic {
         return version;
     }
 
-    public boolean isWaitingPush() {
-        return waitingPush;
+    public boolean isPushing() {
+        return pushing;
     }
 
-    public void setWaitingPush(boolean waitingPush) {
-        this.waitingPush = waitingPush;
+    public void setPushing(boolean pushing) {
+        this.pushing = pushing;
     }
 }
