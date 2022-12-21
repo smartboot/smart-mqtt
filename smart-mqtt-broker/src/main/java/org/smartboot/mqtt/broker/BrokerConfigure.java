@@ -57,7 +57,7 @@ public class BrokerConfigure {
     /**
      * MQTT最大报文限制字节数
      */
-    private int maxPacketSize = 4096;
+    private int maxPacketSize = 1048576;
 
     /**
      * 线程数
