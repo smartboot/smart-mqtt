@@ -81,7 +81,7 @@ public class TopicSubscriber {
         // 飞行队列已满
         if (index == -1) {
             mqttSession.flush();
-//            System.out.println("queue is full...");
+//            System.out.println("queue is full..." + expectConsumerOffset);
             return expectConsumerOffset;
         }
         long start = System.currentTimeMillis();
@@ -96,12 +96,6 @@ public class TopicSubscriber {
                 setRetainConsumerOffset(getRetainConsumerOffset() + 1);
             }
             commitRetainConsumerTimestamp(persistenceMessage.getCreateTime());
-            //本批次全部处理完毕
-            int tVersion = topic.getVersion().get();
-            PersistenceMessage nextMessage = persistenceProvider.get(topic.getTopic(), getNextConsumerOffset());
-            if (nextMessage == null) {
-                pushVersion = tVersion;
-            }
         }, false);
         long cost = System.currentTimeMillis() - start;
         if (cost > 100) {

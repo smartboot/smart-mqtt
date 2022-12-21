@@ -1,6 +1,6 @@
 broker:
   port: 1883
-
+  maxInflight: 8
 plugins:
   - websocket:
       port: 1884

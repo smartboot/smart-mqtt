@@ -50,7 +50,7 @@ public class InflightQueue {
         try {
             if (commitIndex != takeIndex) {
                 //转负数表示以提交
-                offsets[commitIndex] = -offsets[commitIndex];
+                offsets[commitIndex] = offsets[commitIndex] | Long.MIN_VALUE;
                 return -1;
             }
             long offset = offsets[takeIndex++];
@@ -59,7 +59,7 @@ public class InflightQueue {
                 takeIndex = 0;
             }
             while (count > 0 && offsets[takeIndex] < 0) {
-                offset = -offsets[takeIndex];
+                offset = offsets[takeIndex] & ~Long.MIN_VALUE;
                 offsets[takeIndex] = 0;
                 queue[takeIndex++] = null;
                 if (takeIndex == queue.length) {
