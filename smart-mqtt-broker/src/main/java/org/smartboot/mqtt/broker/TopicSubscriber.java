@@ -99,7 +99,7 @@ public class TopicSubscriber {
         }, false);
         long cost = System.currentTimeMillis() - start;
         if (cost > 100) {
-            System.out.println("cost..." + cost);
+            System.out.println("publish busy ,cost: " + cost);
         }
         brokerContext.getEventBus().publish(EventType.PUSH_PUBLISH_MESSAGE, mqttSession);
         //递归处理下一个消息
