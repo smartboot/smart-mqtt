@@ -1,7 +1,7 @@
 package org.smartboot.mqtt.common.enums;
 
 public enum MqttVersion {
-    MQTT_3_1(MqttProtocolEnum.MQTT_3_1, (byte) 3), MQTT_3_1_1(MqttProtocolEnum.MQTT_3_1_1, (byte) 4);
+    MQTT_3_1(MqttProtocolEnum.MQTT_3_1, (byte) 3), MQTT_3_1_1(MqttProtocolEnum.MQTT_3_1_1, (byte) 4), MQTT_5(MqttProtocolEnum.MQTT_5, (byte) 5);
 
     private final MqttProtocolEnum protocol;
     private final byte level;
