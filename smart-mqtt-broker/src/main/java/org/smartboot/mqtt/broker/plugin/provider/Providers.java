@@ -1,9 +1,7 @@
 package org.smartboot.mqtt.broker.plugin.provider;
 
 import org.smartboot.mqtt.broker.persistence.message.MemoryPersistenceProvider;
-import org.smartboot.mqtt.broker.persistence.message.PersistenceProvider;
 import org.smartboot.mqtt.broker.persistence.session.MemorySessionStateProvider;
-import org.smartboot.mqtt.broker.persistence.session.SessionStateProvider;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -14,6 +12,8 @@ public class Providers {
 
     private PersistenceProvider retainMessageProvider = new MemoryPersistenceProvider();
     private PersistenceProvider persistenceProvider = new MemoryPersistenceProvider();
+
+    private ConnectAuthenticationProvider connectAuthenticationProvider;
 
     public SessionStateProvider getSessionStateProvider() {
         return sessionStateProvider;
@@ -39,4 +39,11 @@ public class Providers {
         this.persistenceProvider = persistenceProvider;
     }
 
+    public ConnectAuthenticationProvider getConnectAuthenticationProvider() {
+        return connectAuthenticationProvider;
+    }
+
+    public void setConnectAuthenticationProvider(ConnectAuthenticationProvider connectAuthenticationProvider) {
+        this.connectAuthenticationProvider = connectAuthenticationProvider;
+    }
 }

@@ -3,6 +3,8 @@ package org.smartboot.mqtt.broker;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.broker.plugin.provider.ConnectAuthenticationProvider;
+import org.smartboot.mqtt.common.message.MqttConnectMessage;
 
 import java.util.Objects;
 
@@ -11,18 +13,29 @@ import java.util.Objects;
  * @date 2022-08-05 16:45:50
  * @since 1.0.0
  */
-public class ConfiguredAuthenticationServiceImpl implements AuthenticationService {
+public class ConfiguredConnectAuthenticationProviderImpl implements ConnectAuthenticationProvider {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ConfiguredAuthenticationServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConfiguredConnectAuthenticationProviderImpl.class);
 
     private final BrokerConfigure configure;
 
-    public ConfiguredAuthenticationServiceImpl(BrokerContext context) {
+    public ConfiguredConnectAuthenticationProviderImpl(BrokerContext context) {
         configure = context.getBrokerConfigure();
     }
 
+
+    private static String getHost(MqttSession session) {
+        try {
+            return session.getRemoteAddress().getHostName();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
     @Override
-    public boolean authentication(String username, String password, MqttSession session) {
+    public boolean authentication(MqttConnectMessage connectMessage, MqttSession session) {
+        String username = connectMessage.getPayload().userName();
+        String password = connectMessage.getPayload().passwordInBytes() == null ? "" : new String(connectMessage.getPayload().passwordInBytes());
         String configuredUsername = configure.getUsername();
         String configuredPassword = configure.getPassword();
         String host = getHost(session);
@@ -36,18 +49,10 @@ public class ConfiguredAuthenticationServiceImpl implements AuthenticationServic
         boolean auth = Objects.equals(configuredUsername, username) && Objects.equals(configuredPassword, password);
         if (auth) {
             LOGGER.info("auth success, ip:{} clientId: {}, username: {}", host, session.getClientId(), username);
-        }  else {
+        } else {
             LOGGER.info("auth failed, ip:{} clientId: {}, username: {}", host, session.getClientId(), username);
         }
 
         return auth;
-    }
-
-    private static String getHost(MqttSession session) {
-        try {
-            return session.getRemoteAddress().getHostName();
-        } catch (Exception e) {
-            return "";
-        }
     }
 }

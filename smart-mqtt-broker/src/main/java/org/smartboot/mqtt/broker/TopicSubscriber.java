@@ -3,7 +3,7 @@ package org.smartboot.mqtt.broker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.persistence.message.PersistenceMessage;
-import org.smartboot.mqtt.broker.persistence.message.PersistenceProvider;
+import org.smartboot.mqtt.broker.plugin.provider.PersistenceProvider;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;

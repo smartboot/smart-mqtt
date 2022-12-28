@@ -8,7 +8,7 @@ import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.eventbus.EventObject;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.broker.persistence.session.SessionState;
-import org.smartboot.mqtt.broker.persistence.session.SessionStateProvider;
+import org.smartboot.mqtt.broker.plugin.provider.SessionStateProvider;
 import org.smartboot.mqtt.common.MqttMessageBuilders;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttProtocolEnum;

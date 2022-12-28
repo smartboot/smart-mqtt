@@ -6,7 +6,6 @@ import com.alibaba.fastjson2.JSONReader;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.eventbus.ConnectAuthenticationSubscriber;
 import org.smartboot.mqtt.broker.eventbus.ConnectIdleTimeMonitorSubscriber;
 import org.smartboot.mqtt.broker.eventbus.KeepAliveMonitorSubscriber;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
@@ -93,6 +92,8 @@ public class BrokerContextImpl implements BrokerContext {
 
         updateBrokerConfigure();
 
+        initProvider();
+
         subscribeEventBus();
 
         subscribeMessageBus();
@@ -123,6 +124,11 @@ public class BrokerContextImpl implements BrokerContext {
         eventBus.publish(ServerEventType.BROKER_STARTED, this);
         //释放内存
         configJson = null;
+    }
+
+    private void initProvider() {
+        //连接鉴权处理器
+        providers.setConnectAuthenticationProvider(new ConfiguredConnectAuthenticationProviderImpl(this));
     }
 
     private void initPushThread() {
@@ -209,7 +215,11 @@ public class BrokerContextImpl implements BrokerContext {
         //连接鉴权超时监控
         eventBus.subscribe(ServerEventType.SESSION_CREATE, new ConnectIdleTimeMonitorSubscriber(this));
         //连接鉴权
-        eventBus.subscribe(ServerEventType.CONNECT, new ConnectAuthenticationSubscriber(this));
+        eventBus.subscribe(ServerEventType.CONNECT, (eventType, object) -> {
+            boolean suc = providers.getConnectAuthenticationProvider().authentication(object.getObject(), object.getSession());
+            object.getSession().setAuthorized(suc);
+            object.getSession().setUsername(object.getObject().getPayload().userName());
+        });
         //保持连接状态监听,长时间没有消息通信将断开连接
         eventBus.subscribe(ServerEventType.CONNECT, new KeepAliveMonitorSubscriber(this));
 

@@ -1,5 +1,6 @@
 package org.smartboot.mqtt.broker.persistence.message;
 
+import org.smartboot.mqtt.broker.plugin.provider.PersistenceProvider;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 import java.util.concurrent.ConcurrentHashMap;
