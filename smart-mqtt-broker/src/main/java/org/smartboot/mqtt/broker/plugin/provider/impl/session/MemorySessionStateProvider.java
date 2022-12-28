@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.broker.persistence.session;
+package org.smartboot.mqtt.broker.plugin.provider.impl.session;
 
 import org.smartboot.mqtt.broker.plugin.provider.SessionStateProvider;
 

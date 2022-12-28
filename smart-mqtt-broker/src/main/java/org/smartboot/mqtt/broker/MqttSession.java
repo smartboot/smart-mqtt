@@ -3,7 +3,7 @@ package org.smartboot.mqtt.broker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
-import org.smartboot.mqtt.broker.persistence.session.SessionState;
+import org.smartboot.mqtt.broker.plugin.provider.impl.session.SessionState;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.MqttWriter;
@@ -120,8 +120,13 @@ public class MqttSession extends AbstractSession {
         this.username = username;
     }
 
-    public void subscribe(String topicFilter, MqttQoS mqttQoS) {
-        subscribe0(topicFilter, mqttQoS, true);
+    public MqttQoS subscribe(String topicFilter, MqttQoS mqttQoS) {
+        if (mqttContext.getProviders().getSubscribeProvider().subscribeTopic(topicFilter, this)) {
+            subscribe0(topicFilter, mqttQoS, true);
+            return mqttQoS;
+        } else {
+            return MqttQoS.FAILURE;
+        }
     }
 
     private void subscribe0(String topicFilter, MqttQoS mqttQoS, boolean newSubscribe) {
@@ -138,7 +143,7 @@ public class MqttSession extends AbstractSession {
 
         //通配符匹配存量Topic
         for (BrokerTopic topic : mqttContext.getTopics()) {
-            if (TopicTokenUtil.match(topic.getTopicToken(), topicToken)) {
+            if (TopicTokenUtil.match(topic.getTopicToken(), topicToken) && mqttContext.getProviders().getSubscribeProvider().subscribeTopic(topic.getTopic(), this)) {
                 TopicSubscriber subscription = subscribeSuccess(mqttQoS, topicToken, topic);
                 if (newSubscribe) {
                     mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, subscription);
@@ -163,7 +168,7 @@ public class MqttSession extends AbstractSession {
 
                 @Override
                 public void subscribe(EventType<BrokerTopic> eventType, BrokerTopic object) {
-                    if (TopicTokenUtil.match(object.getTopicToken(), topicToken)) {
+                    if (TopicTokenUtil.match(object.getTopicToken(), topicToken) && mqttContext.getProviders().getSubscribeProvider().subscribeTopic(object.getTopic(), MqttSession.this)) {
                         TopicSubscriber subscription = MqttSession.this.subscribeSuccess(mqttQoS, topicToken, object);
                         mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, subscription);
                     }

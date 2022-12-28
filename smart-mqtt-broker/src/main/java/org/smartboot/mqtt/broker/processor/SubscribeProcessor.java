@@ -25,8 +25,7 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
         int[] qosArray = new int[mqttSubscribeMessage.getMqttSubscribePayload().getTopicSubscriptions().size()];
         int i = 0;
         for (MqttTopicSubscription mqttTopicSubscription : mqttSubscribeMessage.getMqttSubscribePayload().getTopicSubscriptions()) {
-            session.subscribe(mqttTopicSubscription.getTopicFilter(), mqttTopicSubscription.getQualityOfService());
-            qosArray[i++] = mqttTopicSubscription.getQualityOfService().value();
+            qosArray[i++] = session.subscribe(mqttTopicSubscription.getTopicFilter(), mqttTopicSubscription.getQualityOfService()).value();
         }
 
 
