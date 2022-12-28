@@ -38,6 +38,14 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
     @Override
     public void process(BrokerContext context, MqttSession session, MqttConnectMessage mqttConnectMessage) {
 //        LOGGER.info("receive connect message:{}", mqttConnectMessage);
+        String clientId = mqttConnectMessage.getPayload().clientIdentifier();
+        //服务端可以允许客户端提供一个零字节的客户端标识符 (ClientId) ，如果这样做了，服务端必须将这看作特
+        //殊情况并分配唯一的客户端标识符给那个客户端。然后它必须假设客户端提供了那个唯一的客户端标识符，正常处理这个 CONNECT 报文
+        if (clientId.length() == 0) {
+            clientId = MqttUtil.createClientId();
+        }
+        session.setClientId(clientId);
+
         //有效性校验
         //服务端必须按照 3.1 节的要求验证 CONNECT 报文，如果报文不符合规范，服务端不发送CONNACK 报文直接关闭网络连接
         checkMessage(session, mqttConnectMessage);
@@ -109,16 +117,8 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
     }
 
     private void refreshSession(BrokerContext context, MqttSession session, MqttConnectMessage mqttConnectMessage) {
-        MqttConnectPayload payload = mqttConnectMessage.getPayload();
         session.setCleanSession(mqttConnectMessage.getVariableHeader().isCleanSession());
-        String clientId = payload.clientIdentifier();
-        //服务端可以允许客户端提供一个零字节的客户端标识符 (ClientId) ，如果这样做了，服务端必须将这看作特
-        //殊情况并分配唯一的客户端标识符给那个客户端。然后它必须假设客户端提供了那个唯一的客户端标识符，正常处理这个 CONNECT 报文
-        if (clientId.length() == 0) {
-            clientId = MqttUtil.createClientId();
-        }
-
-        MqttSession mqttSession = context.getSession(clientId);
+        MqttSession mqttSession = context.getSession(session.getClientId());
         if (mqttSession != null) {
             if (session.isCleanSession()) {
                 //如果清理会话（CleanSession）标志被设置为 1，客户端和服务端必须丢弃之前的任何会话并开始一个新的会话。
@@ -130,7 +130,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
                 mqttSession.disconnect();
                 //如果清理会话（CleanSession）标志被设置为 0，服务端必须基于当前会话（使用客户端标识符识别）的状态恢复与客户端的通信。
                 SessionStateProvider sessionStateProvider = context.getProviders().getSessionStateProvider();
-                SessionState sessionState = sessionStateProvider.get(clientId);
+                SessionState sessionState = sessionStateProvider.get(session.getClientId());
                 if (sessionState != null) {
                     session.getResponseConsumers().putAll(sessionState.getResponseConsumers());
                     sessionState.getSubscribers().forEach(session::subscribe);
@@ -145,7 +145,6 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
             }
         }
 
-        session.setClientId(clientId);
         context.addSession(session);
         LOGGER.debug("add session for client:{}", session);
     }
