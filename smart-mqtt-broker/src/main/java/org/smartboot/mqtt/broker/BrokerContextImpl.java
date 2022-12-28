@@ -214,12 +214,7 @@ public class BrokerContextImpl implements BrokerContext {
         });
         //连接鉴权超时监控
         eventBus.subscribe(ServerEventType.SESSION_CREATE, new ConnectIdleTimeMonitorSubscriber(this));
-        //连接鉴权
-        eventBus.subscribe(ServerEventType.CONNECT, (eventType, object) -> {
-            boolean suc = providers.getConnectAuthenticationProvider().authentication(object.getObject(), object.getSession());
-            object.getSession().setAuthorized(suc);
-            object.getSession().setUsername(object.getObject().getPayload().userName());
-        });
+
         //保持连接状态监听,长时间没有消息通信将断开连接
         eventBus.subscribe(ServerEventType.CONNECT, new KeepAliveMonitorSubscriber(this));
 

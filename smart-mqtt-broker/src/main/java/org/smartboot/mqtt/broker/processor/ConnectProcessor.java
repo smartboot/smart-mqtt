@@ -42,11 +42,14 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         //服务端必须按照 3.1 节的要求验证 CONNECT 报文，如果报文不符合规范，服务端不发送CONNACK 报文直接关闭网络连接
         checkMessage(session, mqttConnectMessage);
 
-        // 先进行认证
+        //连接鉴权
+        ValidateUtils.isTrue(context.getProviders().getConnectAuthenticationProvider().authentication(mqttConnectMessage, session), "Client authentication failed", () -> connFailAck(CONNECTION_REFUSED_NOT_AUTHORIZED, session));
+
+        session.setAuthorized(true);
+        session.setUsername(mqttConnectMessage.getPayload().userName());
+
+
         context.getEventBus().publish(ServerEventType.CONNECT, EventObject.newEventObject(session, mqttConnectMessage));
-        if (!session.isAuthorized()) {
-            throw new IllegalStateException("Authorization failed");
-        }
 
         //清理会话
         refreshSession(context, session, mqttConnectMessage);
@@ -84,11 +87,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         // 如果发现不支持的协议级别，服务端必须给发送一个返回码为 0x01（不支持的协议级别）的 CONNACK 报文响应
         //CONNECT 报文，然后断开客户端的连接
         final MqttVersion mqttVersion = MqttVersion.getByProtocolWithVersion(protocol, connectVariableHeader.getProtocolLevel());
-        ValidateUtils.notNull(mqttVersion, "invalid version", () -> {
-            MqttConnAckMessage badProto = connFailAck(CONNECTION_REFUSED_UNACCEPTABLE_PROTOCOL_VERSION);
-            session.write(badProto);
-            session.disconnect();
-        });
+        ValidateUtils.notNull(mqttVersion, "invalid version", () -> connFailAck(CONNECTION_REFUSED_UNACCEPTABLE_PROTOCOL_VERSION, session));
 
         //服务端必须验证 CONNECT 控制报文的保留标志位（第 0 位）是否为 0，如果不为 0 必须断开客户端连接。
         ValidateUtils.isTrue(connectVariableHeader.getReserved() == 0, "", session::disconnect);
@@ -98,17 +97,13 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         //“0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ”（大写字母，小写字母和数字）
         boolean invalidClient = StringUtils.isNotBlank(clientId) && (mqttVersion == MqttVersion.MQTT_3_1 && clientId.length() > MqttCodecUtil.MAX_CLIENT_ID_LENGTH);
         ValidateUtils.isTrue(!invalidClient, "", () -> {
-            MqttConnAckMessage connAckMessage = connFailAck(CONNECTION_REFUSED_IDENTIFIER_REJECTED);
-            session.write(connAckMessage);
-            session.disconnect();
+            connFailAck(CONNECTION_REFUSED_IDENTIFIER_REJECTED, session);
             LOGGER.error("The MQTT client ID cannot be empty. Username={}", payload.userName());
         });
         //如果客户端提供的 ClientId 为零字节且清理会话标志为 0，
         // 服务端必须发送返回码为 0x02（表示标识符不合格）的 CONNACK 报文响应客户端的 CONNECT 报文，然后关闭网络连接
         ValidateUtils.isTrue(connectVariableHeader.isCleanSession() || !StringUtils.isBlank(clientId), "", () -> {
-            MqttConnAckMessage connAckMessage = connFailAck(CONNECTION_REFUSED_IDENTIFIER_REJECTED);
-            session.write(connAckMessage);
-            session.disconnect();
+            connFailAck(CONNECTION_REFUSED_IDENTIFIER_REJECTED, session);
             LOGGER.error("The MQTT client ID cannot be empty. Username={}", payload.userName());
         });
     }
@@ -167,10 +162,12 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         session.setWillMessage(publishMessage);
     }
 
-    private MqttConnAckMessage connFailAck(MqttConnectReturnCode returnCode) {
+    private void connFailAck(MqttConnectReturnCode returnCode, MqttSession session) {
         //如果服务端发送了一个包含非零返回码的 CONNACK 报文，它必须将当前会话标志设置为 0
         ValidateUtils.isTrue(returnCode != CONNECTION_ACCEPTED, "");
-        return connAck(returnCode, false);
+        MqttConnAckMessage badProto = connAck(returnCode, false);
+        session.write(badProto);
+        session.disconnect();
     }
 
     private MqttConnAckMessage connAck(MqttConnectReturnCode returnCode, boolean sessionPresent) {
