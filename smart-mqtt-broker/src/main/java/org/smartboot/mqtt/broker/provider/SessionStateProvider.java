@@ -1,6 +1,6 @@
-package org.smartboot.mqtt.broker.plugin.provider;
+package org.smartboot.mqtt.broker.provider;
 
-import org.smartboot.mqtt.broker.plugin.provider.impl.session.SessionState;
+import org.smartboot.mqtt.broker.provider.impl.session.SessionState;
 
 /**
  * 会话状态Provider

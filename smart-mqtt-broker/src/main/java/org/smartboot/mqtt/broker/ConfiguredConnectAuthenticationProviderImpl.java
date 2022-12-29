@@ -3,7 +3,7 @@ package org.smartboot.mqtt.broker;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.plugin.provider.ConnectAuthenticationProvider;
+import org.smartboot.mqtt.broker.provider.ConnectAuthenticationProvider;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 
 import java.util.Objects;
@@ -24,10 +24,11 @@ public class ConfiguredConnectAuthenticationProviderImpl implements ConnectAuthe
     }
 
 
-    private static String getHost(MqttSession session) {
+    private String getHost(MqttSession session) {
         try {
             return session.getRemoteAddress().getHostName();
         } catch (Exception e) {
+            LOGGER.error("get remote address exception", e);
             return "";
         }
     }

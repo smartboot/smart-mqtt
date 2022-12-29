@@ -1,6 +1,6 @@
-package org.smartboot.mqtt.broker.plugin.provider.impl.session;
+package org.smartboot.mqtt.broker.provider.impl.session;
 
-import org.smartboot.mqtt.broker.plugin.provider.SessionStateProvider;
+import org.smartboot.mqtt.broker.provider.SessionStateProvider;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

@@ -1,9 +1,10 @@
-package org.smartboot.mqtt.broker.plugin.provider;
+package org.smartboot.mqtt.broker.provider;
 
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 
 /**
+ * 连接认证
  * @author qinluo
  * @date 2022-08-05 16:42:40
  * @since 1.0.0

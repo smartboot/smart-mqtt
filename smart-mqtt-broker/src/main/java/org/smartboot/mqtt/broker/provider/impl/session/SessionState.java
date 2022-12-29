@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.broker.plugin.provider.impl.session;
+package org.smartboot.mqtt.broker.provider.impl.session;
 
 import org.smartboot.mqtt.common.AckMessage;
 import org.smartboot.mqtt.common.enums.MqttQoS;

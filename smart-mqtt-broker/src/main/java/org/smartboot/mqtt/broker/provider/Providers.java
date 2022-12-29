@@ -1,7 +1,7 @@
-package org.smartboot.mqtt.broker.plugin.provider;
+package org.smartboot.mqtt.broker.provider;
 
-import org.smartboot.mqtt.broker.plugin.provider.impl.message.MemoryPersistenceProvider;
-import org.smartboot.mqtt.broker.plugin.provider.impl.session.MemorySessionStateProvider;
+import org.smartboot.mqtt.broker.provider.impl.message.MemoryPersistenceProvider;
+import org.smartboot.mqtt.broker.provider.impl.session.MemorySessionStateProvider;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）

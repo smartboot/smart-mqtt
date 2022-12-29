@@ -1,6 +1,6 @@
-package org.smartboot.mqtt.broker.plugin.provider;
+package org.smartboot.mqtt.broker.provider;
 
-import org.smartboot.mqtt.broker.plugin.provider.impl.message.PersistenceMessage;
+import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 /**
