@@ -25,11 +25,17 @@ public class ConfiguredConnectAuthenticationProviderImpl implements ConnectAuthe
 
 
     private String getHost(MqttSession session) {
+        long start = System.currentTimeMillis();
         try {
             return session.getRemoteAddress().getHostName();
         } catch (Exception e) {
             LOGGER.error("get remote address exception", e);
             return "";
+        } finally {
+            long cost = System.currentTimeMillis() - start;
+            if (cost > 1000) {
+                LOGGER.warn("InetSocketAddress.getHostName cost: " + cost + "ms");
+            }
         }
     }
 
