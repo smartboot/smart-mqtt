@@ -36,7 +36,7 @@ public class ConnectIdleTimeMonitorSubscriber implements EventBusSubscriber<Mqtt
             @Override
             public void execute() {
                 if (map.remove(session) != null) {
-                    LOGGER.info("长时间未收到Connect消息，连接断开！");
+                    LOGGER.debug("长时间未收到客户端：{} 的Connect消息，连接断开！", session.getClientId());
                     session.disconnect();
                 }
             }

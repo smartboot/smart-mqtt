@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.provider.ConnectAuthenticationProvider;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
+import org.smartboot.mqtt.common.util.MqttUtil;
 
 import java.util.Objects;
 
@@ -24,28 +25,13 @@ public class ConfiguredConnectAuthenticationProviderImpl implements ConnectAuthe
     }
 
 
-    private String getHost(MqttSession session) {
-        long start = System.currentTimeMillis();
-        try {
-            return session.getRemoteAddress().getHostName();
-        } catch (Exception e) {
-            LOGGER.error("get remote address exception", e);
-            return "";
-        } finally {
-            long cost = System.currentTimeMillis() - start;
-            if (cost > 1000) {
-                LOGGER.warn("InetSocketAddress.getHostName cost: " + cost + "ms");
-            }
-        }
-    }
-
     @Override
     public boolean authentication(MqttConnectMessage connectMessage, MqttSession session) {
         String username = connectMessage.getPayload().userName();
         String password = connectMessage.getPayload().passwordInBytes() == null ? "" : new String(connectMessage.getPayload().passwordInBytes());
         String configuredUsername = configure.getUsername();
         String configuredPassword = configure.getPassword();
-        String host = getHost(session);
+        String host = MqttUtil.getRemoteAddress(session);
 
 
         if (StringUtils.isEmpty(configuredPassword) || StringUtils.isEmpty(configuredUsername)) {
