@@ -14,6 +14,7 @@ import org.smartboot.mqtt.broker.eventbus.messagebus.MessageBusSubscriber;
 import org.smartboot.mqtt.broker.eventbus.messagebus.consumer.RetainPersistenceConsumer;
 import org.smartboot.mqtt.broker.plugin.Plugin;
 import org.smartboot.mqtt.broker.provider.Providers;
+import org.smartboot.mqtt.broker.provider.impl.ConfiguredConnectAuthenticationProviderImpl;
 import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;

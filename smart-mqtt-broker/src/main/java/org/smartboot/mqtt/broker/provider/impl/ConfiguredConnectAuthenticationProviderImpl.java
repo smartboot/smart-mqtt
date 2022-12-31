@@ -1,8 +1,11 @@
-package org.smartboot.mqtt.broker;
+package org.smartboot.mqtt.broker.provider.impl;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.broker.BrokerConfigure;
+import org.smartboot.mqtt.broker.BrokerContext;
+import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.provider.ConnectAuthenticationProvider;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.util.MqttUtil;
