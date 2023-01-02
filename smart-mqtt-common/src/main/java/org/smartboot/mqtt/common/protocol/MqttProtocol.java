@@ -11,12 +11,14 @@ import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.Protocol;
 import org.smartboot.socket.transport.AioSession;
+import org.smartboot.socket.util.AttachKey;
+import org.smartboot.socket.util.Attachment;
 import org.smartboot.socket.util.BufferUtils;
 import org.smartboot.socket.util.DecoderException;
 
 import java.nio.ByteBuffer;
 
-import static org.smartboot.mqtt.common.protocol.MqttProtocol.DecoderState.*;
+import static org.smartboot.mqtt.common.protocol.DecoderState.*;
 
 /**
  * @author 三刀
@@ -26,6 +28,9 @@ public class MqttProtocol implements Protocol<MqttMessage> {
     private static final Logger logger = LoggerFactory.getLogger(MqttProtocol.class);
     private static final int DEFAULT_MAX_BYTES_IN_MESSAGE = 8092;
     private final int maxBytesInMessage;
+
+    public static final AttachKey<MqttVersion> MQTT_VERSION_ATTACH_KEY = AttachKey.valueOf("mqtt_version");
+    private static final AttachKey<DecodeUnit> DECODE_UNIT_ATTACH_KEY = AttachKey.valueOf("decodeUnit");
 
     public MqttProtocol() {
         this(DEFAULT_MAX_BYTES_IN_MESSAGE);
@@ -38,14 +43,15 @@ public class MqttProtocol implements Protocol<MqttMessage> {
 
     @Override
     public MqttMessage decode(ByteBuffer buffer, AioSession session) {
-        DecodeUnit unit;
-        if (session.getAttachment() == null) {
+
+        Attachment attachment = session.getAttachment();
+        DecodeUnit unit = attachment.get(DECODE_UNIT_ATTACH_KEY);
+        if (unit == null) {
             unit = new DecodeUnit();
             unit.state = READ_FIXED_HEADER;
-            session.setAttachment(unit);
-        } else {
-            unit = session.getAttachment();
+            attachment.put(DECODE_UNIT_ATTACH_KEY, unit);
         }
+
         switch (unit.state) {
             case READ_FIXED_HEADER:
                 try {
@@ -94,6 +100,11 @@ public class MqttProtocol implements Protocol<MqttMessage> {
 //                            }
 //                    }
                     unit.mqttMessage = MqttMessageFactory.newMessage(mqttFixedHeader);
+                    //非MqttConnectMessage对象为null,
+                    if (unit.mqttMessage.getVersion() == null) {
+                        unit.mqttMessage.setVersion(attachment.get(MQTT_VERSION_ATTACH_KEY));
+                    }
+
                     unit.state = READ_VARIABLE_HEADER;
 
                 } catch (Exception cause) {
@@ -133,7 +144,7 @@ public class MqttProtocol implements Protocol<MqttMessage> {
                     if (payloadBuffer.remaining() < remainingLength) {
                         break;
                     }
-                    unit.mqttMessage.decodeVariableHeader(unit, payloadBuffer);
+                    unit.mqttMessage.decodeVariableHeader(payloadBuffer);
 
 
                     unit.state = READ_PAYLOAD;
@@ -170,16 +181,11 @@ public class MqttProtocol implements Protocol<MqttMessage> {
                 throw new Error();
         }
         if (unit.state == FINISH) {
-            session.setAttachment(null);
+            attachment.remove(DECODE_UNIT_ATTACH_KEY);
             return unit.mqttMessage;
         } else {
             return null;
         }
-    }
-
-
-    enum DecoderState {
-        READ_FIXED_HEADER, READ_VARIABLE_HEADER, READ_PAYLOAD, FINISH,
     }
 
 }

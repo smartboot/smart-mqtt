@@ -10,6 +10,7 @@ import org.smartboot.mqtt.common.MqttMessageBuilders;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventBusImpl;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
@@ -84,10 +85,15 @@ public class MqttClient extends AbstractSession {
     private boolean pingTimeout = false;
 
     public MqttClient(String host, int port, String clientId) {
+        this(host, port, clientId, MqttVersion.MQTT_3_1_1);
+    }
+
+    public MqttClient(String host, int port, String clientId, MqttVersion mqttVersion) {
         super(new ClientQosPublisher(), new EventBusImpl(EventType.types()));
         clientConfigure.setHost(host);
         clientConfigure.setPort(port);
         this.clientId = clientId;
+        setMqttVersion(mqttVersion);
         //ping-pong消息超时监听
         getEventBus().subscribe(EventType.RECEIVE_MESSAGE, (eventType, object) -> {
             if (object.getObject() instanceof MqttPingRespMessage) {

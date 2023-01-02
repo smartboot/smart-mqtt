@@ -3,7 +3,7 @@ package org.smartboot.mqtt.common.message;
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttProtocolEnum;
 import org.smartboot.mqtt.common.enums.MqttVersion;
-import org.smartboot.mqtt.common.protocol.DecodeUnit;
+import org.smartboot.mqtt.common.util.MqttPropertyConstant;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.util.BufferUtils;
 
@@ -34,7 +34,7 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
     }
 
     @Override
-    public void decodeVariableHeader(DecodeUnit unit, ByteBuffer buffer) {
+    public void decodeVariableHeader(ByteBuffer buffer) {
         //协议名
         //协议名是表示协议名 MQTT 的 UTF-8 编码的字符串。
         //MQTT 规范的后续版本不会改变这个字符串的偏移和长度。
@@ -51,13 +51,33 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
         //保持连接
         final int keepAlive = decodeMsbLsb(buffer);
 
-        setVariableHeader(new MqttConnectVariableHeader(
-                protocolName,
-                protocolLevel,
-                b1,
-                keepAlive));
+        version = MqttVersion.getByProtocolWithVersion(MqttProtocolEnum.getByName(protocolName), protocolLevel);
 
-        unit.mqttVersion = MqttVersion.getByProtocolWithVersion(MqttProtocolEnum.getByName(protocolName), protocolLevel);
+        //MQTT 5.0规范
+        if (version == MqttVersion.MQTT_5) {
+            int propertiesLength = BufferUtils.readUnsignedByte(buffer);
+            if (propertiesLength > 0) {
+                switch (buffer.get()) {
+                    case MqttPropertyConstant.SESSION_EXPIRY_INTERVAL:
+                        int sessionExpiryInterval = buffer.getInt();
+                        break;
+                    case MqttPropertyConstant.RECEIVE_MAXIMUM:
+                        short receiveMaxiMum = buffer.getShort();
+                        break;
+                    case MqttPropertyConstant.MAXIMUM_PACKET_SIZE:
+                        int packetSize = buffer.getInt();
+                        break;
+
+                }
+            }
+            int sessionExpiryFlag = BufferUtils.readUnsignedByte(buffer);
+            int sessionExpiryInterval = buffer.getInt();
+        }
+
+
+        setVariableHeader(new MqttConnectVariableHeader(protocolName, protocolLevel, b1, keepAlive));
+
+
     }
 
     @Override

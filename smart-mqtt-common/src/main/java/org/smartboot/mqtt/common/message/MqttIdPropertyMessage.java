@@ -2,7 +2,6 @@ package org.smartboot.mqtt.common.message;
 
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttVersion;
-import org.smartboot.mqtt.common.protocol.DecodeUnit;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -20,7 +19,7 @@ public class MqttIdPropertyMessage extends MqttVariableMessage<MqttPubReplyVaria
     }
 
     public MqttIdPropertyMessage(MqttFixedHeader mqttFixedHeader, int packetId) {
-        this(mqttFixedHeader, packetId, (byte)0, null);
+        this(mqttFixedHeader, packetId, (byte) 0, null);
     }
 
     public MqttIdPropertyMessage(MqttFixedHeader mqttFixedHeader, int packetId, byte reasonCode, MqttProperties mqttProperties) {
@@ -29,15 +28,15 @@ public class MqttIdPropertyMessage extends MqttVariableMessage<MqttPubReplyVaria
     }
 
     @Override
-    public final void decodeVariableHeader(DecodeUnit unit, ByteBuffer buffer) {
+    public final void decodeVariableHeader(ByteBuffer buffer) {
         int packetId = buffer.getShort();
         MqttPubReplyVariableHeader header;
-        if (unit.mqttVersion == MqttVersion.MQTT_5){
+        if (version == MqttVersion.MQTT_5) {
             byte reasonCode = buffer.get();
             byte propertyLen = buffer.get();
             header = new MqttPubReplyVariableHeader(packetId, reasonCode, null);
-        }else {
-            header = new MqttPubReplyVariableHeader(packetId, (byte)0, null);
+        } else {
+            header = new MqttPubReplyVariableHeader(packetId, (byte) 0, null);
         }
         setVariableHeader(header);
     }

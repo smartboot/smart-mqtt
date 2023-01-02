@@ -2,9 +2,8 @@ package org.smartboot.mqtt.common.message;
 
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.ToString;
+import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.exception.MqttProcessException;
-import org.smartboot.mqtt.common.protocol.DecodeUnit;
-import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.socket.util.BufferUtils;
 import org.smartboot.socket.util.DecoderException;
 
@@ -32,6 +31,7 @@ public class MqttMessage extends ToString {
      * 固定报头
      */
     protected MqttFixedHeader fixedHeader = null;
+    protected MqttVersion version;
 
     public MqttMessage(MqttFixedHeader mqttFixedHeader) {
         this.fixedHeader = mqttFixedHeader;
@@ -143,7 +143,7 @@ public class MqttMessage extends ToString {
      *
      * @param buffer
      */
-    public void decodeVariableHeader(DecodeUnit unit, ByteBuffer buffer) {
+    public void decodeVariableHeader(ByteBuffer buffer) {
 
     }
 
@@ -221,4 +221,11 @@ public class MqttMessage extends ToString {
         } while (num > 0);
     }
 
+    public MqttVersion getVersion() {
+        return version;
+    }
+
+    public void setVersion(MqttVersion version) {
+        this.version = version;
+    }
 }

@@ -3,8 +3,6 @@ package org.smartboot.mqtt.common;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
-import org.smartboot.mqtt.common.message.MqttConnAckMessage;
-import org.smartboot.mqtt.common.message.MqttConnAckVariableHeader;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttPingReqMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
@@ -23,9 +21,6 @@ public final class MqttMessageBuilders {
     private MqttMessageBuilders() {
     }
 
-    public static ConnAckBuilder connAck() {
-        return new ConnAckBuilder();
-    }
 
     public static PingReqBuilder pingReq() {
         return new PingReqBuilder();
@@ -112,8 +107,7 @@ public final class MqttMessageBuilders {
         }
 
         public MqttSubscribeMessage build() {
-            MqttFixedHeader mqttFixedHeader =
-                    new MqttFixedHeader(MqttMessageType.SUBSCRIBE, false, MqttQoS.AT_LEAST_ONCE, false, 0);
+            MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.SUBSCRIBE, false, MqttQoS.AT_LEAST_ONCE, false, 0);
             MqttSubscribePayload mqttSubscribePayload = new MqttSubscribePayload();
             mqttSubscribePayload.setTopicSubscriptions(subscriptions);
             return new MqttSubscribeMessage(mqttFixedHeader, packetId, mqttSubscribePayload);
@@ -147,30 +141,6 @@ public final class MqttMessageBuilders {
         }
     }
 
-    public static final class ConnAckBuilder {
-
-        private MqttConnectReturnCode returnCode;
-        private boolean sessionPresent;
-
-        ConnAckBuilder() {
-        }
-
-        public ConnAckBuilder returnCode(MqttConnectReturnCode returnCode) {
-            this.returnCode = returnCode;
-            return this;
-        }
-
-        public ConnAckBuilder sessionPresent(boolean sessionPresent) {
-            this.sessionPresent = sessionPresent;
-            return this;
-        }
-
-        public MqttConnAckMessage build() {
-            MqttConnAckVariableHeader mqttConnAckVariableHeader =
-                    new MqttConnAckVariableHeader(returnCode, sessionPresent);
-            return new MqttConnAckMessage(mqttConnAckVariableHeader);
-        }
-    }
 
     public static final class PingReqBuilder {
 

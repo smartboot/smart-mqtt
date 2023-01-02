@@ -1,7 +1,6 @@
 package org.smartboot.mqtt.common.message;
 
 import org.smartboot.mqtt.common.MqttWriter;
-import org.smartboot.mqtt.common.protocol.DecodeUnit;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.socket.util.DecoderException;
 
@@ -26,7 +25,7 @@ public class MqttPublishMessage extends MqttVariableMessage<MqttPublishVariableH
     }
 
     @Override
-    public void decodeVariableHeader(DecodeUnit unit, ByteBuffer buffer) {
+    public void decodeVariableHeader(ByteBuffer buffer) {
         final String decodedTopic = decodeString(buffer);
         //PUBLISH 报文中的主题名不能包含通配符
         if (MqttUtil.containsTopicWildcards(decodedTopic)) {

@@ -29,6 +29,7 @@ import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioSession;
+import org.smartboot.socket.util.Attachment;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -86,6 +87,7 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
     public void stateEvent0(AioSession session, StateMachineEnum stateMachineEnum, Throwable throwable) {
         switch (stateMachineEnum) {
             case NEW_SESSION:
+                session.setAttachment(new Attachment());
                 MqttSession mqttSession = new MqttSession(mqttContext, session, qosPublisher, new DefaultMqttWriter(session.writeBuffer()));
                 onlineSessions.put(session.getSessionID(), mqttSession);
                 break;

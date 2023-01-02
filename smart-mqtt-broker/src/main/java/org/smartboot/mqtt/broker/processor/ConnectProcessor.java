@@ -45,6 +45,8 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
             clientId = MqttUtil.createClientId();
         }
         session.setClientId(clientId);
+        //绑定MQTT Version
+        session.setMqttVersion(mqttConnectMessage.getVersion());
 
         //有效性校验
         //服务端必须按照 3.1 节的要求验证 CONNECT 报文，如果报文不符合规范，服务端不发送CONNACK 报文直接关闭网络连接

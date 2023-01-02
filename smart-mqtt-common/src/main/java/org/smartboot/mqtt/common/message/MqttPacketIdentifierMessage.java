@@ -1,7 +1,6 @@
 package org.smartboot.mqtt.common.message;
 
 import org.smartboot.mqtt.common.MqttWriter;
-import org.smartboot.mqtt.common.protocol.DecodeUnit;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -29,7 +28,7 @@ public class MqttPacketIdentifierMessage extends MqttVariableMessage<MqttPacketI
     }
 
     @Override
-    public final void decodeVariableHeader(DecodeUnit unit, ByteBuffer buffer) {
+    public final void decodeVariableHeader(ByteBuffer buffer) {
         MqttPacketIdVariableHeader header = new MqttPacketIdVariableHeader();
         header.setPacketId(decodeMessageId(buffer));
         setVariableHeader(header);
