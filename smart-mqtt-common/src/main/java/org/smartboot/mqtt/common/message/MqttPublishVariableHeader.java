@@ -10,6 +10,8 @@ public class MqttPublishVariableHeader extends MqttPacketIdVariableHeader {
      */
     private String topicName;
 
+    private MqttProperties properties;
+
     public String getTopicName() {
         return topicName;
     }
@@ -18,5 +20,11 @@ public class MqttPublishVariableHeader extends MqttPacketIdVariableHeader {
         this.topicName = topicName;
     }
 
+    public MqttProperties getProperties() {
+        return properties;
+    }
 
+    public void setProperties(MqttProperties properties) {
+        this.properties = properties;
+    }
 }

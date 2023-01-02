@@ -9,7 +9,7 @@ public class MqttPubCompMessage extends MqttPacketIdentifierMessage {
         super(mqttFixedHeader);
     }
 
-    public MqttPubCompMessage(int mqttPacketIdVariableHeader) {
-        super(MqttFixedHeader.PUB_COMP_HEADER, mqttPacketIdVariableHeader);
+    public MqttPubCompMessage(int packetId) {
+        super(MqttFixedHeader.PUB_COMP_HEADER, packetId);
     }
 }

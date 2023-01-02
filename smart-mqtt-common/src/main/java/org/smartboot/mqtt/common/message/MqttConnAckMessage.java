@@ -2,6 +2,7 @@ package org.smartboot.mqtt.common.message;
 
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
+import org.smartboot.mqtt.common.protocol.DecodeUnit;
 import org.smartboot.socket.util.BufferUtils;
 
 import java.nio.ByteBuffer;
@@ -22,7 +23,7 @@ public class MqttConnAckMessage extends MqttVariableMessage<MqttConnAckVariableH
     }
 
     @Override
-    public void decodeVariableHeader(ByteBuffer buffer) {
+    public void decodeVariableHeader(DecodeUnit unit, ByteBuffer buffer) {
         final boolean sessionPresent = (BufferUtils.readUnsignedByte(buffer) & 0x01) == 0x01;
         byte returnCode = buffer.get();
         setVariableHeader(new MqttConnAckVariableHeader(MqttConnectReturnCode.valueOf(returnCode), sessionPresent));

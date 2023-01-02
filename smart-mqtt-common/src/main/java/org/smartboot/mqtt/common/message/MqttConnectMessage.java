@@ -1,6 +1,9 @@
 package org.smartboot.mqtt.common.message;
 
 import org.smartboot.mqtt.common.MqttWriter;
+import org.smartboot.mqtt.common.enums.MqttProtocolEnum;
+import org.smartboot.mqtt.common.enums.MqttVersion;
+import org.smartboot.mqtt.common.protocol.DecodeUnit;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.util.BufferUtils;
 
@@ -31,7 +34,7 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
     }
 
     @Override
-    public void decodeVariableHeader(ByteBuffer buffer) {
+    public void decodeVariableHeader(DecodeUnit unit, ByteBuffer buffer) {
         //协议名
         //协议名是表示协议名 MQTT 的 UTF-8 编码的字符串。
         //MQTT 规范的后续版本不会改变这个字符串的偏移和长度。
@@ -53,6 +56,8 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
                 protocolLevel,
                 b1,
                 keepAlive));
+
+        unit.mqttVersion = MqttVersion.getByProtocolWithVersion(MqttProtocolEnum.getByName(protocolName), protocolLevel);
     }
 
     @Override

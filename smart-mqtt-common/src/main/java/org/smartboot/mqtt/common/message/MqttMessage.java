@@ -3,6 +3,8 @@ package org.smartboot.mqtt.common.message;
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.exception.MqttProcessException;
+import org.smartboot.mqtt.common.protocol.DecodeUnit;
+import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.socket.util.BufferUtils;
 import org.smartboot.socket.util.DecoderException;
 
@@ -141,7 +143,7 @@ public class MqttMessage extends ToString {
      *
      * @param buffer
      */
-    public void decodeVariableHeader(ByteBuffer buffer) {
+    public void decodeVariableHeader(DecodeUnit unit, ByteBuffer buffer) {
 
     }
 

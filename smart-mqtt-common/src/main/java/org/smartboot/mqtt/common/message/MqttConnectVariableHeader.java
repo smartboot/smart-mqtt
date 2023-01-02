@@ -25,12 +25,22 @@ public final class MqttConnectVariableHeader extends MqttVariableHeader {
     private final boolean isCleanSession;
     private final int reserved;
     private final int keepAliveTimeSeconds;
+    private final MqttProperties properties;
 
     public MqttConnectVariableHeader(
             String name,
             byte protocolLevel,
             int connectFlag,
             int keepAliveTimeSeconds) {
+        this(name, protocolLevel, connectFlag, keepAliveTimeSeconds, null);
+    }
+
+    public MqttConnectVariableHeader(
+            String name,
+            byte protocolLevel,
+            int connectFlag,
+            int keepAliveTimeSeconds,
+            MqttProperties properties) {
         this.protocolName = name;
         this.protocolLevel = protocolLevel;
         this.hasUserName = (connectFlag & 0x80) == 0x80;
@@ -41,9 +51,14 @@ public final class MqttConnectVariableHeader extends MqttVariableHeader {
         this.isCleanSession = (connectFlag & 0x02) == 0x02;
         this.reserved = (connectFlag & 0x01);
         this.keepAliveTimeSeconds = keepAliveTimeSeconds;
+        this.properties = properties;
     }
 
     public MqttConnectVariableHeader(MqttVersion mqttVersion, boolean hasUserName, boolean hasPassword, WillMessage willMessage, boolean isCleanSession, int keepAliveTimeSeconds) {
+        this(mqttVersion, hasUserName, hasPassword, willMessage, isCleanSession, keepAliveTimeSeconds, null);
+    }
+
+    public MqttConnectVariableHeader(MqttVersion mqttVersion, boolean hasUserName, boolean hasPassword, WillMessage willMessage, boolean isCleanSession, int keepAliveTimeSeconds, MqttProperties properties) {
         this.protocolName = mqttVersion.protocolName();
         this.protocolLevel = mqttVersion.protocolLevel();
         this.hasUserName = hasUserName;
@@ -55,7 +70,9 @@ public final class MqttConnectVariableHeader extends MqttVariableHeader {
         //服务端必须验证 CONNECT 控制报文的保留标志位（第 0 位）是否为 0，如果不为 0 必须断开客户端连接
         this.reserved = 0;
         this.keepAliveTimeSeconds = keepAliveTimeSeconds;
+        this.properties = properties;
     }
+
 
     public String protocolName() {
         return protocolName;
@@ -97,4 +114,7 @@ public final class MqttConnectVariableHeader extends MqttVariableHeader {
         return reserved;
     }
 
+    public MqttProperties getProperties() {
+        return properties;
+    }
 }

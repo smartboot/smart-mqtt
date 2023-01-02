@@ -12,6 +12,10 @@ public final class MqttConnectPayload {
      */
     private final String clientIdentifier;
     /**
+     * 遗嘱属性
+     */
+    private final MqttProperties willProperties;
+    /**
      * 遗嘱主题
      */
     private final String willTopic;
@@ -29,11 +33,16 @@ public final class MqttConnectPayload {
     private final byte[] password;
 
     public MqttConnectPayload(String clientIdentifier, String willTopic, byte[] willMessage, String userName, byte[] password) {
+        this(clientIdentifier, willTopic, willMessage, userName, password, null);
+    }
+
+    public MqttConnectPayload(String clientIdentifier, String willTopic, byte[] willMessage, String userName, byte[] password, MqttProperties willProperties) {
         this.clientIdentifier = clientIdentifier;
         this.willTopic = willTopic;
         this.willMessage = willMessage;
         this.userName = userName;
         this.password = password;
+        this.willProperties = willProperties;
     }
 
     public String clientIdentifier() {
@@ -56,5 +65,7 @@ public final class MqttConnectPayload {
         return password;
     }
 
-
+    public MqttProperties getWillProperties() {
+        return willProperties;
+    }
 }

@@ -14,9 +14,16 @@ public class MqttConnAckVariableHeader extends MqttVariableHeader {
      */
     private final boolean sessionPresent;
 
+    private final MqttProperties properties;
+
+
     public MqttConnAckVariableHeader(MqttConnectReturnCode connectReturnCode, boolean sessionPresent) {
+        this(connectReturnCode, sessionPresent, null);
+    }
+    public MqttConnAckVariableHeader(MqttConnectReturnCode connectReturnCode, boolean sessionPresent, MqttProperties properties) {
         this.connectReturnCode = connectReturnCode;
         this.sessionPresent = sessionPresent;
+        this.properties = properties;
     }
 
     public MqttConnectReturnCode connectReturnCode() {
@@ -25,5 +32,9 @@ public class MqttConnAckVariableHeader extends MqttVariableHeader {
 
     public boolean isSessionPresent() {
         return sessionPresent;
+    }
+
+    public MqttProperties getProperties() {
+        return properties;
     }
 }

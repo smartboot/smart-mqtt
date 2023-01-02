@@ -5,7 +5,7 @@ package org.smartboot.mqtt.common.enums;
  * @version V1.0 , 2022/3/23
  */
 public enum MqttProtocolEnum {
-    MQTT_3_1("MQIsdp"), MQTT_3_1_1("MQTT");
+    MQTT_3_1("MQIsdp"), MQTT_3_1_1("MQTT"), MQTT_5("MQTT");
     /**
      * 协议名
      */
