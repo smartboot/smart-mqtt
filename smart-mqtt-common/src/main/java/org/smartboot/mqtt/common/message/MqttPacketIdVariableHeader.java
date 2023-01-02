@@ -10,6 +10,12 @@ public class MqttPacketIdVariableHeader extends MqttVariableHeader {
      */
     private int packetId;
 
+    public MqttPacketIdVariableHeader() {
+    }
+
+    public MqttPacketIdVariableHeader(int packetId) {
+        this.packetId = packetId;
+    }
 
     public void setPacketId(int packetId) {
         this.packetId = packetId;

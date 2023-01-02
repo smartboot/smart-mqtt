@@ -2,13 +2,9 @@ package org.smartboot.mqtt.common;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
-import org.smartboot.mqtt.common.message.MqttMessage;
-import org.smartboot.mqtt.common.message.MqttPubAckMessage;
-import org.smartboot.mqtt.common.message.MqttPubCompMessage;
-import org.smartboot.mqtt.common.message.MqttPubRecMessage;
-import org.smartboot.mqtt.common.message.MqttPubRelMessage;
-import org.smartboot.mqtt.common.message.MqttPublishMessage;
+import org.smartboot.mqtt.common.message.*;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 
 import java.util.Objects;
@@ -26,7 +22,7 @@ public abstract class QosPublisher {
         //至少一次
 
         session.responseConsumers.put(cacheKey, new AckMessage(publishMessage, message -> {
-            ValidateUtils.isTrue(message instanceof MqttPubAckMessage, "invalid message type");
+            ValidateUtils.isTrue(message.getFixedHeader().getMessageType() == MqttMessageType.PUBACK, "invalid message type");
             future.complete(true);
             session.responseConsumers.remove(cacheKey);
             LOGGER.info("Qos1消息发送成功...");
@@ -44,13 +40,13 @@ public abstract class QosPublisher {
         CompletableFuture<Boolean> publishFuture = new CompletableFuture<>();
         //只有一次
         session.responseConsumers.put(cacheKey, new AckMessage(publishMessage, message -> {
-            ValidateUtils.isTrue(message instanceof MqttPubRecMessage, "invalid message type");
+            ValidateUtils.isTrue(message.getFixedHeader().getMessageType() == MqttMessageType.PUBREC, "invalid message type");
             ValidateUtils.isTrue(Objects.equals(message.getVariableHeader().getPacketId(), publishMessage.getVariableHeader().getPacketId()), "invalid packetId");
             publishFuture.complete(true);
             MqttPubRelMessage pubRelMessage = new MqttPubRelMessage(message.getVariableHeader().getPacketId());
             CompletableFuture<Boolean> pubRelFuture = new CompletableFuture<>();
             session.responseConsumers.put(cacheKey, new AckMessage(pubRelMessage, compMessage -> {
-                ValidateUtils.isTrue(compMessage instanceof MqttPubCompMessage, "invalid message type");
+                ValidateUtils.isTrue(compMessage.getFixedHeader().getMessageType() == MqttMessageType.PUBCOMP, "invalid message type");
                 ValidateUtils.isTrue(Objects.equals(compMessage.getVariableHeader().getPacketId(), pubRelMessage.getVariableHeader().getPacketId()), "invalid packetId");
                 pubRelFuture.complete(true);
                 LOGGER.info("Qos2消息发送成功...");

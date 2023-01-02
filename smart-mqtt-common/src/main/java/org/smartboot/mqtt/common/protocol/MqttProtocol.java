@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttMessage;
@@ -132,7 +133,7 @@ public class MqttProtocol implements Protocol<MqttMessage> {
                     if (payloadBuffer.remaining() < remainingLength) {
                         break;
                     }
-                    unit.mqttMessage.decodeVariableHeader(payloadBuffer);
+                    unit.mqttMessage.decodeVariableHeader(unit, payloadBuffer);
 
 
                     unit.state = READ_PAYLOAD;
@@ -181,10 +182,4 @@ public class MqttProtocol implements Protocol<MqttMessage> {
         READ_FIXED_HEADER, READ_VARIABLE_HEADER, READ_PAYLOAD, FINISH,
     }
 
-    class DecodeUnit {
-        DecoderState state;
-        MqttMessage mqttMessage;
-
-        ByteBuffer disposableBuffer;
-    }
 }
