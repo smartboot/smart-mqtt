@@ -39,6 +39,12 @@ public class MqttClientConfigure {
      */
     private int bufferSize = 4 * 1024;
 
+    /**
+     * MQTT最大报文限制字节数
+     */
+    private int maxPacketSize = 1048576;
+
+
     private int connectAckTimeout = 5;
     private String[] serverURIs = null;
     private MqttVersion mqttVersion = MqttVersion.MQTT_3_1_1;
@@ -636,5 +642,14 @@ public class MqttClientConfigure {
 
     public void setBufferSize(int bufferSize) {
         this.bufferSize = bufferSize;
+    }
+
+    public int getMaxPacketSize() {
+        return maxPacketSize;
+    }
+
+    public MqttClientConfigure setMaxPacketSize(int maxPacketSize) {
+        this.maxPacketSize = maxPacketSize;
+        return this;
     }
 }

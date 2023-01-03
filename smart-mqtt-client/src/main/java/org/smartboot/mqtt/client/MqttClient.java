@@ -198,7 +198,7 @@ public class MqttClient extends AbstractSession {
             }, clientConfigure.getKeepAliveInterval(), TimeUnit.SECONDS);
         }
 //        messageProcessor.addPlugin(new StreamMonitorPlugin<>());
-        client = new AioQuickClient(clientConfigure.getHost(), clientConfigure.getPort(), new MqttProtocol(), messageProcessor);
+        client = new AioQuickClient(clientConfigure.getHost(), clientConfigure.getPort(), new MqttProtocol(clientConfigure.getMaxPacketSize()), messageProcessor);
         try {
             if (bufferPagePool != null) {
                 client.setBufferPagePool(bufferPagePool);
