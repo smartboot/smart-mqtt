@@ -23,12 +23,8 @@ import static org.smartboot.mqtt.common.protocol.MqttProtocol.DecoderState.*;
  */
 public class MqttProtocol implements Protocol<MqttMessage> {
     private static final Logger logger = LoggerFactory.getLogger(MqttProtocol.class);
-    private static final int DEFAULT_MAX_BYTES_IN_MESSAGE = 8092;
     private final int maxBytesInMessage;
 
-    public MqttProtocol() {
-        this(DEFAULT_MAX_BYTES_IN_MESSAGE);
-    }
 
     public MqttProtocol(int maxBytesInMessage) {
         this.maxBytesInMessage = maxBytesInMessage;
