@@ -4,7 +4,6 @@ import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttDisconnectMessage;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
-import org.smartboot.mqtt.common.message.MqttInvalidMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPingReqMessage;
 import org.smartboot.mqtt.common.message.MqttPingRespMessage;
@@ -67,8 +66,4 @@ final class MqttMessageFactory {
         }
     }
 
-    public static MqttMessage newInvalidMessage(Throwable cause) {
-        cause.printStackTrace();
-        return new MqttInvalidMessage(null);
-    }
 }

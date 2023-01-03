@@ -46,44 +46,43 @@ public class MqttProtocol implements Protocol<MqttMessage> {
             unit = session.getAttachment();
         }
         switch (unit.state) {
-            case READ_FIXED_HEADER:
-                try {
-                    if (buffer.remaining() < 2) {
-                        break;
-                    }
-                    buffer.mark();
-                    short b1 = BufferUtils.readUnsignedByte(buffer);
+            case READ_FIXED_HEADER: {
+                if (buffer.remaining() < 2) {
+                    break;
+                }
+                buffer.mark();
+                short b1 = BufferUtils.readUnsignedByte(buffer);
 
-                    MqttMessageType messageType = MqttMessageType.valueOf(b1 >> 4);
+                MqttMessageType messageType = MqttMessageType.valueOf(b1 >> 4);
 //                    System.out.println("messageType:" + messageType);
-                    boolean dupFlag = (b1 & 0x08) == 0x08;
-                    int qosLevel = (b1 & 0x06) >> 1;
-                    boolean retain = (b1 & 0x01) != 0;
+                boolean dupFlag = (b1 & 0x08) == 0x08;
+                int qosLevel = (b1 & 0x06) >> 1;
+                boolean retain = (b1 & 0x01) != 0;
 
-                    int remainingLength = 0;
-                    int multiplier = 1;
-                    short digit;
-                    int loops = 0;
-                    do {
-                        digit = BufferUtils.readUnsignedByte(buffer);
-                        remainingLength += (digit & 127) * multiplier;
-                        multiplier *= 128;
-                        loops++;
-                    } while (buffer.hasRemaining() && (digit & 128) != 0 && loops < 4);
+                int remainingLength = 0;
+                int multiplier = 1;
+                short digit;
+                int loops = 0;
+                do {
+                    digit = BufferUtils.readUnsignedByte(buffer);
+                    remainingLength += (digit & 127) * multiplier;
+                    multiplier *= 128;
+                    loops++;
+                } while (buffer.hasRemaining() && (digit & 128) != 0 && loops < 4);
 
-                    //数据不足
-                    if (!buffer.hasRemaining() && (digit & 128) != 0) {
-                        buffer.reset();
-                        break;
-                    }
-                    // MQTT protocol limits Remaining Length to 4 bytes
-                    if (loops == 4 && (digit & 128) != 0) {
-                        throw new DecoderException("remaining length exceeds 4 digits (" + messageType + ')');
-                    }
-                    buffer.mark();
+                //数据不足
+                if (!buffer.hasRemaining() && (digit & 128) != 0) {
+                    buffer.reset();
+                    break;
+                }
+                // MQTT protocol limits Remaining Length to 4 bytes
+                if (loops == 4 && (digit & 128) != 0) {
+                    throw new DecoderException("remaining length exceeds 4 digits (" + messageType + ')');
+                }
+                buffer.mark();
 
-                    MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(messageType, dupFlag, MqttQoS.valueOf(qosLevel), retain, remainingLength);
-                    MqttCodecUtil.resetUnusedFields(mqttFixedHeader);
+                MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(messageType, dupFlag, MqttQoS.valueOf(qosLevel), retain, remainingLength);
+                MqttCodecUtil.resetUnusedFields(mqttFixedHeader);
 //                    switch (mqttFixedHeader.getMessageType()) {
 //                        case PUBREL:
 //                        case SUBSCRIBE:
@@ -92,77 +91,59 @@ public class MqttProtocol implements Protocol<MqttMessage> {
 //                                throw new DecoderException(mqttFixedHeader.getMessageType().name() + " message must have QoS 1");
 //                            }
 //                    }
-                    unit.mqttMessage = MqttMessageFactory.newMessage(mqttFixedHeader);
-                    unit.state = READ_VARIABLE_HEADER;
+                unit.mqttMessage = MqttMessageFactory.newMessage(mqttFixedHeader);
+                unit.state = READ_VARIABLE_HEADER;
 
-                } catch (Exception cause) {
-                    unit.mqttMessage = MqttMessageFactory.newInvalidMessage(cause);
-                    unit.state = FINISH;
-                    break;
+            }
+            case READ_VARIABLE_HEADER: {
+                int remainingLength = unit.mqttMessage.getFixedHeader().remainingLength();
+                if (remainingLength > maxBytesInMessage) {
+                    throw new DecoderException("too large message: " + remainingLength + " bytes");
                 }
-
-            case READ_VARIABLE_HEADER:
-                try {
-                    int remainingLength = unit.mqttMessage.getFixedHeader().remainingLength();
-                    if (remainingLength > maxBytesInMessage) {
-                        throw new DecoderException("too large message: " + remainingLength + " bytes");
-                    }
-                    ByteBuffer payloadBuffer;
-                    if (remainingLength > buffer.capacity()) {
-                        if (unit.disposableBuffer == null) {
-                            payloadBuffer = unit.disposableBuffer = ByteBuffer.allocate(remainingLength);
-                        } else {
-                            payloadBuffer = unit.disposableBuffer;
-                            payloadBuffer.compact();
-                        }
-
-                        if (payloadBuffer.remaining() >= buffer.remaining()) {
-                            payloadBuffer.put(buffer);
-                        } else {
-                            int limit = buffer.limit();
-                            buffer.limit(buffer.position() + payloadBuffer.remaining());
-                            payloadBuffer.put(buffer);
-                            buffer.limit(limit);
-                        }
-                        payloadBuffer.flip();
-                    } else {
-                        payloadBuffer = buffer;
-                    }
-
-                    if (payloadBuffer.remaining() < remainingLength) {
-                        break;
-                    }
-                    unit.mqttMessage.decodeVariableHeader(payloadBuffer);
-
-
-                    unit.state = READ_PAYLOAD;
-
-                    // fall through
-                } catch (Exception cause) {
-                    logger.error(unit.mqttMessage.toString());
-                    unit.mqttMessage = MqttMessageFactory.newInvalidMessage(cause);
-                    unit.state = FINISH;
-                    break;
-                }
-
-            case READ_PAYLOAD:
-
-                try {
+                ByteBuffer payloadBuffer;
+                if (remainingLength > buffer.capacity()) {
                     if (unit.disposableBuffer == null) {
-                        unit.mqttMessage.decodePlayLoad(buffer);
+                        payloadBuffer = unit.disposableBuffer = ByteBuffer.allocate(remainingLength);
                     } else {
-                        unit.mqttMessage.decodePlayLoad(unit.disposableBuffer);
-                        ValidateUtils.isTrue(unit.disposableBuffer.remaining() == 0, "decode error");
-                        unit.disposableBuffer = null;
+                        payloadBuffer = unit.disposableBuffer;
+                        payloadBuffer.compact();
                     }
 
-                    unit.state = FINISH;
-                    break;
-                } catch (Exception cause) {
-                    unit.mqttMessage = MqttMessageFactory.newInvalidMessage(cause);
-                    unit.state = FINISH;
+                    if (payloadBuffer.remaining() >= buffer.remaining()) {
+                        payloadBuffer.put(buffer);
+                    } else {
+                        int limit = buffer.limit();
+                        buffer.limit(buffer.position() + payloadBuffer.remaining());
+                        payloadBuffer.put(buffer);
+                        buffer.limit(limit);
+                    }
+                    payloadBuffer.flip();
+                } else {
+                    payloadBuffer = buffer;
+                }
+
+                if (payloadBuffer.remaining() < remainingLength) {
                     break;
                 }
+                unit.mqttMessage.decodeVariableHeader(payloadBuffer);
+
+
+                unit.state = READ_PAYLOAD;
+
+                // fall through
+            }
+
+            case READ_PAYLOAD: {
+                if (unit.disposableBuffer == null) {
+                    unit.mqttMessage.decodePlayLoad(buffer);
+                } else {
+                    unit.mqttMessage.decodePlayLoad(unit.disposableBuffer);
+                    ValidateUtils.isTrue(unit.disposableBuffer.remaining() == 0, "decode error");
+                    unit.disposableBuffer = null;
+                }
+                unit.state = FINISH;
+                break;
+            }
 
             default:
                 // Shouldn't reach here.
