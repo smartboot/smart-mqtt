@@ -39,7 +39,6 @@ public class MqttProtocol implements Protocol<MqttMessage> {
 
     @Override
     public MqttMessage decode(ByteBuffer buffer, AioSession session) {
-
         Attachment attachment = session.getAttachment();
         DecodeUnit unit = attachment.get(DECODE_UNIT_ATTACH_KEY);
         if (unit == null) {
@@ -158,8 +157,10 @@ public class MqttProtocol implements Protocol<MqttMessage> {
                 throw new Error();
         }
         if (unit.state == FINISH) {
-            attachment.remove(DECODE_UNIT_ATTACH_KEY);
-            return unit.mqttMessage;
+            MqttMessage mqttMessage = unit.mqttMessage;
+            unit.state = READ_FIXED_HEADER;
+            unit.mqttMessage = null;
+            return mqttMessage;
         } else {
             return null;
         }

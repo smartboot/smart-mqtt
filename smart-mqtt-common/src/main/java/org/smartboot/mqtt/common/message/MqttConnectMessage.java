@@ -3,6 +3,7 @@ package org.smartboot.mqtt.common.message;
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttProtocolEnum;
 import org.smartboot.mqtt.common.enums.MqttVersion;
+import org.smartboot.mqtt.common.message.properties.ConnectProperties;
 import org.smartboot.mqtt.common.util.MqttPropertyConstant;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.util.BufferUtils;
@@ -22,6 +23,7 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
      * 有效载荷
      */
     private MqttConnectPayload mqttConnectPayload;
+    private ConnectProperties connectProperties;
 
     public MqttConnectMessage(MqttFixedHeader mqttFixedHeader) {
         super(mqttFixedHeader);
@@ -55,19 +57,25 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
 
         //MQTT 5.0规范
         if (version == MqttVersion.MQTT_5) {
-            int propertiesLength = BufferUtils.readUnsignedByte(buffer);
+            int propertiesLength = decodeVariableByteInteger(buffer);
             if (propertiesLength > 0) {
-                switch (buffer.get()) {
-                    case MqttPropertyConstant.SESSION_EXPIRY_INTERVAL:
-                        int sessionExpiryInterval = buffer.getInt();
-                        break;
-                    case MqttPropertyConstant.RECEIVE_MAXIMUM:
-                        short receiveMaxiMum = buffer.getShort();
-                        break;
-                    case MqttPropertyConstant.MAXIMUM_PACKET_SIZE:
-                        int packetSize = buffer.getInt();
-                        break;
+                connectProperties = new ConnectProperties();
+                while (propertiesLength > 0) {
+                    switch (buffer.get()) {
+                        case MqttPropertyConstant.SESSION_EXPIRY_INTERVAL:
+                            //包含多个会话过期间隔（Session Expiry Interval）将造成协议错误（Protocol Error）
+                            ValidateUtils.isTrue(connectProperties.getSessionExpiryInterval() == null, "");
+                            connectProperties.setSessionExpiryInterval(buffer.getInt());
+                            propertiesLength = propertiesLength - 5;
+                            break;
+                        case MqttPropertyConstant.RECEIVE_MAXIMUM:
+                            short receiveMaxiMum = buffer.getShort();
+                            break;
+                        case MqttPropertyConstant.MAXIMUM_PACKET_SIZE:
+                            int packetSize = buffer.getInt();
+                            break;
 
+                    }
                 }
             }
             int sessionExpiryFlag = BufferUtils.readUnsignedByte(buffer);

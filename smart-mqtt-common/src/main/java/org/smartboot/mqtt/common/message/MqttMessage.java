@@ -201,6 +201,23 @@ public class MqttMessage extends ToString {
         return bytes;
     }
 
+    /**
+     * 解码变长字节整数，规范1.5.5
+     */
+    protected final int decodeVariableByteInteger(ByteBuffer buffer) {
+        int multiplier = 1;
+        int value = 0;
+        byte encodedByte;
+        do {
+            encodedByte = buffer.get();
+            value += (encodedByte & 127) * multiplier;
+            if (multiplier > 128 * 128 * 128)
+                throw new DecoderException("decode Variable Byte Integer error");
+            multiplier *= 128;
+        } while ((encodedByte & 128) != 0);
+        return value;
+    }
+
     protected final int getVariableLengthInt(int num) {
         int count = 0;
         do {
