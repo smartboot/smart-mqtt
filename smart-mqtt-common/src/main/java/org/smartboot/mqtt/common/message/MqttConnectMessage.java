@@ -164,6 +164,7 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
             willProperties = new WillProperties();
             int remainingLength = decodeVariableByteInteger(buffer);
             int willDelayInterval = -1;
+            int messageExpiryInterval = -1;
             byte payloadFormatIndicator = -1;
             int position;
             while (remainingLength > 0) {
@@ -186,6 +187,32 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
                         break;
                     //消息过期间隔
                     case MqttPropertyConstant.MESSAGE_EXPIRY_INTERVAL:
+                        //包含多个消息过期间隔将导致协议错误（Protocol Error）
+                        ValidateUtils.isTrue(messageExpiryInterval == -1, "");
+                        messageExpiryInterval = buffer.getInt();
+                        willProperties.setMessageExpiryInterval(messageExpiryInterval);
+                        ValidateUtils.isTrue(messageExpiryInterval > 0, "");
+                        break;
+                    //内容类型
+                    case MqttPropertyConstant.CONTENT_TYPE:
+                        ValidateUtils.isTrue(willProperties.getContentType() == null, "");
+                        willProperties.setContentType(decodeString(buffer));
+                        break;
+                    //响应主题
+                    case MqttPropertyConstant.RESPONSE_TOPIC:
+                        ValidateUtils.isTrue(willProperties.getResponseTopic() == null, "");
+                        willProperties.setResponseTopic(decodeString(buffer));
+                        break;
+                    //对比数据
+                    case MqttPropertyConstant.CORRELATION_DATA:
+                        ValidateUtils.isTrue(willProperties.getCorrelationData() == null, "");
+                        willProperties.setCorrelationData(decodeByteArray(buffer));
+                        break;
+                    //用户属性
+                    case MqttPropertyConstant.USER_PROPERTY:
+                        String key = decodeString(buffer);
+                        String value = decodeString(buffer);
+                        willProperties.getUserProperties().add(new UserProperty(key, value));
                         break;
                 }
                 remainingLength -= buffer.position() - position;

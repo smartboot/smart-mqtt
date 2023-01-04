@@ -13,6 +13,18 @@ public class MqttPropertyConstant {
      * 消息过期间隔
      */
     public static final byte MESSAGE_EXPIRY_INTERVAL = 0x02;
+    /**
+     * 内容类型
+     */
+    public static final byte CONTENT_TYPE = 0x03;
+    /**
+     * 响应主题
+     */
+    public static final byte RESPONSE_TOPIC=0x08;
+    /**
+     * 对比数据
+     */
+    public static final byte CORRELATION_DATA=0x09;
     //会话过期间隔
     public static final byte SESSION_EXPIRY_INTERVAL = 0x11;
     /**
