@@ -158,72 +158,18 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
         // 客户端标识符 (ClientId) 必须存在而且必须是 CONNECT 报文有效载荷的第一个字段
         final String decodedClientId = decodeString(buffer);
 
-        // MQTT 5.0 遗嘱属性
-        WillProperties willProperties = null;
-        if (version == MqttVersion.MQTT_5) {
-            willProperties = new WillProperties();
-            int remainingLength = decodeVariableByteInteger(buffer);
-            int willDelayInterval = -1;
-            int messageExpiryInterval = -1;
-            byte payloadFormatIndicator = -1;
-            int position;
-            while (remainingLength > 0) {
-                position = buffer.position();
-                switch (buffer.get()) {
-                    case MqttPropertyConstant.WILL_DELAY_INTERVAL:
-                        //包含多个遗嘱延时间隔将造成协议错误（Protocol Error）
-                        ValidateUtils.isTrue(willDelayInterval == -1, "");
-                        willDelayInterval = buffer.getInt();
-                        willProperties.setWillDelayInterval(willDelayInterval);
-                        ValidateUtils.isTrue(willDelayInterval >= 0, "");
-                        break;
-                    //载荷格式指示
-                    case MqttPropertyConstant.PAYLOAD_FORMAT_INDICATOR:
-                        //包含多个载荷格式指示（Payload Format Indicator）将造成协议错误（Protocol Error）
-                        ValidateUtils.isTrue(payloadFormatIndicator == -1, "");
-                        payloadFormatIndicator = buffer.get();
-                        willProperties.setPayloadFormatIndicator(payloadFormatIndicator);
-                        ValidateUtils.isTrue(payloadFormatIndicator == 0 || payloadFormatIndicator == 1, "");
-                        break;
-                    //消息过期间隔
-                    case MqttPropertyConstant.MESSAGE_EXPIRY_INTERVAL:
-                        //包含多个消息过期间隔将导致协议错误（Protocol Error）
-                        ValidateUtils.isTrue(messageExpiryInterval == -1, "");
-                        messageExpiryInterval = buffer.getInt();
-                        willProperties.setMessageExpiryInterval(messageExpiryInterval);
-                        ValidateUtils.isTrue(messageExpiryInterval > 0, "");
-                        break;
-                    //内容类型
-                    case MqttPropertyConstant.CONTENT_TYPE:
-                        ValidateUtils.isTrue(willProperties.getContentType() == null, "");
-                        willProperties.setContentType(decodeString(buffer));
-                        break;
-                    //响应主题
-                    case MqttPropertyConstant.RESPONSE_TOPIC:
-                        ValidateUtils.isTrue(willProperties.getResponseTopic() == null, "");
-                        willProperties.setResponseTopic(decodeString(buffer));
-                        break;
-                    //对比数据
-                    case MqttPropertyConstant.CORRELATION_DATA:
-                        ValidateUtils.isTrue(willProperties.getCorrelationData() == null, "");
-                        willProperties.setCorrelationData(decodeByteArray(buffer));
-                        break;
-                    //用户属性
-                    case MqttPropertyConstant.USER_PROPERTY:
-                        String key = decodeString(buffer);
-                        String value = decodeString(buffer);
-                        willProperties.getUserProperties().add(new UserProperty(key, value));
-                        break;
-                }
-                remainingLength -= buffer.position() - position;
-            }
-        }
-
         String decodedWillTopic = null;
         byte[] decodedWillMessage = null;
+        WillProperties willProperties = null;
         //如果遗嘱标志被设置为 1，有效载荷的下一个字段是遗嘱主题（Will Topic）。
         // 遗嘱主题必须是 1.5.3 节定义的 UTF-8 编码字符串
         if (variableHeader.isWillFlag()) {
+            // MQTT 5.0 遗嘱属性
+            //如果遗嘱标志（Will Flag）被设置为1，有效载荷的下一个字段是遗嘱属性（Will Properties）。
+            // 遗嘱属性字段定义了遗嘱消息（Will Message）将何时被发布，以及被发布时的应用消息（Application Message）属性。
+            if (version == MqttVersion.MQTT_5) {
+                willProperties = decodeWillProperties(buffer);
+            }
             decodedWillTopic = decodeString(buffer, 0, 32767);
             decodedWillMessage = decodeByteArray(buffer);
         }
@@ -243,6 +189,67 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
         }
 
         mqttConnectPayload = new MqttConnectPayload(decodedClientId, decodedWillTopic, decodedWillMessage, decodedUserName, decodedPassword, willProperties);
+    }
+
+    private WillProperties decodeWillProperties(ByteBuffer buffer) {
+        WillProperties willProperties;
+        willProperties = new WillProperties();
+        int remainingLength = decodeVariableByteInteger(buffer);
+        int willDelayInterval = -1;
+        int messageExpiryInterval = -1;
+        byte payloadFormatIndicator = -1;
+        int position;
+        while (remainingLength > 0) {
+            position = buffer.position();
+            switch (buffer.get()) {
+                case MqttPropertyConstant.WILL_DELAY_INTERVAL:
+                    //包含多个遗嘱延时间隔将造成协议错误（Protocol Error）
+                    ValidateUtils.isTrue(willDelayInterval == -1, "");
+                    willDelayInterval = buffer.getInt();
+                    willProperties.setWillDelayInterval(willDelayInterval);
+                    ValidateUtils.isTrue(willDelayInterval >= 0, "");
+                    break;
+                //载荷格式指示
+                case MqttPropertyConstant.PAYLOAD_FORMAT_INDICATOR:
+                    //包含多个载荷格式指示（Payload Format Indicator）将造成协议错误（Protocol Error）
+                    ValidateUtils.isTrue(payloadFormatIndicator == -1, "");
+                    payloadFormatIndicator = buffer.get();
+                    willProperties.setPayloadFormatIndicator(payloadFormatIndicator);
+                    ValidateUtils.isTrue(payloadFormatIndicator == 0 || payloadFormatIndicator == 1, "");
+                    break;
+                //消息过期间隔
+                case MqttPropertyConstant.MESSAGE_EXPIRY_INTERVAL:
+                    //包含多个消息过期间隔将导致协议错误（Protocol Error）
+                    ValidateUtils.isTrue(messageExpiryInterval == -1, "");
+                    messageExpiryInterval = buffer.getInt();
+                    willProperties.setMessageExpiryInterval(messageExpiryInterval);
+                    ValidateUtils.isTrue(messageExpiryInterval > 0, "");
+                    break;
+                //内容类型
+                case MqttPropertyConstant.CONTENT_TYPE:
+                    ValidateUtils.isTrue(willProperties.getContentType() == null, "");
+                    willProperties.setContentType(decodeString(buffer));
+                    break;
+                //响应主题
+                case MqttPropertyConstant.RESPONSE_TOPIC:
+                    ValidateUtils.isTrue(willProperties.getResponseTopic() == null, "");
+                    willProperties.setResponseTopic(decodeString(buffer));
+                    break;
+                //对比数据
+                case MqttPropertyConstant.CORRELATION_DATA:
+                    ValidateUtils.isTrue(willProperties.getCorrelationData() == null, "");
+                    willProperties.setCorrelationData(decodeByteArray(buffer));
+                    break;
+                //用户属性
+                case MqttPropertyConstant.USER_PROPERTY:
+                    String key = decodeString(buffer);
+                    String value = decodeString(buffer);
+                    willProperties.getUserProperties().add(new UserProperty(key, value));
+                    break;
+            }
+            remainingLength -= buffer.position() - position;
+        }
+        return willProperties;
     }
 
     @Override
