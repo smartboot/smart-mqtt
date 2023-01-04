@@ -4,6 +4,8 @@ import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttProtocolEnum;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.properties.ConnectProperties;
+import org.smartboot.mqtt.common.message.properties.UserProperty;
+import org.smartboot.mqtt.common.message.properties.WillProperties;
 import org.smartboot.mqtt.common.util.MqttPropertyConstant;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.util.BufferUtils;
@@ -23,6 +25,9 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
      * 有效载荷
      */
     private MqttConnectPayload mqttConnectPayload;
+    /**
+     * CONNECT属性
+     */
     private ConnectProperties connectProperties;
 
     public MqttConnectMessage(MqttFixedHeader mqttFixedHeader) {
@@ -57,35 +62,93 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
 
         //MQTT 5.0规范
         if (version == MqttVersion.MQTT_5) {
-            int propertiesLength = decodeVariableByteInteger(buffer);
-            if (propertiesLength > 0) {
-                connectProperties = new ConnectProperties();
-                while (propertiesLength > 0) {
-                    switch (buffer.get()) {
-                        case MqttPropertyConstant.SESSION_EXPIRY_INTERVAL:
-                            //包含多个会话过期间隔（Session Expiry Interval）将造成协议错误（Protocol Error）
-                            ValidateUtils.isTrue(connectProperties.getSessionExpiryInterval() == null, "");
-                            connectProperties.setSessionExpiryInterval(buffer.getInt());
-                            propertiesLength = propertiesLength - 5;
-                            break;
-                        case MqttPropertyConstant.RECEIVE_MAXIMUM:
-                            short receiveMaxiMum = buffer.getShort();
-                            break;
-                        case MqttPropertyConstant.MAXIMUM_PACKET_SIZE:
-                            int packetSize = buffer.getInt();
-                            break;
-
-                    }
-                }
-            }
-            int sessionExpiryFlag = BufferUtils.readUnsignedByte(buffer);
-            int sessionExpiryInterval = buffer.getInt();
+            decodeConnectProperties(buffer);
         }
-
 
         setVariableHeader(new MqttConnectVariableHeader(protocolName, protocolLevel, b1, keepAlive));
 
 
+    }
+
+    private void decodeConnectProperties(ByteBuffer buffer) {
+        int remainingLength = decodeVariableByteInteger(buffer);
+        connectProperties = new ConnectProperties();
+        if (remainingLength == 0) {
+            return;
+        }
+
+        int sessionExpiryInterval = -1;
+        int topicAliasMaximum = -1;
+        byte requestResponseInformation = -1;
+        byte requestProblemInformation = -1;
+        int position;
+        while (remainingLength > 0) {
+            position = buffer.position();
+            switch (buffer.get()) {
+                //会话过期间隔
+                case MqttPropertyConstant.SESSION_EXPIRY_INTERVAL:
+                    //包含多个会话过期间隔（Session Expiry Interval）将造成协议错误（Protocol Error）
+                    ValidateUtils.isTrue(sessionExpiryInterval == -1, "");
+                    sessionExpiryInterval = buffer.getInt();
+                    connectProperties.setSessionExpiryInterval(sessionExpiryInterval);
+                    break;
+                //接收最大值
+                case MqttPropertyConstant.RECEIVE_MAXIMUM:
+                    connectProperties.setReceiveMaximum(decodeMsbLsb(buffer));
+                    break;
+                //最大报文长度
+                case MqttPropertyConstant.MAXIMUM_PACKET_SIZE:
+                    //包含多个最大报文长度（Maximum Packet Size）或者最大报文长度（Maximum Packet Size）值为0将造成协议错误。
+                    ValidateUtils.isTrue(connectProperties.getMaximumPacketSize() == null, "");
+                    int maximumPacketSize = buffer.getInt();
+                    ValidateUtils.isTrue(maximumPacketSize > 0, "");
+                    connectProperties.setMaximumPacketSize(buffer.getInt());
+                    break;
+                //主题别名最大值
+                case MqttPropertyConstant.TOPIC_ALIAS_MAXIMUM:
+                    //跟随其后的是用双字节整数表示的主题别名最大值（Topic Alias Maximum）。
+                    // 包含多个主题别名最大值（Topic Alias Maximum）将造成协议错误（Protocol Error）。
+                    ValidateUtils.isTrue(topicAliasMaximum == -1, "");
+                    topicAliasMaximum = decodeMsbLsb(buffer);
+                    connectProperties.setTopicAliasMaximum(decodeMsbLsb(buffer));
+                    ValidateUtils.isTrue(topicAliasMaximum >= 0, "");
+                    break;
+                //请求响应信息
+                case MqttPropertyConstant.REQUEST_RESPONSE_INFORMATION:
+                    ValidateUtils.isTrue(requestResponseInformation == -1, "");
+                    requestResponseInformation = buffer.get();
+                    connectProperties.setRequestResponseInformation(requestResponseInformation);
+                    ValidateUtils.isTrue(requestResponseInformation == 0 || requestResponseInformation == 1, "");
+                    break;
+                //请求问题信息
+                case MqttPropertyConstant.REQUEST_PROBLEM_INFORMATION:
+                    ValidateUtils.isTrue(requestProblemInformation == -1, "");
+                    requestProblemInformation = buffer.get();
+                    connectProperties.setRequestProblemInformation(requestProblemInformation);
+                    ValidateUtils.isTrue(requestProblemInformation == 0 || requestProblemInformation == 1, "");
+                    break;
+                //用户属性
+                case MqttPropertyConstant.USER_PROPERTY:
+                    String key = decodeString(buffer);
+                    String value = decodeString(buffer);
+                    connectProperties.getUserProperties().add(new UserProperty(key, value));
+                    break;
+                //认证方法
+                case MqttPropertyConstant.AUTHENTICATION_METHOD:
+                    //包含多个认证方法将造成协议错误
+                    ValidateUtils.isTrue(connectProperties.getAuthenticationMethod() == null, "");
+                    connectProperties.setAuthenticationMethod(decodeString(buffer));
+                    break;
+                //认证数据
+                case MqttPropertyConstant.AUTHENTICATION_DATA:
+                    //包含多个认证数据（Authentication Data）将造成协议错误
+                    ValidateUtils.isTrue(connectProperties.getAuthenticationData() == null, "");
+                    byte[] data = decodeByteArray(buffer);
+                    connectProperties.setAuthenticationData(data);
+                    break;
+            }
+            remainingLength -= buffer.position() - position;
+        }
     }
 
     @Override
@@ -94,6 +157,40 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
         //客户端标识符
         // 客户端标识符 (ClientId) 必须存在而且必须是 CONNECT 报文有效载荷的第一个字段
         final String decodedClientId = decodeString(buffer);
+
+        // MQTT 5.0 遗嘱属性
+        WillProperties willProperties = null;
+        if (version == MqttVersion.MQTT_5) {
+            willProperties = new WillProperties();
+            int remainingLength = decodeVariableByteInteger(buffer);
+            int willDelayInterval = -1;
+            byte payloadFormatIndicator = -1;
+            int position;
+            while (remainingLength > 0) {
+                position = buffer.position();
+                switch (buffer.get()) {
+                    case MqttPropertyConstant.WILL_DELAY_INTERVAL:
+                        //包含多个遗嘱延时间隔将造成协议错误（Protocol Error）
+                        ValidateUtils.isTrue(willDelayInterval == -1, "");
+                        willDelayInterval = buffer.getInt();
+                        willProperties.setWillDelayInterval(willDelayInterval);
+                        ValidateUtils.isTrue(willDelayInterval >= 0, "");
+                        break;
+                    //载荷格式指示
+                    case MqttPropertyConstant.PAYLOAD_FORMAT_INDICATOR:
+                        //包含多个载荷格式指示（Payload Format Indicator）将造成协议错误（Protocol Error）
+                        ValidateUtils.isTrue(payloadFormatIndicator == -1, "");
+                        payloadFormatIndicator = buffer.get();
+                        willProperties.setPayloadFormatIndicator(payloadFormatIndicator);
+                        ValidateUtils.isTrue(payloadFormatIndicator == 0 || payloadFormatIndicator == 1, "");
+                        break;
+                    //消息过期间隔
+                    case MqttPropertyConstant.MESSAGE_EXPIRY_INTERVAL:
+                        break;
+                }
+                remainingLength -= buffer.position() - position;
+            }
+        }
 
         String decodedWillTopic = null;
         byte[] decodedWillMessage = null;
@@ -118,7 +215,7 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
             decodedPassword = decodeByteArray(buffer);
         }
 
-        mqttConnectPayload = new MqttConnectPayload(decodedClientId, decodedWillTopic, decodedWillMessage, decodedUserName, decodedPassword);
+        mqttConnectPayload = new MqttConnectPayload(decodedClientId, decodedWillTopic, decodedWillMessage, decodedUserName, decodedPassword, willProperties);
     }
 
     @Override
@@ -209,4 +306,8 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
         return mqttConnectPayload;
     }
 
+    public ConnectProperties getConnectProperties() {
+        ValidateUtils.isTrue(version == MqttVersion.MQTT_5, "");
+        return connectProperties;
+    }
 }

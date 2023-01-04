@@ -1,5 +1,7 @@
 package org.smartboot.mqtt.common.message;
 
+import org.smartboot.mqtt.common.message.properties.WillProperties;
+
 /**
  * CONNECT 报文的有效载荷（payload）包含一个或多个以长度为前缀的字段，
  * 可变报头中的标志决定是否包含这些字段。
@@ -14,7 +16,7 @@ public final class MqttConnectPayload {
     /**
      * 遗嘱属性
      */
-    private final MqttProperties willProperties;
+    private WillProperties willProperties;
     /**
      * 遗嘱主题
      */
@@ -36,7 +38,7 @@ public final class MqttConnectPayload {
         this(clientIdentifier, willTopic, willMessage, userName, password, null);
     }
 
-    public MqttConnectPayload(String clientIdentifier, String willTopic, byte[] willMessage, String userName, byte[] password, MqttProperties willProperties) {
+    public MqttConnectPayload(String clientIdentifier, String willTopic, byte[] willMessage, String userName, byte[] password, WillProperties willProperties) {
         this.clientIdentifier = clientIdentifier;
         this.willTopic = willTopic;
         this.willMessage = willMessage;
@@ -65,7 +67,5 @@ public final class MqttConnectPayload {
         return password;
     }
 
-    public MqttProperties getWillProperties() {
-        return willProperties;
-    }
+
 }

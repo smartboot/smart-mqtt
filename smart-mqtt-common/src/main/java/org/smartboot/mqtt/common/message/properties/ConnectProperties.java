@@ -1,5 +1,7 @@
 package org.smartboot.mqtt.common.message.properties;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -14,9 +16,9 @@ public class ConnectProperties {
      */
     private int sessionExpiryInterval;
     /**
-     * 接收最大值
+     * 接收最大值只将被应用在当前网络连接。如果没有设置最大接收值，将使用默认值65535。
      */
-    private Short receiveMaximum;
+    private int receiveMaximum = 65535;
     /**
      * 最大报文长度
      */
@@ -24,17 +26,20 @@ public class ConnectProperties {
 
     /**
      * 主题别名最大值
+     * 没有设置主题别名最大值属性的情况下，主题别名最大值默认为零。
      */
-    private Short topicAliasMaximum;
+    private int topicAliasMaximum = 0;
 
     /**
      * 请求响应信息
+     * 如果没有请求响应信息（Request Response Information），则请求响应默认值为0
      */
-    private Integer requestResponseInformation;
+    private byte requestResponseInformation;
     /**
      * 请求问题信息
+     * 如果没有请求问题信息（Request Problem Information），则请求问题默认值为1
      */
-    private Integer requestProblemInformation;
+    private byte requestProblemInformation = 1;
 
     /**
      * 用户属性
@@ -51,19 +56,24 @@ public class ConnectProperties {
      */
     private byte[] authenticationData;
 
-    public Integer getSessionExpiryInterval() {
+    /**
+     * 用户属性
+     */
+    private final List<UserProperty> userProperties = new ArrayList<>();
+
+    public int getSessionExpiryInterval() {
         return sessionExpiryInterval;
     }
 
-    public void setSessionExpiryInterval(Integer sessionExpiryInterval) {
+    public void setSessionExpiryInterval(int sessionExpiryInterval) {
         this.sessionExpiryInterval = sessionExpiryInterval;
     }
 
-    public Short getReceiveMaximum() {
+    public int getReceiveMaximum() {
         return receiveMaximum;
     }
 
-    public void setReceiveMaximum(Short receiveMaximum) {
+    public void setReceiveMaximum(int receiveMaximum) {
         this.receiveMaximum = receiveMaximum;
     }
 
@@ -75,27 +85,27 @@ public class ConnectProperties {
         this.maximumPacketSize = maximumPacketSize;
     }
 
-    public Short getTopicAliasMaximum() {
+    public int getTopicAliasMaximum() {
         return topicAliasMaximum;
     }
 
-    public void setTopicAliasMaximum(Short topicAliasMaximum) {
+    public void setTopicAliasMaximum(int topicAliasMaximum) {
         this.topicAliasMaximum = topicAliasMaximum;
     }
 
-    public Integer getRequestResponseInformation() {
+    public byte getRequestResponseInformation() {
         return requestResponseInformation;
     }
 
-    public void setRequestResponseInformation(Integer requestResponseInformation) {
+    public void setRequestResponseInformation(byte requestResponseInformation) {
         this.requestResponseInformation = requestResponseInformation;
     }
 
-    public Integer getRequestProblemInformation() {
+    public byte getRequestProblemInformation() {
         return requestProblemInformation;
     }
 
-    public void setRequestProblemInformation(Integer requestProblemInformation) {
+    public void setRequestProblemInformation(byte requestProblemInformation) {
         this.requestProblemInformation = requestProblemInformation;
     }
 
@@ -121,5 +131,9 @@ public class ConnectProperties {
 
     public void setAuthenticationData(byte[] authenticationData) {
         this.authenticationData = authenticationData;
+    }
+
+    public List<UserProperty> getUserProperties() {
+        return userProperties;
     }
 }
