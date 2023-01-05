@@ -25,7 +25,7 @@ public class MqttPublishMessage extends MqttVariableMessage<MqttPublishVariableH
     }
 
     @Override
-    public void decodeVariableHeader(ByteBuffer buffer) {
+    public void decodeVariableHeader0(ByteBuffer buffer) {
         final String decodedTopic = decodeString(buffer);
         //PUBLISH 报文中的主题名不能包含通配符
         if (MqttUtil.containsTopicWildcards(decodedTopic)) {

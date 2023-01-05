@@ -2,6 +2,10 @@ package org.smartboot.mqtt.common.message;
 
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.common.enums.MqttVersion;
+import org.smartboot.mqtt.common.message.properties.SubscribeProperties;
+import org.smartboot.mqtt.common.message.properties.UserProperty;
+import org.smartboot.mqtt.common.util.MqttPropertyConstant;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.util.BufferUtils;
 
@@ -14,23 +18,64 @@ import java.util.List;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttSubscribeMessage extends MqttPacketIdentifierMessage {
-
+public class MqttSubscribeMessage extends MqttVariableMessage<MqttSubscribeVariableHeader> {
     private MqttSubscribePayload mqttSubscribePayload;
 
     public MqttSubscribeMessage(MqttFixedHeader mqttFixedHeader) {
         super(mqttFixedHeader);
     }
 
-    public MqttSubscribeMessage(MqttFixedHeader mqttFixedHeader, int packageId, MqttSubscribePayload mqttSubscribePayload) {
-        super(mqttFixedHeader, packageId);
+    public MqttSubscribeMessage(MqttFixedHeader mqttFixedHeader, MqttSubscribeVariableHeader variableHeader, MqttSubscribePayload mqttSubscribePayload) {
+        super(mqttFixedHeader);
+        setVariableHeader(variableHeader);
         this.mqttSubscribePayload = mqttSubscribePayload;
+    }
+
+    @Override
+    public void decodeVariableHeader0(ByteBuffer buffer) {
+        int packetId = decodeMessageId(buffer);
+        SubscribeProperties subscribeProperties = null;
+        if (version == MqttVersion.MQTT_5) {
+            subscribeProperties = new SubscribeProperties();
+            decodeSubscribeProperties(buffer, subscribeProperties);
+        }
+        MqttSubscribeVariableHeader header = new MqttSubscribeVariableHeader(packetId, subscribeProperties);
+        setVariableHeader(header);
+    }
+
+    private void decodeSubscribeProperties(ByteBuffer buffer, SubscribeProperties subscribeProperties) {
+        int remainingLength = decodeVariableByteInteger(buffer);
+        if (remainingLength <= 0) {
+            return;
+        }
+        int subscriptionIdentifier = -1;
+        int position;
+        while (remainingLength > 0) {
+            position = buffer.position();
+            switch (buffer.get()) {
+                //订阅标识符
+                case MqttPropertyConstant.SUBSCRIPTION_IDENTIFIER:
+                    //包含多个订阅标识符将造成协议错误（Protocol Error）
+                    ValidateUtils.isTrue(subscriptionIdentifier == -1, "");
+                    subscriptionIdentifier = buffer.getInt();
+                    subscribeProperties.setSubscriptionIdentifier(subscriptionIdentifier);
+                    //订阅标识符取值范围从1到268,435,455
+                    ValidateUtils.isTrue(subscriptionIdentifier >= 1 && subscriptionIdentifier <= 268435455, "");
+                    break;
+                case MqttPropertyConstant.USER_PROPERTY:
+                    String key = decodeString(buffer);
+                    String value = decodeString(buffer);
+                    subscribeProperties.getUserProperties().add(new UserProperty(key, value));
+                    break;
+            }
+            remainingLength -= buffer.position() - position;
+        }
     }
 
     @Override
     public void decodePlayLoad(ByteBuffer buffer) {
         final List<MqttTopicSubscription> subscribeTopics = new ArrayList<>();
-        int payloadLength = fixedHeader.remainingLength() - PACKET_LENGTH;
+        int payloadLength = fixedHeader.remainingLength() - getVariableHeaderLength();
         ValidateUtils.isTrue(buffer.remaining() >= payloadLength, "数据不足");
         int limit = buffer.limit();
         buffer.limit(buffer.position() + payloadLength);

@@ -28,7 +28,7 @@ public class MqttIdPropertyMessage extends MqttVariableMessage<MqttPubReplyVaria
     }
 
     @Override
-    public final void decodeVariableHeader(ByteBuffer buffer) {
+    public final void decodeVariableHeader0(ByteBuffer buffer) {
         int packetId = buffer.getShort();
         MqttPubReplyVariableHeader header;
         if (version == MqttVersion.MQTT_5) {

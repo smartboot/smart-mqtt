@@ -25,6 +25,10 @@ public class MqttPropertyConstant {
      * 对比数据
      */
     public static final byte CORRELATION_DATA=0x09;
+    /**
+     * 订阅标识符
+     */
+    public static final byte SUBSCRIPTION_IDENTIFIER=0x0B;
     //会话过期间隔
     public static final byte SESSION_EXPIRY_INTERVAL = 0x11;
     /**

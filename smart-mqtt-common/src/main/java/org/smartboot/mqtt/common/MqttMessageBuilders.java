@@ -1,17 +1,17 @@
 package org.smartboot.mqtt.common;
 
-import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
-import org.smartboot.mqtt.common.message.MqttPingReqMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttPublishVariableHeader;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttSubscribePayload;
+import org.smartboot.mqtt.common.message.MqttSubscribeVariableHeader;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttUnsubscribePayload;
+import org.smartboot.mqtt.common.message.properties.SubscribeProperties;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,10 +21,6 @@ public final class MqttMessageBuilders {
     private MqttMessageBuilders() {
     }
 
-
-    public static PingReqBuilder pingReq() {
-        return new PingReqBuilder();
-    }
 
     public static PublishBuilder publish() {
         return new PublishBuilder();
@@ -86,6 +82,7 @@ public final class MqttMessageBuilders {
 
         private List<MqttTopicSubscription> subscriptions;
         private int packetId;
+        private SubscribeProperties subscribeProperties;
 
         SubscribeBuilder() {
         }
@@ -106,11 +103,17 @@ public final class MqttMessageBuilders {
             return this;
         }
 
+        public SubscribeBuilder subscribeProperties(SubscribeProperties subscribeProperties) {
+            this.subscribeProperties = subscribeProperties;
+            return this;
+        }
+
         public MqttSubscribeMessage build() {
             MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.SUBSCRIBE, false, MqttQoS.AT_LEAST_ONCE, false, 0);
             MqttSubscribePayload mqttSubscribePayload = new MqttSubscribePayload();
             mqttSubscribePayload.setTopicSubscriptions(subscriptions);
-            return new MqttSubscribeMessage(mqttFixedHeader, packetId, mqttSubscribePayload);
+            MqttSubscribeVariableHeader variableHeader = new MqttSubscribeVariableHeader(packetId, subscribeProperties);
+            return new MqttSubscribeMessage(mqttFixedHeader, variableHeader, mqttSubscribePayload);
         }
     }
 
@@ -142,16 +145,4 @@ public final class MqttMessageBuilders {
     }
 
 
-    public static final class PingReqBuilder {
-
-        private MqttConnectReturnCode returnCode;
-        private boolean sessionPresent;
-
-        PingReqBuilder() {
-        }
-
-        public MqttPingReqMessage build() {
-            return new MqttPingReqMessage();
-        }
-    }
 }

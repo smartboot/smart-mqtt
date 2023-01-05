@@ -28,7 +28,7 @@ public class MqttPacketIdentifierMessage extends MqttVariableMessage<MqttPacketI
     }
 
     @Override
-    public final void decodeVariableHeader(ByteBuffer buffer) {
+    public final void decodeVariableHeader0(ByteBuffer buffer) {
         MqttPacketIdVariableHeader header = new MqttPacketIdVariableHeader();
         header.setPacketId(decodeMessageId(buffer));
         setVariableHeader(header);

@@ -22,7 +22,7 @@ public class MqttConnAckMessage extends MqttVariableMessage<MqttConnAckVariableH
     }
 
     @Override
-    public void decodeVariableHeader(ByteBuffer buffer) {
+    public void decodeVariableHeader0(ByteBuffer buffer) {
         final boolean sessionPresent = (BufferUtils.readUnsignedByte(buffer) & 0x01) == 0x01;
         byte returnCode = buffer.get();
         setVariableHeader(new MqttConnAckVariableHeader(MqttConnectReturnCode.valueOf(returnCode), sessionPresent));
