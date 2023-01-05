@@ -11,6 +11,7 @@ import org.smartboot.mqtt.common.message.MqttSubscribeVariableHeader;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttUnsubscribePayload;
+import org.smartboot.mqtt.common.message.properties.PublishProperties;
 import org.smartboot.mqtt.common.message.properties.SubscribeProperties;
 
 import java.util.ArrayList;
@@ -40,6 +41,7 @@ public final class MqttMessageBuilders {
         private MqttQoS qos;
         private byte[] payload;
         private int packetId;
+        private PublishProperties publishProperties;
 
         PublishBuilder() {
         }
@@ -69,11 +71,14 @@ public final class MqttMessageBuilders {
             return this;
         }
 
+        public PublishBuilder publishProperties(PublishProperties publishProperties) {
+            this.publishProperties = publishProperties;
+            return this;
+        }
+
         public MqttPublishMessage build() {
             MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false, qos, retained, 0);
-            MqttPublishVariableHeader mqttVariableHeader = new MqttPublishVariableHeader();
-            mqttVariableHeader.setTopicName(topic);
-            mqttVariableHeader.setPacketId(packetId);
+            MqttPublishVariableHeader mqttVariableHeader = new MqttPublishVariableHeader(packetId, topic, publishProperties);
             return new MqttPublishMessage(mqttFixedHeader, mqttVariableHeader, payload);
         }
     }

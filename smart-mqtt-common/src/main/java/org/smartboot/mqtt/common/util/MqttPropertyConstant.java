@@ -20,15 +20,15 @@ public class MqttPropertyConstant {
     /**
      * 响应主题
      */
-    public static final byte RESPONSE_TOPIC=0x08;
+    public static final byte RESPONSE_TOPIC = 0x08;
     /**
      * 对比数据
      */
-    public static final byte CORRELATION_DATA=0x09;
+    public static final byte CORRELATION_DATA = 0x09;
     /**
      * 订阅标识符
      */
-    public static final byte SUBSCRIPTION_IDENTIFIER=0x0B;
+    public static final byte SUBSCRIPTION_IDENTIFIER = 0x0B;
     //会话过期间隔
     public static final byte SESSION_EXPIRY_INTERVAL = 0x11;
     /**
@@ -52,6 +52,10 @@ public class MqttPropertyConstant {
     public static final byte RECEIVE_MAXIMUM = 0x21;
     //主题别名最大值
     public static final byte TOPIC_ALIAS_MAXIMUM = 0x22;
+    /**
+     * 主题别名
+     */
+    public static final byte TOPIC_ALIAS = 0x23;
     //用户属性
     public static final byte USER_PROPERTY = 0x26;
     //最大报文长度

@@ -1,30 +1,40 @@
 package org.smartboot.mqtt.common.message;
 
+import org.smartboot.mqtt.common.message.properties.PublishProperties;
+
 /**
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttPublishVariableHeader extends MqttPacketIdVariableHeader {
+public class MqttPublishVariableHeader extends MqttVariableHeader {
+    /**
+     * 报文标识符
+     */
+    private final int packetId;
     /**
      * PUBLISH 报文中的主题名不能包含通配符
      */
-    private String topicName;
+    private final String topicName;
 
-    private MqttProperties properties;
+    private final PublishProperties publishProperties;
+
+    public MqttPublishVariableHeader(int packetId, String topicName, PublishProperties publishProperties) {
+        this.packetId = packetId;
+        this.topicName = topicName;
+        this.publishProperties = publishProperties;
+    }
 
     public String getTopicName() {
         return topicName;
     }
 
-    public void setTopicName(String topicName) {
-        this.topicName = topicName;
+
+    public PublishProperties getPublishProperties() {
+        return publishProperties;
     }
 
-    public MqttProperties getProperties() {
-        return properties;
+    public int getPacketId() {
+        return packetId;
     }
 
-    public void setProperties(MqttProperties properties) {
-        this.properties = properties;
-    }
 }
