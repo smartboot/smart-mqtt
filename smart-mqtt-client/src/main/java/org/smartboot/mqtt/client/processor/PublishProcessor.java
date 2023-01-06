@@ -7,6 +7,7 @@ import org.smartboot.mqtt.client.Subscribe;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
+import org.smartboot.mqtt.common.message.MqttPubAckVariableHeader;
 import org.smartboot.mqtt.common.message.MqttPubCompMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
 import org.smartboot.mqtt.common.message.MqttPubRelMessage;
@@ -72,7 +73,8 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
 
     private void processQos1(MqttClient mqttClient, MqttPublishMessage mqttPublishMessage) {
         processPublishMessage(mqttPublishMessage, mqttClient);
-        MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(mqttPublishMessage.getVariableHeader().getPacketId());
+        MqttPubAckVariableHeader variableHeader = new MqttPubAckVariableHeader(mqttPublishMessage.getVariableHeader().getPacketId(), null);
+        MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(variableHeader);
         mqttClient.write(pubAckMessage);
     }
 

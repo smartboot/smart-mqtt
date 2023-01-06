@@ -8,6 +8,7 @@ import org.smartboot.mqtt.broker.eventbus.EventObject;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
+import org.smartboot.mqtt.common.message.MqttPubAckVariableHeader;
 import org.smartboot.mqtt.common.message.MqttPubCompMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
 import org.smartboot.mqtt.common.message.MqttPubRelMessage;
@@ -57,7 +58,8 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
         final int messageId = mqttPublishMessage.getVariableHeader().getPacketId();
 
         //给 publisher 回响应
-        MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(messageId);
+        MqttPubAckVariableHeader variableHeader = new MqttPubAckVariableHeader(messageId, null);
+        MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(variableHeader);
         session.write(pubAckMessage);
 
         // 消息投递至消息总线

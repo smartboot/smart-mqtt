@@ -31,6 +31,16 @@ public class MqttPropertyConstant {
     public static final byte SUBSCRIPTION_IDENTIFIER = 0x0B;
     //会话过期间隔
     public static final byte SESSION_EXPIRY_INTERVAL = 0x11;
+
+    /**
+     * 分配客户标识符
+     */
+    public static final byte ASSIGNED_CLIENT_IDENTIFIER = 0x12;
+
+    /**
+     * 服务端保持连接
+     */
+    public static final byte SERVER_KEEP_ALIVE = 0x13;
     /**
      * 认证方法
      */
@@ -46,6 +56,20 @@ public class MqttPropertyConstant {
      * 遗嘱延时间隔
      */
     public static final byte WILL_DELAY_INTERVAL = 0x18;
+
+    /**
+     * 响应信息
+     */
+    public static final byte RESPONSE_INFORMATION = 0x1A;
+
+    /**
+     * 服务端参考
+     */
+    public static final byte SERVER_REFERENCE = 0x1C;
+    /**
+     * 原因字符串
+     */
+    public static final byte REASON_STRING = 0x1F;
     //请求响应信息
     public static final byte REQUEST_RESPONSE_INFORMATION = 0x19;
     //接收最大值
@@ -56,10 +80,33 @@ public class MqttPropertyConstant {
      * 主题别名
      */
     public static final byte TOPIC_ALIAS = 0x23;
+
+    /**
+     * 最大服务质量
+     */
+    public static final byte MAXIMUM_QOS = 0x24;
+    /**
+     * 保留可用
+     */
+    public static final byte RETAIN_AVAILABLE = 0x25;
     //用户属性
     public static final byte USER_PROPERTY = 0x26;
     //最大报文长度
     public static final byte MAXIMUM_PACKET_SIZE = 0x27;
 
+    /**
+     * 通配符订阅可用
+     */
+    public static final byte WILDCARD_SUBSCRIPTION_AVAILABLE = 0x28;
+
+    /**
+     * 订阅标识符可用
+     */
+    public static final byte SUBSCRIPTION_IDENTIFIER_AVAILABLE = 0x29;
+
+    /**
+     * 共享订阅可用
+     */
+    public static final byte SHARED_SUBSCRIPTION_AVAILABLE = 0x2A;
 
 }
