@@ -1,139 +1,84 @@
 package org.smartboot.mqtt.common.message.properties;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/1/2
  */
 public class ConnectProperties {
-    /**
-     * 会话过期间隔.
-     * 如果会话过期间隔（Session Expiry Interval）值未指定，则使用0。
-     * 如果设置为0或者未指定，会话将在网络连接（Network Connection）关闭时结束
-     */
-    private int sessionExpiryInterval;
-    /**
-     * 接收最大值只将被应用在当前网络连接。如果没有设置最大接收值，将使用默认值65535。
-     */
-    private int receiveMaximum = 65535;
-    /**
-     * 最大报文长度
-     */
-    private Integer maximumPacketSize;
+    private final MqttProperties properties;
 
-    /**
-     * 主题别名最大值
-     * 没有设置主题别名最大值属性的情况下，主题别名最大值默认为零。
-     */
-    private int topicAliasMaximum = 0;
-
-    /**
-     * 请求响应信息
-     * 如果没有请求响应信息（Request Response Information），则请求响应默认值为0
-     */
-    private byte requestResponseInformation;
-    /**
-     * 请求问题信息
-     * 如果没有请求问题信息（Request Problem Information），则请求问题默认值为1
-     */
-    private byte requestProblemInformation = 1;
-
-    /**
-     * 用户属性
-     */
-    private Map<String, String> userProperty;
-
-    /**
-     * 认证方法
-     */
-    private String authenticationMethod;
-
-    /**
-     * 认证数据
-     */
-    private byte[] authenticationData;
-
-    /**
-     * 用户属性
-     */
-    private final List<UserProperty> userProperties = new ArrayList<>();
+    public ConnectProperties(MqttProperties properties) {
+        this.properties = properties;
+    }
 
     public int getSessionExpiryInterval() {
-        return sessionExpiryInterval;
+        return properties.getSessionExpiryInterval();
     }
 
     public void setSessionExpiryInterval(int sessionExpiryInterval) {
-        this.sessionExpiryInterval = sessionExpiryInterval;
+        properties.setSessionExpiryInterval(sessionExpiryInterval);
     }
 
     public int getReceiveMaximum() {
-        return receiveMaximum;
+        return properties.getReceiveMaximum();
     }
 
     public void setReceiveMaximum(int receiveMaximum) {
-        this.receiveMaximum = receiveMaximum;
+        properties.setReceiveMaximum(receiveMaximum);
     }
 
     public Integer getMaximumPacketSize() {
-        return maximumPacketSize;
+        return properties.getMaximumPacketSize();
     }
 
     public void setMaximumPacketSize(Integer maximumPacketSize) {
-        this.maximumPacketSize = maximumPacketSize;
+        properties.setMaximumPacketSize(maximumPacketSize);
     }
 
     public int getTopicAliasMaximum() {
-        return topicAliasMaximum;
+        return properties.getTopicAliasMaximum();
     }
 
     public void setTopicAliasMaximum(int topicAliasMaximum) {
-        this.topicAliasMaximum = topicAliasMaximum;
+        properties.setTopicAliasMaximum(topicAliasMaximum);
     }
 
     public byte getRequestResponseInformation() {
-        return requestResponseInformation;
+        return properties.getRequestResponseInformation();
     }
 
     public void setRequestResponseInformation(byte requestResponseInformation) {
-        this.requestResponseInformation = requestResponseInformation;
+        properties.setRequestResponseInformation(requestResponseInformation);
     }
 
     public byte getRequestProblemInformation() {
-        return requestProblemInformation;
+        return properties.getRequestProblemInformation();
     }
 
     public void setRequestProblemInformation(byte requestProblemInformation) {
-        this.requestProblemInformation = requestProblemInformation;
+        properties.setRequestProblemInformation(requestProblemInformation);
     }
 
-    public Map<String, String> getUserProperty() {
-        return userProperty;
-    }
-
-    public void setUserProperty(Map<String, String> userProperty) {
-        this.userProperty = userProperty;
-    }
 
     public String getAuthenticationMethod() {
-        return authenticationMethod;
+        return properties.getAuthenticationMethod();
     }
 
     public void setAuthenticationMethod(String authenticationMethod) {
-        this.authenticationMethod = authenticationMethod;
+        properties.setAuthenticationMethod(authenticationMethod);
     }
 
     public byte[] getAuthenticationData() {
-        return authenticationData;
+        return properties.getAuthenticationData();
     }
 
     public void setAuthenticationData(byte[] authenticationData) {
-        this.authenticationData = authenticationData;
+        properties.setAuthenticationData(authenticationData);
     }
 
     public List<UserProperty> getUserProperties() {
-        return userProperties;
+        return properties.getUserProperties();
     }
 }

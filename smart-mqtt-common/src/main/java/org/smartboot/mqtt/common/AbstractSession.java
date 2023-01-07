@@ -7,8 +7,10 @@ import org.smartboot.mqtt.common.eventbus.EventBus;
 import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.mqtt.common.message.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
+import org.smartboot.mqtt.common.message.MqttVariableMessage;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.transport.AioSession;
@@ -71,7 +73,7 @@ public abstract class AbstractSession {
         return responseConsumers;
     }
 
-    public final void notifyResponse(MqttPacketIdentifierMessage message) {
+    public final void notifyResponse(MqttVariableMessage<? extends MqttPacketIdVariableHeader> message) {
         AckMessage ackMessage = responseConsumers.remove(message.getVariableHeader().getPacketId());
         if (ackMessage != null) {
             ackMessage.setDone(true);

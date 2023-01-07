@@ -2,6 +2,7 @@ package org.smartboot.mqtt.common.message;
 
 
 import org.smartboot.mqtt.common.enums.MqttVersion;
+import org.smartboot.mqtt.common.message.properties.ConnectProperties;
 
 /**
  * CONNECT 报文的可变报头按下列次序包含四个字段：协议名（Protocol Name），协议级别（Protocol
@@ -25,7 +26,7 @@ public final class MqttConnectVariableHeader extends MqttVariableHeader {
     private final boolean isCleanSession;
     private final int reserved;
     private final int keepAliveTimeSeconds;
-    private final MqttProperties properties;
+    private final ConnectProperties properties;
 
     public MqttConnectVariableHeader(
             String name,
@@ -40,7 +41,7 @@ public final class MqttConnectVariableHeader extends MqttVariableHeader {
             byte protocolLevel,
             int connectFlag,
             int keepAliveTimeSeconds,
-            MqttProperties properties) {
+            ConnectProperties properties) {
         this.protocolName = name;
         this.protocolLevel = protocolLevel;
         this.hasUserName = (connectFlag & 0x80) == 0x80;
@@ -58,7 +59,7 @@ public final class MqttConnectVariableHeader extends MqttVariableHeader {
         this(mqttVersion, hasUserName, hasPassword, willMessage, isCleanSession, keepAliveTimeSeconds, null);
     }
 
-    public MqttConnectVariableHeader(MqttVersion mqttVersion, boolean hasUserName, boolean hasPassword, WillMessage willMessage, boolean isCleanSession, int keepAliveTimeSeconds, MqttProperties properties) {
+    public MqttConnectVariableHeader(MqttVersion mqttVersion, boolean hasUserName, boolean hasPassword, WillMessage willMessage, boolean isCleanSession, int keepAliveTimeSeconds, ConnectProperties properties) {
         this.protocolName = mqttVersion.protocolName();
         this.protocolLevel = mqttVersion.protocolLevel();
         this.hasUserName = hasUserName;
@@ -114,7 +115,7 @@ public final class MqttConnectVariableHeader extends MqttVariableHeader {
         return reserved;
     }
 
-    public MqttProperties getProperties() {
+    public ConnectProperties getProperties() {
         return properties;
     }
 }

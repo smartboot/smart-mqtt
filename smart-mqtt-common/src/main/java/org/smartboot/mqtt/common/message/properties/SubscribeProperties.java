@@ -1,6 +1,5 @@
 package org.smartboot.mqtt.common.message.properties;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -11,21 +10,21 @@ public class SubscribeProperties {
     /**
      * 订阅标识符
      */
-    private int subscriptionIdentifier;
-    /**
-     * 用户属性
-     */
-    private final List<UserProperty> userProperties = new ArrayList<>();
+    private final MqttProperties properties;
+
+    public SubscribeProperties(MqttProperties properties) {
+        this.properties = properties;
+    }
 
     public int getSubscriptionIdentifier() {
-        return subscriptionIdentifier;
+        return properties.getSubscriptionIdentifier();
     }
 
     public void setSubscriptionIdentifier(int subscriptionIdentifier) {
-        this.subscriptionIdentifier = subscriptionIdentifier;
+        properties.setSubscriptionIdentifier(subscriptionIdentifier);
     }
 
     public List<UserProperty> getUserProperties() {
-        return userProperties;
+        return properties.getUserProperties();
     }
 }

@@ -1,6 +1,5 @@
 package org.smartboot.mqtt.common.message.properties;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -8,220 +7,142 @@ import java.util.List;
  * @version V1.0 , 2023/1/6
  */
 public class ConnectAckProperties {
-    /**
-     * 会话过期间隔
-     */
-    private int sessionExpiryInterval;
 
-    /**
-     * 接收最大值只将被应用在当前网络连接。如果没有设置最大接收值，将使用默认值65535。
-     */
-    private int receiveMaximum = 65535;
+    private MqttProperties properties;
 
-    /**
-     * 最大服务质量
-     */
-    private int maximumQoS;
-
-    /**
-     * 保留可用
-     */
-    private byte retainAvailable;
-
-    /**
-     * 最大报文长度
-     */
-    private Integer maximumPacketSize;
-
-    /**
-     * 分配客户标识符
-     */
-    private String assignedClientIdentifier;
-
-    /**
-     * 主题别名最大值
-     */
-    private int topicAliasMaximum;
-
-    /**
-     * 原因字符串
-     */
-    private String reasonString;
-
-    /**
-     * 用户属性
-     */
-    private final List<UserProperty> userProperties = new ArrayList<>();
-
-    /**
-     * 通配符订阅可用
-     */
-    private byte wildcardSubscriptionAvailable;
-
-    /**
-     * 订阅标识符可用
-     */
-    private byte subscriptionIdentifierAvailable;
-
-    /**
-     * 共享订阅可用
-     */
-    private byte sharedSubscriptionAvailable;
-
-    /**
-     * 服务端保持连接
-     */
-    private int serverKeepAlive;
-
-    /**
-     * 响应信息
-     */
-    private String responseInformation;
-
-    /**
-     * 服务端参考
-     */
-    private String serverReference;
-
-    /**
-     * 认证方法
-     */
-    private String authenticationMethod;
-
-    /**
-     * 认证数据
-     */
-    private byte[] authenticationData;
+    public ConnectAckProperties(MqttProperties properties) {
+        this.properties = properties;
+    }
 
     public int getSessionExpiryInterval() {
-        return sessionExpiryInterval;
+        return properties.getSessionExpiryInterval();
     }
 
     public void setSessionExpiryInterval(int sessionExpiryInterval) {
-        this.sessionExpiryInterval = sessionExpiryInterval;
+        properties.setSessionExpiryInterval(sessionExpiryInterval);
     }
 
     public int getReceiveMaximum() {
-        return receiveMaximum;
+        return properties.getReceiveMaximum();
     }
 
     public void setReceiveMaximum(int receiveMaximum) {
-        this.receiveMaximum = receiveMaximum;
+        properties.setReceiveMaximum(receiveMaximum);
     }
 
     public int getMaximumQoS() {
-        return maximumQoS;
+        return properties.getMaximumQoS();
     }
 
     public void setMaximumQoS(int maximumQoS) {
-        this.maximumQoS = maximumQoS;
+        properties.setMaximumQoS(maximumQoS);
     }
 
     public byte getRetainAvailable() {
-        return retainAvailable;
+        return properties.getRetainAvailable();
     }
 
     public void setRetainAvailable(byte retainAvailable) {
-        this.retainAvailable = retainAvailable;
+        properties.setRetainAvailable(retainAvailable);
     }
 
     public Integer getMaximumPacketSize() {
-        return maximumPacketSize;
+        return properties.getMaximumPacketSize();
     }
 
     public void setMaximumPacketSize(Integer maximumPacketSize) {
-        this.maximumPacketSize = maximumPacketSize;
+        properties.setMaximumPacketSize(maximumPacketSize);
     }
 
     public String getAssignedClientIdentifier() {
-        return assignedClientIdentifier;
+        return properties.getAssignedClientIdentifier();
     }
 
     public void setAssignedClientIdentifier(String assignedClientIdentifier) {
-        this.assignedClientIdentifier = assignedClientIdentifier;
+        properties.setAssignedClientIdentifier(assignedClientIdentifier);
     }
 
     public int getTopicAliasMaximum() {
-        return topicAliasMaximum;
+        return properties.getTopicAliasMaximum();
     }
 
     public void setTopicAliasMaximum(int topicAliasMaximum) {
-        this.topicAliasMaximum = topicAliasMaximum;
+        properties.setTopicAliasMaximum(topicAliasMaximum);
     }
 
     public String getReasonString() {
-        return reasonString;
+        return properties.getReasonString();
     }
 
     public void setReasonString(String reasonString) {
-        this.reasonString = reasonString;
+        properties.setReasonString(reasonString);
     }
 
     public List<UserProperty> getUserProperties() {
-        return userProperties;
+        return properties.getUserProperties();
     }
 
     public byte getWildcardSubscriptionAvailable() {
-        return wildcardSubscriptionAvailable;
+        return properties.getWildcardSubscriptionAvailable();
     }
 
     public void setWildcardSubscriptionAvailable(byte wildcardSubscriptionAvailable) {
-        this.wildcardSubscriptionAvailable = wildcardSubscriptionAvailable;
+        properties.setWildcardSubscriptionAvailable(wildcardSubscriptionAvailable);
     }
 
     public byte getSubscriptionIdentifierAvailable() {
-        return subscriptionIdentifierAvailable;
+        return properties.getSubscriptionIdentifierAvailable();
     }
 
     public void setSubscriptionIdentifierAvailable(byte subscriptionIdentifierAvailable) {
-        this.subscriptionIdentifierAvailable = subscriptionIdentifierAvailable;
+        properties.setSubscriptionIdentifierAvailable(subscriptionIdentifierAvailable);
     }
 
     public byte getSharedSubscriptionAvailable() {
-        return sharedSubscriptionAvailable;
+        return properties.getSharedSubscriptionAvailable();
     }
 
     public void setSharedSubscriptionAvailable(byte sharedSubscriptionAvailable) {
-        this.sharedSubscriptionAvailable = sharedSubscriptionAvailable;
+        properties.setSharedSubscriptionAvailable(sharedSubscriptionAvailable);
     }
 
     public int getServerKeepAlive() {
-        return serverKeepAlive;
+        return properties.getServerKeepAlive();
     }
 
     public void setServerKeepAlive(int serverKeepAlive) {
-        this.serverKeepAlive = serverKeepAlive;
+        properties.setServerKeepAlive(serverKeepAlive);
     }
 
     public String getResponseInformation() {
-        return responseInformation;
+        return properties.getResponseInformation();
     }
 
     public void setResponseInformation(String responseInformation) {
-        this.responseInformation = responseInformation;
+        properties.setResponseInformation(responseInformation);
     }
 
     public String getServerReference() {
-        return serverReference;
+        return properties.getServerReference();
     }
 
     public void setServerReference(String serverReference) {
-        this.serverReference = serverReference;
+        properties.setServerReference(serverReference);
     }
 
     public String getAuthenticationMethod() {
-        return authenticationMethod;
+        return properties.getAuthenticationMethod();
     }
 
     public void setAuthenticationMethod(String authenticationMethod) {
-        this.authenticationMethod = authenticationMethod;
+        properties.setAuthenticationMethod(authenticationMethod);
     }
 
     public byte[] getAuthenticationData() {
-        return authenticationData;
+        return properties.getAuthenticationData();
     }
 
     public void setAuthenticationData(byte[] authenticationData) {
-        this.authenticationData = authenticationData;
+        properties.setAuthenticationData(authenticationData);
     }
 }

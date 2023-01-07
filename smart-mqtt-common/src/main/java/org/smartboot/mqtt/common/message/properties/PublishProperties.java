@@ -2,7 +2,6 @@ package org.smartboot.mqtt.common.message.properties;
 
 import org.smartboot.mqtt.common.message.MqttMessage;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -10,72 +9,38 @@ import java.util.List;
  * @version V1.0 , 2023/1/5
  */
 public class PublishProperties {
-    /**
-     * 载荷格式指示
-     */
-    private byte payloadFormatIndicator = -1;
+    private final MqttProperties properties;
 
-    /**
-     * 消息过期间隔
-     */
-    private int messageExpiryInterval;
-    /**
-     * 主题别名
-     */
-    private int topicAlias;
-
-    /**
-     * 响应主题
-     */
-    private String responseTopic;
-    private byte[] responseTopicBytes;
-
-    /**
-     * 对比数据
-     */
-    private byte[] correlationData;
-
-    /**
-     * 用户属性
-     */
-    private final List<UserProperty> userProperties = new ArrayList<>();
-    /**
-     * 订阅标识符
-     */
-    private int subscriptionIdentifier;
-
-    /**
-     * 内容类型
-     */
-    private String contentType;
-    private byte[] contentTypeBytes;
+    public PublishProperties(MqttProperties properties) {
+        this.properties = properties;
+    }
 
     public byte getPayloadFormatIndicator() {
-        return payloadFormatIndicator;
+        return properties.getPayloadFormatIndicator();
     }
 
     public void setPayloadFormatIndicator(byte payloadFormatIndicator) {
-        this.payloadFormatIndicator = payloadFormatIndicator;
+        properties.setPayloadFormatIndicator(payloadFormatIndicator);
     }
 
     public int getMessageExpiryInterval() {
-        return messageExpiryInterval;
+        return properties.getMessageExpiryInterval();
     }
 
     public void setMessageExpiryInterval(int messageExpiryInterval) {
-        this.messageExpiryInterval = messageExpiryInterval;
+        properties.setMessageExpiryInterval(messageExpiryInterval);
     }
 
     public int getTopicAlias() {
-        return topicAlias;
+        return properties.getTopicAlias();
     }
 
     public void setTopicAlias(int topicAlias) {
-        this.topicAlias = topicAlias;
+        properties.setTopicAlias(topicAlias);
     }
 
     public String getResponseTopic() {
-        return responseTopic;
+        return properties.getResponseTopic();
     }
 
     public byte[] getResponseTopicBytes() {
@@ -83,31 +48,31 @@ public class PublishProperties {
     }
 
     public void setResponseTopic(String responseTopic) {
-        this.responseTopic = responseTopic;
+        properties.setResponseTopic(responseTopic);
     }
 
     public byte[] getCorrelationData() {
-        return correlationData;
+        return properties.getCorrelationData();
     }
 
     public void setCorrelationData(byte[] correlationData) {
-        this.correlationData = correlationData;
+        properties.setCorrelationData(correlationData);
     }
 
     public List<UserProperty> getUserProperties() {
-        return userProperties;
+        return properties.getUserProperties();
     }
 
     public int getSubscriptionIdentifier() {
-        return subscriptionIdentifier;
+        return properties.getSubscriptionIdentifier();
     }
 
     public void setSubscriptionIdentifier(int subscriptionIdentifier) {
-        this.subscriptionIdentifier = subscriptionIdentifier;
+        properties.setSubscriptionIdentifier(subscriptionIdentifier);
     }
 
     public String getContentType() {
-        return contentType;
+        return properties.getContentType();
     }
 
     public byte[] getContentTypeBytes() {
@@ -115,15 +80,18 @@ public class PublishProperties {
     }
 
     public void setContentType(String contentType) {
-        this.contentType = contentType;
+        properties.setContentType(contentType);
     }
 
+    private byte[] responseTopicBytes;
+    private byte[] contentTypeBytes;
+
     public void decode() {
-        if (responseTopic != null) {
-            responseTopicBytes = MqttMessage.encodeUTF8(responseTopic);
+        if (getResponseTopic() != null) {
+            responseTopicBytes = MqttMessage.encodeUTF8(getResponseTopic());
         }
-        if (contentType != null) {
-            contentTypeBytes = MqttMessage.encodeUTF8(contentType);
+        if (getContentType() != null) {
+            contentTypeBytes = MqttMessage.encodeUTF8(getContentType());
         }
     }
 }

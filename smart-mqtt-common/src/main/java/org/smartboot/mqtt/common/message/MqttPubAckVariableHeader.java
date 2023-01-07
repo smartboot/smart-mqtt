@@ -6,11 +6,7 @@ import org.smartboot.mqtt.common.message.properties.ReasonProperties;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/1/6
  */
-public class MqttPubAckVariableHeader extends MqttVariableHeader {
-    /**
-     * 报文标识符
-     */
-    private final int packetId;
+public class MqttPubAckVariableHeader extends MqttPacketIdVariableHeader {
 
     /**
      * 原因码
@@ -19,12 +15,8 @@ public class MqttPubAckVariableHeader extends MqttVariableHeader {
     private final ReasonProperties properties;
 
     public MqttPubAckVariableHeader(int packetId, ReasonProperties properties) {
-        this.packetId = packetId;
+        super(packetId);
         this.properties = properties;
-    }
-
-    public int getPacketId() {
-        return packetId;
     }
 
     public ReasonProperties getProperties() {

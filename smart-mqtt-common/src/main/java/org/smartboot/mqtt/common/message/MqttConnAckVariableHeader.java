@@ -1,6 +1,7 @@
 package org.smartboot.mqtt.common.message;
 
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
+import org.smartboot.mqtt.common.message.properties.ConnectAckProperties;
 
 /**
  * @author 三刀
@@ -14,13 +15,14 @@ public class MqttConnAckVariableHeader extends MqttVariableHeader {
      */
     private final boolean sessionPresent;
 
-    private final MqttProperties properties;
+    private final ConnectAckProperties properties;
 
 
     public MqttConnAckVariableHeader(MqttConnectReturnCode connectReturnCode, boolean sessionPresent) {
         this(connectReturnCode, sessionPresent, null);
     }
-    public MqttConnAckVariableHeader(MqttConnectReturnCode connectReturnCode, boolean sessionPresent, MqttProperties properties) {
+
+    public MqttConnAckVariableHeader(MqttConnectReturnCode connectReturnCode, boolean sessionPresent, ConnectAckProperties properties) {
         this.connectReturnCode = connectReturnCode;
         this.sessionPresent = sessionPresent;
         this.properties = properties;
@@ -34,7 +36,7 @@ public class MqttConnAckVariableHeader extends MqttVariableHeader {
         return sessionPresent;
     }
 
-    public MqttProperties getProperties() {
+    public ConnectAckProperties getProperties() {
         return properties;
     }
 }
