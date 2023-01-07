@@ -1,6 +1,5 @@
 package org.smartboot.mqtt.common.message.properties;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -8,90 +7,61 @@ import java.util.List;
  * @version V1.0 , 2023/1/4
  */
 public class WillProperties {
-    /**
-     * 遗嘱延时间隔
-     * 如果没有设置遗嘱延时间隔，遗嘱延时间隔默认值将为0，即不用延时发布遗嘱消息（Will Message）
-     */
-    private int willDelayInterval;
+    private final MqttProperties properties;
 
-    /**
-     * 载荷格式指示
-     */
-    private byte payloadFormatIndicator;
-
-    /**
-     * 消息过期间隔
-     */
-    private int messageExpiryInterval;
-
-    /**
-     * 内容类型
-     */
-    private String contentType;
-
-    /**
-     * 响应主题
-     */
-    private String responseTopic;
-
-    /**
-     * 对比数据
-     */
-    private byte[] correlationData;
-    /**
-     * 用户属性
-     */
-    private final List<UserProperty> userProperties = new ArrayList<>();
+    public WillProperties(MqttProperties properties) {
+        this.properties = properties;
+    }
 
     public int getWillDelayInterval() {
-        return willDelayInterval;
+        return properties.getWillDelayInterval();
     }
 
     public void setWillDelayInterval(int willDelayInterval) {
-        this.willDelayInterval = willDelayInterval;
+        properties.setWillDelayInterval(willDelayInterval);
     }
 
     public byte getPayloadFormatIndicator() {
-        return payloadFormatIndicator;
+        return properties.getPayloadFormatIndicator();
     }
 
     public void setPayloadFormatIndicator(byte payloadFormatIndicator) {
-        this.payloadFormatIndicator = payloadFormatIndicator;
+        properties.setPayloadFormatIndicator(payloadFormatIndicator);
     }
 
     public int getMessageExpiryInterval() {
-        return messageExpiryInterval;
+        return properties.getMessageExpiryInterval();
     }
 
     public void setMessageExpiryInterval(int messageExpiryInterval) {
-        this.messageExpiryInterval = messageExpiryInterval;
+        properties.setMessageExpiryInterval(messageExpiryInterval);
     }
 
     public String getContentType() {
-        return contentType;
+        return properties.getContentType();
     }
 
     public void setContentType(String contentType) {
-        this.contentType = contentType;
+        properties.setContentType(contentType);
     }
 
     public String getResponseTopic() {
-        return responseTopic;
+        return properties.getResponseTopic();
     }
 
     public void setResponseTopic(String responseTopic) {
-        this.responseTopic = responseTopic;
+        properties.setResponseTopic(responseTopic);
     }
 
     public byte[] getCorrelationData() {
-        return correlationData;
+        return properties.getCorrelationData();
     }
 
     public void setCorrelationData(byte[] correlationData) {
-        this.correlationData = correlationData;
+        properties.setCorrelationData(correlationData);
     }
 
     public List<UserProperty> getUserProperties() {
-        return userProperties;
+        return properties.getUserProperties();
     }
 }
