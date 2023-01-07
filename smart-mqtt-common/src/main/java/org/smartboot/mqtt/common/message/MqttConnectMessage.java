@@ -28,6 +28,8 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
             | RECEIVE_MAXIMUM_BIT | MAXIMUM_PACKET_SIZE_BIT
             | TOPIC_ALIAS_MAXIMUM_BIT | REQUEST_RESPONSE_INFORMATION_BIT
             | REQUEST_PROBLEM_INFORMATION_BIT | USER_PROPERTY_BIT | AUTHENTICATION_METHOD_BIT | AUTHENTICATION_DATA_BIT;
+    private static final int WILL_PROPERTIES_BITS = WILL_DELAY_INTERVAL_BIT | PAYLOAD_FORMAT_INDICATOR_BIT | MESSAGE_EXPIRY_INTERVAL_BIT
+            | CONTENT_TYPE_BIT | RESPONSE_TOPIC_BIT | CORRELATION_DATA_BIT | USER_PROPERTY_BIT;
     /**
      * 有效载荷
      */
@@ -94,7 +96,7 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
             // 遗嘱属性字段定义了遗嘱消息（Will Message）将何时被发布，以及被发布时的应用消息（Application Message）属性。
             if (version == MqttVersion.MQTT_5) {
                 MqttProperties mqttProperties = new MqttProperties();
-                mqttProperties.decode(buffer, PROPERTIES_BITS);
+                mqttProperties.decode(buffer, WILL_PROPERTIES_BITS);
                 willProperties = new WillProperties(mqttProperties);
             }
             decodedWillTopic = decodeString(buffer, 0, 32767);
