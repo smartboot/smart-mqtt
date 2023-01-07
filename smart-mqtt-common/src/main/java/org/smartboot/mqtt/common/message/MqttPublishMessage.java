@@ -147,7 +147,7 @@ public class MqttPublishMessage extends MqttVariableMessage<MqttPublishVariableH
         MqttPublishVariableHeader variableHeader = getVariableHeader();
         byte[] topicBytes = encodeUTF8(variableHeader.getTopicName());
         boolean hasPacketId = fixedHeader.getQosLevel().value() > 0;
-        mqttWriter.writeByte(getFixedHeaderByte1(fixedHeader));
+        mqttWriter.writeByte(getFixedHeaderByte(fixedHeader));
 
         int length = topicBytes.length + (hasPacketId ? 2 : 0) + payload.length;
         int propertiesLength = 0;

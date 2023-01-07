@@ -149,7 +149,7 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
 
 
         //第一部分：固定报头
-        mqttWriter.writeByte(getFixedHeaderByte1(fixedHeader));
+        mqttWriter.writeByte(getFixedHeaderByte(fixedHeader));
         mqttWriter.write(encodeMBI(remainingLength));
 
 

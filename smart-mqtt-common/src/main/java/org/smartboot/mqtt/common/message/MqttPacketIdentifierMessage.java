@@ -39,7 +39,7 @@ public class MqttPacketIdentifierMessage extends MqttVariableMessage<MqttPacketI
     public void writeTo(MqttWriter mqttWriter) throws IOException {
         MqttPacketIdVariableHeader variableHeader = getVariableHeader();
         int variableHeaderBufferSize = 2; // variable part only has a message id
-        mqttWriter.writeByte(getFixedHeaderByte1(fixedHeader));
+        mqttWriter.writeByte(getFixedHeaderByte(fixedHeader));
         writeVariableLengthInt(mqttWriter, variableHeaderBufferSize);
         mqttWriter.writeShort((short) variableHeader.getPacketId());
     }

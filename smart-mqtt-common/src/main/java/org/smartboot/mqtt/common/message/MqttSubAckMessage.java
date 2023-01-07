@@ -42,7 +42,7 @@ public class MqttSubAckMessage extends MqttPacketIdentifierMessage {
         int variableHeaderBufferSize = 2;
         int payloadBufferSize = mqttSubAckPayload.grantedQoSLevels().size();
         int variablePartSize = variableHeaderBufferSize + payloadBufferSize;
-        mqttWriter.writeByte(getFixedHeaderByte1(fixedHeader));
+        mqttWriter.writeByte(getFixedHeaderByte(fixedHeader));
         writeVariableLengthInt(mqttWriter, variablePartSize);
         mqttWriter.writeShort((short) getVariableHeader().getPacketId());
         for (int qos : mqttSubAckPayload.grantedQoSLevels()) {

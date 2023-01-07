@@ -142,7 +142,7 @@ public class MqttMessage extends ToString {
         return messageId;
     }
 
-    protected final byte getFixedHeaderByte1(MqttFixedHeader header) {
+    protected final byte getFixedHeaderByte(MqttFixedHeader header) {
         int ret = 0;
         ret |= header.getMessageType().value() << 4;
         if (header.isDup()) {

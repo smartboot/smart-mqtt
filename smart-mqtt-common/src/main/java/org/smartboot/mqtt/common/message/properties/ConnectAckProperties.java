@@ -8,7 +8,7 @@ import java.util.List;
  */
 public class ConnectAckProperties {
 
-    private MqttProperties properties;
+    private final MqttProperties properties;
 
     public ConnectAckProperties(MqttProperties properties) {
         this.properties = properties;

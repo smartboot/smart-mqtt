@@ -107,7 +107,7 @@ public class MqttSubscribeMessage extends MqttVariableMessage<MqttSubscribeVaria
             topicFilters.add(bytes);
             length += 1 + bytes.length;
         }
-        mqttWriter.writeByte(getFixedHeaderByte1(fixedHeader));
+        mqttWriter.writeByte(getFixedHeaderByte(fixedHeader));
         mqttWriter.write(encodeMBI(length));
         mqttWriter.writeShort((short) getVariableHeader().getPacketId());
         int i = 0;
