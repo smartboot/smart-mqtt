@@ -1,5 +1,7 @@
 package org.smartboot.mqtt.common.message.properties;
 
+import org.smartboot.mqtt.common.message.MqttMessage;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,7 +13,7 @@ public class PublishProperties {
     /**
      * 载荷格式指示
      */
-    private byte payloadFormatIndicator;
+    private byte payloadFormatIndicator = -1;
 
     /**
      * 消息过期间隔
@@ -26,6 +28,7 @@ public class PublishProperties {
      * 响应主题
      */
     private String responseTopic;
+    private byte[] responseTopicBytes;
 
     /**
      * 对比数据
@@ -45,6 +48,7 @@ public class PublishProperties {
      * 内容类型
      */
     private String contentType;
+    private byte[] contentTypeBytes;
 
     public byte getPayloadFormatIndicator() {
         return payloadFormatIndicator;
@@ -72,6 +76,10 @@ public class PublishProperties {
 
     public String getResponseTopic() {
         return responseTopic;
+    }
+
+    public byte[] getResponseTopicBytes() {
+        return responseTopicBytes;
     }
 
     public void setResponseTopic(String responseTopic) {
@@ -102,8 +110,21 @@ public class PublishProperties {
         return contentType;
     }
 
+    public byte[] getContentTypeBytes() {
+        return contentTypeBytes;
+    }
+
     public void setContentType(String contentType) {
         this.contentType = contentType;
+    }
+
+    public void decode() {
+        if (responseTopic != null) {
+            responseTopicBytes = MqttMessage.encodeUTF8(responseTopic);
+        }
+        if (contentType != null) {
+            contentTypeBytes = MqttMessage.encodeUTF8(contentType);
+        }
     }
 }
 

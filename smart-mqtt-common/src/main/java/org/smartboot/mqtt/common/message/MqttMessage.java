@@ -9,7 +9,6 @@ import org.smartboot.socket.util.DecoderException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.UTFDataFormatException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -83,7 +82,7 @@ public class MqttMessage extends ToString {
     /**
      * java.io.DataOutputStream#writeUTF(java.lang.String, java.io.DataOutput)
      */
-    protected final byte[] encodeUTF8(String str) throws UTFDataFormatException {
+    public static byte[] encodeUTF8(String str) {
         int strlen = str.length();
         int utflen = 0;
         int c, count = 0;
@@ -101,8 +100,7 @@ public class MqttMessage extends ToString {
         }
 
         if (utflen > 65535) {
-            throw new MqttProcessException(
-                    "encoded string too long: " + utflen + " bytes", () -> {
+            throw new MqttProcessException("encoded string too long: " + utflen + " bytes", () -> {
             });
         }
         byte[] bytearr = new byte[utflen + 2];
@@ -194,6 +192,11 @@ public class MqttMessage extends ToString {
         return (byte) ret;
     }
 
+    protected final void writeByteArray(MqttWriter writer, byte[] bytes) throws IOException {
+        writer.writeShort((short) bytes.length);
+        writer.write(bytes);
+    }
+
     protected final byte[] decodeByteArray(ByteBuffer buffer) {
         final int decodedSize = decodeMsbLsb(buffer);
         byte[] bytes = new byte[decodedSize];
@@ -211,8 +214,7 @@ public class MqttMessage extends ToString {
         do {
             encodedByte = buffer.get();
             value += (encodedByte & 127) * multiplier;
-            if (multiplier > 128 * 128 * 128)
-                throw new DecoderException("decode Variable Byte Integer error");
+            if (multiplier > 128 * 128 * 128) throw new DecoderException("decode Variable Byte Integer error");
             multiplier *= 128;
         } while ((encodedByte & 128) != 0);
         return value;

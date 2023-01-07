@@ -26,6 +26,11 @@ public class DefaultMqttWriter implements MqttWriter {
     }
 
     @Override
+    public void writeInt(int data) throws IOException {
+        writeBuffer.writeInt(data);
+    }
+
+    @Override
     public void write(byte[] data) throws IOException {
         writeBuffer.write(data);
     }

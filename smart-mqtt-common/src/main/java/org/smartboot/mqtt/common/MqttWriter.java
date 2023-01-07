@@ -11,6 +11,8 @@ public interface MqttWriter {
 
     void writeShort(short data) throws IOException;
 
+    void writeInt(int data) throws IOException;
+
     void write(byte[] data) throws IOException;
 
     void flush();
