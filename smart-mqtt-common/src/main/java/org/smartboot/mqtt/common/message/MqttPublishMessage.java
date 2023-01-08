@@ -117,8 +117,7 @@ public class MqttPublishMessage extends MqttVariableMessage<MqttPublishVariableH
         }
         //响应主题
         if (properties.getResponseTopic() != null) {
-            byte[] responseTopicBytes = encodeUTF8(properties.getResponseTopic());
-            length += responseTopicBytes.length;
+            length += properties.getResponseTopicBytes().length;
         }
         //对比数据
         if (properties.getCorrelationData() != null) {
@@ -137,9 +136,8 @@ public class MqttPublishMessage extends MqttVariableMessage<MqttPublishVariableH
             length += 2;
         }
         //内容类型
-        if (properties.getContentType() != null) {
-            byte[] contentTypeBytes = encodeUTF8(properties.getContentType());
-            length += contentTypeBytes.length;
+        if (properties.getContentTypeBytes() != null) {
+            length += properties.getContentTypeBytes().length;
         }
         return length;
     }
