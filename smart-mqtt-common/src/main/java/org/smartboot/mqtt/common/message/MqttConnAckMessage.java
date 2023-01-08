@@ -16,10 +16,7 @@ import static org.smartboot.mqtt.common.util.MqttPropertyConstant.*;
  * @version V1.0 , 2018/4/22
  */
 public class MqttConnAckMessage extends MqttVariableMessage<MqttConnAckVariableHeader> {
-    private static final int PROPERTIES_BITS = SESSION_EXPIRY_INTERVAL_BIT | RECEIVE_MAXIMUM_BIT | MAXIMUM_QOS_BIT | RETAIN_AVAILABLE_BIT
-            | MAXIMUM_PACKET_SIZE_BIT | ASSIGNED_CLIENT_IDENTIFIER_BIT | TOPIC_ALIAS_MAXIMUM_BIT | REASON_STRING_BIT | USER_PROPERTY_BIT
-            | WILDCARD_SUBSCRIPTION_AVAILABLE_BIT | SUBSCRIPTION_IDENTIFIER_AVAILABLE_BIT | SHARED_SUBSCRIPTION_AVAILABLE_BIT
-            | SERVER_KEEP_ALIVE_BIT | RESPONSE_INFORMATION_BIT | SERVER_REFERENCE_BIT | AUTHENTICATION_METHOD_BIT | AUTHENTICATION_DATA_BIT;
+    private static final int PROPERTIES_BITS = SESSION_EXPIRY_INTERVAL_BIT | RECEIVE_MAXIMUM_BIT | MAXIMUM_QOS_BIT | RETAIN_AVAILABLE_BIT | MAXIMUM_PACKET_SIZE_BIT | ASSIGNED_CLIENT_IDENTIFIER_BIT | TOPIC_ALIAS_MAXIMUM_BIT | REASON_STRING_BIT | USER_PROPERTY_BIT | WILDCARD_SUBSCRIPTION_AVAILABLE_BIT | SUBSCRIPTION_IDENTIFIER_AVAILABLE_BIT | SHARED_SUBSCRIPTION_AVAILABLE_BIT | SERVER_KEEP_ALIVE_BIT | RESPONSE_INFORMATION_BIT | SERVER_REFERENCE_BIT | AUTHENTICATION_METHOD_BIT | AUTHENTICATION_DATA_BIT;
 
     public MqttConnAckMessage(MqttFixedHeader mqttFixedHeader) {
         super(mqttFixedHeader);
@@ -54,14 +51,20 @@ public class MqttConnAckMessage extends MqttVariableMessage<MqttConnAckVariableH
         if (version == MqttVersion.MQTT_5) {
             int propertiesLength = preEncodeProperties(variableHeader.getProperties());
             remaining += propertiesLength + getVariableLengthInt(propertiesLength);
-        }
-        //用变长字节整数来编码，表示可变报头的长度。
-        writeVariableLengthInt(mqttWriter, remaining);
+            //用变长字节整数来编码，表示可变报头的长度。
+            writeVariableLengthInt(mqttWriter, remaining);
 
-        mqttWriter.writeByte((byte) (variableHeader.isSessionPresent() ? 0x01 : 0x00));
-        mqttWriter.writeByte(variableHeader.connectReturnCode().getCode());
-        if (version == MqttVersion.MQTT_5) {
+            mqttWriter.writeByte((byte) (variableHeader.isSessionPresent() ? 0x01 : 0x00));
+            mqttWriter.writeByte(variableHeader.connectReturnCode().getCode());
+
+            //CONNACK报文可变报头中的属性长度，编码为变长字节整数。
+            writeVariableLengthInt(mqttWriter, propertiesLength);
             writeProperties(mqttWriter, variableHeader.getProperties());
+        } else {
+            //表示可变报头的长度。对于 CONNACK 报文这个值等于 2。
+            mqttWriter.writeByte((byte) 2);
+            mqttWriter.writeByte((byte) (variableHeader.isSessionPresent() ? 0x01 : 0x00));
+            mqttWriter.writeByte(variableHeader.connectReturnCode().getCode());
         }
     }
 

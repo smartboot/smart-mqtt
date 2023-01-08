@@ -109,7 +109,7 @@ public class MqttClient extends AbstractSession {
 
     public void connect() {
         try {
-            asynchronousChannelGroup = new EnhanceAsynchronousChannelProvider().openAsynchronousChannelGroup(2, new ThreadFactory() {
+            asynchronousChannelGroup = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(2, new ThreadFactory() {
                 private int i = 0;
 
                 @Override

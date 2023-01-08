@@ -25,22 +25,6 @@ smart-mqtt 底层通信采用了异步非阻塞通信框架 smart-socket，现�
 - [关于企业版](https://smartboot.gitee.io/smart-mqtt/enterprise.html)
 
 
-## 功能列表
-- [X] 支持MQTTv.3.1.1协议标准
-- [X] 支持Qos0、Qos1、Qos2 的消息传递。
-- [X] 支持遗嘱消息
-- [X] 支持 retain 消息
-- [X] 支持心跳消息
-- [X] 插件化设计模式
-- [X] mqtt client 相关功能
-- [X] 优雅停机
-- [X] Broker生命周期及各类事件监听
-- [ ] 客户端鉴权
-- [X] 支持集群部署模式
-- [X] 支持通配符订阅模式
-- [ ] 精准流控
-- [ ] 待补充。。。
-
 ## 参考资料
 1. 《MQTT协议3.1.1中文版》
 2. [moquette](https://github.com/moquette-io/moquette)
