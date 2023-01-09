@@ -1,6 +1,6 @@
 package org.smartboot.mqtt.common.message.properties;
 
-import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.mqtt.common.message.MqttCodecUtil;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -27,8 +27,8 @@ public class UserProperty {
     }
 
     public void decode() {
-        keyBytes = MqttMessage.encodeUTF8(key);
-        valueBytes = MqttMessage.encodeUTF8(value);
+        keyBytes = MqttCodecUtil.encodeUTF8(key);
+        valueBytes = MqttCodecUtil.encodeUTF8(value);
     }
 
     public byte[] getKeyBytes() {

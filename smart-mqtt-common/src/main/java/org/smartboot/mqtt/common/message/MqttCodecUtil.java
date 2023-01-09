@@ -3,6 +3,7 @@ package org.smartboot.mqtt.common.message;
 
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.common.exception.MqttProcessException;
 import org.smartboot.socket.util.BufferUtils;
 import org.smartboot.socket.util.DecoderException;
 
@@ -87,8 +88,8 @@ public final class MqttCodecUtil {
         } while (num > 0);
     }
 
-    public static String decodeString(ByteBuffer buffer) {
-        return decodeString(buffer, 0, Integer.MAX_VALUE);
+    public static String decodeUTF8(ByteBuffer buffer) {
+        return decodeUTF8(buffer, 0, Integer.MAX_VALUE);
     }
 
     /**
@@ -97,7 +98,7 @@ public final class MqttCodecUtil {
      * 65535 字节。
      * 除非另有说明，所有的 UTF-8 编码字符串的长度都必须在 0 到 65535 字节这个范围内。
      */
-    public static String decodeString(ByteBuffer buffer, int minBytes, int maxBytes) {
+    public static String decodeUTF8(ByteBuffer buffer, int minBytes, int maxBytes) {
         final int size = decodeMsbLsb(buffer);
         if (size < minBytes || size > maxBytes) {
 //            buffer.position(buffer.position() + size);
@@ -107,6 +108,56 @@ public final class MqttCodecUtil {
         byte[] bytes = new byte[size];
         buffer.get(bytes);
         return new String(bytes, StandardCharsets.UTF_8);
+    }
+
+    public static byte[] encodeUTF8(String str) {
+        int strlen = str.length();
+        int utflen = 0;
+        int c, count = 0;
+
+        /* use charAt instead of copying String to char array */
+        for (int i = 0; i < strlen; i++) {
+            c = str.charAt(i);
+            if ((c >= 0x0001) && (c <= 0x007F)) {
+                utflen++;
+            } else if (c > 0x07FF) {
+                utflen += 3;
+            } else {
+                utflen += 2;
+            }
+        }
+
+        if (utflen > 65535) {
+            throw new MqttProcessException("encoded string too long: " + utflen + " bytes", () -> {
+            });
+        }
+        byte[] bytearr = new byte[utflen + 2];
+
+        bytearr[count++] = (byte) ((utflen >>> 8) & 0xFF);
+        bytearr[count++] = (byte) ((utflen >>> 0) & 0xFF);
+
+        int i = 0;
+        for (i = 0; i < strlen; i++) {
+            c = str.charAt(i);
+            if (!((c >= 0x0001) && (c <= 0x007F))) break;
+            bytearr[count++] = (byte) c;
+        }
+
+        for (; i < strlen; i++) {
+            c = str.charAt(i);
+            if ((c >= 0x0001) && (c <= 0x007F)) {
+                bytearr[count++] = (byte) c;
+
+            } else if (c > 0x07FF) {
+                bytearr[count++] = (byte) (0xE0 | ((c >> 12) & 0x0F));
+                bytearr[count++] = (byte) (0x80 | ((c >> 6) & 0x3F));
+                bytearr[count++] = (byte) (0x80 | ((c >> 0) & 0x3F));
+            } else {
+                bytearr[count++] = (byte) (0xC0 | ((c >> 6) & 0x1F));
+                bytearr[count++] = (byte) (0x80 | ((c >> 0) & 0x3F));
+            }
+        }
+        return bytearr;
     }
 
 

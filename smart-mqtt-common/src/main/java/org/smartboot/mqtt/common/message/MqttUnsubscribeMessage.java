@@ -31,7 +31,7 @@ public class MqttUnsubscribeMessage extends MqttPacketIdentifierMessage {
         int limit = buffer.limit();
         buffer.limit(buffer.position() + fixedHeader.remainingLength() - PACKET_LENGTH);
         while (buffer.hasRemaining()) {
-            final String decodedTopicName = MqttCodecUtil.decodeString(buffer);
+            final String decodedTopicName = MqttCodecUtil.decodeUTF8(buffer);
             unsubscribeTopics.add(decodedTopicName);
         }
         buffer.limit(limit);

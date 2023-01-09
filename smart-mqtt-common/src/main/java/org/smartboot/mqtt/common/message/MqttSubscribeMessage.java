@@ -82,7 +82,7 @@ public class MqttSubscribeMessage extends MqttVariableMessage<MqttSubscribeVaria
         int limit = buffer.limit();
         buffer.limit(buffer.position() + payloadLength);
         while (buffer.hasRemaining()) {
-            final String decodedTopicName = MqttCodecUtil.decodeString(buffer);
+            final String decodedTopicName = MqttCodecUtil.decodeUTF8(buffer);
             int qos = BufferUtils.readUnsignedByte(buffer) & 0x03;
             MqttTopicSubscription subscription = new MqttTopicSubscription();
             subscription.setTopicFilter(decodedTopicName);
@@ -103,7 +103,7 @@ public class MqttSubscribeMessage extends MqttVariableMessage<MqttSubscribeVaria
         int length = 2;
         List<byte[]> topicFilters = new ArrayList<>(mqttSubscribePayload.getTopicSubscriptions().size());
         for (MqttTopicSubscription topicSubscription : mqttSubscribePayload.getTopicSubscriptions()) {
-            byte[] bytes = encodeUTF8(topicSubscription.getTopicFilter());
+            byte[] bytes = MqttCodecUtil.encodeUTF8(topicSubscription.getTopicFilter());
             topicFilters.add(bytes);
             length += 1 + bytes.length;
         }

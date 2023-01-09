@@ -165,13 +165,13 @@ public class MqttProperties {
                 case MqttPropertyConstant.CONTENT_TYPE:
                     ValidateUtils.isTrue((MqttPropertyConstant.CONTENT_TYPE_BIT & validBites) > 0, "");
                     validBites &= ~MqttPropertyConstant.CONTENT_TYPE_BIT;
-                    contentType = MqttCodecUtil.decodeString(buffer);
+                    contentType = MqttCodecUtil.decodeUTF8(buffer);
                     break;
                 //响应主题
                 case MqttPropertyConstant.RESPONSE_TOPIC:
                     ValidateUtils.isTrue((MqttPropertyConstant.RESPONSE_TOPIC_BIT & validBites) > 0, "");
                     validBites &= ~MqttPropertyConstant.RESPONSE_TOPIC_BIT;
-                    responseTopic = MqttCodecUtil.decodeString(buffer);
+                    responseTopic = MqttCodecUtil.decodeUTF8(buffer);
                     break;
                 //对比数据
                 case MqttPropertyConstant.CORRELATION_DATA:
@@ -200,7 +200,7 @@ public class MqttProperties {
                     //包含多个分配客户标识符将造成协议错误（Protocol Error）
                     ValidateUtils.isTrue((MqttPropertyConstant.ASSIGNED_CLIENT_IDENTIFIER_BIT & validBites) > 0, "");
                     validBites &= ~MqttPropertyConstant.ASSIGNED_CLIENT_IDENTIFIER_BIT;
-                    assignedClientIdentifier = MqttCodecUtil.decodeString(buffer);
+                    assignedClientIdentifier = MqttCodecUtil.decodeUTF8(buffer);
                     break;
                 //服务端保持连接
                 case MqttPropertyConstant.SERVER_KEEP_ALIVE:
@@ -214,7 +214,7 @@ public class MqttProperties {
                     //包含多个认证方法将造成协议错误
                     ValidateUtils.isTrue((MqttPropertyConstant.AUTHENTICATION_METHOD_BIT & validBites) > 0, "");
                     validBites &= ~MqttPropertyConstant.AUTHENTICATION_METHOD_BIT;
-                    authenticationMethod = MqttCodecUtil.decodeString(buffer);
+                    authenticationMethod = MqttCodecUtil.decodeUTF8(buffer);
                     break;
                 //认证数据
                 case MqttPropertyConstant.AUTHENTICATION_DATA:
@@ -250,21 +250,21 @@ public class MqttProperties {
                     ValidateUtils.isTrue((MqttPropertyConstant.RESPONSE_INFORMATION_BIT & validBites) > 0, "");
                     validBites &= ~MqttPropertyConstant.RESPONSE_INFORMATION_BIT;
                     //包含多个响应信息将造成协议错误（Protocol Error）。
-                    responseInformation = MqttCodecUtil.decodeString(buffer);
+                    responseInformation = MqttCodecUtil.decodeUTF8(buffer);
                     break;
                 //服务端参考
                 case MqttPropertyConstant.SERVER_REFERENCE:
                     //包含多个响应信息将造成协议错误（Protocol Error）。
                     ValidateUtils.isTrue((MqttPropertyConstant.SERVER_REFERENCE_BIT & validBites) > 0, "");
                     validBites &= ~MqttPropertyConstant.SERVER_REFERENCE_BIT;
-                    serverReference = MqttCodecUtil.decodeString(buffer);
+                    serverReference = MqttCodecUtil.decodeUTF8(buffer);
                     break;
                 //原因字符串
                 case MqttPropertyConstant.REASON_STRING:
                     //包含多个原因字符串将造成协议错误（Protocol Error）。
                     ValidateUtils.isTrue((MqttPropertyConstant.REASON_STRING_BIT & validBites) > 0, "");
                     validBites &= ~MqttPropertyConstant.REASON_STRING_BIT;
-                    reasonString = MqttCodecUtil.decodeString(buffer);
+                    reasonString = MqttCodecUtil.decodeUTF8(buffer);
                     break;
                 //接收最大值
                 case MqttPropertyConstant.RECEIVE_MAXIMUM:
@@ -307,8 +307,8 @@ public class MqttProperties {
                 //用户属性
                 case MqttPropertyConstant.USER_PROPERTY:
                     ValidateUtils.isTrue((MqttPropertyConstant.USER_PROPERTY_BIT & validBites) > 0, "");
-                    String key = MqttCodecUtil.decodeString(buffer);
-                    String value = MqttCodecUtil.decodeString(buffer);
+                    String key = MqttCodecUtil.decodeUTF8(buffer);
+                    String value = MqttCodecUtil.decodeUTF8(buffer);
                     userProperties.add(new UserProperty(key, value));
                     break;
                 //最大报文长度

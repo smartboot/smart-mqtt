@@ -1,6 +1,6 @@
 package org.smartboot.mqtt.common.message.properties;
 
-import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.mqtt.common.message.MqttCodecUtil;
 
 import java.util.List;
 
@@ -88,10 +88,10 @@ public class PublishProperties {
 
     public void decode() {
         if (getResponseTopic() != null) {
-            responseTopicBytes = MqttMessage.encodeUTF8(getResponseTopic());
+            responseTopicBytes = MqttCodecUtil.encodeUTF8(getResponseTopic());
         }
         if (getContentType() != null) {
-            contentTypeBytes = MqttMessage.encodeUTF8(getContentType());
+            contentTypeBytes = MqttCodecUtil.encodeUTF8(getContentType());
         }
     }
 }

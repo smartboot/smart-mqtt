@@ -13,8 +13,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
-import static org.smartboot.mqtt.common.message.MqttCodecUtil.decodeMsbLsb;
-import static org.smartboot.mqtt.common.message.MqttCodecUtil.decodeString;
 import static org.smartboot.mqtt.common.util.MqttPropertyConstant.*;
 
 /**
@@ -52,7 +50,7 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
         //MQTT 规范的后续版本不会改变这个字符串的偏移和长度。
         //如果协议名不正确服务端可以断开客户端的连接，也可以按照某些其它规范继续处理 CONNECT 报文。
         //对于后一种情况，按照本规范，服务端不能继续处理 CONNECT 报文
-        final String protocolName = decodeString(buffer);
+        final String protocolName = MqttCodecUtil.decodeUTF8(buffer);
 
         //协议级别，8位无符号值
         final byte protocolLevel = buffer.get();
@@ -61,7 +59,7 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
         final int b1 = BufferUtils.readUnsignedByte(buffer);
 
         //保持连接
-        final int keepAlive = decodeMsbLsb(buffer);
+        final int keepAlive = MqttCodecUtil.decodeMsbLsb(buffer);
 
         version = MqttVersion.getByProtocolWithVersion(MqttProtocolEnum.getByName(protocolName), protocolLevel);
 
@@ -83,7 +81,7 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
         MqttConnectVariableHeader variableHeader = getVariableHeader();
         //客户端标识符
         // 客户端标识符 (ClientId) 必须存在而且必须是 CONNECT 报文有效载荷的第一个字段
-        final String decodedClientId = decodeString(buffer);
+        final String decodedClientId = MqttCodecUtil.decodeUTF8(buffer);
 
         String decodedWillTopic = null;
         byte[] decodedWillMessage = null;
@@ -99,7 +97,7 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
                 mqttProperties.decode(buffer, WILL_PROPERTIES_BITS);
                 willProperties = new WillProperties(mqttProperties);
             }
-            decodedWillTopic = decodeString(buffer, 0, 32767);
+            decodedWillTopic = MqttCodecUtil.decodeUTF8(buffer, 0, 32767);
             decodedWillMessage = MqttCodecUtil.decodeByteArray(buffer);
         }
         String decodedUserName = null;
@@ -108,7 +106,7 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
         // 用户名必须是 1.5.3 节定义的 UTF-8 编码字符串 [MQTT-3.1.3-11]。
         // 服务端可以将它用于身份验证和授权。
         if (variableHeader.hasUserName()) {
-            decodedUserName = decodeString(buffer);
+            decodedUserName = MqttCodecUtil.decodeUTF8(buffer);
         }
         // 密码字段包含一个两字节的长度字段，
         // 长度表示二进制数据的字节数（不包含长度字段本身占用的两个字节），
@@ -125,21 +123,21 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
     public void writeTo(MqttWriter mqttWriter) throws IOException {
         MqttConnectVariableHeader variableHeader = getVariableHeader();
         //VariableHeader
-        byte[] clientIdBytes = encodeUTF8(mqttConnectPayload.clientIdentifier());
+        byte[] clientIdBytes = MqttCodecUtil.encodeUTF8(mqttConnectPayload.clientIdentifier());
         //剩余长度等于可变报头的长度（10 字节）加上有效载荷的长度。
         int remainingLength = 10 + clientIdBytes.length;
 
         //遗嘱
         byte[] willTopicBytes = null;
         if (mqttConnectPayload.willTopic() != null) {
-            willTopicBytes = encodeUTF8(mqttConnectPayload.willTopic());
+            willTopicBytes = MqttCodecUtil.encodeUTF8(mqttConnectPayload.willTopic());
             remainingLength += willTopicBytes.length + 2 + mqttConnectPayload.willMessageInBytes().length;
         }
 
         //用户名
         byte[] userNameBytes = null;
         if (mqttConnectPayload.userName() != null) {
-            userNameBytes = encodeUTF8(mqttConnectPayload.userName());
+            userNameBytes = MqttCodecUtil.encodeUTF8(mqttConnectPayload.userName());
             remainingLength += userNameBytes.length;
         }
         //密码
@@ -150,7 +148,7 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
 
         //第一部分：固定报头
         mqttWriter.writeByte(getFixedHeaderByte(fixedHeader));
-        MqttCodecUtil.writeVariableLengthInt(mqttWriter,remainingLength);
+        MqttCodecUtil.writeVariableLengthInt(mqttWriter, remainingLength);
 
 
         //第二部分：可变报头，10字节
