@@ -1,10 +1,12 @@
 package org.smartboot.mqtt.common.message;
 
 
+import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.socket.util.BufferUtils;
 import org.smartboot.socket.util.DecoderException;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
@@ -74,6 +76,16 @@ public final class MqttCodecUtil {
         return value;
     }
 
+    public static void writeVariableLengthInt(MqttWriter buf, int num) {
+        do {
+            int digit = num % 128;
+            num /= 128;
+            if (num > 0) {
+                digit |= 0x80;
+            }
+            buf.writeByte((byte) digit);
+        } while (num > 0);
+    }
 
     public static String decodeString(ByteBuffer buffer) {
         return decodeString(buffer, 0, Integer.MAX_VALUE);
@@ -116,11 +128,29 @@ public final class MqttCodecUtil {
         return result;
     }
 
+    public static void writeMsbLsb(MqttWriter writer, int v) throws IOException {
+        writer.writeShort((short) v);
+    }
 
     public static byte[] decodeByteArray(ByteBuffer buffer) {
         final int decodedSize = decodeMsbLsb(buffer);
         byte[] bytes = new byte[decodedSize];
         buffer.get(bytes);
         return bytes;
+    }
+
+    public static void writeByteArray(MqttWriter writer, byte[] bytes) throws IOException {
+        writer.writeShort((short) bytes.length);
+        writer.write(bytes);
+    }
+
+
+    public static int getVariableLengthInt(int num) {
+        int count = 0;
+        do {
+            num /= 128;
+            count++;
+        } while (num > 0);
+        return count;
     }
 }

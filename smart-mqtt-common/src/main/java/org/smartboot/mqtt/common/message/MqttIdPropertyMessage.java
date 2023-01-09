@@ -47,7 +47,7 @@ public class MqttIdPropertyMessage extends MqttVariableMessage<MqttPubReplyVaria
         MqttPubReplyVariableHeader variableHeader = getVariableHeader();
         int variableHeaderBufferSize = 2; // variable part only has a message id
         mqttWriter.writeByte(getFixedHeaderByte(fixedHeader));
-        writeVariableLengthInt(mqttWriter, variableHeaderBufferSize);
+        MqttCodecUtil.writeVariableLengthInt(mqttWriter, variableHeaderBufferSize);
         mqttWriter.writeShort((short) variableHeader.getPacketId());
         mqttWriter.writeByte(variableHeader.getReasonCode());
     }

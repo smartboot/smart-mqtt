@@ -6,7 +6,6 @@ import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.exception.MqttProcessException;
 import org.smartboot.socket.util.DecoderException;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -35,27 +34,6 @@ public class MqttMessage extends ToString {
 
     public MqttMessage(MqttFixedHeader mqttFixedHeader) {
         this.fixedHeader = mqttFixedHeader;
-    }
-
-    public static byte[] encodeMBI(long number) {
-        if (number < 0 || number >= VARIABLE_BYTE_INT_MAX) {
-            throw new IllegalArgumentException("This property must be a number between 0 and " + VARIABLE_BYTE_INT_MAX);
-        }
-        int numBytes = 0;
-        long no = number;
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        // Encode the remaining length fields in the four bytes
-        do {
-            byte digit = (byte) (no % 128);
-            no = no / 128;
-            if (no > 0) {
-                digit |= 0x80;
-            }
-            bos.write(digit);
-            numBytes++;
-        } while ((no > 0) && (numBytes < 4));
-
-        return bos.toByteArray();
     }
 
 
@@ -155,32 +133,8 @@ public class MqttMessage extends ToString {
         return (byte) ret;
     }
 
-    protected final void writeByteArray(MqttWriter writer, byte[] bytes) throws IOException {
-        writer.writeShort((short) bytes.length);
-        writer.write(bytes);
-    }
 
 
-
-    protected final int getVariableLengthInt(int num) {
-        int count = 0;
-        do {
-            num /= 128;
-            count++;
-        } while (num > 0);
-        return count;
-    }
-
-    protected final void writeVariableLengthInt(MqttWriter buf, int num) {
-        do {
-            int digit = num % 128;
-            num /= 128;
-            if (num > 0) {
-                digit |= 0x80;
-            }
-            buf.writeByte((byte) digit);
-        } while (num > 0);
-    }
 
     public MqttVersion getVersion() {
         return version;

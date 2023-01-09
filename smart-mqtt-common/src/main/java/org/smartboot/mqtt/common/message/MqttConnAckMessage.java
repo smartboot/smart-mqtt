@@ -50,15 +50,15 @@ public class MqttConnAckMessage extends MqttVariableMessage<MqttConnAckVariableH
         int remaining = 2;
         if (version == MqttVersion.MQTT_5) {
             int propertiesLength = preEncodeProperties(variableHeader.getProperties());
-            remaining += propertiesLength + getVariableLengthInt(propertiesLength);
+            remaining += propertiesLength + MqttCodecUtil.getVariableLengthInt(propertiesLength);
             //用变长字节整数来编码，表示可变报头的长度。
-            writeVariableLengthInt(mqttWriter, remaining);
+            MqttCodecUtil.writeVariableLengthInt(mqttWriter, remaining);
 
             mqttWriter.writeByte((byte) (variableHeader.isSessionPresent() ? 0x01 : 0x00));
             mqttWriter.writeByte(variableHeader.connectReturnCode().getCode());
 
             //CONNACK报文可变报头中的属性长度，编码为变长字节整数。
-            writeVariableLengthInt(mqttWriter, propertiesLength);
+            MqttCodecUtil.writeVariableLengthInt(mqttWriter, propertiesLength);
             writeProperties(mqttWriter, variableHeader.getProperties());
         } else {
             //表示可变报头的长度。对于 CONNACK 报文这个值等于 2。

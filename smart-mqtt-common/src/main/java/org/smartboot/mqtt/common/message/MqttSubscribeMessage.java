@@ -108,7 +108,7 @@ public class MqttSubscribeMessage extends MqttVariableMessage<MqttSubscribeVaria
             length += 1 + bytes.length;
         }
         mqttWriter.writeByte(getFixedHeaderByte(fixedHeader));
-        mqttWriter.write(encodeMBI(length));
+        MqttCodecUtil.writeVariableLengthInt(mqttWriter, length);
         mqttWriter.writeShort((short) getVariableHeader().getPacketId());
         int i = 0;
         for (MqttTopicSubscription topicSubscription : mqttSubscribePayload.getTopicSubscriptions()) {

@@ -81,9 +81,9 @@ public class MqttPublishMessage extends MqttVariableMessage<MqttPublishVariableH
         if (version == MqttVersion.MQTT_5) {
             //属性长度
             propertiesLength = preEncodeProperties(variableHeader.getPublishProperties());
-            length += getVariableLengthInt(propertiesLength) + propertiesLength;
+            length += MqttCodecUtil.getVariableLengthInt(propertiesLength) + propertiesLength;
         }
-        mqttWriter.write(encodeMBI(length));
+        MqttCodecUtil.writeVariableLengthInt(mqttWriter, length);
 
         mqttWriter.write(topicBytes);
         if (hasPacketId) {
@@ -91,7 +91,7 @@ public class MqttPublishMessage extends MqttVariableMessage<MqttPublishVariableH
         }
         if (version == MqttVersion.MQTT_5) {
             //属性长度
-            writeVariableLengthInt(mqttWriter, propertiesLength);
+            MqttCodecUtil.writeVariableLengthInt(mqttWriter, propertiesLength);
             writeProperties(mqttWriter, variableHeader.getPublishProperties());
         }
         mqttWriter.write(payload);
@@ -169,7 +169,7 @@ public class MqttPublishMessage extends MqttVariableMessage<MqttPublishVariableH
         //对比数据
         if (properties.getCorrelationData() != null) {
             mqttWriter.writeByte(MqttPropertyConstant.CORRELATION_DATA);
-            writeByteArray(mqttWriter, properties.getCorrelationData());
+            MqttCodecUtil.writeByteArray(mqttWriter, properties.getCorrelationData());
         }
         //用户属性
         if (CollectionUtils.isNotEmpty(properties.getUserProperties())) {
@@ -182,7 +182,7 @@ public class MqttPublishMessage extends MqttVariableMessage<MqttPublishVariableH
         //订阅标识符
         if (properties.getSubscriptionIdentifier() > 0) {
             mqttWriter.writeByte(MqttPropertyConstant.SUBSCRIPTION_IDENTIFIER);
-            writeVariableLengthInt(mqttWriter, properties.getSubscriptionIdentifier());
+            MqttCodecUtil.writeVariableLengthInt(mqttWriter, properties.getSubscriptionIdentifier());
         }
         //内容类型
         if (properties.getContentTypeBytes() != null) {
