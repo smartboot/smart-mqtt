@@ -11,7 +11,7 @@ public abstract class MqttVariableMessage<T extends MqttVariableHeader> extends 
     /**
      * 可变报头
      */
-    private T variableHeader;
+    protected T variableHeader;
 
     /**
      * 可变报头长度

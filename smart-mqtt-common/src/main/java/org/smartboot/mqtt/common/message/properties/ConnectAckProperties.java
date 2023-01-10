@@ -2,16 +2,17 @@ package org.smartboot.mqtt.common.message.properties;
 
 import java.util.List;
 
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.*;
+
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/1/6
  */
-public class ConnectAckProperties {
+public class ConnectAckProperties extends AbstractProperties {
+    private static final int PROPERTIES_BITS = SESSION_EXPIRY_INTERVAL_BIT | RECEIVE_MAXIMUM_BIT | MAXIMUM_QOS_BIT | RETAIN_AVAILABLE_BIT | MAXIMUM_PACKET_SIZE_BIT | ASSIGNED_CLIENT_IDENTIFIER_BIT | TOPIC_ALIAS_MAXIMUM_BIT | REASON_STRING_BIT | USER_PROPERTY_BIT | WILDCARD_SUBSCRIPTION_AVAILABLE_BIT | SUBSCRIPTION_IDENTIFIER_AVAILABLE_BIT | SHARED_SUBSCRIPTION_AVAILABLE_BIT | SERVER_KEEP_ALIVE_BIT | RESPONSE_INFORMATION_BIT | SERVER_REFERENCE_BIT | AUTHENTICATION_METHOD_BIT | AUTHENTICATION_DATA_BIT;
 
-    private final MqttProperties properties;
-
-    public ConnectAckProperties(MqttProperties properties) {
-        this.properties = properties;
+    public ConnectAckProperties() {
+        super(PROPERTIES_BITS);
     }
 
     public int getSessionExpiryInterval() {
@@ -34,7 +35,7 @@ public class ConnectAckProperties {
         return properties.getMaximumQoS();
     }
 
-    public void setMaximumQoS(int maximumQoS) {
+    public void setMaximumQoS(byte maximumQoS) {
         properties.setMaximumQoS(maximumQoS);
     }
 

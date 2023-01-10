@@ -1,9 +1,12 @@
 package org.smartboot.mqtt.common.message.properties;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.common.util.MqttPropertyConstant;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,10 +17,12 @@ import java.util.List;
  * @version V1.0 , 2023/1/7
  */
 public class MqttProperties {
+
     /**
      * 认证方法
      */
     private String authenticationMethod;
+    private byte[] authenticationMethodBytes;
     /**
      * 会话过期间隔.
      * 如果会话过期间隔（Session Expiry Interval）值未指定，则使用0。
@@ -49,11 +54,13 @@ public class MqttProperties {
      * 内容类型
      */
     private String contentType;
+    private byte[] contentTypeBytes;
 
     /**
      * 响应主题
      */
     private String responseTopic;
+    private byte[] responseTopicBytes;
 
     /**
      * 对比数据
@@ -63,6 +70,7 @@ public class MqttProperties {
      * 分配客户标识符
      */
     private String assignedClientIdentifier;
+    private byte[] assignedClientIdentifierBytes;
     /**
      * 服务端保持连接
      */
@@ -89,15 +97,18 @@ public class MqttProperties {
      * 响应信息
      */
     private String responseInformation;
+    private byte[] responseInformationBytes;
 
     /**
      * 服务端参考
      */
     private String serverReference;
+    private byte[] serverReferenceBytes;
     /**
      * 原因字符串
      */
     private String reasonString;
+    private byte[] reasonStringBytes;
 
     /**
      * 主题别名最大值
@@ -116,27 +127,27 @@ public class MqttProperties {
     /**
      * 最大服务质量
      */
-    private int maximumQoS;
+    private byte maximumQoS = -1;
     /**
      * 保留可用
      */
-    private byte retainAvailable;
+    private byte retainAvailable = 1;
     /**
      * 最大报文长度
      */
-    private Integer maximumPacketSize;
+    private int maximumPacketSize;
     /**
      * 通配符订阅可用
      */
-    private byte wildcardSubscriptionAvailable;
+    private byte wildcardSubscriptionAvailable = 1;
     /**
      * 订阅标识符可用
      */
-    private byte subscriptionIdentifierAvailable;
+    private byte subscriptionIdentifierAvailable = 1;
     /**
      * 共享订阅可用
      */
-    private byte sharedSubscriptionAvailable;
+    private byte sharedSubscriptionAvailable = 1;
 
     public void decode(ByteBuffer buffer, int validBites) {
         int remainingLength = MqttCodecUtil.decodeVariableByteInteger(buffer);
@@ -184,7 +195,7 @@ public class MqttProperties {
                     //包含多个订阅标识符将造成协议错误（Protocol Error）
                     ValidateUtils.isTrue((MqttPropertyConstant.SUBSCRIPTION_IDENTIFIER_BIT & validBites) > 0, "");
                     validBites &= ~MqttPropertyConstant.SUBSCRIPTION_IDENTIFIER_BIT;
-                    subscriptionIdentifier = buffer.getInt();
+                    subscriptionIdentifier =MqttCodecUtil.decodeVariableByteInteger(buffer);
                     //订阅标识符取值范围从1到268,435,455
                     ValidateUtils.isTrue(subscriptionIdentifier >= 1 && subscriptionIdentifier <= 268435455, "");
                     break;
@@ -342,6 +353,224 @@ public class MqttProperties {
                     break;
             }
             remainingLength -= buffer.position() - position;
+        }
+    }
+
+    /**
+     * 预编码
+     *
+     * @return 属性长度
+     */
+    public int preEncode(int validBites) {
+        int length = 0;
+        if (payloadFormatIndicator == 1 && (MqttPropertyConstant.PAYLOAD_FORMAT_INDICATOR_BIT & validBites) > 0) {
+            length += 2;
+        }
+        if (messageExpiryInterval > 0 && (MqttPropertyConstant.MESSAGE_EXPIRY_INTERVAL_BIT & validBites) > 0) {
+            length += 5;
+        }
+        if (contentType != null && (MqttPropertyConstant.CONTENT_TYPE_BIT & validBites) > 0) {
+            contentTypeBytes = MqttCodecUtil.encodeUTF8(contentType);
+            length += 1 + contentTypeBytes.length;
+        }
+        if (responseTopic != null && (MqttPropertyConstant.RESPONSE_TOPIC_BIT & validBites) > 0) {
+            responseTopicBytes = MqttCodecUtil.encodeUTF8(responseTopic);
+            length += 1 + responseTopicBytes.length;
+        }
+        if (correlationData != null && (MqttPropertyConstant.CORRELATION_DATA_BIT & validBites) > 0) {
+            length += 1 + correlationData.length;
+        }
+        if (subscriptionIdentifier > 0 && (MqttPropertyConstant.SUBSCRIPTION_IDENTIFIER_BIT & validBites) > 0) {
+            length += 1 + MqttCodecUtil.getVariableLengthInt(subscriptionIdentifier);
+        }
+        if (sessionExpiryInterval > 0 && (MqttPropertyConstant.SESSION_EXPIRY_INTERVAL_BIT & validBites) > 0) {
+            length += 5;
+        }
+
+        if (assignedClientIdentifier != null && (MqttPropertyConstant.ASSIGNED_CLIENT_IDENTIFIER_BIT & validBites) > 0) {
+            assignedClientIdentifierBytes = MqttCodecUtil.encodeUTF8(assignedClientIdentifier);
+            length += 1 + assignedClientIdentifierBytes.length;
+        }
+        if (serverKeepAlive > 0 && (MqttPropertyConstant.SERVER_KEEP_ALIVE_BIT & validBites) > 0) {
+            length += 3;
+        }
+        if (authenticationMethod != null && (MqttPropertyConstant.AUTHENTICATION_METHOD_BIT & validBites) > 0) {
+            authenticationMethodBytes = MqttCodecUtil.encodeUTF8(authenticationMethod);
+            length += 1 + authenticationMethodBytes.length;
+        }
+        if (authenticationData != null && (MqttPropertyConstant.AUTHENTICATION_DATA_BIT & validBites) > 0) {
+            length += 1 + authenticationData.length;
+        }
+        if (requestProblemInformation == 0 && (MqttPropertyConstant.REQUEST_PROBLEM_INFORMATION_BIT) > 0) {
+            length += 2;
+        }
+        if (willDelayInterval > 0 && (MqttPropertyConstant.WILL_DELAY_INTERVAL_BIT & validBites) > 0) {
+            length += 5;
+        }
+        if (requestResponseInformation == 1 && (MqttPropertyConstant.REQUEST_RESPONSE_INFORMATION_BIT & validBites) > 0) {
+            length += 2;
+        }
+        if (responseInformation != null && (MqttPropertyConstant.RESPONSE_INFORMATION_BIT & validBites) > 0) {
+            responseInformationBytes = MqttCodecUtil.encodeUTF8(responseInformation);
+            length += 1 + responseInformationBytes.length;
+        }
+        if (serverReference != null && (MqttPropertyConstant.SERVER_REFERENCE_BIT & validBites) > 0) {
+            serverReferenceBytes = MqttCodecUtil.encodeUTF8(serverReference);
+            length += 1 + serverReferenceBytes.length;
+        }
+        if (reasonString != null && (MqttPropertyConstant.REASON_STRING_BIT & validBites) > 0) {
+            reasonStringBytes = MqttCodecUtil.encodeUTF8(reasonString);
+            length += 1 + reasonStringBytes.length;
+        }
+        if (receiveMaximum > 0 && (MqttPropertyConstant.RECEIVE_MAXIMUM_BIT & validBites) > 0) {
+            length += 3;
+        }
+        if (topicAliasMaximum > 0 && (MqttPropertyConstant.TOPIC_ALIAS_MAXIMUM_BIT & validBites) > 0) {
+            length += 3;
+        }
+        if (topicAlias > 0 && (MqttPropertyConstant.TOPIC_ALIAS_BIT & validBites) > 0) {
+            length += 3;
+        }
+        if (maximumQoS != -1 && (MqttPropertyConstant.MAXIMUM_QOS_BIT & validBites) > 0) {
+            length += 2;
+        }
+        if (retainAvailable == 0 && (MqttPropertyConstant.RETAIN_AVAILABLE_BIT & validBites) > 0) {
+            length += 2;
+        }
+        if (CollectionUtils.isNotEmpty(userProperties) && (MqttPropertyConstant.USER_PROPERTY_BIT & validBites) > 0) {
+            length += 1;
+            for (UserProperty userProperty : userProperties) {
+                userProperty.decode();
+                length += userProperty.getKeyBytes().length + userProperty.getValueBytes().length;
+            }
+        }
+        if (maximumPacketSize > 0 && (MqttPropertyConstant.MAXIMUM_PACKET_SIZE_BIT & validBites) > 0) {
+            length += 5;
+        }
+        if (wildcardSubscriptionAvailable == 0 && (MqttPropertyConstant.WILDCARD_SUBSCRIPTION_AVAILABLE_BIT & validBites) > 0) {
+            length += 2;
+        }
+        if (subscriptionIdentifierAvailable == 0 && (MqttPropertyConstant.SUBSCRIPTION_IDENTIFIER_BIT & validBites) > 0) {
+            length += 2;
+        }
+        if (sharedSubscriptionAvailable == 0 && (MqttPropertyConstant.SHARED_SUBSCRIPTION_AVAILABLE_BIT & validBites) > 0) {
+            length += 2;
+        }
+        return length;
+    }
+
+    public void writeTo(MqttWriter writer, int validBites) throws IOException {
+        if (payloadFormatIndicator == 1 && (MqttPropertyConstant.PAYLOAD_FORMAT_INDICATOR_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.PAYLOAD_FORMAT_INDICATOR);
+            writer.writeByte(payloadFormatIndicator);
+        }
+        if (messageExpiryInterval > 0 && (MqttPropertyConstant.MESSAGE_EXPIRY_INTERVAL_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.MESSAGE_EXPIRY_INTERVAL);
+            writer.writeInt(messageExpiryInterval);
+        }
+        if (contentType != null && (MqttPropertyConstant.CONTENT_TYPE_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.CONTENT_TYPE);
+            writer.write(contentTypeBytes);
+        }
+        if (responseTopic != null && (MqttPropertyConstant.RESPONSE_TOPIC_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.RESPONSE_TOPIC);
+            writer.write(responseTopicBytes);
+        }
+        if (correlationData != null && (MqttPropertyConstant.CORRELATION_DATA_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.CORRELATION_DATA);
+            writer.write(correlationData);
+        }
+        if (subscriptionIdentifier > 0 && (MqttPropertyConstant.SUBSCRIPTION_IDENTIFIER_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.SUBSCRIPTION_IDENTIFIER);
+            MqttCodecUtil.writeVariableLengthInt(writer, subscriptionIdentifier);
+        }
+        if (sessionExpiryInterval > 0 && (MqttPropertyConstant.SESSION_EXPIRY_INTERVAL_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.SESSION_EXPIRY_INTERVAL);
+            writer.writeInt(sessionExpiryInterval);
+        }
+
+        if (assignedClientIdentifier != null && (MqttPropertyConstant.ASSIGNED_CLIENT_IDENTIFIER_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.ASSIGNED_CLIENT_IDENTIFIER);
+            writer.write(assignedClientIdentifierBytes);
+        }
+        if (serverKeepAlive > 0 && (MqttPropertyConstant.SERVER_KEEP_ALIVE_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.SERVER_KEEP_ALIVE);
+            MqttCodecUtil.writeMsbLsb(writer, serverKeepAlive);
+        }
+        if (authenticationMethod != null && (MqttPropertyConstant.AUTHENTICATION_METHOD_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.AUTHENTICATION_METHOD);
+            writer.write(authenticationMethodBytes);
+        }
+        if (authenticationData != null && (MqttPropertyConstant.AUTHENTICATION_DATA_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.AUTHENTICATION_DATA);
+            writer.write(authenticationData);
+        }
+        if (requestProblemInformation == 0 && (MqttPropertyConstant.REQUEST_PROBLEM_INFORMATION_BIT) > 0) {
+            writer.writeByte(MqttPropertyConstant.REQUEST_PROBLEM_INFORMATION);
+            writer.writeByte(requestProblemInformation);
+        }
+        if (willDelayInterval > 0 && (MqttPropertyConstant.WILL_DELAY_INTERVAL_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.WILL_DELAY_INTERVAL);
+            writer.writeInt(willDelayInterval);
+        }
+        if (requestResponseInformation == 1 && (MqttPropertyConstant.REQUEST_RESPONSE_INFORMATION_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.REQUEST_RESPONSE_INFORMATION);
+            writer.writeByte(requestResponseInformation);
+        }
+        if (responseInformation != null && (MqttPropertyConstant.RESPONSE_INFORMATION_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.RESPONSE_INFORMATION);
+            writer.write(responseInformationBytes);
+        }
+        if (serverReference != null && (MqttPropertyConstant.SERVER_REFERENCE_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.SERVER_REFERENCE);
+            writer.write(serverReferenceBytes);
+        }
+        if (reasonString != null && (MqttPropertyConstant.REASON_STRING_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.REASON_STRING);
+            writer.write(reasonStringBytes);
+        }
+        if (receiveMaximum > 0 && (MqttPropertyConstant.RECEIVE_MAXIMUM_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.RECEIVE_MAXIMUM);
+            MqttCodecUtil.writeMsbLsb(writer, receiveMaximum);
+        }
+        if (topicAliasMaximum > 0 && (MqttPropertyConstant.TOPIC_ALIAS_MAXIMUM_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.TOPIC_ALIAS_MAXIMUM);
+            MqttCodecUtil.writeMsbLsb(writer, topicAliasMaximum);
+        }
+        if (topicAlias > 0 && (MqttPropertyConstant.TOPIC_ALIAS_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.TOPIC_ALIAS);
+            MqttCodecUtil.writeMsbLsb(writer, topicAlias);
+        }
+        if (maximumQoS != -1 && (MqttPropertyConstant.MAXIMUM_QOS_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.MAXIMUM_QOS);
+            writer.writeByte(maximumQoS);
+        }
+        if (retainAvailable == 0 && (MqttPropertyConstant.RETAIN_AVAILABLE_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.RETAIN_AVAILABLE);
+            writer.writeByte(retainAvailable);
+        }
+        if (CollectionUtils.isNotEmpty(userProperties) && (MqttPropertyConstant.USER_PROPERTY_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.USER_PROPERTY);
+            for (UserProperty userProperty : userProperties) {
+                writer.write(userProperty.getKeyBytes());
+                writer.write(userProperty.getValueBytes());
+            }
+        }
+        if (maximumPacketSize > 0 && (MqttPropertyConstant.MAXIMUM_PACKET_SIZE_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.MAXIMUM_PACKET_SIZE);
+            writer.writeInt(maximumPacketSize);
+        }
+        if (wildcardSubscriptionAvailable == 0 && (MqttPropertyConstant.WILDCARD_SUBSCRIPTION_AVAILABLE_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.WILDCARD_SUBSCRIPTION_AVAILABLE);
+            writer.writeByte(wildcardSubscriptionAvailable);
+        }
+        if (subscriptionIdentifierAvailable == 0 && (MqttPropertyConstant.SUBSCRIPTION_IDENTIFIER_AVAILABLE_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.SUBSCRIPTION_IDENTIFIER_AVAILABLE);
+            writer.writeByte(maximumQoS);
+        }
+        if (sharedSubscriptionAvailable == 0 && (MqttPropertyConstant.SHARED_SUBSCRIPTION_AVAILABLE_BIT & validBites) > 0) {
+            writer.writeByte(MqttPropertyConstant.SHARED_SUBSCRIPTION_AVAILABLE);
+            writer.writeByte(sharedSubscriptionAvailable);
         }
     }
 
@@ -533,7 +762,7 @@ public class MqttProperties {
         this.topicAlias = topicAlias;
     }
 
-    public void setMaximumQoS(int maximumQoS) {
+    public void setMaximumQoS(byte maximumQoS) {
         this.maximumQoS = maximumQoS;
     }
 

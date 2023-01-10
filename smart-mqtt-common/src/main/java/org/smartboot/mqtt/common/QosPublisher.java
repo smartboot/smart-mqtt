@@ -4,7 +4,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
-import org.smartboot.mqtt.common.message.*;
+import org.smartboot.mqtt.common.enums.MqttVersion;
+import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.mqtt.common.message.MqttPubQosVariableHeader;
+import org.smartboot.mqtt.common.message.MqttPubRelMessage;
+import org.smartboot.mqtt.common.message.MqttPublishMessage;
+import org.smartboot.mqtt.common.message.properties.ReasonProperties;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 
 import java.util.Objects;
@@ -43,7 +48,12 @@ public abstract class QosPublisher {
             ValidateUtils.isTrue(message.getFixedHeader().getMessageType() == MqttMessageType.PUBREC, "invalid message type");
             ValidateUtils.isTrue(Objects.equals(message.getVariableHeader().getPacketId(), publishMessage.getVariableHeader().getPacketId()), "invalid packetId");
             publishFuture.complete(true);
-            MqttPubRelMessage pubRelMessage = new MqttPubRelMessage(message.getVariableHeader().getPacketId());
+            MqttPubQosVariableHeader variableHeader=new MqttPubQosVariableHeader(message.getVariableHeader().getPacketId());
+            //todo
+            if(message.getVersion()== MqttVersion.MQTT_5){
+                variableHeader.setProperties(new ReasonProperties());
+            }
+            MqttPubRelMessage pubRelMessage = new MqttPubRelMessage(variableHeader);
             CompletableFuture<Boolean> pubRelFuture = new CompletableFuture<>();
             session.responseConsumers.put(cacheKey, new AckMessage(pubRelMessage, compMessage -> {
                 ValidateUtils.isTrue(compMessage.getFixedHeader().getMessageType() == MqttMessageType.PUBCOMP, "invalid message type");

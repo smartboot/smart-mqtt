@@ -208,13 +208,7 @@ public class MqttClient extends AbstractSession {
             mqttWriter = new DefaultMqttWriter(session.writeBuffer());
 
             MqttConnectVariableHeader variableHeader = new MqttConnectVariableHeader(clientConfigure.getMqttVersion(), StringUtils.isNotBlank(clientConfigure.getUserName()), clientConfigure.getPassword() != null, clientConfigure.getWillMessage(), clientConfigure.isCleanSession(), clientConfigure.getKeepAliveInterval());
-            String willTopic = null;
-            byte[] willMessage = null;
-            if (clientConfigure.getWillMessage() != null) {
-                willTopic = clientConfigure.getWillMessage().getWillTopic();
-                willMessage = clientConfigure.getWillMessage().getWillMessage();
-            }
-            MqttConnectPayload payload = new MqttConnectPayload(clientId, willTopic, willMessage, clientConfigure.getUserName(), clientConfigure.getPassword());
+            MqttConnectPayload payload = new MqttConnectPayload(clientId, clientConfigure.getWillMessage(), clientConfigure.getUserName(), clientConfigure.getPassword());
             MqttConnectMessage connectMessage = new MqttConnectMessage(variableHeader, payload);
 
             //如果客户端在合理的时间内没有收到服务端的 CONNACK 报文，客户端应该关闭网络连接。

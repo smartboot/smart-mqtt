@@ -2,15 +2,20 @@ package org.smartboot.mqtt.common.message.properties;
 
 import java.util.List;
 
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.*;
+
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/1/2
  */
-public class ConnectProperties {
-    private final MqttProperties properties;
+public class ConnectProperties extends AbstractProperties {
+    private static final int PROPERTIES_BITS = SESSION_EXPIRY_INTERVAL_BIT
+            | RECEIVE_MAXIMUM_BIT | MAXIMUM_PACKET_SIZE_BIT
+            | TOPIC_ALIAS_MAXIMUM_BIT | REQUEST_RESPONSE_INFORMATION_BIT
+            | REQUEST_PROBLEM_INFORMATION_BIT | USER_PROPERTY_BIT | AUTHENTICATION_METHOD_BIT | AUTHENTICATION_DATA_BIT;
 
-    public ConnectProperties(MqttProperties properties) {
-        this.properties = properties;
+    public ConnectProperties() {
+        super(PROPERTIES_BITS);
     }
 
     public int getSessionExpiryInterval() {

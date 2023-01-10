@@ -6,12 +6,12 @@ import java.util.List;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2023/1/6
+ * @version V1.0 , 2023/1/10
  */
-public class ReasonProperties extends AbstractProperties {
+public class PubAckProperties extends AbstractProperties {
     private static final int PROPERTIES_BITS = MqttPropertyConstant.REASON_STRING_BIT | MqttPropertyConstant.USER_PROPERTY_BIT;
 
-    public ReasonProperties() {
+    public PubAckProperties() {
         super(PROPERTIES_BITS);
     }
 
@@ -20,7 +20,7 @@ public class ReasonProperties extends AbstractProperties {
     }
 
     public void setReasonString(String reasonString) {
-        properties.setResponseTopic(reasonString);
+        properties.setReasonString(reasonString);
     }
 
     public List<UserProperty> getUserProperties() {

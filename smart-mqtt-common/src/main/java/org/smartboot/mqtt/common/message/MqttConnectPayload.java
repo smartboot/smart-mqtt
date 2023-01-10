@@ -1,7 +1,5 @@
 package org.smartboot.mqtt.common.message;
 
-import org.smartboot.mqtt.common.message.properties.WillProperties;
-
 /**
  * CONNECT 报文的有效载荷（payload）包含一个或多个以长度为前缀的字段，
  * 可变报头中的标志决定是否包含这些字段。
@@ -13,18 +11,11 @@ public final class MqttConnectPayload {
      * 客户端标识符
      */
     private final String clientIdentifier;
-    /**
-     * 遗嘱属性
-     */
-    private WillProperties willProperties;
-    /**
-     * 遗嘱主题
-     */
-    private final String willTopic;
+
     /**
      * 遗嘱消息
      */
-    private final byte[] willMessage;
+    private final WillMessage willMessage;
     /**
      * 用户名
      */
@@ -34,28 +25,19 @@ public final class MqttConnectPayload {
      */
     private final byte[] password;
 
-    public MqttConnectPayload(String clientIdentifier, String willTopic, byte[] willMessage, String userName, byte[] password) {
-        this(clientIdentifier, willTopic, willMessage, userName, password, null);
-    }
 
-    public MqttConnectPayload(String clientIdentifier, String willTopic, byte[] willMessage, String userName, byte[] password, WillProperties willProperties) {
+    public MqttConnectPayload(String clientIdentifier, WillMessage willMessage, String userName, byte[] password) {
         this.clientIdentifier = clientIdentifier;
-        this.willTopic = willTopic;
         this.willMessage = willMessage;
         this.userName = userName;
         this.password = password;
-        this.willProperties = willProperties;
     }
 
     public String clientIdentifier() {
         return clientIdentifier;
     }
 
-    public String willTopic() {
-        return willTopic;
-    }
-
-    public byte[] willMessageInBytes() {
+    public WillMessage getWillMessage() {
         return willMessage;
     }
 

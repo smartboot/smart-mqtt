@@ -6,13 +6,15 @@ import org.smartboot.mqtt.client.MqttClient;
 import org.smartboot.mqtt.client.Subscribe;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
-import org.smartboot.mqtt.common.message.MqttPubAckVariableHeader;
 import org.smartboot.mqtt.common.message.MqttPubCompMessage;
+import org.smartboot.mqtt.common.message.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
 import org.smartboot.mqtt.common.message.MqttPubRelMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttPublishVariableHeader;
+import org.smartboot.mqtt.common.message.properties.ReasonProperties;
 import org.smartboot.mqtt.common.util.TopicTokenUtil;
 
 import java.util.function.Consumer;
@@ -73,16 +75,25 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
 
     private void processQos1(MqttClient mqttClient, MqttPublishMessage mqttPublishMessage) {
         processPublishMessage(mqttPublishMessage, mqttClient);
-        MqttPubAckVariableHeader variableHeader = new MqttPubAckVariableHeader(mqttPublishMessage.getVariableHeader().getPacketId(), null);
+        MqttPubQosVariableHeader variableHeader = new MqttPubQosVariableHeader(mqttPublishMessage.getVariableHeader().getPacketId());
         MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(variableHeader);
         mqttClient.write(pubAckMessage);
     }
 
     private void processQos2(MqttClient session, MqttPublishMessage mqttPublishMessage) {
         final int messageId = mqttPublishMessage.getVariableHeader().getPacketId();
-        MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(messageId);
+        //todo
+        MqttPubQosVariableHeader variableHeader = new MqttPubQosVariableHeader(messageId);
+        if (mqttPublishMessage.getVersion() == MqttVersion.MQTT_5) {
+            variableHeader.setProperties(new ReasonProperties());
+        }
+        MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(variableHeader);
         session.write(pubRecMessage, (Consumer<MqttPubRelMessage>) message -> {
-            MqttPubCompMessage pubRelMessage = new MqttPubCompMessage(message.getVariableHeader().getPacketId());
+            MqttPubQosVariableHeader qosVariableHeader = new MqttPubQosVariableHeader(message.getVariableHeader().getPacketId());
+            if (mqttPublishMessage.getVersion() == MqttVersion.MQTT_5) {
+                qosVariableHeader.setProperties(new ReasonProperties());
+            }
+            MqttPubCompMessage pubRelMessage = new MqttPubCompMessage(qosVariableHeader);
             session.write(pubRelMessage);
 
             processPublishMessage(mqttPublishMessage, session);

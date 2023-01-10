@@ -4,7 +4,6 @@ import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttProtocolEnum;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.properties.ConnectProperties;
-import org.smartboot.mqtt.common.message.properties.MqttProperties;
 import org.smartboot.mqtt.common.message.properties.WillProperties;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.util.BufferUtils;
@@ -13,8 +12,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
-import static org.smartboot.mqtt.common.util.MqttPropertyConstant.*;
-
 /**
  * 连接服务端，客户端到服务端的网络连接建立后，客户端发送给服务端的第一个报文必须是 CONNECT 报文。
  *
@@ -22,12 +19,8 @@ import static org.smartboot.mqtt.common.util.MqttPropertyConstant.*;
  * @version V1.0 , 2018/4/22
  */
 public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableHeader> {
-    private static final int PROPERTIES_BITS = SESSION_EXPIRY_INTERVAL_BIT
-            | RECEIVE_MAXIMUM_BIT | MAXIMUM_PACKET_SIZE_BIT
-            | TOPIC_ALIAS_MAXIMUM_BIT | REQUEST_RESPONSE_INFORMATION_BIT
-            | REQUEST_PROBLEM_INFORMATION_BIT | USER_PROPERTY_BIT | AUTHENTICATION_METHOD_BIT | AUTHENTICATION_DATA_BIT;
-    private static final int WILL_PROPERTIES_BITS = WILL_DELAY_INTERVAL_BIT | PAYLOAD_FORMAT_INDICATOR_BIT | MESSAGE_EXPIRY_INTERVAL_BIT
-            | CONTENT_TYPE_BIT | RESPONSE_TOPIC_BIT | CORRELATION_DATA_BIT | USER_PROPERTY_BIT;
+
+
     /**
      * 有效载荷
      */
@@ -66,9 +59,8 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
         //MQTT 5.0规范
         ConnectProperties properties = null;
         if (version == MqttVersion.MQTT_5) {
-            MqttProperties mqttProperties = new MqttProperties();
-            mqttProperties.decode(buffer, PROPERTIES_BITS);
-            properties = new ConnectProperties(mqttProperties);
+            properties = new ConnectProperties();
+            properties.decode(buffer);
         }
 
         setVariableHeader(new MqttConnectVariableHeader(protocolName, protocolLevel, b1, keepAlive, properties));
@@ -83,22 +75,21 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
         // 客户端标识符 (ClientId) 必须存在而且必须是 CONNECT 报文有效载荷的第一个字段
         final String decodedClientId = MqttCodecUtil.decodeUTF8(buffer);
 
-        String decodedWillTopic = null;
-        byte[] decodedWillMessage = null;
-        WillProperties willProperties = null;
+        WillMessage willMessage = null;
         //如果遗嘱标志被设置为 1，有效载荷的下一个字段是遗嘱主题（Will Topic）。
         // 遗嘱主题必须是 1.5.3 节定义的 UTF-8 编码字符串
         if (variableHeader.isWillFlag()) {
+            willMessage = new WillMessage();
             // MQTT 5.0 遗嘱属性
             //如果遗嘱标志（Will Flag）被设置为1，有效载荷的下一个字段是遗嘱属性（Will Properties）。
             // 遗嘱属性字段定义了遗嘱消息（Will Message）将何时被发布，以及被发布时的应用消息（Application Message）属性。
             if (version == MqttVersion.MQTT_5) {
-                MqttProperties mqttProperties = new MqttProperties();
-                mqttProperties.decode(buffer, WILL_PROPERTIES_BITS);
-                willProperties = new WillProperties(mqttProperties);
+                WillProperties willProperties = new WillProperties();
+                willProperties.decode(buffer);
+                willMessage.setProperties(willProperties);
             }
-            decodedWillTopic = MqttCodecUtil.decodeUTF8(buffer, 0, 32767);
-            decodedWillMessage = MqttCodecUtil.decodeByteArray(buffer);
+            willMessage.setWillTopic(MqttCodecUtil.decodeUTF8(buffer, 0, 32767));
+            willMessage.setWillMessage(MqttCodecUtil.decodeByteArray(buffer));
         }
         String decodedUserName = null;
         byte[] decodedPassword = null;
@@ -115,7 +106,7 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
             decodedPassword = MqttCodecUtil.decodeByteArray(buffer);
         }
 
-        mqttConnectPayload = new MqttConnectPayload(decodedClientId, decodedWillTopic, decodedWillMessage, decodedUserName, decodedPassword, willProperties);
+        mqttConnectPayload = new MqttConnectPayload(decodedClientId, willMessage, decodedUserName, decodedPassword);
     }
 
 
@@ -128,10 +119,8 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
         int remainingLength = 10 + clientIdBytes.length;
 
         //遗嘱
-        byte[] willTopicBytes = null;
-        if (mqttConnectPayload.willTopic() != null) {
-            willTopicBytes = MqttCodecUtil.encodeUTF8(mqttConnectPayload.willTopic());
-            remainingLength += willTopicBytes.length + 2 + mqttConnectPayload.willMessageInBytes().length;
+        if (variableHeader.isWillFlag()) {
+            remainingLength += mqttConnectPayload.getWillMessage().preEncode();
         }
 
         //用户名
@@ -143,6 +132,13 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
         //密码
         if (mqttConnectPayload.passwordInBytes() != null) {
             remainingLength += 2 + mqttConnectPayload.passwordInBytes().length;
+        }
+
+        int propertiesLength = 0;
+        if (version == MqttVersion.MQTT_5) {
+            ConnectProperties properties = variableHeader.getProperties();
+            propertiesLength = properties.preEncode();
+            remainingLength += MqttCodecUtil.getVariableLengthInt(propertiesLength) + propertiesLength;
         }
 
 
@@ -182,15 +178,20 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
         //保持连接
         mqttWriter.writeShort((short) variableHeader.keepAliveTimeSeconds());
 
+        // Connect属性
+        if (version == MqttVersion.MQTT_5) {
+            MqttCodecUtil.writeVariableLengthInt(mqttWriter, propertiesLength);
+            ConnectProperties properties = variableHeader.getProperties();
+            properties.writeTo(mqttWriter);
+        }
+
         //第三部分：有效载荷
         //客户端标识符 (ClientId) 必须存在而且必须是 CONNECT 报文有效载荷的第一个字段
         mqttWriter.write(clientIdBytes);
 
         //遗嘱
-        if (willTopicBytes != null) {
-            mqttWriter.write(willTopicBytes);
-            mqttWriter.writeShort((short) mqttConnectPayload.willMessageInBytes().length);
-            mqttWriter.write(mqttConnectPayload.willMessageInBytes());
+        if (variableHeader.isWillFlag()) {
+            mqttConnectPayload.getWillMessage().writeTo(mqttWriter);
         }
         //用户名
         if (userNameBytes != null) {

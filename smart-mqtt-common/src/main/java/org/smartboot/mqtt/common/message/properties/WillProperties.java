@@ -2,15 +2,17 @@ package org.smartboot.mqtt.common.message.properties;
 
 import java.util.List;
 
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.*;
+
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/1/4
  */
-public class WillProperties {
-    private final MqttProperties properties;
+public class WillProperties extends AbstractProperties {
+    private static final int WILL_PROPERTIES_BITS = WILL_DELAY_INTERVAL_BIT | PAYLOAD_FORMAT_INDICATOR_BIT | MESSAGE_EXPIRY_INTERVAL_BIT | CONTENT_TYPE_BIT | RESPONSE_TOPIC_BIT | CORRELATION_DATA_BIT | USER_PROPERTY_BIT;
 
-    public WillProperties(MqttProperties properties) {
-        this.properties = properties;
+    public WillProperties() {
+        super(WILL_PROPERTIES_BITS);
     }
 
     public int getWillDelayInterval() {
