@@ -16,13 +16,13 @@ import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
-import org.smartboot.mqtt.common.message.MqttConnAckVariableHeader;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
-import org.smartboot.mqtt.common.message.MqttConnectPayload;
-import org.smartboot.mqtt.common.message.MqttConnectVariableHeader;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.WillMessage;
+import org.smartboot.mqtt.common.message.payload.MqttConnectPayload;
 import org.smartboot.mqtt.common.message.properties.ConnectAckProperties;
+import org.smartboot.mqtt.common.message.variable.MqttConnAckVariableHeader;
+import org.smartboot.mqtt.common.message.variable.MqttConnectVariableHeader;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 

@@ -6,6 +6,7 @@ import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.properties.MqttProperties;
 import org.smartboot.mqtt.common.message.properties.PublishProperties;
 import org.smartboot.mqtt.common.message.properties.UserProperty;
+import org.smartboot.mqtt.common.message.variable.MqttPublishVariableHeader;
 import org.smartboot.mqtt.common.util.MqttPropertyConstant;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.socket.util.DecoderException;

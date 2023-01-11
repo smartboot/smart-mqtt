@@ -4,15 +4,17 @@ import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
-import org.smartboot.mqtt.common.message.MqttPublishVariableHeader;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
-import org.smartboot.mqtt.common.message.MqttSubscribePayload;
-import org.smartboot.mqtt.common.message.MqttSubscribeVariableHeader;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
-import org.smartboot.mqtt.common.message.MqttUnsubscribePayload;
+import org.smartboot.mqtt.common.message.payload.MqttSubscribePayload;
+import org.smartboot.mqtt.common.message.payload.MqttUnsubscribePayload;
 import org.smartboot.mqtt.common.message.properties.PublishProperties;
 import org.smartboot.mqtt.common.message.properties.SubscribeProperties;
+import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
+import org.smartboot.mqtt.common.message.variable.MqttPublishVariableHeader;
+import org.smartboot.mqtt.common.message.variable.MqttReasonVariableHeader;
+import org.smartboot.mqtt.common.message.variable.MqttSubscribeVariableHeader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -145,7 +147,8 @@ public final class MqttMessageBuilders {
 
         public MqttUnsubscribeMessage build() {
             MqttUnsubscribePayload mqttSubscribePayload = new MqttUnsubscribePayload(topicFilters);
-            return new MqttUnsubscribeMessage(MqttFixedHeader.UNSUBSCRIBE_HEADER, packetId, mqttSubscribePayload);
+            MqttReasonVariableHeader variableHeader = new MqttPubQosVariableHeader(packetId);
+            return new MqttUnsubscribeMessage(MqttFixedHeader.UNSUBSCRIBE_HEADER, variableHeader, mqttSubscribePayload);
         }
     }
 

@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.common.message;
+package org.smartboot.mqtt.common.message.variable;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）

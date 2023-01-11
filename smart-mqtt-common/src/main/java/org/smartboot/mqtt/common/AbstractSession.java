@@ -7,10 +7,10 @@ import org.smartboot.mqtt.common.eventbus.EventBus;
 import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttMessage;
-import org.smartboot.mqtt.common.message.MqttPacketIdVariableHeader;
-import org.smartboot.mqtt.common.message.MqttPubQosMessage;
+import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttVariableMessage;
+import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.transport.AioSession;
@@ -64,7 +64,7 @@ public abstract class AbstractSession {
         this.eventBus = eventBus;
     }
 
-    public final synchronized void write(MqttPubQosMessage mqttMessage, Consumer<? extends MqttPubQosMessage> consumer) {
+    public final synchronized void write(MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> mqttMessage, Consumer<? extends MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
         responseConsumers.put(mqttMessage.getVariableHeader().getPacketId(), new AckMessage(mqttMessage, consumer));
         write(mqttMessage);
     }

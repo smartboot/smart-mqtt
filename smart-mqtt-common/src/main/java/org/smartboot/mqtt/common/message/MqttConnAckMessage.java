@@ -4,6 +4,7 @@ import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.properties.ConnectAckProperties;
+import org.smartboot.mqtt.common.message.variable.MqttConnAckVariableHeader;
 import org.smartboot.socket.util.BufferUtils;
 
 import java.io.IOException;

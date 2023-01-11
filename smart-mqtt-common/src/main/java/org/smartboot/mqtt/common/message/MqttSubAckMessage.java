@@ -1,6 +1,8 @@
 package org.smartboot.mqtt.common.message;
 
 import org.smartboot.mqtt.common.MqttWriter;
+import org.smartboot.mqtt.common.message.payload.MqttSubAckPayload;
+import org.smartboot.mqtt.common.message.variable.MqttReasonVariableHeader;
 import org.smartboot.socket.util.BufferUtils;
 
 import java.io.IOException;
@@ -12,15 +14,20 @@ import java.util.List;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttSubAckMessage extends MqttPacketIdentifierMessage {
+public class MqttSubAckMessage extends MqttPacketIdentifierMessage<MqttReasonVariableHeader> {
     private MqttSubAckPayload mqttSubAckPayload;
 
     public MqttSubAckMessage(MqttFixedHeader mqttFixedHeader) {
         super(mqttFixedHeader);
     }
 
-    public MqttSubAckMessage(int packetId) {
-        super(MqttFixedHeader.SUB_ACK_HEADER, packetId);
+    @Override
+    protected void decodeVariableHeader0(ByteBuffer buffer) {
+
+    }
+
+    public MqttSubAckMessage(MqttReasonVariableHeader variableHeader) {
+        super(MqttFixedHeader.SUB_ACK_HEADER, variableHeader);
     }
 
 

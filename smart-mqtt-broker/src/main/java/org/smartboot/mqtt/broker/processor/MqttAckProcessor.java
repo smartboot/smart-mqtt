@@ -2,8 +2,8 @@ package org.smartboot.mqtt.broker.processor;
 
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.common.message.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.MqttVariableMessage;
+import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）

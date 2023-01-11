@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.common.message;
+package org.smartboot.mqtt.common.message.variable;
 
 import org.smartboot.mqtt.common.message.properties.ReasonProperties;
 
@@ -6,7 +6,7 @@ import org.smartboot.mqtt.common.message.properties.ReasonProperties;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/1/6
  */
-public class MqttPubQosVariableHeader extends MqttPacketIdVariableHeader {
+public class MqttPubQosVariableHeader extends MqttReasonVariableHeader {
 
     /**
      * 原因码

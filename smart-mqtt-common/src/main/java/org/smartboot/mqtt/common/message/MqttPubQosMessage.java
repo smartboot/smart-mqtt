@@ -3,6 +3,7 @@ package org.smartboot.mqtt.common.message;
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.properties.ReasonProperties;
+import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -11,7 +12,7 @@ import java.nio.ByteBuffer;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttPubQosMessage extends MqttVariableMessage<MqttPubQosVariableHeader> {
+public class MqttPubQosMessage extends MqttPacketIdentifierMessage<MqttPubQosVariableHeader> {
 
     public MqttPubQosMessage(MqttFixedHeader mqttFixedHeader) {
         super(mqttFixedHeader);

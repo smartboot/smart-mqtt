@@ -1,4 +1,6 @@
-package org.smartboot.mqtt.common.message;
+package org.smartboot.mqtt.common.message.payload;
+
+import org.smartboot.mqtt.common.message.WillMessage;
 
 /**
  * CONNECT 报文的有效载荷（payload）包含一个或多个以长度为前缀的字段，

@@ -1,7 +1,8 @@
 package org.smartboot.mqtt.common;
 
 import org.smartboot.mqtt.common.message.MqttMessage;
-import org.smartboot.mqtt.common.message.MqttPubQosMessage;
+import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
+import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 
 import java.util.function.Consumer;
 
@@ -17,14 +18,14 @@ public class AckMessage {
     /**
      * 回调事件
      */
-    private Consumer<? extends MqttPubQosMessage> consumer;
+    private Consumer<? extends MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer;
 
     /**
      * 执行状态
      */
     private boolean done;
 
-    public AckMessage(MqttMessage originalMessage, Consumer<? extends MqttPubQosMessage> consumer) {
+    public AckMessage(MqttMessage originalMessage, Consumer<? extends MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
         this.originalMessage = originalMessage;
         this.consumer = consumer;
     }
@@ -38,7 +39,7 @@ public class AckMessage {
         return consumer;
     }
 
-    public void setConsumer(Consumer<? extends MqttPubQosMessage> consumer) {
+    public void setConsumer(Consumer<? extends MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
         this.consumer = consumer;
     }
 

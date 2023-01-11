@@ -1,7 +1,8 @@
-package org.smartboot.mqtt.common.message;
+package org.smartboot.mqtt.common.message.variable;
 
 
 import org.smartboot.mqtt.common.enums.MqttVersion;
+import org.smartboot.mqtt.common.message.WillMessage;
 import org.smartboot.mqtt.common.message.properties.ConnectProperties;
 
 /**

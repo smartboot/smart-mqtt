@@ -5,9 +5,11 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.common.message.MqttSubAckMessage;
-import org.smartboot.mqtt.common.message.MqttSubAckPayload;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
+import org.smartboot.mqtt.common.message.payload.MqttSubAckPayload;
+import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
+import org.smartboot.mqtt.common.message.variable.MqttReasonVariableHeader;
 
 /**
  * 客户端订阅消息
@@ -31,7 +33,9 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
 
         //订阅确认
         //允许服务端在发送 SUBACK 报文之前就开始发送与订阅匹配的 PUBLISH 报文
-        MqttSubAckMessage mqttSubAckMessage = new MqttSubAckMessage(mqttSubscribeMessage.getVariableHeader().getPacketId());
+        MqttReasonVariableHeader variableHeader = new MqttPubQosVariableHeader(mqttSubscribeMessage.getVariableHeader().getPacketId());
+        //todo
+        MqttSubAckMessage mqttSubAckMessage = new MqttSubAckMessage(variableHeader);
 
         //有效载荷包含一个返回码清单。
         // 每个返回码对应等待确认的 SUBSCRIBE 报文中的一个主题过滤器。

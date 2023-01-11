@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.common.message;
+package org.smartboot.mqtt.common.message.payload;
 
 import java.util.Collections;
 import java.util.List;

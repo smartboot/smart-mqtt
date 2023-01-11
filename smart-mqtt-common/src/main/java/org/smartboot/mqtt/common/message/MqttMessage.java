@@ -16,7 +16,7 @@ import static org.smartboot.mqtt.common.message.MqttCodecUtil.decodeMsbLsb;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttMessage extends ToString {
+public abstract class MqttMessage extends ToString {
     /**
      * 8-bit UTF (UCS Transformation Format)
      */
@@ -83,8 +83,6 @@ public class MqttMessage extends ToString {
         }
         return (byte) ret;
     }
-
-
 
 
     public MqttVersion getVersion() {

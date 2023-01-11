@@ -1,5 +1,7 @@
 package org.smartboot.mqtt.common.message;
 
+import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
+
 /**
  * @author 三刀
  * @version V1.0 , 2018/4/22

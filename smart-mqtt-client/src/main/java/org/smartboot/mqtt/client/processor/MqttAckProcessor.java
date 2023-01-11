@@ -1,8 +1,8 @@
 package org.smartboot.mqtt.client.processor;
 
 import org.smartboot.mqtt.client.MqttClient;
-import org.smartboot.mqtt.common.message.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.MqttVariableMessage;
+import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）

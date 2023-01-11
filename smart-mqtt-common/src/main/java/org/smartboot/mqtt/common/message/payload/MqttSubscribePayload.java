@@ -1,6 +1,7 @@
-package org.smartboot.mqtt.common.message;
+package org.smartboot.mqtt.common.message.payload;
 
 import org.smartboot.mqtt.common.ToString;
+import org.smartboot.mqtt.common.message.MqttTopicSubscription;
 
 import java.util.List;
 

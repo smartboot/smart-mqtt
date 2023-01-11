@@ -3,8 +3,10 @@ package org.smartboot.mqtt.common.message;
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
+import org.smartboot.mqtt.common.message.payload.MqttSubscribePayload;
 import org.smartboot.mqtt.common.message.properties.MqttProperties;
 import org.smartboot.mqtt.common.message.properties.SubscribeProperties;
+import org.smartboot.mqtt.common.message.variable.MqttSubscribeVariableHeader;
 import org.smartboot.mqtt.common.util.MqttPropertyConstant;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.util.BufferUtils;
@@ -44,35 +46,6 @@ public class MqttSubscribeMessage extends MqttVariableMessage<MqttSubscribeVaria
         MqttSubscribeVariableHeader header = new MqttSubscribeVariableHeader(packetId, subscribeProperties);
         setVariableHeader(header);
     }
-
-//    private void decodeSubscribeProperties(ByteBuffer buffer, SubscribeProperties subscribeProperties) {
-//        int remainingLength = MqttCodecUtil.decodeVariableByteInteger(buffer);
-//        if (remainingLength <= 0) {
-//            return;
-//        }
-//        int subscriptionIdentifier = -1;
-//        int position;
-//        while (remainingLength > 0) {
-//            position = buffer.position();
-//            switch (buffer.get()) {
-//                //订阅标识符
-//                case MqttPropertyConstant.SUBSCRIPTION_IDENTIFIER:
-//                    //包含多个订阅标识符将造成协议错误（Protocol Error）
-//                    ValidateUtils.isTrue(subscriptionIdentifier == -1, "");
-//                    subscriptionIdentifier = buffer.getInt();
-//                    subscribeProperties.setSubscriptionIdentifier(subscriptionIdentifier);
-//                    //订阅标识符取值范围从1到268,435,455
-//                    ValidateUtils.isTrue(subscriptionIdentifier >= 1 && subscriptionIdentifier <= 268435455, "");
-//                    break;
-//                case MqttPropertyConstant.USER_PROPERTY:
-//                    String key = decodeString(buffer);
-//                    String value = decodeString(buffer);
-//                    subscribeProperties.getUserProperties().add(new UserProperty(key, value));
-//                    break;
-//            }
-//            remainingLength -= buffer.position() - position;
-//        }
-//    }
 
     @Override
     public void decodePlayLoad(ByteBuffer buffer) {
