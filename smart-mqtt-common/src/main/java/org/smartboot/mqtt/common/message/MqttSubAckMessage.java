@@ -1,6 +1,7 @@
 package org.smartboot.mqtt.common.message;
 
 import org.smartboot.mqtt.common.MqttWriter;
+import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.payload.MqttSubAckPayload;
 import org.smartboot.mqtt.common.message.variable.MqttReasonVariableHeader;
 import org.smartboot.socket.util.BufferUtils;
@@ -50,8 +51,19 @@ public class MqttSubAckMessage extends MqttPacketIdentifierMessage<MqttReasonVar
         int payloadBufferSize = mqttSubAckPayload.grantedQoSLevels().size();
         int variablePartSize = variableHeaderBufferSize + payloadBufferSize;
         mqttWriter.writeByte(getFixedHeaderByte(fixedHeader));
+
+        int propertiesLength = 0;
+        if (version == MqttVersion.MQTT_5) {
+            propertiesLength = variableHeader.getProperties().preEncode();
+            variablePartSize += MqttCodecUtil.getVariableLengthInt(propertiesLength) + propertiesLength;
+        }
+
         MqttCodecUtil.writeVariableLengthInt(mqttWriter, variablePartSize);
         mqttWriter.writeShort((short) getVariableHeader().getPacketId());
+        if (version == MqttVersion.MQTT_5) {
+            MqttCodecUtil.writeVariableLengthInt(mqttWriter, propertiesLength);
+            variableHeader.getProperties().writeTo(mqttWriter);
+        }
         for (int qos : mqttSubAckPayload.grantedQoSLevels()) {
             mqttWriter.writeByte((byte) qos);
         }

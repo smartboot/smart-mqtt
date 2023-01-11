@@ -6,11 +6,8 @@ import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttPublishVariableHeader extends MqttVariableHeader {
-    /**
-     * 报文标识符
-     */
-    private final int packetId;
+public class MqttPublishVariableHeader extends MqttPacketIdVariableHeader {
+
     /**
      * PUBLISH 报文中的主题名不能包含通配符
      */
@@ -19,7 +16,7 @@ public class MqttPublishVariableHeader extends MqttVariableHeader {
     private final PublishProperties publishProperties;
 
     public MqttPublishVariableHeader(int packetId, String topicName, PublishProperties publishProperties) {
-        this.packetId = packetId;
+        super(packetId);
         this.topicName = topicName;
         this.publishProperties = publishProperties;
     }
@@ -31,10 +28,6 @@ public class MqttPublishVariableHeader extends MqttVariableHeader {
 
     public PublishProperties getPublishProperties() {
         return publishProperties;
-    }
-
-    public int getPacketId() {
-        return packetId;
     }
 
 }

@@ -4,12 +4,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
+import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttSubAckMessage;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
 import org.smartboot.mqtt.common.message.payload.MqttSubAckPayload;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttReasonVariableHeader;
+import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 
 /**
  * 客户端订阅消息
@@ -35,6 +37,9 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
         //允许服务端在发送 SUBACK 报文之前就开始发送与订阅匹配的 PUBLISH 报文
         MqttReasonVariableHeader variableHeader = new MqttPubQosVariableHeader(mqttSubscribeMessage.getVariableHeader().getPacketId());
         //todo
+        if (mqttSubscribeMessage.getVersion() == MqttVersion.MQTT_5) {
+            variableHeader.setProperties(new ReasonProperties());
+        }
         MqttSubAckMessage mqttSubAckMessage = new MqttSubAckMessage(variableHeader);
 
         //有效载荷包含一个返回码清单。

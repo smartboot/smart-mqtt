@@ -7,6 +7,6 @@ import org.smartboot.mqtt.common.ToString;
  *
  * @author 三刀(zhengjunweimail @ 163.com)
  */
-public class MqttVariableHeader extends ToString {
+public abstract class MqttVariableHeader extends ToString {
 
 }

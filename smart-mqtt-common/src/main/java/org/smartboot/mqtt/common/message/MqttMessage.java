@@ -7,8 +7,6 @@ import org.smartboot.socket.util.DecoderException;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 import static org.smartboot.mqtt.common.message.MqttCodecUtil.decodeMsbLsb;
 
@@ -17,29 +15,16 @@ import static org.smartboot.mqtt.common.message.MqttCodecUtil.decodeMsbLsb;
  * @version V1.0 , 2018/4/22
  */
 public abstract class MqttMessage extends ToString {
-    /**
-     * 8-bit UTF (UCS Transformation Format)
-     */
-    public static final Charset UTF_8 = StandardCharsets.UTF_8;
     protected static final int PACKET_LENGTH = 2;
-    private static final char[] TOPIC_WILDCARDS = {'#', '+'};
-    private static final int VARIABLE_BYTE_INT_MAX = 268435455;
-    private static final int UTF8_STRING_MAX_LENGTH = 65535;
     /**
      * 固定报头
      */
-    protected MqttFixedHeader fixedHeader = null;
+    protected final MqttFixedHeader fixedHeader;
     protected MqttVersion version;
 
     public MqttMessage(MqttFixedHeader mqttFixedHeader) {
         this.fixedHeader = mqttFixedHeader;
     }
-
-
-    /**
-     * java.io.DataOutputStream#writeUTF(java.lang.String, java.io.DataOutput)
-     */
-
 
     public final MqttFixedHeader getFixedHeader() {
         return fixedHeader;
