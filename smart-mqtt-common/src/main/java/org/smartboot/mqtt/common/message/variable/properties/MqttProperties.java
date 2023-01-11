@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.common.message.properties;
+package org.smartboot.mqtt.common.message.variable.properties;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.smartboot.mqtt.common.MqttWriter;

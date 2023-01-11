@@ -1,6 +1,6 @@
 package org.smartboot.mqtt.common.message.variable;
 
-import org.smartboot.mqtt.common.message.properties.PublishProperties;
+import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 
 /**
  * @author 三刀

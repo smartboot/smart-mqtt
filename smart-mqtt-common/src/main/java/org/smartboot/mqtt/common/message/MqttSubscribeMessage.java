@@ -4,9 +4,9 @@ import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.payload.MqttSubscribePayload;
-import org.smartboot.mqtt.common.message.properties.MqttProperties;
-import org.smartboot.mqtt.common.message.properties.SubscribeProperties;
 import org.smartboot.mqtt.common.message.variable.MqttSubscribeVariableHeader;
+import org.smartboot.mqtt.common.message.variable.properties.MqttProperties;
+import org.smartboot.mqtt.common.message.variable.properties.SubscribeProperties;
 import org.smartboot.mqtt.common.util.MqttPropertyConstant;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.util.BufferUtils;
@@ -20,7 +20,7 @@ import java.util.List;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttSubscribeMessage extends MqttVariableMessage<MqttSubscribeVariableHeader> {
+public class MqttSubscribeMessage extends MqttPacketIdentifierMessage<MqttSubscribeVariableHeader> {
     private static final int PROPERTIES_BITS = MqttPropertyConstant.SUBSCRIPTION_IDENTIFIER_BIT | MqttPropertyConstant.USER_PROPERTY_BIT;
     private MqttSubscribePayload mqttSubscribePayload;
 

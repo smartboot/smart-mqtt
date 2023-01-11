@@ -3,9 +3,9 @@ package org.smartboot.mqtt.common.message;
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.payload.MqttUnsubscribePayload;
-import org.smartboot.mqtt.common.message.properties.ReasonProperties;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttReasonVariableHeader;
+import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

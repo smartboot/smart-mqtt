@@ -1,20 +1,17 @@
 package org.smartboot.mqtt.common.message.variable;
 
-import org.smartboot.mqtt.common.message.properties.SubscribeProperties;
+import org.smartboot.mqtt.common.message.variable.properties.SubscribeProperties;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/1/4
  */
-public class MqttSubscribeVariableHeader extends MqttVariableHeader {
-    /**
-     * 报文标识符
-     */
-    private int packetId;
+public class MqttSubscribeVariableHeader extends MqttPacketIdVariableHeader {
+
     private SubscribeProperties subscribeProperties;
 
     public MqttSubscribeVariableHeader(int packetId, SubscribeProperties subscribeProperties) {
-        this.packetId = packetId;
+        super(packetId);
         this.subscribeProperties = subscribeProperties;
     }
 
@@ -26,11 +23,4 @@ public class MqttSubscribeVariableHeader extends MqttVariableHeader {
         this.subscribeProperties = subscribeProperties;
     }
 
-    public int getPacketId() {
-        return packetId;
-    }
-
-    public void setPacketId(int packetId) {
-        this.packetId = packetId;
-    }
 }

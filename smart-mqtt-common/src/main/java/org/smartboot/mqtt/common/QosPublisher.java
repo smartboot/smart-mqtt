@@ -8,8 +8,8 @@ import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPubRelMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
-import org.smartboot.mqtt.common.message.properties.ReasonProperties;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
+import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 
 import java.util.Objects;

@@ -1,7 +1,7 @@
 package org.smartboot.mqtt.common.message.variable;
 
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
-import org.smartboot.mqtt.common.message.properties.ConnectAckProperties;
+import org.smartboot.mqtt.common.message.variable.properties.ConnectAckProperties;
 
 /**
  * @author 三刀

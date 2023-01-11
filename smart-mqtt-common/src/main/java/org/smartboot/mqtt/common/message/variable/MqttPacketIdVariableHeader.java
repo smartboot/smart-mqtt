@@ -8,18 +8,12 @@ public class MqttPacketIdVariableHeader extends MqttVariableHeader {
     /**
      * 报文标识符
      */
-    private int packetId;
-
-    public MqttPacketIdVariableHeader() {
-    }
+    private final int packetId;
 
     public MqttPacketIdVariableHeader(int packetId) {
         this.packetId = packetId;
     }
 
-    public void setPacketId(int packetId) {
-        this.packetId = packetId;
-    }
 
     public int getPacketId() {
         return packetId;

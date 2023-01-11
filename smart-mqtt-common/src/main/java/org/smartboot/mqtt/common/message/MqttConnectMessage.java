@@ -4,9 +4,9 @@ import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttProtocolEnum;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.payload.MqttConnectPayload;
-import org.smartboot.mqtt.common.message.properties.ConnectProperties;
-import org.smartboot.mqtt.common.message.properties.WillProperties;
 import org.smartboot.mqtt.common.message.variable.MqttConnectVariableHeader;
+import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
+import org.smartboot.mqtt.common.message.variable.properties.WillProperties;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.util.BufferUtils;
 

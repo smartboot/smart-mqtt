@@ -9,12 +9,12 @@ import org.smartboot.mqtt.common.message.MqttTopicSubscription;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.mqtt.common.message.payload.MqttSubscribePayload;
 import org.smartboot.mqtt.common.message.payload.MqttUnsubscribePayload;
-import org.smartboot.mqtt.common.message.properties.PublishProperties;
-import org.smartboot.mqtt.common.message.properties.SubscribeProperties;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttPublishVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttReasonVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttSubscribeVariableHeader;
+import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
+import org.smartboot.mqtt.common.message.variable.properties.SubscribeProperties;
 
 import java.util.ArrayList;
 import java.util.List;

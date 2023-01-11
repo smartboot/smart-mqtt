@@ -2,7 +2,7 @@ package org.smartboot.mqtt.common.message;
 
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttQoS;
-import org.smartboot.mqtt.common.message.properties.WillProperties;
+import org.smartboot.mqtt.common.message.variable.properties.WillProperties;
 
 import java.io.IOException;
 

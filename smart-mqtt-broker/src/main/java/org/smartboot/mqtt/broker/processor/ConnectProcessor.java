@@ -20,9 +20,9 @@ import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.WillMessage;
 import org.smartboot.mqtt.common.message.payload.MqttConnectPayload;
-import org.smartboot.mqtt.common.message.properties.ConnectAckProperties;
 import org.smartboot.mqtt.common.message.variable.MqttConnAckVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttConnectVariableHeader;
+import org.smartboot.mqtt.common.message.variable.properties.ConnectAckProperties;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 

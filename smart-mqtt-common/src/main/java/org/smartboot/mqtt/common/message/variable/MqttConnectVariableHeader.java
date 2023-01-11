@@ -3,7 +3,7 @@ package org.smartboot.mqtt.common.message.variable;
 
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.WillMessage;
-import org.smartboot.mqtt.common.message.properties.ConnectProperties;
+import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
 
 /**
  * CONNECT 报文的可变报头按下列次序包含四个字段：协议名（Protocol Name），协议级别（Protocol
@@ -29,13 +29,6 @@ public final class MqttConnectVariableHeader extends MqttVariableHeader {
     private final int keepAliveTimeSeconds;
     private final ConnectProperties properties;
 
-    public MqttConnectVariableHeader(
-            String name,
-            byte protocolLevel,
-            int connectFlag,
-            int keepAliveTimeSeconds) {
-        this(name, protocolLevel, connectFlag, keepAliveTimeSeconds, null);
-    }
 
     public MqttConnectVariableHeader(
             String name,
