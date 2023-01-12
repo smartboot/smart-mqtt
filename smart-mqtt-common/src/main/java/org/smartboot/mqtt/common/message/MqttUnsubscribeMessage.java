@@ -60,7 +60,7 @@ public class MqttUnsubscribeMessage extends MqttPacketIdentifierMessage<MqttReas
     }
 
     @Override
-    public void writeTo(MqttWriter mqttWriter) throws IOException {
+    public void writeWithoutFixedHeader(MqttWriter mqttWriter) throws IOException {
 
     }
 

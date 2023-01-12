@@ -8,19 +8,18 @@ import org.smartboot.mqtt.common.message.variable.properties.SubscribeProperties
  */
 public class MqttSubscribeVariableHeader extends MqttPacketIdVariableHeader {
 
-    private SubscribeProperties subscribeProperties;
+    private SubscribeProperties properties;
 
-    public MqttSubscribeVariableHeader(int packetId, SubscribeProperties subscribeProperties) {
+    public MqttSubscribeVariableHeader(int packetId) {
         super(packetId);
-        this.subscribeProperties = subscribeProperties;
     }
 
-    public SubscribeProperties getSubscribeProperties() {
-        return subscribeProperties;
+    public SubscribeProperties getProperties() {
+        return properties;
     }
 
-    public void setSubscribeProperties(SubscribeProperties subscribeProperties) {
-        this.subscribeProperties = subscribeProperties;
+    public void setProperties(SubscribeProperties properties) {
+        this.properties = properties;
     }
 
 }

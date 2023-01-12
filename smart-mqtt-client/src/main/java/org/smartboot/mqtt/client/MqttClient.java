@@ -28,6 +28,7 @@ import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.mqtt.common.message.WillMessage;
 import org.smartboot.mqtt.common.message.payload.MqttConnectPayload;
 import org.smartboot.mqtt.common.message.variable.MqttConnectVariableHeader;
+import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.buffer.BufferPagePool;
@@ -350,6 +351,9 @@ public class MqttClient extends AbstractSession {
             publishBuilder.packetId(packetId);
         }
         MqttPublishMessage message = publishBuilder.build();
+        if (getMqttVersion() == MqttVersion.MQTT_5) {
+            message.getVariableHeader().setProperties(new PublishProperties());
+        }
         if (connected) {
             publish(message, consumer);
         } else {

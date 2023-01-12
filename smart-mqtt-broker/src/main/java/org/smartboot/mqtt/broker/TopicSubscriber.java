@@ -5,11 +5,13 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.provider.PersistenceProvider;
 import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
 import org.smartboot.mqtt.common.InflightQueue;
+import org.smartboot.mqtt.common.MqttMessageBuilders;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
-import org.smartboot.mqtt.common.util.MqttUtil;
+import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 
 /**
  * Topic订阅者
@@ -75,7 +77,10 @@ public class TopicSubscriber {
 //            System.out.println("退出递归...");
             return expectConsumerOffset;
         }
-        MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(mqttSession.newPacketId(), persistenceMessage.getTopic(), mqttQoS, persistenceMessage.getPayload());
+        MqttPublishMessage publishMessage = MqttMessageBuilders.publish().payload(persistenceMessage.getPayload()).qos(mqttQoS).packetId(mqttSession.newPacketId()).topicName(persistenceMessage.getTopic()).build();
+        if (mqttSession.getMqttVersion() == MqttVersion.MQTT_5) {
+            publishMessage.getVariableHeader().setProperties(new PublishProperties());
+        }
         InflightQueue inflightQueue = mqttSession.getInflightQueue();
         int index = inflightQueue.offer(publishMessage, persistenceMessage.getOffset());
         // 飞行队列已满

@@ -22,15 +22,14 @@ public class MqttSubAckMessage extends MqttPacketIdentifierMessage<MqttReasonVar
         super(mqttFixedHeader);
     }
 
-    @Override
-    protected void decodeVariableHeader0(ByteBuffer buffer) {
-
-    }
-
     public MqttSubAckMessage(MqttReasonVariableHeader variableHeader) {
         super(MqttFixedHeader.SUB_ACK_HEADER, variableHeader);
     }
 
+    @Override
+    protected void decodeVariableHeader0(ByteBuffer buffer) {
+
+    }
 
     @Override
     public void decodePlayLoad(ByteBuffer buffer) {
@@ -46,11 +45,10 @@ public class MqttSubAckMessage extends MqttPacketIdentifierMessage<MqttReasonVar
     }
 
     @Override
-    public void writeTo(MqttWriter mqttWriter) throws IOException {
+    public void writeWithoutFixedHeader(MqttWriter mqttWriter) throws IOException {
         int variableHeaderBufferSize = 2;
         int payloadBufferSize = mqttSubAckPayload.grantedQoSLevels().size();
         int variablePartSize = variableHeaderBufferSize + payloadBufferSize;
-        mqttWriter.writeByte(getFixedHeaderByte(fixedHeader));
 
         int propertiesLength = 0;
         if (version == MqttVersion.MQTT_5) {

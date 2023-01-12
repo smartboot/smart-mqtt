@@ -1,18 +1,18 @@
 package org.smartboot.mqtt.common.message.variable.properties;
 
-import org.smartboot.mqtt.common.message.MqttCodecUtil;
-
 import java.util.List;
+
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.*;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/1/5
  */
-public class PublishProperties {
-    private final MqttProperties properties;
+public class PublishProperties extends AbstractProperties {
+    private static final int PROPERTIES_BITS = PAYLOAD_FORMAT_INDICATOR_BIT | MESSAGE_EXPIRY_INTERVAL_BIT | TOPIC_ALIAS_BIT | RESPONSE_TOPIC_BIT | CORRELATION_DATA_BIT | USER_PROPERTY_BIT | SUBSCRIPTION_IDENTIFIER_BIT | CONTENT_TYPE_BIT;
 
-    public PublishProperties(MqttProperties properties) {
-        this.properties = properties;
+    public PublishProperties() {
+        super(PROPERTIES_BITS);
     }
 
     public byte getPayloadFormatIndicator() {
@@ -43,10 +43,6 @@ public class PublishProperties {
         return properties.getResponseTopic();
     }
 
-    public byte[] getResponseTopicBytes() {
-        return responseTopicBytes;
-    }
-
     public void setResponseTopic(String responseTopic) {
         properties.setResponseTopic(responseTopic);
     }
@@ -75,24 +71,9 @@ public class PublishProperties {
         return properties.getContentType();
     }
 
-    public byte[] getContentTypeBytes() {
-        return contentTypeBytes;
-    }
-
     public void setContentType(String contentType) {
         properties.setContentType(contentType);
     }
 
-    private byte[] responseTopicBytes;
-    private byte[] contentTypeBytes;
-
-    public void decode() {
-        if (getResponseTopic() != null) {
-            responseTopicBytes = MqttCodecUtil.encodeUTF8(getResponseTopic());
-        }
-        if (getContentType() != null) {
-            contentTypeBytes = MqttCodecUtil.encodeUTF8(getContentType());
-        }
-    }
 }
 

@@ -35,15 +35,13 @@ public abstract class MqttMessage extends ToString {
      *
      * @param buffer
      */
-    public void decodeVariableHeader(ByteBuffer buffer) {
-
-    }
+    public abstract void decodeVariableHeader(ByteBuffer buffer);
 
     public void decodePlayLoad(ByteBuffer buffer) {
 
     }
 
-    public void writeTo(MqttWriter mqttWriter) throws IOException {
+    public void writeWithoutFixedHeader(MqttWriter mqttWriter) throws IOException {
         throw new UnsupportedOperationException();
     }
 
@@ -56,18 +54,7 @@ public abstract class MqttMessage extends ToString {
         return messageId;
     }
 
-    protected final byte getFixedHeaderByte(MqttFixedHeader header) {
-        int ret = 0;
-        ret |= header.getMessageType().value() << 4;
-        if (header.isDup()) {
-            ret |= 0x08;
-        }
-        ret |= header.getQosLevel().value() << 1;
-        if (header.isRetain()) {
-            ret |= 0x01;
-        }
-        return (byte) ret;
-    }
+
 
 
     public MqttVersion getVersion() {

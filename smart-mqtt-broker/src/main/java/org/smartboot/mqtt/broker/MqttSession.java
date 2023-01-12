@@ -137,6 +137,8 @@ public class MqttSession extends AbstractSession {
             TopicSubscriber subscription = subscribeSuccess(mqttQoS, topicToken, topic);
             if (newSubscribe) {
                 mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, subscription);
+            } else {
+                mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_REFRESH_TOPIC, subscription);
             }
             return;
         }
@@ -147,6 +149,8 @@ public class MqttSession extends AbstractSession {
                 TopicSubscriber subscription = subscribeSuccess(mqttQoS, topicToken, topic);
                 if (newSubscribe) {
                     mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, subscription);
+                } else {
+                    mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_REFRESH_TOPIC, subscription);
                 }
             }
         }

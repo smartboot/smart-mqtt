@@ -13,21 +13,23 @@ public class MqttPublishVariableHeader extends MqttPacketIdVariableHeader {
      */
     private final String topicName;
 
-    private final PublishProperties publishProperties;
+    private PublishProperties properties;
 
-    public MqttPublishVariableHeader(int packetId, String topicName, PublishProperties publishProperties) {
+    public MqttPublishVariableHeader(int packetId, String topicName) {
         super(packetId);
         this.topicName = topicName;
-        this.publishProperties = publishProperties;
     }
 
     public String getTopicName() {
         return topicName;
     }
 
+    public void setProperties(PublishProperties properties) {
+        this.properties = properties;
+    }
 
-    public PublishProperties getPublishProperties() {
-        return publishProperties;
+    public PublishProperties getProperties() {
+        return properties;
     }
 
 }

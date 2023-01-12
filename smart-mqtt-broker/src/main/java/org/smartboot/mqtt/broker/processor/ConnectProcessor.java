@@ -23,6 +23,7 @@ import org.smartboot.mqtt.common.message.payload.MqttConnectPayload;
 import org.smartboot.mqtt.common.message.variable.MqttConnAckVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttConnectVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectAckProperties;
+import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 
@@ -166,6 +167,9 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         }
         WillMessage willMessage = msg.getPayload().getWillMessage();
         MqttPublishMessage publishMessage = MqttMessageBuilders.publish().topicName(willMessage.getWillTopic()).qos(MqttQoS.valueOf(msg.getVariableHeader().willQos())).payload(willMessage.getWillMessage()).retained(msg.getFixedHeader().isRetain()).build();
+        if (session.getMqttVersion() == MqttVersion.MQTT_5) {
+            publishMessage.getVariableHeader().setProperties(new PublishProperties());
+        }
         session.setWillMessage(publishMessage);
     }
 

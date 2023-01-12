@@ -46,10 +46,9 @@ public class MqttPubQosMessage extends MqttPacketIdentifierMessage<MqttPubQosVar
     }
 
     @Override
-    public final void writeTo(MqttWriter mqttWriter) throws IOException {
+    public final void writeWithoutFixedHeader(MqttWriter mqttWriter) throws IOException {
         MqttPubQosVariableHeader variableHeader = getVariableHeader();
         int remainingLength = 2; // variable part only has a message id
-        mqttWriter.writeByte(getFixedHeaderByte(fixedHeader));
 
         int propertiesLength = 0;
         if (version == MqttVersion.MQTT_5 && variableHeader.getReasonCode() != 0) {

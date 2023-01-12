@@ -18,11 +18,14 @@ import org.smartboot.mqtt.broker.provider.impl.ConfiguredConnectAuthenticationPr
 import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
+import org.smartboot.mqtt.common.MqttMessageBuilders;
+import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventBus;
 import org.smartboot.mqtt.common.eventbus.EventBusImpl;
 import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
+import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
@@ -244,7 +247,10 @@ public class BrokerContextImpl implements BrokerContext {
                         }
                         //retain采用严格顺序publish模式
                         MqttSession session = subscriber.getMqttSession();
-                        MqttPublishMessage publishMessage = MqttUtil.createPublishMessage(session.newPacketId(), storedMessage.getTopic(), subscriber.getMqttQoS(), storedMessage.getPayload());
+                        MqttPublishMessage publishMessage = MqttMessageBuilders.publish().payload(storedMessage.getPayload()).qos(subscriber.getMqttQoS()).packetId(session.newPacketId()).topicName(storedMessage.getTopic()).build();
+                        if (session.getMqttVersion() == MqttVersion.MQTT_5) {
+                            publishMessage.getVariableHeader().setProperties(new PublishProperties());
+                        }
                         InflightQueue inflightQueue = session.getInflightQueue();
                         int index = inflightQueue.offer(publishMessage, storedMessage.getOffset());
                         session.publish(publishMessage, packetId -> {
@@ -261,6 +267,10 @@ public class BrokerContextImpl implements BrokerContext {
                     }
                 });
             }
+        });
+        eventBus.subscribe(ServerEventType.SUBSCRIBE_REFRESH_TOPIC, (eventType, subscriber) -> {
+            LOGGER.info("刷新订阅关系, {} 订阅了topic: {}", subscriber.getTopicFilterToken().getTopicFilter(), subscriber.getTopic().getTopic());
+            subscriber.setReady(true);
         });
         //打印消息日志
 //        eventBus.subscribe(Arrays.asList(EventType.RECEIVE_MESSAGE, EventType.WRITE_MESSAGE), new

@@ -80,7 +80,8 @@ public final class MqttMessageBuilders {
 
         public MqttPublishMessage build() {
             MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false, qos, retained, 0);
-            MqttPublishVariableHeader mqttVariableHeader = new MqttPublishVariableHeader(packetId, topic, publishProperties);
+            MqttPublishVariableHeader mqttVariableHeader = new MqttPublishVariableHeader(packetId, topic);
+            mqttVariableHeader.setProperties(publishProperties);
             return new MqttPublishMessage(mqttFixedHeader, mqttVariableHeader, payload);
         }
     }
@@ -119,7 +120,8 @@ public final class MqttMessageBuilders {
             MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.SUBSCRIBE, false, MqttQoS.AT_LEAST_ONCE, false, 0);
             MqttSubscribePayload mqttSubscribePayload = new MqttSubscribePayload();
             mqttSubscribePayload.setTopicSubscriptions(subscriptions);
-            MqttSubscribeVariableHeader variableHeader = new MqttSubscribeVariableHeader(packetId, subscribeProperties);
+            MqttSubscribeVariableHeader variableHeader = new MqttSubscribeVariableHeader(packetId);
+            variableHeader.setProperties(subscribeProperties);
             return new MqttSubscribeMessage(mqttFixedHeader, variableHeader, mqttSubscribePayload);
         }
     }

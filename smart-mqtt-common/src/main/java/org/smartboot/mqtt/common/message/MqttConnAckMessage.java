@@ -43,9 +43,8 @@ public class MqttConnAckMessage extends MqttVariableMessage<MqttConnAckVariableH
 
 
     @Override
-    public void writeTo(MqttWriter mqttWriter) throws IOException {
+    public void writeWithoutFixedHeader(MqttWriter mqttWriter) throws IOException {
         MqttConnAckVariableHeader variableHeader = getVariableHeader();
-        mqttWriter.writeByte(getFixedHeaderByte(fixedHeader));
         int remaining = 2;
         if (version == MqttVersion.MQTT_5) {
             int propertiesLength = variableHeader.getProperties().preEncode();

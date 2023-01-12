@@ -113,7 +113,7 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
 
 
     @Override
-    public void writeTo(MqttWriter mqttWriter) throws IOException {
+    public void writeWithoutFixedHeader(MqttWriter mqttWriter) throws IOException {
         MqttConnectVariableHeader variableHeader = getVariableHeader();
         //VariableHeader
         byte[] clientIdBytes = MqttCodecUtil.encodeUTF8(mqttConnectPayload.clientIdentifier());
@@ -145,7 +145,6 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
 
 
         //第一部分：固定报头
-        mqttWriter.writeByte(getFixedHeaderByte(fixedHeader));
         MqttCodecUtil.writeVariableLengthInt(mqttWriter, remainingLength);
 
 

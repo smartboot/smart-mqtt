@@ -1,28 +1,20 @@
 package org.smartboot.mqtt.common.message;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.variable.MqttPublishVariableHeader;
-import org.smartboot.mqtt.common.message.variable.properties.MqttProperties;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
-import org.smartboot.mqtt.common.message.variable.properties.UserProperty;
-import org.smartboot.mqtt.common.util.MqttPropertyConstant;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.socket.util.DecoderException;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import static org.smartboot.mqtt.common.util.MqttPropertyConstant.*;
-
 /**
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
 public class MqttPublishMessage extends MqttVariableMessage<MqttPublishVariableHeader> {
-    private static final int PROPERTIES_BITS = PAYLOAD_FORMAT_INDICATOR_BIT | MESSAGE_EXPIRY_INTERVAL_BIT | TOPIC_ALIAS_BIT | RESPONSE_TOPIC_BIT
-            | CORRELATION_DATA_BIT | USER_PROPERTY_BIT | SUBSCRIPTION_IDENTIFIER_BIT | CONTENT_TYPE_BIT;
     private static final byte[] EMPTY_BYTES = new byte[0];
     private byte[] payload;
 
@@ -48,13 +40,13 @@ public class MqttPublishMessage extends MqttVariableMessage<MqttPublishVariableH
         if (fixedHeader.getQosLevel().value() > 0) {
             packetId = decodeMessageId(buffer);
         }
-        PublishProperties properties = null;
+        MqttPublishVariableHeader variableHeader = new MqttPublishVariableHeader(packetId, decodedTopic);
         if (version == MqttVersion.MQTT_5) {
-            MqttProperties mqttProperties = new MqttProperties();
-            mqttProperties.decode(buffer, PROPERTIES_BITS);
-            properties = new PublishProperties(mqttProperties);
+            PublishProperties properties = new PublishProperties();
+            properties.decode(buffer);
+            variableHeader.setProperties(properties);
         }
-        MqttPublishVariableHeader variableHeader = new MqttPublishVariableHeader(packetId, decodedTopic, properties);
+
         setVariableHeader(variableHeader);
     }
 
@@ -71,17 +63,17 @@ public class MqttPublishMessage extends MqttVariableMessage<MqttPublishVariableH
     }
 
     @Override
-    public void writeTo(MqttWriter mqttWriter) throws IOException {
+    public void writeWithoutFixedHeader(MqttWriter mqttWriter) throws IOException {
         MqttPublishVariableHeader variableHeader = getVariableHeader();
         byte[] topicBytes = MqttCodecUtil.encodeUTF8(variableHeader.getTopicName());
         boolean hasPacketId = fixedHeader.getQosLevel().value() > 0;
-        mqttWriter.writeByte(getFixedHeaderByte(fixedHeader));
+
 
         int length = topicBytes.length + (hasPacketId ? 2 : 0) + payload.length;
         int propertiesLength = 0;
         if (version == MqttVersion.MQTT_5) {
             //属性长度
-            propertiesLength = preEncodeProperties(variableHeader.getPublishProperties());
+            propertiesLength = variableHeader.getProperties().preEncode();
             length += MqttCodecUtil.getVariableLengthInt(propertiesLength) + propertiesLength;
         }
         MqttCodecUtil.writeVariableLengthInt(mqttWriter, length);
@@ -93,103 +85,9 @@ public class MqttPublishMessage extends MqttVariableMessage<MqttPublishVariableH
         if (version == MqttVersion.MQTT_5) {
             //属性长度
             MqttCodecUtil.writeVariableLengthInt(mqttWriter, propertiesLength);
-            writeProperties(mqttWriter, variableHeader.getPublishProperties());
+            variableHeader.getProperties().writeTo(mqttWriter);
         }
         mqttWriter.write(payload);
-    }
-
-    private int preEncodeProperties(PublishProperties properties) {
-        if (properties == null) {
-            return 0;
-        }
-        properties.decode();
-        int length = 0;
-        //载荷格式指示
-        if (properties.getPayloadFormatIndicator() != -1) {
-            length += 2;
-        }
-        //消息过期间隔
-        if (properties.getMessageExpiryInterval() > 0) {
-            length += 5;
-        }
-        //主题别名
-        if (properties.getTopicAlias() > 0) {
-            length += 2;
-        }
-        //响应主题
-        if (properties.getResponseTopic() != null) {
-            length += properties.getResponseTopicBytes().length;
-        }
-        //对比数据
-        if (properties.getCorrelationData() != null) {
-            length += properties.getCorrelationData().length + 2;
-        }
-        //用户属性
-        if (CollectionUtils.isNotEmpty(properties.getUserProperties())) {
-            length += 1;
-            for (UserProperty userProperty : properties.getUserProperties()) {
-                userProperty.decode();
-                length += userProperty.getKeyBytes().length + userProperty.getValueBytes().length;
-            }
-        }
-        //订阅标识符
-        if (properties.getSubscriptionIdentifier() > 0) {
-            length += 2;
-        }
-        //内容类型
-        if (properties.getContentTypeBytes() != null) {
-            length += properties.getContentTypeBytes().length;
-        }
-        return length;
-    }
-
-    private void writeProperties(MqttWriter mqttWriter, PublishProperties properties) throws IOException {
-        if (properties == null) {
-            return;
-        }
-        //载荷格式指示
-        if (properties.getPayloadFormatIndicator() != -1) {
-            mqttWriter.writeByte(MqttPropertyConstant.PAYLOAD_FORMAT_INDICATOR);
-            mqttWriter.writeByte(properties.getPayloadFormatIndicator());
-        }
-        //消息过期间隔
-        if (properties.getMessageExpiryInterval() > 0) {
-            mqttWriter.writeByte(MqttPropertyConstant.MESSAGE_EXPIRY_INTERVAL);
-            mqttWriter.writeInt(properties.getMessageExpiryInterval());
-        }
-        //主题别名
-        if (properties.getTopicAlias() > 0) {
-            mqttWriter.writeByte(MqttPropertyConstant.TOPIC_ALIAS);
-            mqttWriter.writeShort((short) properties.getTopicAlias());
-        }
-        //响应主题
-        if (properties.getResponseTopicBytes() != null) {
-            mqttWriter.writeByte(MqttPropertyConstant.RESPONSE_TOPIC);
-            mqttWriter.write(properties.getResponseTopicBytes());
-        }
-        //对比数据
-        if (properties.getCorrelationData() != null) {
-            mqttWriter.writeByte(MqttPropertyConstant.CORRELATION_DATA);
-            MqttCodecUtil.writeByteArray(mqttWriter, properties.getCorrelationData());
-        }
-        //用户属性
-        if (CollectionUtils.isNotEmpty(properties.getUserProperties())) {
-            mqttWriter.writeByte(MqttPropertyConstant.USER_PROPERTY);
-            for (UserProperty userProperty : properties.getUserProperties()) {
-                mqttWriter.write(userProperty.getKeyBytes());
-                mqttWriter.write(userProperty.getValueBytes());
-            }
-        }
-        //订阅标识符
-        if (properties.getSubscriptionIdentifier() > 0) {
-            mqttWriter.writeByte(MqttPropertyConstant.SUBSCRIPTION_IDENTIFIER);
-            MqttCodecUtil.writeVariableLengthInt(mqttWriter, properties.getSubscriptionIdentifier());
-        }
-        //内容类型
-        if (properties.getContentTypeBytes() != null) {
-            mqttWriter.writeByte(MqttPropertyConstant.CONTENT_TYPE);
-            mqttWriter.write(properties.getContentTypeBytes());
-        }
     }
 
     public byte[] getPayload() {

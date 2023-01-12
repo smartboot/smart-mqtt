@@ -5,9 +5,7 @@ import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.payload.MqttSubscribePayload;
 import org.smartboot.mqtt.common.message.variable.MqttSubscribeVariableHeader;
-import org.smartboot.mqtt.common.message.variable.properties.MqttProperties;
 import org.smartboot.mqtt.common.message.variable.properties.SubscribeProperties;
-import org.smartboot.mqtt.common.util.MqttPropertyConstant;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.util.BufferUtils;
 
@@ -21,7 +19,7 @@ import java.util.List;
  * @version V1.0 , 2018/4/22
  */
 public class MqttSubscribeMessage extends MqttPacketIdentifierMessage<MqttSubscribeVariableHeader> {
-    private static final int PROPERTIES_BITS = MqttPropertyConstant.SUBSCRIPTION_IDENTIFIER_BIT | MqttPropertyConstant.USER_PROPERTY_BIT;
+
     private MqttSubscribePayload mqttSubscribePayload;
 
     public MqttSubscribeMessage(MqttFixedHeader mqttFixedHeader) {
@@ -37,13 +35,12 @@ public class MqttSubscribeMessage extends MqttPacketIdentifierMessage<MqttSubscr
     @Override
     public void decodeVariableHeader0(ByteBuffer buffer) {
         int packetId = decodeMessageId(buffer);
-        SubscribeProperties subscribeProperties = null;
+        MqttSubscribeVariableHeader header = new MqttSubscribeVariableHeader(packetId);
         if (version == MqttVersion.MQTT_5) {
-            MqttProperties mqttProperties = new MqttProperties();
-            mqttProperties.decode(buffer, PROPERTIES_BITS);
-            subscribeProperties = new SubscribeProperties(mqttProperties);
+            SubscribeProperties properties = new SubscribeProperties();
+            properties.decode(buffer);
+            header.setProperties(properties);
         }
-        MqttSubscribeVariableHeader header = new MqttSubscribeVariableHeader(packetId, subscribeProperties);
         setVariableHeader(header);
     }
 
@@ -72,7 +69,7 @@ public class MqttSubscribeMessage extends MqttPacketIdentifierMessage<MqttSubscr
     }
 
     @Override
-    public void writeTo(MqttWriter mqttWriter) throws IOException {
+    public void writeWithoutFixedHeader(MqttWriter mqttWriter) throws IOException {
         int length = 2;
         List<byte[]> topicFilters = new ArrayList<>(mqttSubscribePayload.getTopicSubscriptions().size());
         for (MqttTopicSubscription topicSubscription : mqttSubscribePayload.getTopicSubscriptions()) {
@@ -80,7 +77,6 @@ public class MqttSubscribeMessage extends MqttPacketIdentifierMessage<MqttSubscr
             topicFilters.add(bytes);
             length += 1 + bytes.length;
         }
-        mqttWriter.writeByte(getFixedHeaderByte(fixedHeader));
         MqttCodecUtil.writeVariableLengthInt(mqttWriter, length);
         mqttWriter.writeShort((short) getVariableHeader().getPacketId());
         int i = 0;

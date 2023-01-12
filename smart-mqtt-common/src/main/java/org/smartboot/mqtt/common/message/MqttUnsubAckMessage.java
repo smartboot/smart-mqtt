@@ -17,11 +17,9 @@ public class MqttUnsubAckMessage extends MqttPacketIdentifierMessage<MqttReasonV
     }
 
     @Override
-    public void writeTo(MqttWriter mqttWriter) throws IOException {
+    public void writeWithoutFixedHeader(MqttWriter mqttWriter) throws IOException {
         MqttReasonVariableHeader variableHeader = getVariableHeader();
         int remainingLength = 2; // variable part only has a message id
-        mqttWriter.writeByte(getFixedHeaderByte(fixedHeader));
-
         int propertiesLength = 0;
         if (version == MqttVersion.MQTT_5) {
             propertiesLength = variableHeader.getProperties().preEncode();

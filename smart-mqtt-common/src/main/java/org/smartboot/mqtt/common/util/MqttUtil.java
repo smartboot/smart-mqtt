@@ -3,9 +3,6 @@ package org.smartboot.mqtt.common.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.AbstractSession;
-import org.smartboot.mqtt.common.MqttMessageBuilders;
-import org.smartboot.mqtt.common.enums.MqttQoS;
-import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 import java.util.UUID;
 
@@ -27,10 +24,6 @@ public class MqttUtil {
             }
         }
         return false;
-    }
-
-    public static MqttPublishMessage createPublishMessage(int packetId, String topic, MqttQoS subscribeQos, byte[] payload) {
-        return MqttMessageBuilders.publish().payload(payload).qos(subscribeQos).packetId(packetId).topicName(topic).build();
     }
 
     public static String createClientId() {

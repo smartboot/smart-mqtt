@@ -48,7 +48,7 @@ public class ServerEventType<T> extends EventType<T> {
     /**
      * 客户端订阅Topic
      */
-    public static final ServerEventType<TopicSubscriber> SUBSCRIBE_RE_TOPIC = new ServerEventType<>("subscribeReTopic");
+    public static final ServerEventType<TopicSubscriber> SUBSCRIBE_REFRESH_TOPIC = new ServerEventType<>("subscribe_refresh_topic");
 
     /**
      * 消息总线消费完成
