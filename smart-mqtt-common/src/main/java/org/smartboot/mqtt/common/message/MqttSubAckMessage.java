@@ -4,6 +4,7 @@ import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.payload.MqttSubAckPayload;
 import org.smartboot.mqtt.common.message.variable.MqttReasonVariableHeader;
+import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 import org.smartboot.socket.util.BufferUtils;
 
 import java.io.IOException;
@@ -28,14 +29,22 @@ public class MqttSubAckMessage extends MqttPacketIdentifierMessage<MqttReasonVar
 
     @Override
     protected void decodeVariableHeader0(ByteBuffer buffer) {
-
+        int packetId = decodeMessageId(buffer);
+        MqttReasonVariableHeader header = new MqttReasonVariableHeader(packetId);
+        if (version == MqttVersion.MQTT_5) {
+            ReasonProperties properties = new ReasonProperties();
+            properties.decode(buffer);
+            header.setProperties(properties);
+        }
+        setVariableHeader(header);
     }
 
     @Override
     public void decodePlayLoad(ByteBuffer buffer) {
+        int payloadLength = fixedHeader.remainingLength() - getVariableHeaderLength();
         final List<Integer> grantedQos = new ArrayList<Integer>();
         int limit = buffer.limit();
-        buffer.limit(buffer.position() + fixedHeader.remainingLength() - PACKET_LENGTH);
+        buffer.limit(buffer.position() + payloadLength);
         while (buffer.hasRemaining()) {
             int qos = BufferUtils.readUnsignedByte(buffer) & 0x03;
             grantedQos.add(qos);

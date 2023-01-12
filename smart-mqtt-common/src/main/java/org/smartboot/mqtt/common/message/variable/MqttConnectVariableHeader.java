@@ -1,9 +1,15 @@
 package org.smartboot.mqtt.common.message.variable;
 
 
+import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttVersion;
+import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.common.message.WillMessage;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
+import org.smartboot.mqtt.common.util.ValidateUtils;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * CONNECT 报文的可变报头按下列次序包含四个字段：协议名（Protocol Name），协议级别（Protocol
@@ -27,15 +33,14 @@ public final class MqttConnectVariableHeader extends MqttVariableHeader {
     private final boolean isCleanSession;
     private final int reserved;
     private final int keepAliveTimeSeconds;
-    private final ConnectProperties properties;
-
+    private ConnectProperties properties;
+    private int propertiesLength;
 
     public MqttConnectVariableHeader(
             String name,
             byte protocolLevel,
             int connectFlag,
-            int keepAliveTimeSeconds,
-            ConnectProperties properties) {
+            int keepAliveTimeSeconds) {
         this.protocolName = name;
         this.protocolLevel = protocolLevel;
         this.hasUserName = (connectFlag & 0x80) == 0x80;
@@ -46,14 +51,9 @@ public final class MqttConnectVariableHeader extends MqttVariableHeader {
         this.isCleanSession = (connectFlag & 0x02) == 0x02;
         this.reserved = (connectFlag & 0x01);
         this.keepAliveTimeSeconds = keepAliveTimeSeconds;
-        this.properties = properties;
     }
 
     public MqttConnectVariableHeader(MqttVersion mqttVersion, boolean hasUserName, boolean hasPassword, WillMessage willMessage, boolean isCleanSession, int keepAliveTimeSeconds) {
-        this(mqttVersion, hasUserName, hasPassword, willMessage, isCleanSession, keepAliveTimeSeconds, null);
-    }
-
-    public MqttConnectVariableHeader(MqttVersion mqttVersion, boolean hasUserName, boolean hasPassword, WillMessage willMessage, boolean isCleanSession, int keepAliveTimeSeconds, ConnectProperties properties) {
         this.protocolName = mqttVersion.protocolName();
         this.protocolLevel = mqttVersion.protocolLevel();
         this.hasUserName = hasUserName;
@@ -65,7 +65,6 @@ public final class MqttConnectVariableHeader extends MqttVariableHeader {
         //服务端必须验证 CONNECT 控制报文的保留标志位（第 0 位）是否为 0，如果不为 0 必须断开客户端连接
         this.reserved = 0;
         this.keepAliveTimeSeconds = keepAliveTimeSeconds;
-        this.properties = properties;
     }
 
 
@@ -111,5 +110,55 @@ public final class MqttConnectVariableHeader extends MqttVariableHeader {
 
     public ConnectProperties getProperties() {
         return properties;
+    }
+
+    public void setProperties(ConnectProperties properties) {
+        this.properties = properties;
+    }
+
+    public int preEncode() {
+        int length = 10;
+        if (properties != null) {
+            propertiesLength = properties.preEncode();
+            length += propertiesLength + MqttCodecUtil.getVariableLengthInt(propertiesLength);
+        }
+        return length;
+    }
+
+    public void writeTo(MqttWriter mqttWriter) throws IOException {
+        //协议名
+        byte[] nameBytes = protocolName.getBytes(StandardCharsets.UTF_8);
+        ValidateUtils.isTrue(nameBytes.length == 4, "invalid protocol name");
+        mqttWriter.writeShort((short) nameBytes.length);
+        mqttWriter.write(nameBytes);
+        //协议级别
+        mqttWriter.writeByte(protocolLevel);
+        //连接标志
+        byte connectFlag = 0x00;
+        if (hasUserName) {
+            connectFlag = (byte) 0x80;
+        }
+        if (hasPassword) {
+            connectFlag |= 0x40;
+        }
+        if (isWillFlag) {
+            connectFlag |= 0x04;
+            connectFlag |= willQos << 3;
+            if (isWillRetain) {
+                connectFlag |= 0x20;
+            }
+        }
+        if (isCleanSession) {
+            connectFlag |= 0x02;
+        }
+        mqttWriter.writeByte(connectFlag);
+        //保持连接
+        mqttWriter.writeShort((short) keepAliveTimeSeconds);
+
+        // Connect属性
+        if (properties != null) {
+            MqttCodecUtil.writeVariableLengthInt(mqttWriter, propertiesLength);
+            properties.writeTo(mqttWriter);
+        }
     }
 }

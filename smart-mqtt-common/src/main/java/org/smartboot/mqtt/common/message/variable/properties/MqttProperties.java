@@ -195,7 +195,7 @@ public class MqttProperties {
                     //包含多个订阅标识符将造成协议错误（Protocol Error）
                     ValidateUtils.isTrue((MqttPropertyConstant.SUBSCRIPTION_IDENTIFIER_BIT & validBites) > 0, "");
                     validBites &= ~MqttPropertyConstant.SUBSCRIPTION_IDENTIFIER_BIT;
-                    subscriptionIdentifier =MqttCodecUtil.decodeVariableByteInteger(buffer);
+                    subscriptionIdentifier = MqttCodecUtil.decodeVariableByteInteger(buffer);
                     //订阅标识符取值范围从1到268,435,455
                     ValidateUtils.isTrue(subscriptionIdentifier >= 1 && subscriptionIdentifier <= 268435455, "");
                     break;
@@ -422,7 +422,7 @@ public class MqttProperties {
             reasonStringBytes = MqttCodecUtil.encodeUTF8(reasonString);
             length += 1 + reasonStringBytes.length;
         }
-        if (receiveMaximum > 0 && (MqttPropertyConstant.RECEIVE_MAXIMUM_BIT & validBites) > 0) {
+        if (receiveMaximum > 0 && receiveMaximum < 65535 && (MqttPropertyConstant.RECEIVE_MAXIMUM_BIT & validBites) > 0) {
             length += 3;
         }
         if (topicAliasMaximum > 0 && (MqttPropertyConstant.TOPIC_ALIAS_MAXIMUM_BIT & validBites) > 0) {
@@ -529,7 +529,7 @@ public class MqttProperties {
             writer.writeByte(MqttPropertyConstant.REASON_STRING);
             writer.write(reasonStringBytes);
         }
-        if (receiveMaximum > 0 && (MqttPropertyConstant.RECEIVE_MAXIMUM_BIT & validBites) > 0) {
+        if (receiveMaximum > 0 && receiveMaximum < 65535 && (MqttPropertyConstant.RECEIVE_MAXIMUM_BIT & validBites) > 0) {
             writer.writeByte(MqttPropertyConstant.RECEIVE_MAXIMUM);
             MqttCodecUtil.writeMsbLsb(writer, receiveMaximum);
         }

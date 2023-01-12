@@ -232,22 +232,7 @@ public class MqttClientConfigure {
         return mqttVersion;
     }
 
-    /**
-     * Sets the MQTT version. The default action is to connect with version 3.1.1,
-     * and to fall back to 3.1 if that fails. Version 3.1.1 or 3.1 can be selected
-     * specifically, with no fall back, by using the MQTT_VERSION_3_1_1 or
-     * MQTT_VERSION_3_1 options respectively.
-     *
-     * @param mqttVersion the version of the MQTT protocol.
-     * @throws IllegalArgumentException If the MqttVersion supplied is invalid
-     */
     public void setMqttVersion(MqttVersion mqttVersion) throws IllegalArgumentException {
-        if (mqttVersion != MqttVersion.MQTT_3_1
-                && mqttVersion != MqttVersion.MQTT_3_1_1) {
-            throw new IllegalArgumentException(
-                    "An incorrect version was used \"" + mqttVersion + "\". Acceptable version options are "
-                            + MqttVersion.MQTT_3_1 + " and " + MqttVersion.MQTT_3_1_1 + ".");
-        }
         this.mqttVersion = mqttVersion;
     }
 

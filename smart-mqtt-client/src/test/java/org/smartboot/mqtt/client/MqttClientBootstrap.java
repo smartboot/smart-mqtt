@@ -1,7 +1,9 @@
 package org.smartboot.mqtt.client;
 
 import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.WillMessage;
+import org.smartboot.mqtt.common.message.variable.properties.WillProperties;
 import org.smartboot.mqtt.common.util.MqttUtil;
 
 import java.nio.charset.StandardCharsets;
@@ -13,7 +15,7 @@ import java.nio.charset.StandardCharsets;
 public class MqttClientBootstrap {
 
     public static void main(String[] args) {
-        MqttClient client = new MqttClient("localhost", 1883, MqttUtil.createClientId());
+        MqttClient client = new MqttClient("localhost", 1883, MqttUtil.createClientId(), MqttVersion.MQTT_5);
         //心跳
         client.getClientConfigure().setKeepAliveInterval(2).setAutomaticReconnect(true);
 
@@ -23,6 +25,7 @@ public class MqttClientBootstrap {
         willMessage.setWillRetain(true);
         willMessage.setWillMessage("helloWorld".getBytes(StandardCharsets.UTF_8));
         willMessage.setWillQos(MqttQoS.AT_MOST_ONCE);
+        willMessage.setProperties(new WillProperties());
         client.willMessage(willMessage);
 
         //连接broker

@@ -77,8 +77,17 @@ public class MqttSubscribeMessage extends MqttPacketIdentifierMessage<MqttSubscr
             topicFilters.add(bytes);
             length += 1 + bytes.length;
         }
+        int pLength = 0;
+        if (version == MqttVersion.MQTT_5) {
+            pLength = variableHeader.getProperties().preEncode();
+            length += pLength + MqttCodecUtil.getVariableLengthInt(pLength);
+        }
         MqttCodecUtil.writeVariableLengthInt(mqttWriter, length);
         mqttWriter.writeShort((short) getVariableHeader().getPacketId());
+        if (version == MqttVersion.MQTT_5) {
+            MqttCodecUtil.writeVariableLengthInt(mqttWriter, pLength);
+            variableHeader.getProperties().writeTo(mqttWriter);
+        }
         int i = 0;
         for (MqttTopicSubscription topicSubscription : mqttSubscribePayload.getTopicSubscriptions()) {
             mqttWriter.write(topicFilters.get(i++));

@@ -72,21 +72,21 @@ public class WillMessage {
 
     public int preEncode() {
         willTopicBytes = MqttCodecUtil.encodeUTF8(willTopic);
-        int length = willMessage.length + 2 + willMessage.length;
+        int length = willTopicBytes.length + 2 + willMessage.length;
         if (properties != null) {
             propertiesLength = properties.preEncode();
-            length += MqttCodecUtil.getVariableLengthInt(propertiesLength) + properties.preEncode();
+            length += MqttCodecUtil.getVariableLengthInt(propertiesLength) + propertiesLength;
         }
         return length;
     }
 
     public void writeTo(MqttWriter writer) throws IOException {
-        writer.write(willTopicBytes);
-        MqttCodecUtil.writeMsbLsb(writer, willMessage.length);
-        writer.write(willMessage);
         if (properties != null) {
             MqttCodecUtil.writeVariableLengthInt(writer, propertiesLength);
             properties.writeTo(writer);
         }
+        writer.write(willTopicBytes);
+        MqttCodecUtil.writeMsbLsb(writer, willMessage.length);
+        writer.write(willMessage);
     }
 }

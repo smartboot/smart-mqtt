@@ -28,13 +28,16 @@ import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.mqtt.common.message.WillMessage;
 import org.smartboot.mqtt.common.message.payload.MqttConnectPayload;
 import org.smartboot.mqtt.common.message.variable.MqttConnectVariableHeader;
+import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
+import org.smartboot.mqtt.common.message.variable.properties.SubscribeProperties;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioQuickClient;
+import org.smartboot.socket.util.Attachment;
 import org.smartboot.socket.util.QuickTimerTask;
 
 import java.io.IOException;
@@ -93,8 +96,8 @@ public class MqttClient extends AbstractSession {
         super(new ClientQosPublisher(), new EventBusImpl(EventType.types()));
         clientConfigure.setHost(host);
         clientConfigure.setPort(port);
+        clientConfigure.setMqttVersion(mqttVersion);
         this.clientId = clientId;
-        setMqttVersion(mqttVersion);
         //ping-pong消息超时监听
         getEventBus().subscribe(EventType.RECEIVE_MESSAGE, (eventType, object) -> {
             if (object.getObject() instanceof MqttPingRespMessage) {
@@ -206,10 +209,16 @@ public class MqttClient extends AbstractSession {
             }
             client.setReadBufferSize(clientConfigure.getBufferSize()).setWriteBuffer(clientConfigure.getBufferSize(), 8).connectTimeout(clientConfigure.getConnectionTimeout());
             session = client.start(asynchronousChannelGroup);
+            session.setAttachment(new Attachment());
+            setMqttVersion(clientConfigure.getMqttVersion());
             mqttWriter = new DefaultMqttWriter(session.writeBuffer());
 
             MqttConnectVariableHeader variableHeader = new MqttConnectVariableHeader(clientConfigure.getMqttVersion(), StringUtils.isNotBlank(clientConfigure.getUserName()), clientConfigure.getPassword() != null, clientConfigure.getWillMessage(), clientConfigure.isCleanSession(), clientConfigure.getKeepAliveInterval());
             MqttConnectPayload payload = new MqttConnectPayload(clientId, clientConfigure.getWillMessage(), clientConfigure.getUserName(), clientConfigure.getPassword());
+            //todo
+            if (clientConfigure.getMqttVersion() == MqttVersion.MQTT_5) {
+                variableHeader.setProperties(new ConnectProperties());
+            }
             MqttConnectMessage connectMessage = new MqttConnectMessage(variableHeader, payload);
 
             //如果客户端在合理的时间内没有收到服务端的 CONNACK 报文，客户端应该关闭网络连接。
@@ -302,6 +311,9 @@ public class MqttClient extends AbstractSession {
             subscribeBuilder.addSubscription(qos[i], topic[i]);
         }
         MqttSubscribeMessage subscribeMessage = subscribeBuilder.build();
+        if (clientConfigure.getMqttVersion() == MqttVersion.MQTT_5) {
+            subscribeMessage.getVariableHeader().setProperties(new SubscribeProperties());
+        }
         responseConsumers.put(subscribeMessage.getVariableHeader().getPacketId(), new AckMessage(subscribeMessage, mqttMessage -> {
             List<Integer> qosValues = ((MqttSubAckMessage) mqttMessage).getMqttSubAckPayload().grantedQoSLevels();
             ValidateUtils.isTrue(qosValues.size() == qos.length, "invalid response");
