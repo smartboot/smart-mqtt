@@ -346,6 +346,9 @@ public class MqttClient extends AbstractSession {
      * 设置遗嘱消息，必须在connect之前调用
      */
     public MqttClient willMessage(WillMessage willMessage) {
+        if (clientConfigure.getMqttVersion() != MqttVersion.MQTT_5 && willMessage != null && willMessage.getProperties() != null) {
+            ValidateUtils.throwException("will properties only support on mqtt5");
+        }
         clientConfigure.setWillMessage(willMessage);
         return this;
     }

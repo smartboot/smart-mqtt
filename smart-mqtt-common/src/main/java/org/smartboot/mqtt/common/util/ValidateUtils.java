@@ -61,4 +61,8 @@ public class ValidateUtils {
     public static void throwException(String showMsg, Runnable runnable) {
         throw new MqttProcessException(showMsg, runnable);
     }
+
+    public static void throwException(String showMsg) {
+        throw new MqttProcessException(showMsg, DEFAULT_RUNNABLE);
+    }
 }
