@@ -1,6 +1,7 @@
 package org.smartboot.mqtt.common.message.variable.properties;
 
 import org.smartboot.mqtt.common.MqttWriter;
+import org.smartboot.mqtt.common.message.Codec;
 import org.smartboot.mqtt.common.message.MqttCodecUtil;
 
 import java.io.IOException;
@@ -10,7 +11,7 @@ import java.nio.ByteBuffer;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/1/10
  */
-class AbstractProperties {
+class AbstractProperties extends Codec {
     protected final MqttProperties properties = new MqttProperties();
     private final int validBits;
     private int propertiesLength;

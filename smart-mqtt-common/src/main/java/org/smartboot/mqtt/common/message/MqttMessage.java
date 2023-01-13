@@ -72,7 +72,7 @@ public abstract class MqttMessage extends ToString {
 
     public abstract MqttVariableHeader getVariableHeader();
 
-    public MqttPayload getPayload() {
+    protected MqttPayload getPayload() {
         return NONE_PAYLOAD;
     }
 
