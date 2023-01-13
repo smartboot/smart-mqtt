@@ -20,7 +20,7 @@ public abstract class MqttVariableMessage<T extends MqttVariableHeader> extends 
      */
     private int variableHeaderLength;
 
-    public MqttVariableMessage(MqttFixedHeader mqttFixedHeader) {
+    MqttVariableMessage(MqttFixedHeader mqttFixedHeader) {
         super(mqttFixedHeader);
     }
 
