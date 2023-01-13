@@ -8,8 +8,8 @@ import java.io.IOException;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/1/13
  */
-public interface Codec {
-    int preEncode();
+public abstract class Codec {
+    protected abstract int preEncode();
 
-    void writeTo(MqttWriter mqttWriter) throws IOException;
+    protected abstract void writeTo(MqttWriter mqttWriter) throws IOException;
 }

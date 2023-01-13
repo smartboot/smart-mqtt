@@ -43,7 +43,7 @@ public class MqttConnAckVariableHeader extends MqttVariableHeader {
     }
 
     @Override
-    public int preEncode() {
+    protected int preEncode() {
         int length = 2;
         if (properties != null) {
             length += properties.preEncode();
@@ -52,7 +52,7 @@ public class MqttConnAckVariableHeader extends MqttVariableHeader {
     }
 
     @Override
-    public void writeTo(MqttWriter mqttWriter) throws IOException {
+    protected void writeTo(MqttWriter mqttWriter) throws IOException {
         mqttWriter.writeByte((byte) (sessionPresent ? 0x01 : 0x00));
         mqttWriter.writeByte(connectReturnCode.getCode());
         if (properties != null) {

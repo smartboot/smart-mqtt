@@ -17,8 +17,17 @@ import static org.smartboot.mqtt.common.message.MqttCodecUtil.decodeMsbLsb;
  * @version V1.0 , 2018/4/22
  */
 public abstract class MqttMessage extends ToString {
-    private static final MqttPayload NONE_PAYLOAD = new MqttPayload();
-    protected static final int PACKET_LENGTH = 2;
+    private static final MqttPayload NONE_PAYLOAD = new MqttPayload() {
+        @Override
+        protected int preEncode() {
+            return 0;
+        }
+
+        @Override
+        protected void writeTo(MqttWriter mqttWriter) {
+
+        }
+    };
     /**
      * 固定报头
      */

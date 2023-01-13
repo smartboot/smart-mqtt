@@ -2,7 +2,6 @@ package org.smartboot.mqtt.common.message.payload;
 
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.message.MqttCodecUtil;
-import org.smartboot.mqtt.common.message.WillMessage;
 
 import java.io.IOException;
 
@@ -59,7 +58,7 @@ public final class MqttConnectPayload extends MqttPayload {
         return password;
     }
 
-    public int preEncode() {
+    protected int preEncode() {
         int length = 0;
         clientIdentifierBytes = MqttCodecUtil.encodeUTF8(clientIdentifier);
         length += clientIdentifierBytes.length;
@@ -78,7 +77,7 @@ public final class MqttConnectPayload extends MqttPayload {
         return length;
     }
 
-    public void writeTo(MqttWriter mqttWriter) throws IOException {
+    protected void writeTo(MqttWriter mqttWriter) throws IOException {
         //客户端标识符 (ClientId) 必须存在而且必须是 CONNECT 报文有效载荷的第一个字段
         mqttWriter.write(clientIdentifierBytes);
 

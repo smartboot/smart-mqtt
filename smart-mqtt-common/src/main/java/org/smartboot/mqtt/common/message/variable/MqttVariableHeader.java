@@ -1,6 +1,5 @@
 package org.smartboot.mqtt.common.message.variable;
 
-import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.message.Codec;
 
 /**
@@ -8,6 +7,6 @@ import org.smartboot.mqtt.common.message.Codec;
  *
  * @author 三刀(zhengjunweimail @ 163.com)
  */
-public abstract class MqttVariableHeader extends ToString implements Codec {
+public abstract class MqttVariableHeader extends Codec {
 
 }

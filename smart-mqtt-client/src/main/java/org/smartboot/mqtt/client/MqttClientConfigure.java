@@ -3,7 +3,7 @@ package org.smartboot.mqtt.client;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttMessage;
-import org.smartboot.mqtt.common.message.WillMessage;
+import org.smartboot.mqtt.common.message.payload.WillMessage;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.HostnameVerifier;

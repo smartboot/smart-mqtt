@@ -27,7 +27,7 @@ public class MqttSubscribeVariableHeader extends MqttPacketIdVariableHeader {
     }
 
     @Override
-    public int preEncode() {
+    protected int preEncode() {
         // packetId 2 个字节
         int length = 2;
         if (properties != null) {
@@ -37,7 +37,7 @@ public class MqttSubscribeVariableHeader extends MqttPacketIdVariableHeader {
     }
 
     @Override
-    public void writeTo(MqttWriter mqttWriter) throws IOException {
+    protected void writeTo(MqttWriter mqttWriter) throws IOException {
         MqttCodecUtil.writeMsbLsb(mqttWriter, getPacketId());
         if (properties != null) {
             properties.writeTo(mqttWriter);

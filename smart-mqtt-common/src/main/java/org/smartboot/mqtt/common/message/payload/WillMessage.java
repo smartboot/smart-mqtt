@@ -1,7 +1,8 @@
-package org.smartboot.mqtt.common.message;
+package org.smartboot.mqtt.common.message.payload;
 
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.common.message.variable.properties.WillProperties;
 
 import java.io.IOException;
@@ -69,7 +70,7 @@ public class WillMessage {
         this.properties = properties;
     }
 
-    public int preEncode() {
+    protected int preEncode() {
         willTopicBytes = MqttCodecUtil.encodeUTF8(willTopic);
         int length = willTopicBytes.length + 2 + willMessage.length;
         if (properties != null) {
@@ -78,7 +79,7 @@ public class WillMessage {
         return length;
     }
 
-    public void writeTo(MqttWriter writer) throws IOException {
+    protected void writeTo(MqttWriter writer) throws IOException {
         if (properties != null) {
             properties.writeTo(writer);
         }

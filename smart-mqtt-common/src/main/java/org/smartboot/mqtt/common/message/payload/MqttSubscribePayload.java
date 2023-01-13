@@ -22,7 +22,7 @@ public final class MqttSubscribePayload extends MqttPayload {
     }
 
     @Override
-    public int preEncode() {
+    protected int preEncode() {
         int length = topicSubscriptions.size();
         topics = new ArrayList<>(topicSubscriptions.size());
         for (MqttTopicSubscription topicSubscription : topicSubscriptions) {
@@ -34,7 +34,7 @@ public final class MqttSubscribePayload extends MqttPayload {
     }
 
     @Override
-    public void writeTo(MqttWriter mqttWriter) throws IOException {
+    protected void writeTo(MqttWriter mqttWriter) throws IOException {
         int i = 0;
         for (MqttTopicSubscription topicSubscription : topicSubscriptions) {
             mqttWriter.write(topics.get(i++));

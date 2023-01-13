@@ -38,7 +38,7 @@ public class MqttPublishVariableHeader extends MqttPacketIdVariableHeader {
     }
 
     @Override
-    public int preEncode() {
+    protected int preEncode() {
         int length = getPacketId() > 0 ? 2 : 0;
         topicNameBytes = MqttCodecUtil.encodeUTF8(topicName);
         length += topicNameBytes.length;
@@ -49,7 +49,7 @@ public class MqttPublishVariableHeader extends MqttPacketIdVariableHeader {
     }
 
     @Override
-    public void writeTo(MqttWriter mqttWriter) throws IOException {
+    protected void writeTo(MqttWriter mqttWriter) throws IOException {
         mqttWriter.write(topicNameBytes);
         if (getPacketId() > 0) {
             MqttCodecUtil.writeMsbLsb(mqttWriter, getPacketId());

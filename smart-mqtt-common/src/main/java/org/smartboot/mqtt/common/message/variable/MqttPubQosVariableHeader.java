@@ -30,7 +30,7 @@ public class MqttPubQosVariableHeader extends MqttReasonVariableHeader {
     }
 
     @Override
-    public int preEncode() {
+    protected int preEncode() {
         int length = 2;
         if (reasonCode != 0) {
             length += 1 + properties.preEncode();
@@ -39,7 +39,7 @@ public class MqttPubQosVariableHeader extends MqttReasonVariableHeader {
     }
 
     @Override
-    public void writeTo(MqttWriter mqttWriter) throws IOException {
+    protected void writeTo(MqttWriter mqttWriter) throws IOException {
         MqttCodecUtil.writeMsbLsb(mqttWriter, getPacketId());
         if (reasonCode != 0) {
             mqttWriter.writeByte(reasonCode);

@@ -45,12 +45,12 @@ public class MqttSubAckPayload extends MqttPayload {
     }
 
     @Override
-    public int preEncode() {
+    protected int preEncode() {
         return grantedQoSLevels.size();
     }
 
     @Override
-    public void writeTo(MqttWriter mqttWriter) throws IOException {
+    protected void writeTo(MqttWriter mqttWriter) throws IOException {
         for (int qos : grantedQoSLevels) {
             mqttWriter.writeByte((byte) qos);
         }

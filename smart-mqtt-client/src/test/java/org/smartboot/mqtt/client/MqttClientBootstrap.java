@@ -2,7 +2,7 @@ package org.smartboot.mqtt.client;
 
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
-import org.smartboot.mqtt.common.message.WillMessage;
+import org.smartboot.mqtt.common.message.payload.WillMessage;
 import org.smartboot.mqtt.common.message.variable.properties.WillProperties;
 import org.smartboot.mqtt.common.util.MqttUtil;
 

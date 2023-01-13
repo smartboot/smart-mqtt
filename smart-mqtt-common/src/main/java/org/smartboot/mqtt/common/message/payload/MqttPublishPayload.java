@@ -16,12 +16,12 @@ public class MqttPublishPayload extends MqttPayload {
     }
 
     @Override
-    public int preEncode() {
+    protected int preEncode() {
         return payload.length;
     }
 
     @Override
-    public void writeTo(MqttWriter mqttWriter) throws IOException {
+    protected void writeTo(MqttWriter mqttWriter) throws IOException {
         mqttWriter.write(payload);
     }
 

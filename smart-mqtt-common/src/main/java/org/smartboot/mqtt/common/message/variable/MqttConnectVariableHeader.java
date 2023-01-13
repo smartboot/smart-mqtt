@@ -3,7 +3,7 @@ package org.smartboot.mqtt.common.message.variable;
 
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttVersion;
-import org.smartboot.mqtt.common.message.WillMessage;
+import org.smartboot.mqtt.common.message.payload.WillMessage;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 
@@ -114,7 +114,7 @@ public final class MqttConnectVariableHeader extends MqttVariableHeader {
         this.properties = properties;
     }
 
-    public int preEncode() {
+    protected int preEncode() {
         int length = 10;
         if (properties != null) {
             length += properties.preEncode();
@@ -122,7 +122,7 @@ public final class MqttConnectVariableHeader extends MqttVariableHeader {
         return length;
     }
 
-    public void writeTo(MqttWriter mqttWriter) throws IOException {
+    protected void writeTo(MqttWriter mqttWriter) throws IOException {
         //协议名
         byte[] nameBytes = protocolName.getBytes(StandardCharsets.UTF_8);
         ValidateUtils.isTrue(nameBytes.length == 4, "invalid protocol name");
