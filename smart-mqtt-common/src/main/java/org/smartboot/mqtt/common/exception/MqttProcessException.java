@@ -23,7 +23,7 @@ public class MqttProcessException extends RuntimeException {
      */
     @Override
     public Throwable fillInStackTrace() {
-        return this;
+        return super.fillInStackTrace();
     }
 
     public Runnable getCallback() {

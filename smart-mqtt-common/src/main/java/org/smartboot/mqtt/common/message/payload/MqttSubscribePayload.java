@@ -1,13 +1,17 @@
 package org.smartboot.mqtt.common.message.payload;
 
-import org.smartboot.mqtt.common.ToString;
+import org.smartboot.mqtt.common.MqttWriter;
+import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
-public final class MqttSubscribePayload extends ToString {
+public final class MqttSubscribePayload extends MqttPayload {
 
     private List<MqttTopicSubscription> topicSubscriptions;
+    private List<byte[]> topics;
 
     public void setTopicSubscriptions(List<MqttTopicSubscription> topicSubscriptions) {
         this.topicSubscriptions = topicSubscriptions;
@@ -17,4 +21,24 @@ public final class MqttSubscribePayload extends ToString {
         return topicSubscriptions;
     }
 
+    @Override
+    public int preEncode() {
+        int length = topicSubscriptions.size();
+        topics = new ArrayList<>(topicSubscriptions.size());
+        for (MqttTopicSubscription topicSubscription : topicSubscriptions) {
+            byte[] bytes = MqttCodecUtil.encodeUTF8(topicSubscription.getTopicFilter());
+            topics.add(bytes);
+            length += bytes.length;
+        }
+        return length;
+    }
+
+    @Override
+    public void writeTo(MqttWriter mqttWriter) throws IOException {
+        int i = 0;
+        for (MqttTopicSubscription topicSubscription : topicSubscriptions) {
+            mqttWriter.write(topics.get(i++));
+            mqttWriter.writeByte((byte) topicSubscription.getQualityOfService().value());
+        }
+    }
 }

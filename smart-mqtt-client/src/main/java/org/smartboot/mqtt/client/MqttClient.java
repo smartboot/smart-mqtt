@@ -315,10 +315,10 @@ public class MqttClient extends AbstractSession {
             subscribeMessage.getVariableHeader().setProperties(new SubscribeProperties());
         }
         responseConsumers.put(subscribeMessage.getVariableHeader().getPacketId(), new AckMessage(subscribeMessage, mqttMessage -> {
-            List<Integer> qosValues = ((MqttSubAckMessage) mqttMessage).getMqttSubAckPayload().grantedQoSLevels();
+            List<Integer> qosValues = ((MqttSubAckMessage) mqttMessage).getPayload().grantedQoSLevels();
             ValidateUtils.isTrue(qosValues.size() == qos.length, "invalid response");
             int i = 0;
-            for (MqttTopicSubscription subscription : subscribeMessage.getMqttSubscribePayload().getTopicSubscriptions()) {
+            for (MqttTopicSubscription subscription : subscribeMessage.getPayload().getTopicSubscriptions()) {
                 MqttQoS minQos = MqttQoS.valueOf(Math.min(subscription.getQualityOfService().value(), qosValues.get(i++)));
                 clientConfigure.getTopicListener().subscribe(subscription.getTopicFilter(), subscription.getQualityOfService() == MqttQoS.FAILURE ? MqttQoS.FAILURE : minQos);
                 if (subscription.getQualityOfService() != MqttQoS.FAILURE) {

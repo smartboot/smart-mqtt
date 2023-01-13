@@ -42,7 +42,7 @@ public final class MqttMessageBuilders {
         private boolean retained;
         private MqttQoS qos;
         private byte[] payload;
-        private int packetId;
+        private int packetId = -1;
         private PublishProperties publishProperties;
 
         PublishBuilder() {
@@ -68,9 +68,8 @@ public final class MqttMessageBuilders {
             return this;
         }
 
-        public PublishBuilder packetId(int packetId) {
+        public void packetId(int packetId) {
             this.packetId = packetId;
-            return this;
         }
 
         public PublishBuilder publishProperties(PublishProperties publishProperties) {
@@ -80,6 +79,9 @@ public final class MqttMessageBuilders {
 
         public MqttPublishMessage build() {
             MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false, qos, retained, 0);
+            if (qos != MqttQoS.AT_LEAST_ONCE && qos != MqttQoS.EXACTLY_ONCE) {
+                packetId = -1;
+            }
             MqttPublishVariableHeader mqttVariableHeader = new MqttPublishVariableHeader(packetId, topic);
             mqttVariableHeader.setProperties(publishProperties);
             return new MqttPublishMessage(mqttFixedHeader, mqttVariableHeader, payload);

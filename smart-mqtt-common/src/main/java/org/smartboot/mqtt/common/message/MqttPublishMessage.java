@@ -1,13 +1,12 @@
 package org.smartboot.mqtt.common.message;
 
-import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttVersion;
+import org.smartboot.mqtt.common.message.payload.MqttPublishPayload;
 import org.smartboot.mqtt.common.message.variable.MqttPublishVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.socket.util.DecoderException;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -15,8 +14,8 @@ import java.nio.ByteBuffer;
  * @version V1.0 , 2018/4/22
  */
 public class MqttPublishMessage extends MqttVariableMessage<MqttPublishVariableHeader> {
-    private static final byte[] EMPTY_BYTES = new byte[0];
-    private byte[] payload;
+    private static final MqttPublishPayload EMPTY_BYTES = new MqttPublishPayload(new byte[0]);
+    private MqttPublishPayload payload;
 
     public MqttPublishMessage(MqttFixedHeader mqttFixedHeader) {
         super(mqttFixedHeader);
@@ -25,7 +24,7 @@ public class MqttPublishMessage extends MqttVariableMessage<MqttPublishVariableH
     public MqttPublishMessage(MqttFixedHeader mqttFixedHeader, MqttPublishVariableHeader mqttPublishVariableHeader, byte[] payload) {
         super(mqttFixedHeader);
         setVariableHeader(mqttPublishVariableHeader);
-        this.payload = payload;
+        this.payload = new MqttPublishPayload(payload);
     }
 
     @Override
@@ -52,46 +51,19 @@ public class MqttPublishMessage extends MqttVariableMessage<MqttPublishVariableH
 
     @Override
     public void decodePlayLoad(ByteBuffer buffer) {
-        int remainingLength = fixedHeader.remainingLength();
-        int readLength = remainingLength - getVariableHeaderLength();
+        int readLength = fixedHeader.remainingLength() - getVariableHeaderLength();
         if (readLength == 0) {
             payload = EMPTY_BYTES;
         } else {
-            payload = new byte[readLength];
-            buffer.get(payload);
+            byte[] bytes = new byte[readLength];
+            buffer.get(bytes);
+            payload = new MqttPublishPayload(bytes);
         }
     }
+
 
     @Override
-    public void writeWithoutFixedHeader(MqttWriter mqttWriter) throws IOException {
-        MqttPublishVariableHeader variableHeader = getVariableHeader();
-        byte[] topicBytes = MqttCodecUtil.encodeUTF8(variableHeader.getTopicName());
-        boolean hasPacketId = fixedHeader.getQosLevel().value() > 0;
-
-
-        int length = topicBytes.length + (hasPacketId ? 2 : 0) + payload.length;
-        int propertiesLength = 0;
-        if (version == MqttVersion.MQTT_5) {
-            //属性长度
-            propertiesLength = variableHeader.getProperties().preEncode();
-            length += MqttCodecUtil.getVariableLengthInt(propertiesLength) + propertiesLength;
-        }
-        MqttCodecUtil.writeVariableLengthInt(mqttWriter, length);
-
-        mqttWriter.write(topicBytes);
-        if (hasPacketId) {
-            mqttWriter.writeShort((short) variableHeader.getPacketId());
-        }
-        if (version == MqttVersion.MQTT_5) {
-            //属性长度
-            MqttCodecUtil.writeVariableLengthInt(mqttWriter, propertiesLength);
-            variableHeader.getProperties().writeTo(mqttWriter);
-        }
-        mqttWriter.write(payload);
-    }
-
-    public byte[] getPayload() {
+    public MqttPublishPayload getPayload() {
         return payload;
     }
-
 }

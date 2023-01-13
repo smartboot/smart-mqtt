@@ -29,7 +29,7 @@ public class PersistenceMessage extends ToString {
     private final long createTime = System.currentTimeMillis();
 
     public PersistenceMessage(MqttPublishMessage message, long offset) {
-        this.payload = message.getPayload();
+        this.payload = message.getPayload().getPayload();
         this.retained = message.getFixedHeader().isRetain();
         this.topic = message.getVariableHeader().getTopicName();
         this.offset = offset;

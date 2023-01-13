@@ -1,13 +1,11 @@
 package org.smartboot.mqtt.common.message;
 
-import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.payload.MqttUnsubscribePayload;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttReasonVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,11 +55,6 @@ public class MqttUnsubscribeMessage extends MqttPacketIdentifierMessage<MqttReas
         }
         buffer.limit(limit);
         mqttUnsubscribePayload = new MqttUnsubscribePayload(unsubscribeTopics);
-    }
-
-    @Override
-    public void writeWithoutFixedHeader(MqttWriter mqttWriter) throws IOException {
-
     }
 
     public MqttUnsubscribePayload getMqttUnsubscribePayload() {

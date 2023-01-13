@@ -1,13 +1,11 @@
 package org.smartboot.mqtt.common.message;
 
-import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.payload.MqttSubAckPayload;
 import org.smartboot.mqtt.common.message.variable.MqttReasonVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 import org.smartboot.socket.util.BufferUtils;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +15,7 @@ import java.util.List;
  * @version V1.0 , 2018/4/22
  */
 public class MqttSubAckMessage extends MqttPacketIdentifierMessage<MqttReasonVariableHeader> {
-    private MqttSubAckPayload mqttSubAckPayload;
+    private MqttSubAckPayload payload;
 
     public MqttSubAckMessage(MqttFixedHeader mqttFixedHeader) {
         super(mqttFixedHeader);
@@ -50,37 +48,15 @@ public class MqttSubAckMessage extends MqttPacketIdentifierMessage<MqttReasonVar
             grantedQos.add(qos);
         }
         buffer.limit(limit);
-        mqttSubAckPayload = new MqttSubAckPayload(grantedQos);
+        payload = new MqttSubAckPayload(grantedQos);
     }
 
-    @Override
-    public void writeWithoutFixedHeader(MqttWriter mqttWriter) throws IOException {
-        int variableHeaderBufferSize = 2;
-        int payloadBufferSize = mqttSubAckPayload.grantedQoSLevels().size();
-        int variablePartSize = variableHeaderBufferSize + payloadBufferSize;
 
-        int propertiesLength = 0;
-        if (version == MqttVersion.MQTT_5) {
-            propertiesLength = variableHeader.getProperties().preEncode();
-            variablePartSize += MqttCodecUtil.getVariableLengthInt(propertiesLength) + propertiesLength;
-        }
-
-        MqttCodecUtil.writeVariableLengthInt(mqttWriter, variablePartSize);
-        mqttWriter.writeShort((short) getVariableHeader().getPacketId());
-        if (version == MqttVersion.MQTT_5) {
-            MqttCodecUtil.writeVariableLengthInt(mqttWriter, propertiesLength);
-            variableHeader.getProperties().writeTo(mqttWriter);
-        }
-        for (int qos : mqttSubAckPayload.grantedQoSLevels()) {
-            mqttWriter.writeByte((byte) qos);
-        }
+    public MqttSubAckPayload getPayload() {
+        return this.payload;
     }
 
-    public MqttSubAckPayload getMqttSubAckPayload() {
-        return this.mqttSubAckPayload;
-    }
-
-    public void setMqttSubAckPayload(MqttSubAckPayload mqttSubAckPayload) {
-        this.mqttSubAckPayload = mqttSubAckPayload;
+    public void setPayload(MqttSubAckPayload payload) {
+        this.payload = payload;
     }
 }

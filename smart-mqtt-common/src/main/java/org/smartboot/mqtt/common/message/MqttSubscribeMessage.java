@@ -1,6 +1,5 @@
 package org.smartboot.mqtt.common.message;
 
-import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.payload.MqttSubscribePayload;
@@ -9,7 +8,6 @@ import org.smartboot.mqtt.common.message.variable.properties.SubscribeProperties
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.util.BufferUtils;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,16 +18,16 @@ import java.util.List;
  */
 public class MqttSubscribeMessage extends MqttPacketIdentifierMessage<MqttSubscribeVariableHeader> {
 
-    private MqttSubscribePayload mqttSubscribePayload;
+    private MqttSubscribePayload payload;
 
     public MqttSubscribeMessage(MqttFixedHeader mqttFixedHeader) {
         super(mqttFixedHeader);
     }
 
-    public MqttSubscribeMessage(MqttFixedHeader mqttFixedHeader, MqttSubscribeVariableHeader variableHeader, MqttSubscribePayload mqttSubscribePayload) {
+    public MqttSubscribeMessage(MqttFixedHeader mqttFixedHeader, MqttSubscribeVariableHeader variableHeader, MqttSubscribePayload payload) {
         super(mqttFixedHeader);
         setVariableHeader(variableHeader);
-        this.mqttSubscribePayload = mqttSubscribePayload;
+        this.payload = payload;
     }
 
     @Override
@@ -60,38 +58,12 @@ public class MqttSubscribeMessage extends MqttPacketIdentifierMessage<MqttSubscr
             subscribeTopics.add(subscription);
         }
         buffer.limit(limit);
-        this.mqttSubscribePayload = new MqttSubscribePayload();
-        mqttSubscribePayload.setTopicSubscriptions(subscribeTopics);
+        this.payload = new MqttSubscribePayload();
+        payload.setTopicSubscriptions(subscribeTopics);
     }
 
-    public MqttSubscribePayload getMqttSubscribePayload() {
-        return mqttSubscribePayload;
+    public MqttSubscribePayload getPayload() {
+        return payload;
     }
 
-    @Override
-    public void writeWithoutFixedHeader(MqttWriter mqttWriter) throws IOException {
-        int length = 2;
-        List<byte[]> topicFilters = new ArrayList<>(mqttSubscribePayload.getTopicSubscriptions().size());
-        for (MqttTopicSubscription topicSubscription : mqttSubscribePayload.getTopicSubscriptions()) {
-            byte[] bytes = MqttCodecUtil.encodeUTF8(topicSubscription.getTopicFilter());
-            topicFilters.add(bytes);
-            length += 1 + bytes.length;
-        }
-        int pLength = 0;
-        if (version == MqttVersion.MQTT_5) {
-            pLength = variableHeader.getProperties().preEncode();
-            length += pLength + MqttCodecUtil.getVariableLengthInt(pLength);
-        }
-        MqttCodecUtil.writeVariableLengthInt(mqttWriter, length);
-        mqttWriter.writeShort((short) getVariableHeader().getPacketId());
-        if (version == MqttVersion.MQTT_5) {
-            MqttCodecUtil.writeVariableLengthInt(mqttWriter, pLength);
-            variableHeader.getProperties().writeTo(mqttWriter);
-        }
-        int i = 0;
-        for (MqttTopicSubscription topicSubscription : mqttSubscribePayload.getTopicSubscriptions()) {
-            mqttWriter.write(topicFilters.get(i++));
-            mqttWriter.writeByte((byte) topicSubscription.getQualityOfService().value());
-        }
-    }
 }

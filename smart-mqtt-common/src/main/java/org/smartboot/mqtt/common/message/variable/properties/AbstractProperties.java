@@ -1,6 +1,7 @@
 package org.smartboot.mqtt.common.message.variable.properties;
 
 import org.smartboot.mqtt.common.MqttWriter;
+import org.smartboot.mqtt.common.message.MqttCodecUtil;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -12,6 +13,7 @@ import java.nio.ByteBuffer;
 class AbstractProperties {
     protected final MqttProperties properties = new MqttProperties();
     private final int validBits;
+    private int propertiesLength;
 
     public AbstractProperties(int validBits) {
         this.validBits = validBits;
@@ -22,10 +24,13 @@ class AbstractProperties {
     }
 
     public final int preEncode() {
-        return properties.preEncode(validBits);
+        propertiesLength = properties.preEncode(validBits);
+        return propertiesLength + MqttCodecUtil.getVariableLengthInt(propertiesLength);
     }
 
     public final void writeTo(MqttWriter writer) throws IOException {
+        //属性长度，编码为变长字节整数。
+        MqttCodecUtil.writeVariableLengthInt(writer, propertiesLength);
         properties.writeTo(writer, validBits);
     }
 }

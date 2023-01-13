@@ -19,6 +19,7 @@ import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.MqttMessageBuilders;
+import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventBus;
 import org.smartboot.mqtt.common.eventbus.EventBusImpl;
@@ -247,7 +248,12 @@ public class BrokerContextImpl implements BrokerContext {
                         }
                         //retain采用严格顺序publish模式
                         MqttSession session = subscriber.getMqttSession();
-                        MqttPublishMessage publishMessage = MqttMessageBuilders.publish().payload(storedMessage.getPayload()).qos(subscriber.getMqttQoS()).packetId(session.newPacketId()).topicName(storedMessage.getTopic()).build();
+
+                        MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(storedMessage.getPayload()).qos(subscriber.getMqttQoS()).topicName(storedMessage.getTopic());
+                        if (subscriber.getMqttQoS() == MqttQoS.AT_LEAST_ONCE || subscriber.getMqttQoS() == MqttQoS.EXACTLY_ONCE) {
+                            publishBuilder.packetId(session.newPacketId());
+                        }
+                        MqttPublishMessage publishMessage = publishBuilder.build();
                         if (session.getMqttVersion() == MqttVersion.MQTT_5) {
                             publishMessage.getVariableHeader().setProperties(new PublishProperties());
                         }

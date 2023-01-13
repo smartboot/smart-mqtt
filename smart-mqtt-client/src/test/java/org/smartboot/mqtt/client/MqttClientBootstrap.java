@@ -33,11 +33,11 @@ public class MqttClientBootstrap {
 
         //订阅主题
         client.subscribe("test", MqttQoS.AT_MOST_ONCE, (mqttClient, publishMessage) -> {
-            System.out.println("subscribe message:" + new String(publishMessage.getPayload()));
+            System.out.println("subscribe message:" + new String(publishMessage.getPayload().getPayload()));
         });
 
         client.subscribe("test/#", MqttQoS.AT_MOST_ONCE, (mqttClient, publishMessage) -> {
-            System.out.println("subscribe test/# message:" + new String(publishMessage.getPayload()));
+            System.out.println("subscribe test/# message:" + new String(publishMessage.getPayload().getPayload()));
         });
 
         //最多分发一次

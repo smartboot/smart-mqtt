@@ -1,6 +1,5 @@
 package org.smartboot.mqtt.common.message;
 
-import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttProtocolEnum;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.payload.MqttConnectPayload;
@@ -9,7 +8,6 @@ import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
 import org.smartboot.mqtt.common.message.variable.properties.WillProperties;
 import org.smartboot.socket.util.BufferUtils;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -107,23 +105,7 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
 
 
     @Override
-    public void writeWithoutFixedHeader(MqttWriter mqttWriter) throws IOException {
-        MqttConnectVariableHeader variableHeader = getVariableHeader();
-        //剩余长度等于可变报头的长度（10 字节）加上有效载荷的长度。
-        int remainingLength = variableHeader.preEncode() + mqttConnectPayload.preEncode();
-
-        //第一部分：固定报头
-        MqttCodecUtil.writeVariableLengthInt(mqttWriter, remainingLength);
-
-        //第二部分：可变报头，10字节
-        variableHeader.writeTo(mqttWriter);
-
-        //第三部分：有效载荷
-        mqttConnectPayload.writeTo(mqttWriter);
-    }
-
     public MqttConnectPayload getPayload() {
         return mqttConnectPayload;
     }
-
 }

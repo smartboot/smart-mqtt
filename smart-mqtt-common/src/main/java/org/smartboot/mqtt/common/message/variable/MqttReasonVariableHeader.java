@@ -1,6 +1,10 @@
 package org.smartboot.mqtt.common.message.variable;
 
+import org.smartboot.mqtt.common.MqttWriter;
+import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
+
+import java.io.IOException;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -8,17 +12,35 @@ import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
  */
 public class MqttReasonVariableHeader extends MqttPacketIdVariableHeader {
 
-    private ReasonProperties properties;
+    protected ReasonProperties properties;
 
     public MqttReasonVariableHeader(int packetId) {
         super(packetId);
     }
 
-    public ReasonProperties getProperties() {
+    public final ReasonProperties getProperties() {
         return properties;
     }
 
-    public void setProperties(ReasonProperties properties) {
+    public final void setProperties(ReasonProperties properties) {
         this.properties = properties;
+    }
+
+    @Override
+    public int preEncode() {
+        // packetId 2 个字节
+        int length = 2;
+        if (properties != null) {
+            length += properties.preEncode();
+        }
+        return length;
+    }
+
+    @Override
+    public void writeTo(MqttWriter mqttWriter) throws IOException {
+        MqttCodecUtil.writeMsbLsb(mqttWriter, getPacketId());
+        if (properties != null) {
+            properties.writeTo(mqttWriter);
+        }
     }
 }

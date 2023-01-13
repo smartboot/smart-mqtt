@@ -6,7 +6,6 @@ import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventBus;
 import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
-import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
@@ -91,8 +90,7 @@ public abstract class AbstractSession {
             mqttMessage.setVersion(mqttVersion);
             eventBus.publish(EventType.WRITE_MESSAGE, EventObject.newEventObject(this, mqttMessage));
 
-            MqttCodecUtil.writeFixedHeader(mqttWriter, mqttMessage.getFixedHeader());
-            mqttMessage.writeWithoutFixedHeader(mqttWriter);
+            mqttMessage.write(mqttWriter);
             if (autoFlush) {
                 mqttWriter.flush();
             }

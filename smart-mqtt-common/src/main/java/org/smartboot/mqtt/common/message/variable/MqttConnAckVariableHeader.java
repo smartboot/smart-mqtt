@@ -1,7 +1,10 @@
 package org.smartboot.mqtt.common.message.variable;
 
+import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectAckProperties;
+
+import java.io.IOException;
 
 /**
  * @author 三刀
@@ -37,5 +40,23 @@ public class MqttConnAckVariableHeader extends MqttVariableHeader {
 
     public void setProperties(ConnectAckProperties properties) {
         this.properties = properties;
+    }
+
+    @Override
+    public int preEncode() {
+        int length = 2;
+        if (properties != null) {
+            length += properties.preEncode();
+        }
+        return length;
+    }
+
+    @Override
+    public void writeTo(MqttWriter mqttWriter) throws IOException {
+        mqttWriter.writeByte((byte) (sessionPresent ? 0x01 : 0x00));
+        mqttWriter.writeByte(connectReturnCode.getCode());
+        if (properties != null) {
+            properties.writeTo(mqttWriter);
+        }
     }
 }

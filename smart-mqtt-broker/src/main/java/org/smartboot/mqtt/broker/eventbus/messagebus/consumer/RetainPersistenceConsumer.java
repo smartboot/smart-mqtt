@@ -22,7 +22,7 @@ public class RetainPersistenceConsumer implements Consumer {
         }
         //保留标志为 1 且有效载荷为零字节的 PUBLISH 报文会被服务端当作正常消息处理，它会被发送给订阅主题匹配的客户端。
         // 此外，同一个主题下任何现存的保留消息必须被移除，因此这个主题之后的任何订阅者都不会收到一个保留消息。
-        if (message.getPayload().length == 0) {
+        if (message.getPayload().getPayload().length == 0) {
             LOGGER.info("clear topic:{} retained messages, because of current retained message's payload length is 0", message.getVariableHeader().getTopicName());
             brokerContext.getProviders().getRetainMessageProvider().delete(message.getVariableHeader().getTopicName());
             return;

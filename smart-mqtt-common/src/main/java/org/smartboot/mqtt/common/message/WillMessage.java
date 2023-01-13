@@ -28,7 +28,6 @@ public class WillMessage {
     private boolean isWillRetain;
 
     private WillProperties properties;
-    private int propertiesLength;
 
     public String getWillTopic() {
         return willTopic;
@@ -74,15 +73,13 @@ public class WillMessage {
         willTopicBytes = MqttCodecUtil.encodeUTF8(willTopic);
         int length = willTopicBytes.length + 2 + willMessage.length;
         if (properties != null) {
-            propertiesLength = properties.preEncode();
-            length += MqttCodecUtil.getVariableLengthInt(propertiesLength) + propertiesLength;
+            length += properties.preEncode();
         }
         return length;
     }
 
     public void writeTo(MqttWriter writer) throws IOException {
         if (properties != null) {
-            MqttCodecUtil.writeVariableLengthInt(writer, propertiesLength);
             properties.writeTo(writer);
         }
         writer.write(willTopicBytes);

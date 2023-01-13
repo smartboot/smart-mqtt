@@ -3,7 +3,6 @@ package org.smartboot.mqtt.common.message.variable;
 
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttVersion;
-import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.common.message.WillMessage;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
 import org.smartboot.mqtt.common.util.ValidateUtils;
@@ -34,7 +33,6 @@ public final class MqttConnectVariableHeader extends MqttVariableHeader {
     private final int reserved;
     private final int keepAliveTimeSeconds;
     private ConnectProperties properties;
-    private int propertiesLength;
 
     public MqttConnectVariableHeader(
             String name,
@@ -119,8 +117,7 @@ public final class MqttConnectVariableHeader extends MqttVariableHeader {
     public int preEncode() {
         int length = 10;
         if (properties != null) {
-            propertiesLength = properties.preEncode();
-            length += propertiesLength + MqttCodecUtil.getVariableLengthInt(propertiesLength);
+            length += properties.preEncode();
         }
         return length;
     }
@@ -157,7 +154,6 @@ public final class MqttConnectVariableHeader extends MqttVariableHeader {
 
         // Connect属性
         if (properties != null) {
-            MqttCodecUtil.writeVariableLengthInt(mqttWriter, propertiesLength);
             properties.writeTo(mqttWriter);
         }
     }

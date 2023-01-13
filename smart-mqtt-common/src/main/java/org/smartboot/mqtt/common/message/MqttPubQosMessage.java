@@ -1,11 +1,9 @@
 package org.smartboot.mqtt.common.message;
 
-import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -44,28 +42,4 @@ public class MqttPubQosMessage extends MqttPacketIdentifierMessage<MqttPubQosVar
         }
         setVariableHeader(header);
     }
-
-    @Override
-    public final void writeWithoutFixedHeader(MqttWriter mqttWriter) throws IOException {
-        MqttPubQosVariableHeader variableHeader = getVariableHeader();
-        int remainingLength = 2; // variable part only has a message id
-
-        int propertiesLength = 0;
-        if (version == MqttVersion.MQTT_5 && variableHeader.getReasonCode() != 0) {
-            remainingLength += 1;
-            propertiesLength = variableHeader.getProperties().preEncode();
-            remainingLength += MqttCodecUtil.getVariableLengthInt(propertiesLength) + propertiesLength;
-        }
-
-        MqttCodecUtil.writeVariableLengthInt(mqttWriter, remainingLength);
-
-        mqttWriter.writeShort((short) variableHeader.getPacketId());
-
-        if (version == MqttVersion.MQTT_5 && variableHeader.getReasonCode() != 0) {
-            mqttWriter.writeByte(variableHeader.getReasonCode());
-            MqttCodecUtil.writeVariableLengthInt(mqttWriter, propertiesLength);
-            variableHeader.getProperties().writeTo(mqttWriter);
-        }
-    }
-
 }

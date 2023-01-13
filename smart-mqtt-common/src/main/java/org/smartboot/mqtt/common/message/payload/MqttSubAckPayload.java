@@ -1,10 +1,13 @@
 package org.smartboot.mqtt.common.message.payload;
 
+import org.smartboot.mqtt.common.MqttWriter;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class MqttSubAckPayload {
+public class MqttSubAckPayload extends MqttPayload {
 
     /**
      * 每个Topic订阅被授予的最大Qos等级
@@ -41,4 +44,15 @@ public class MqttSubAckPayload {
         return grantedQoSLevels;
     }
 
+    @Override
+    public int preEncode() {
+        return grantedQoSLevels.size();
+    }
+
+    @Override
+    public void writeTo(MqttWriter mqttWriter) throws IOException {
+        for (int qos : grantedQoSLevels) {
+            mqttWriter.writeByte((byte) qos);
+        }
+    }
 }

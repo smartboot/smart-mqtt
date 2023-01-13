@@ -9,7 +9,6 @@ import org.smartboot.mqtt.common.message.MqttSubAckMessage;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
 import org.smartboot.mqtt.common.message.payload.MqttSubAckPayload;
-import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttReasonVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 
@@ -26,16 +25,16 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
     public void process0(BrokerContext context, MqttSession session, MqttSubscribeMessage mqttSubscribeMessage) {
         //有效载荷包含一个返回码清单。每个返回码对应等待确认的 SUBSCRIBE 报文中的一个主题过滤器。
         // 返回码的顺序必须和 SUBSCRIBE 报文中主题过滤器的顺序相同
-        int[] qosArray = new int[mqttSubscribeMessage.getMqttSubscribePayload().getTopicSubscriptions().size()];
+        int[] qosArray = new int[mqttSubscribeMessage.getPayload().getTopicSubscriptions().size()];
         int i = 0;
-        for (MqttTopicSubscription mqttTopicSubscription : mqttSubscribeMessage.getMqttSubscribePayload().getTopicSubscriptions()) {
+        for (MqttTopicSubscription mqttTopicSubscription : mqttSubscribeMessage.getPayload().getTopicSubscriptions()) {
             qosArray[i++] = session.subscribe(mqttTopicSubscription.getTopicFilter(), mqttTopicSubscription.getQualityOfService()).value();
         }
 
 
         //订阅确认
         //允许服务端在发送 SUBACK 报文之前就开始发送与订阅匹配的 PUBLISH 报文
-        MqttReasonVariableHeader variableHeader = new MqttPubQosVariableHeader(mqttSubscribeMessage.getVariableHeader().getPacketId());
+        MqttReasonVariableHeader variableHeader = new MqttReasonVariableHeader(mqttSubscribeMessage.getVariableHeader().getPacketId());
         //todo
         if (mqttSubscribeMessage.getVersion() == MqttVersion.MQTT_5) {
             variableHeader.setProperties(new ReasonProperties());
@@ -45,7 +44,7 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
         //有效载荷包含一个返回码清单。
         // 每个返回码对应等待确认的 SUBSCRIBE 报文中的一个主题过滤器。
         // 返回码的顺序必须和 SUBSCRIBE 报文中主题过滤器的顺序相同
-        mqttSubAckMessage.setMqttSubAckPayload(new MqttSubAckPayload(qosArray));
+        mqttSubAckMessage.setPayload(new MqttSubAckPayload(qosArray));
         session.write(mqttSubAckMessage);
     }
 }

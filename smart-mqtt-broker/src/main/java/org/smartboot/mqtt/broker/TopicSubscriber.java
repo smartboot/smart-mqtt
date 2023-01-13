@@ -77,7 +77,13 @@ public class TopicSubscriber {
 //            System.out.println("退出递归...");
             return expectConsumerOffset;
         }
-        MqttPublishMessage publishMessage = MqttMessageBuilders.publish().payload(persistenceMessage.getPayload()).qos(mqttQoS).packetId(mqttSession.newPacketId()).topicName(persistenceMessage.getTopic()).build();
+
+        MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(persistenceMessage.getPayload()).qos(mqttQoS).topicName(persistenceMessage.getTopic());
+        if (mqttQoS == MqttQoS.AT_LEAST_ONCE || mqttQoS == MqttQoS.EXACTLY_ONCE) {
+            publishBuilder.packetId(mqttSession.newPacketId());
+        }
+        MqttPublishMessage publishMessage = publishBuilder.build();
+
         if (mqttSession.getMqttVersion() == MqttVersion.MQTT_5) {
             publishMessage.getVariableHeader().setProperties(new PublishProperties());
         }
