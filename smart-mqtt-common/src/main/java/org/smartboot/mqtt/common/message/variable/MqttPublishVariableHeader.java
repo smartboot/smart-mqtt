@@ -29,13 +29,10 @@ public class MqttPublishVariableHeader extends MqttPacketIdVariableHeader<Publis
     }
 
     @Override
-    protected int preEncode() {
+    protected int preEncode0() {
         int length = getPacketId() > 0 ? 2 : 0;
         topicNameBytes = MqttCodecUtil.encodeUTF8(topicName);
         length += topicNameBytes.length;
-        if (properties != null) {
-            length += properties.preEncode();
-        }
         return length;
     }
 

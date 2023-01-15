@@ -31,10 +31,10 @@ public class MqttPubQosVariableHeader extends MqttReasonVariableHeader {
     }
 
     @Override
-    protected int preEncode() {
+    protected int preEncode0() {
         int length = 2;
         if (reasonCode != 0) {
-            length += 1 + properties.preEncode();
+            length += 1;
         }
         return length;
     }

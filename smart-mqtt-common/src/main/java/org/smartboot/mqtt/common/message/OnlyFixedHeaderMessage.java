@@ -1,7 +1,6 @@
 package org.smartboot.mqtt.common.message;
 
 import org.smartboot.mqtt.common.MqttWriter;
-import org.smartboot.mqtt.common.message.variable.MqttVariableHeader;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -13,7 +12,7 @@ import java.nio.ByteBuffer;
 class OnlyFixedHeaderMessage extends MqttMessage {
     private static final MqttVariableHeader NONE_VARIABLE_HEADER = new MqttVariableHeader(null) {
         @Override
-        public int preEncode() {
+        public int preEncode0() {
             return 0;
         }
 

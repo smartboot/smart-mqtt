@@ -1,8 +1,6 @@
 package org.smartboot.mqtt.common.message;
 
 
-import org.smartboot.mqtt.common.message.variable.MqttVariableHeader;
-
 import java.nio.ByteBuffer;
 
 /**

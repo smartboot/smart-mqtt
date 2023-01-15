@@ -1,6 +1,5 @@
-package org.smartboot.mqtt.common.message.variable;
+package org.smartboot.mqtt.common.message;
 
-import org.smartboot.mqtt.common.message.Codec;
 import org.smartboot.mqtt.common.message.variable.properties.AbstractProperties;
 
 /**
@@ -18,5 +17,16 @@ public abstract class MqttVariableHeader<T extends AbstractProperties> extends C
     public final T getProperties() {
         return properties;
     }
+
+    @Override
+    protected final int preEncode() {
+        int length = preEncode0();
+        if (properties != null) {
+            length += properties.preEncode();
+        }
+        return length;
+    }
+
+    protected abstract int preEncode0();
 
 }

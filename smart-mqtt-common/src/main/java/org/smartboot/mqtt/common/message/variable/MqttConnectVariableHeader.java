@@ -3,6 +3,7 @@ package org.smartboot.mqtt.common.message.variable;
 
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttVersion;
+import org.smartboot.mqtt.common.message.MqttVariableHeader;
 import org.smartboot.mqtt.common.message.payload.WillMessage;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
 import org.smartboot.mqtt.common.util.ValidateUtils;
@@ -107,12 +108,8 @@ public final class MqttConnectVariableHeader extends MqttVariableHeader<ConnectP
         return reserved;
     }
 
-    protected int preEncode() {
-        int length = 10;
-        if (properties != null) {
-            length += properties.preEncode();
-        }
-        return length;
+    protected int preEncode0() {
+        return 10;
     }
 
     protected void writeTo(MqttWriter mqttWriter) throws IOException {

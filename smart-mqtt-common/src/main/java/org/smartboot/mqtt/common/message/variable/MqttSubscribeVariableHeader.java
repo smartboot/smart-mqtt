@@ -18,13 +18,8 @@ public class MqttSubscribeVariableHeader extends MqttPacketIdVariableHeader<Subs
     }
 
     @Override
-    protected int preEncode() {
-        // packetId 2 个字节
-        int length = 2;
-        if (properties != null) {
-            length += properties.preEncode();
-        }
-        return length;
+    protected int preEncode0() {
+        return 2;
     }
 
     @Override

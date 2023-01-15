@@ -1,5 +1,6 @@
 package org.smartboot.mqtt.common.message.variable;
 
+import org.smartboot.mqtt.common.message.MqttVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.AbstractProperties;
 
 /**

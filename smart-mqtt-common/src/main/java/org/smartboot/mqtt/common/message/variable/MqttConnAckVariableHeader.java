@@ -2,6 +2,7 @@ package org.smartboot.mqtt.common.message.variable;
 
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
+import org.smartboot.mqtt.common.message.MqttVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectAckProperties;
 
 import java.io.IOException;
@@ -34,12 +35,8 @@ public class MqttConnAckVariableHeader extends MqttVariableHeader<ConnectAckProp
     }
 
     @Override
-    protected int preEncode() {
-        int length = 2;
-        if (properties != null) {
-            length += properties.preEncode();
-        }
-        return length;
+    protected int preEncode0() {
+        return 2;
     }
 
     @Override
