@@ -2,6 +2,7 @@ package org.smartboot.mqtt.common.message.variable;
 
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.message.MqttCodecUtil;
+import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 
 import java.io.IOException;
 
@@ -16,8 +17,8 @@ public class MqttPubQosVariableHeader extends MqttReasonVariableHeader {
      */
     private byte reasonCode;
 
-    public MqttPubQosVariableHeader(int packetId) {
-        super(packetId);
+    public MqttPubQosVariableHeader(int packetId, ReasonProperties properties) {
+        super(packetId, properties);
     }
 
 

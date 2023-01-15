@@ -10,7 +10,7 @@ import java.io.IOException;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttConnAckVariableHeader extends MqttVariableHeader {
+public class MqttConnAckVariableHeader extends MqttVariableHeader<ConnectAckProperties> {
     private final MqttConnectReturnCode connectReturnCode;
 
     /**
@@ -18,10 +18,9 @@ public class MqttConnAckVariableHeader extends MqttVariableHeader {
      */
     private final boolean sessionPresent;
 
-    private ConnectAckProperties properties;
 
-
-    public MqttConnAckVariableHeader(MqttConnectReturnCode connectReturnCode, boolean sessionPresent) {
+    public MqttConnAckVariableHeader(MqttConnectReturnCode connectReturnCode, boolean sessionPresent, ConnectAckProperties properties) {
+        super(properties);
         this.connectReturnCode = connectReturnCode;
         this.sessionPresent = sessionPresent;
     }
@@ -32,14 +31,6 @@ public class MqttConnAckVariableHeader extends MqttVariableHeader {
 
     public boolean isSessionPresent() {
         return sessionPresent;
-    }
-
-    public ConnectAckProperties getProperties() {
-        return properties;
-    }
-
-    public void setProperties(ConnectAckProperties properties) {
-        this.properties = properties;
     }
 
     @Override

@@ -53,12 +53,14 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
         final int keepAlive = MqttCodecUtil.decodeMsbLsb(buffer);
 
         version = MqttVersion.getByProtocolWithVersion(MqttProtocolEnum.getByName(protocolName), protocolLevel);
-        MqttConnectVariableHeader variableHeader = new MqttConnectVariableHeader(protocolName, protocolLevel, b1, keepAlive);
+        MqttConnectVariableHeader variableHeader;
         //MQTT 5.0规范
         if (version == MqttVersion.MQTT_5) {
             ConnectProperties properties = new ConnectProperties();
             properties.decode(buffer);
-            variableHeader.setProperties(properties);
+            variableHeader = new MqttConnectVariableHeader(protocolName, protocolLevel, b1, keepAlive, properties);
+        } else {
+            variableHeader = new MqttConnectVariableHeader(protocolName, protocolLevel, b1, keepAlive, null);
         }
         setVariableHeader(variableHeader);
     }

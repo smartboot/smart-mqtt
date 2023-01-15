@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
  * @version V1.0 , 2018/4/24
  */
 class OnlyFixedHeaderMessage extends MqttMessage {
-    private static final MqttVariableHeader NONE_VARIABLE_HEADER = new MqttVariableHeader() {
+    private static final MqttVariableHeader NONE_VARIABLE_HEADER = new MqttVariableHeader(null) {
         @Override
         public int preEncode() {
             return 0;

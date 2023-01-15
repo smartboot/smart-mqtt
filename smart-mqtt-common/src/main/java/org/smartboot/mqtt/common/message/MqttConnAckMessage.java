@@ -29,12 +29,14 @@ public class MqttConnAckMessage extends MqttVariableMessage<MqttConnAckVariableH
         final boolean sessionPresent = (BufferUtils.readUnsignedByte(buffer) & 0x01) == 0x01;
         byte returnCode = buffer.get();
 
-        MqttConnAckVariableHeader variableHeader = new MqttConnAckVariableHeader(MqttConnectReturnCode.valueOf(returnCode), sessionPresent);
+        MqttConnAckVariableHeader variableHeader;
         //MQTT 5.0规范
         if (version == MqttVersion.MQTT_5) {
             ConnectAckProperties properties = new ConnectAckProperties();
             properties.decode(buffer);
-            variableHeader.setProperties(properties);
+            variableHeader = new MqttConnAckVariableHeader(MqttConnectReturnCode.valueOf(returnCode), sessionPresent, properties);
+        } else {
+            variableHeader = new MqttConnAckVariableHeader(MqttConnectReturnCode.valueOf(returnCode), sessionPresent, null);
         }
         setVariableHeader(variableHeader);
     }

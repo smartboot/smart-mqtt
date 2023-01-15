@@ -75,10 +75,12 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         //如果服务端收到一个 CleanSession 为 0 的连接，当前会话标志的值取决于服务端是否已经保存了 ClientId 对应客户端的会话状态。
         // 如果服务端已经保存了会话状态，它必须将 CONNACK 报文中的当前会话标志设置为 1 。
         // 如果服务端没有已保存的会话状态，它必须将 CONNACK 报文中的当前会话设置为 0。还需要将 CONNACK 报文中的返回码设置为 0
-        MqttConnAckMessage mqttConnAckMessage = connAck(MqttConnectReturnCode.CONNECTION_ACCEPTED, !mqttConnectMessage.getVariableHeader().isCleanSession());
+        ConnectAckProperties properties = null;
         if (session.getMqttVersion() == MqttVersion.MQTT_5) {
-            mqttConnAckMessage.getVariableHeader().setProperties(new ConnectAckProperties());
+            properties = new ConnectAckProperties();
         }
+        MqttConnAckMessage mqttConnAckMessage = connAck(MqttConnectReturnCode.CONNECTION_ACCEPTED, !mqttConnectMessage.getVariableHeader().isCleanSession(), properties);
+
         session.write(mqttConnAckMessage);
 
 
@@ -166,27 +168,31 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
             return;
         }
         WillMessage willMessage = msg.getPayload().getWillMessage();
-        MqttPublishMessage publishMessage = MqttMessageBuilders.publish().topicName(willMessage.getWillTopic()).qos(MqttQoS.valueOf(msg.getVariableHeader().willQos())).payload(willMessage.getWillMessage()).retained(msg.getFixedHeader().isRetain()).build();
+        MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().topicName(willMessage.getWillTopic()).qos(MqttQoS.valueOf(msg.getVariableHeader().willQos())).payload(willMessage.getWillMessage()).retained(msg.getFixedHeader().isRetain());
+        //todo
         if (session.getMqttVersion() == MqttVersion.MQTT_5) {
-            publishMessage.getVariableHeader().setProperties(new PublishProperties());
+            publishBuilder.publishProperties(new PublishProperties());
         }
+        MqttPublishMessage publishMessage = publishBuilder.build();
         session.setWillMessage(publishMessage);
     }
 
     private void connFailAck(MqttConnectReturnCode returnCode, MqttSession session) {
         //如果服务端发送了一个包含非零返回码的 CONNACK 报文，它必须将当前会话标志设置为 0
         ValidateUtils.isTrue(returnCode != CONNECTION_ACCEPTED, "");
-        MqttConnAckMessage badProto = connAck(returnCode, false);
+        ConnectAckProperties properties = null;
         //todo
         if (session.getMqttVersion() == MqttVersion.MQTT_5) {
-            badProto.getVariableHeader().setProperties(new ConnectAckProperties());
+            properties = new ConnectAckProperties();
         }
+        MqttConnAckMessage badProto = connAck(returnCode, false, properties);
+
         session.write(badProto);
         session.disconnect();
     }
 
-    private MqttConnAckMessage connAck(MqttConnectReturnCode returnCode, boolean sessionPresent) {
-        MqttConnAckVariableHeader mqttConnAckVariableHeader = new MqttConnAckVariableHeader(returnCode, sessionPresent);
+    private MqttConnAckMessage connAck(MqttConnectReturnCode returnCode, boolean sessionPresent, ConnectAckProperties properties) {
+        MqttConnAckVariableHeader mqttConnAckVariableHeader = new MqttConnAckVariableHeader(returnCode, sessionPresent, properties);
         return new MqttConnAckMessage(mqttConnAckVariableHeader);
     }
 }

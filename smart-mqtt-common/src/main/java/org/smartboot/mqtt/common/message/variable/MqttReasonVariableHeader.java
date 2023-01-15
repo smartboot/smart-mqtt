@@ -10,20 +10,10 @@ import java.io.IOException;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/1/6
  */
-public class MqttReasonVariableHeader extends MqttPacketIdVariableHeader {
+public class MqttReasonVariableHeader extends MqttPacketIdVariableHeader<ReasonProperties> {
 
-    protected ReasonProperties properties;
-
-    public MqttReasonVariableHeader(int packetId) {
-        super(packetId);
-    }
-
-    public final ReasonProperties getProperties() {
-        return properties;
-    }
-
-    public final void setProperties(ReasonProperties properties) {
-        this.properties = properties;
+    public MqttReasonVariableHeader(int packetId, ReasonProperties properties) {
+        super(packetId, properties);
     }
 
     @Override

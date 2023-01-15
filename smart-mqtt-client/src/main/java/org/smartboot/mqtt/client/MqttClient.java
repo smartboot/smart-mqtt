@@ -30,6 +30,7 @@ import org.smartboot.mqtt.common.message.payload.WillMessage;
 import org.smartboot.mqtt.common.message.variable.MqttConnectVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
+import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 import org.smartboot.mqtt.common.message.variable.properties.SubscribeProperties;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.ValidateUtils;
@@ -213,12 +214,14 @@ public class MqttClient extends AbstractSession {
             setMqttVersion(clientConfigure.getMqttVersion());
             mqttWriter = new DefaultMqttWriter(session.writeBuffer());
 
-            MqttConnectVariableHeader variableHeader = new MqttConnectVariableHeader(clientConfigure.getMqttVersion(), StringUtils.isNotBlank(clientConfigure.getUserName()), clientConfigure.getPassword() != null, clientConfigure.getWillMessage(), clientConfigure.isCleanSession(), clientConfigure.getKeepAliveInterval());
-            MqttConnectPayload payload = new MqttConnectPayload(clientId, clientConfigure.getWillMessage(), clientConfigure.getUserName(), clientConfigure.getPassword());
             //todo
+            ConnectProperties properties = null;
             if (clientConfigure.getMqttVersion() == MqttVersion.MQTT_5) {
-                variableHeader.setProperties(new ConnectProperties());
+                properties = new ConnectProperties();
             }
+            MqttConnectVariableHeader variableHeader = new MqttConnectVariableHeader(clientConfigure.getMqttVersion(), StringUtils.isNotBlank(clientConfigure.getUserName()), clientConfigure.getPassword() != null, clientConfigure.getWillMessage(), clientConfigure.isCleanSession(), clientConfigure.getKeepAliveInterval(), properties);
+            MqttConnectPayload payload = new MqttConnectPayload(clientId, clientConfigure.getWillMessage(), clientConfigure.getUserName(), clientConfigure.getPassword());
+
             MqttConnectMessage connectMessage = new MqttConnectMessage(variableHeader, payload);
 
             //如果客户端在合理的时间内没有收到服务端的 CONNACK 报文，客户端应该关闭网络连接。
@@ -270,7 +273,12 @@ public class MqttClient extends AbstractSession {
         MqttMessageBuilders.UnsubscribeBuilder unsubscribeBuilder = MqttMessageBuilders.unsubscribe().packetId(newPacketId());
         unsubscribedTopics.forEach(unsubscribeBuilder::addTopicFilter);
 
-        MqttUnsubscribeMessage unsubscribedMessage = unsubscribeBuilder.build();
+        //todo
+        ReasonProperties properties = null;
+        if (getMqttVersion() == MqttVersion.MQTT_5) {
+            properties = new ReasonProperties();
+        }
+        MqttUnsubscribeMessage unsubscribedMessage = unsubscribeBuilder.build(properties);
         // wait ack message.
         responseConsumers.put(unsubscribedMessage.getVariableHeader().getPacketId(), new AckMessage(unsubscribedMessage, mqttMessage -> {
             ValidateUtils.isTrue(mqttMessage instanceof MqttUnsubAckMessage, "uncorrected message type.");
@@ -310,10 +318,12 @@ public class MqttClient extends AbstractSession {
         for (int i = 0; i < topic.length; i++) {
             subscribeBuilder.addSubscription(qos[i], topic[i]);
         }
-        MqttSubscribeMessage subscribeMessage = subscribeBuilder.build();
+        //todo
         if (clientConfigure.getMqttVersion() == MqttVersion.MQTT_5) {
-            subscribeMessage.getVariableHeader().setProperties(new SubscribeProperties());
+            subscribeBuilder.subscribeProperties(new SubscribeProperties());
         }
+        MqttSubscribeMessage subscribeMessage = subscribeBuilder.build();
+
         responseConsumers.put(subscribeMessage.getVariableHeader().getPacketId(), new AckMessage(subscribeMessage, mqttMessage -> {
             List<Integer> qosValues = ((MqttSubAckMessage) mqttMessage).getPayload().grantedQoSLevels();
             ValidateUtils.isTrue(qosValues.size() == qos.length, "invalid response");
@@ -365,10 +375,11 @@ public class MqttClient extends AbstractSession {
             int packetId = newPacketId();
             publishBuilder.packetId(packetId);
         }
-        MqttPublishMessage message = publishBuilder.build();
+        //todo
         if (getMqttVersion() == MqttVersion.MQTT_5) {
-            message.getVariableHeader().setProperties(new PublishProperties());
+            publishBuilder.publishProperties(new PublishProperties());
         }
+        MqttPublishMessage message = publishBuilder.build();
         if (connected) {
             publish(message, consumer);
         } else {

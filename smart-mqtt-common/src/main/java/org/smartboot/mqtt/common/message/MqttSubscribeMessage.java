@@ -33,11 +33,13 @@ public class MqttSubscribeMessage extends MqttPacketIdentifierMessage<MqttSubscr
     @Override
     public void decodeVariableHeader0(ByteBuffer buffer) {
         int packetId = decodeMessageId(buffer);
-        MqttSubscribeVariableHeader header = new MqttSubscribeVariableHeader(packetId);
+        MqttSubscribeVariableHeader header;
         if (version == MqttVersion.MQTT_5) {
             SubscribeProperties properties = new SubscribeProperties();
             properties.decode(buffer);
-            header.setProperties(properties);
+            header = new MqttSubscribeVariableHeader(packetId, properties);
+        } else {
+            header = new MqttSubscribeVariableHeader(packetId, null);
         }
         setVariableHeader(header);
     }

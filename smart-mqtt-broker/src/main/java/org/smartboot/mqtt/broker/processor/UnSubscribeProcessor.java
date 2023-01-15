@@ -36,10 +36,13 @@ public class UnSubscribeProcessor extends AuthorizedMqttProcessor<MqttUnsubscrib
         session.resubscribe();
 
         //取消订阅确认
-        MqttReasonVariableHeader variableHeader = new MqttPubQosVariableHeader(unsubscribeMessage.getVariableHeader().getPacketId());
+        MqttReasonVariableHeader variableHeader;
         //todo
         if (unsubscribeMessage.getVersion() == MqttVersion.MQTT_5) {
-            variableHeader.setProperties(new ReasonProperties());
+            ReasonProperties properties = new ReasonProperties();
+            variableHeader = new MqttPubQosVariableHeader(unsubscribeMessage.getVariableHeader().getPacketId(), properties);
+        } else {
+            variableHeader = new MqttPubQosVariableHeader(unsubscribeMessage.getVariableHeader().getPacketId(), null);
         }
         MqttUnsubAckMessage mqttSubAckMessage = new MqttUnsubAckMessage(variableHeader);
         session.write(mqttSubAckMessage);

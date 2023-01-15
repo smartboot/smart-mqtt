@@ -39,11 +39,13 @@ public class MqttPublishMessage extends MqttVariableMessage<MqttPublishVariableH
         if (fixedHeader.getQosLevel().value() > 0) {
             packetId = decodeMessageId(buffer);
         }
-        MqttPublishVariableHeader variableHeader = new MqttPublishVariableHeader(packetId, decodedTopic);
+        MqttPublishVariableHeader variableHeader;
         if (version == MqttVersion.MQTT_5) {
             PublishProperties properties = new PublishProperties();
             properties.decode(buffer);
-            variableHeader.setProperties(properties);
+            variableHeader = new MqttPublishVariableHeader(packetId, decodedTopic, properties);
+        } else {
+            variableHeader = new MqttPublishVariableHeader(packetId, decodedTopic, null);
         }
 
         setVariableHeader(variableHeader);

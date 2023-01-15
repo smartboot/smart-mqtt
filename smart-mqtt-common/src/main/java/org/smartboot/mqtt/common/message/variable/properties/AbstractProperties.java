@@ -11,12 +11,12 @@ import java.nio.ByteBuffer;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/1/10
  */
-class AbstractProperties extends Codec {
+public class AbstractProperties extends Codec {
     protected final MqttProperties properties = new MqttProperties();
     private final int validBits;
     private int propertiesLength;
 
-    public AbstractProperties(int validBits) {
+    AbstractProperties(int validBits) {
         this.validBits = validBits;
     }
 

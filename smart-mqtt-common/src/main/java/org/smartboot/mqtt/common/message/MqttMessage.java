@@ -53,7 +53,7 @@ public abstract class MqttMessage extends ToString {
 
     }
 
-    public void write(MqttWriter mqttWriter) throws IOException {
+    public final void write(MqttWriter mqttWriter) throws IOException {
         MqttCodecUtil.writeFixedHeader(mqttWriter, getFixedHeader());
         MqttVariableHeader variableHeader = getVariableHeader();
         MqttPayload mqttPayload = getPayload();
@@ -86,11 +86,11 @@ public abstract class MqttMessage extends ToString {
     }
 
 
-    public MqttVersion getVersion() {
+    public final MqttVersion getVersion() {
         return version;
     }
 
-    public void setVersion(MqttVersion version) {
+    public final void setVersion(MqttVersion version) {
         this.version = version;
     }
 }

@@ -29,11 +29,13 @@ public class MqttUnsubscribeMessage extends MqttPacketIdentifierMessage<MqttReas
     @Override
     protected void decodeVariableHeader0(ByteBuffer buffer) {
         int packetId = decodeMessageId(buffer);
-        MqttPubQosVariableHeader header = new MqttPubQosVariableHeader(packetId);
+        MqttPubQosVariableHeader header;
         if (version == MqttVersion.MQTT_5) {
             ReasonProperties properties = new ReasonProperties();
             properties.decode(buffer);
-            header.setProperties(properties);
+            header = new MqttPubQosVariableHeader(packetId, properties);
+        } else {
+            header = new MqttPubQosVariableHeader(packetId, null);
         }
         setVariableHeader(header);
     }

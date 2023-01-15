@@ -253,10 +253,10 @@ public class BrokerContextImpl implements BrokerContext {
                         if (subscriber.getMqttQoS() == MqttQoS.AT_LEAST_ONCE || subscriber.getMqttQoS() == MqttQoS.EXACTLY_ONCE) {
                             publishBuilder.packetId(session.newPacketId());
                         }
-                        MqttPublishMessage publishMessage = publishBuilder.build();
                         if (session.getMqttVersion() == MqttVersion.MQTT_5) {
-                            publishMessage.getVariableHeader().setProperties(new PublishProperties());
+                            publishBuilder.publishProperties(new PublishProperties());
                         }
+                        MqttPublishMessage publishMessage = publishBuilder.build();
                         InflightQueue inflightQueue = session.getInflightQueue();
                         int index = inflightQueue.offer(publishMessage, storedMessage.getOffset());
                         session.publish(publishMessage, packetId -> {

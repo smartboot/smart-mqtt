@@ -48,11 +48,13 @@ public abstract class QosPublisher {
             ValidateUtils.isTrue(message.getFixedHeader().getMessageType() == MqttMessageType.PUBREC, "invalid message type");
             ValidateUtils.isTrue(Objects.equals(message.getVariableHeader().getPacketId(), publishMessage.getVariableHeader().getPacketId()), "invalid packetId");
             publishFuture.complete(true);
-            MqttPubQosVariableHeader variableHeader=new MqttPubQosVariableHeader(message.getVariableHeader().getPacketId());
+
             //todo
-            if(message.getVersion()== MqttVersion.MQTT_5){
-                variableHeader.setProperties(new ReasonProperties());
+            ReasonProperties properties = null;
+            if (message.getVersion() == MqttVersion.MQTT_5) {
+                properties = new ReasonProperties();
             }
+            MqttPubQosVariableHeader variableHeader = new MqttPubQosVariableHeader(message.getVariableHeader().getPacketId(), properties);
             MqttPubRelMessage pubRelMessage = new MqttPubRelMessage(variableHeader);
             CompletableFuture<Boolean> pubRelFuture = new CompletableFuture<>();
             session.responseConsumers.put(cacheKey, new AckMessage(pubRelMessage, compMessage -> {

@@ -2,6 +2,7 @@ package org.smartboot.mqtt.common.message.payload;
 
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.common.message.Codec;
 import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.common.message.variable.properties.WillProperties;
 
@@ -11,7 +12,7 @@ import java.io.IOException;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/4/6
  */
-public class WillMessage {
+public class WillMessage extends Codec {
     /**
      * 遗嘱Topic
      */

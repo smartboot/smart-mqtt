@@ -24,21 +24,24 @@ public class MqttPubQosMessage extends MqttPacketIdentifierMessage<MqttPubQosVar
     @Override
     protected final void decodeVariableHeader0(ByteBuffer buffer) {
         int packetId = decodeMessageId(buffer);
-        MqttPubQosVariableHeader header = new MqttPubQosVariableHeader(packetId);
+        MqttPubQosVariableHeader header = null;
         if (version == MqttVersion.MQTT_5) {
             //如果剩余长度为2，则表示使用原因码0x00 （成功）
-            if (fixedHeader.remainingLength() == 2) {
-                header.setReasonCode((byte) 0x00);
-            } else if (fixedHeader.remainingLength() < 4) {
-                //如果剩余长度小于4，则表示没有属性长度字段。
-                header.setReasonCode(buffer.get());
-            } else {
-                header.setReasonCode(buffer.get());
+            byte reasonCode = 0;
+            if (fixedHeader.remainingLength() > 2) {
+                reasonCode = buffer.get();
+            }
+            //如果剩余长度小于4，则表示没有属性长度字段。
+            if (fixedHeader.remainingLength() >= 4) {
                 ReasonProperties properties = new ReasonProperties();
                 properties.decode(buffer);
-                header.setProperties(properties);
+                header = new MqttPubQosVariableHeader(packetId, properties);
+            } else {
+                header = new MqttPubQosVariableHeader(packetId, null);
+                header.setReasonCode(reasonCode);
             }
-
+        } else {
+            header = new MqttPubQosVariableHeader(packetId, null);
         }
         setVariableHeader(header);
     }

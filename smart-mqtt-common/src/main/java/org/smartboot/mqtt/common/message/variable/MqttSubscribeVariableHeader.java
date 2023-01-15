@@ -10,20 +10,11 @@ import java.io.IOException;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/1/4
  */
-public class MqttSubscribeVariableHeader extends MqttPacketIdVariableHeader {
+public class MqttSubscribeVariableHeader extends MqttPacketIdVariableHeader<SubscribeProperties> {
 
-    private SubscribeProperties properties;
 
-    public MqttSubscribeVariableHeader(int packetId) {
-        super(packetId);
-    }
-
-    public SubscribeProperties getProperties() {
-        return properties;
-    }
-
-    public void setProperties(SubscribeProperties properties) {
-        this.properties = properties;
+    public MqttSubscribeVariableHeader(int packetId, SubscribeProperties properties) {
+        super(packetId, properties);
     }
 
     @Override

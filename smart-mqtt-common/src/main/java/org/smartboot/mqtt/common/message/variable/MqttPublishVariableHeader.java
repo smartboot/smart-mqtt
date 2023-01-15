@@ -10,7 +10,7 @@ import java.io.IOException;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttPublishVariableHeader extends MqttPacketIdVariableHeader {
+public class MqttPublishVariableHeader extends MqttPacketIdVariableHeader<PublishProperties> {
 
     /**
      * PUBLISH 报文中的主题名不能包含通配符
@@ -18,23 +18,14 @@ public class MqttPublishVariableHeader extends MqttPacketIdVariableHeader {
     private final String topicName;
     private byte[] topicNameBytes;
 
-    private PublishProperties properties;
 
-    public MqttPublishVariableHeader(int packetId, String topicName) {
-        super(packetId);
+    public MqttPublishVariableHeader(int packetId, String topicName, PublishProperties properties) {
+        super(packetId, properties);
         this.topicName = topicName;
     }
 
     public String getTopicName() {
         return topicName;
-    }
-
-    public void setProperties(PublishProperties properties) {
-        this.properties = properties;
-    }
-
-    public PublishProperties getProperties() {
-        return properties;
     }
 
     @Override

@@ -28,11 +28,13 @@ public class MqttSubAckMessage extends MqttPacketIdentifierMessage<MqttReasonVar
     @Override
     protected void decodeVariableHeader0(ByteBuffer buffer) {
         int packetId = decodeMessageId(buffer);
-        MqttReasonVariableHeader header = new MqttReasonVariableHeader(packetId);
+        MqttReasonVariableHeader header;
         if (version == MqttVersion.MQTT_5) {
             ReasonProperties properties = new ReasonProperties();
             properties.decode(buffer);
-            header.setProperties(properties);
+            header = new MqttReasonVariableHeader(packetId, properties);
+        } else {
+            header = new MqttReasonVariableHeader(packetId, null);
         }
         setVariableHeader(header);
     }

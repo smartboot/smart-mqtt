@@ -82,11 +82,12 @@ public class TopicSubscriber {
         if (mqttQoS == MqttQoS.AT_LEAST_ONCE || mqttQoS == MqttQoS.EXACTLY_ONCE) {
             publishBuilder.packetId(mqttSession.newPacketId());
         }
+        if (mqttSession.getMqttVersion() == MqttVersion.MQTT_5) {
+            publishBuilder.publishProperties(new PublishProperties());
+        }
+
         MqttPublishMessage publishMessage = publishBuilder.build();
 
-        if (mqttSession.getMqttVersion() == MqttVersion.MQTT_5) {
-            publishMessage.getVariableHeader().setProperties(new PublishProperties());
-        }
         InflightQueue inflightQueue = mqttSession.getInflightQueue();
         int index = inflightQueue.offer(publishMessage, persistenceMessage.getOffset());
         // 飞行队列已满

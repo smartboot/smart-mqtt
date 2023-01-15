@@ -14,6 +14,7 @@ import org.smartboot.mqtt.common.message.variable.MqttPublishVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttReasonVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttSubscribeVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
+import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 import org.smartboot.mqtt.common.message.variable.properties.SubscribeProperties;
 
 import java.util.ArrayList;
@@ -82,8 +83,7 @@ public final class MqttMessageBuilders {
             if (qos != MqttQoS.AT_LEAST_ONCE && qos != MqttQoS.EXACTLY_ONCE) {
                 packetId = -1;
             }
-            MqttPublishVariableHeader mqttVariableHeader = new MqttPublishVariableHeader(packetId, topic);
-            mqttVariableHeader.setProperties(publishProperties);
+            MqttPublishVariableHeader mqttVariableHeader = new MqttPublishVariableHeader(packetId, topic, publishProperties);
             return new MqttPublishMessage(mqttFixedHeader, mqttVariableHeader, payload);
         }
     }
@@ -122,8 +122,7 @@ public final class MqttMessageBuilders {
             MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.SUBSCRIBE, false, MqttQoS.AT_LEAST_ONCE, false, 0);
             MqttSubscribePayload mqttSubscribePayload = new MqttSubscribePayload();
             mqttSubscribePayload.setTopicSubscriptions(subscriptions);
-            MqttSubscribeVariableHeader variableHeader = new MqttSubscribeVariableHeader(packetId);
-            variableHeader.setProperties(subscribeProperties);
+            MqttSubscribeVariableHeader variableHeader = new MqttSubscribeVariableHeader(packetId, subscribeProperties);
             return new MqttSubscribeMessage(mqttFixedHeader, variableHeader, mqttSubscribePayload);
         }
     }
@@ -149,9 +148,9 @@ public final class MqttMessageBuilders {
             return this;
         }
 
-        public MqttUnsubscribeMessage build() {
+        public MqttUnsubscribeMessage build(ReasonProperties properties) {
             MqttUnsubscribePayload mqttSubscribePayload = new MqttUnsubscribePayload(topicFilters);
-            MqttReasonVariableHeader variableHeader = new MqttPubQosVariableHeader(packetId);
+            MqttReasonVariableHeader variableHeader = new MqttPubQosVariableHeader(packetId, properties);
             return new MqttUnsubscribeMessage(MqttFixedHeader.UNSUBSCRIBE_HEADER, variableHeader, mqttSubscribePayload);
         }
     }
