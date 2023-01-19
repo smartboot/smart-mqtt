@@ -12,6 +12,10 @@ import java.io.IOException;
  * @version V1.0 , 2018/4/22
  */
 public class MqttConnAckVariableHeader extends MqttVariableHeader<ConnectAckProperties> {
+    /**
+     * MQTT3: 连接返回码
+     * MQTT5: 连接原因码
+     */
     private final MqttConnectReturnCode connectReturnCode;
 
     /**

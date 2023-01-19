@@ -1,13 +1,15 @@
 package org.smartboot.mqtt.common.message;
 
 
+import org.smartboot.mqtt.common.message.variable.properties.AbstractProperties;
+
 import java.nio.ByteBuffer;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/4/23
  */
-public abstract class MqttVariableMessage<T extends MqttVariableHeader> extends MqttMessage {
+public abstract class MqttVariableMessage<T extends MqttVariableHeader<? extends AbstractProperties>> extends MqttMessage {
     /**
      * 可变报头
      */

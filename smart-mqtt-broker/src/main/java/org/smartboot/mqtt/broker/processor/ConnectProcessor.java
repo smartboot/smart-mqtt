@@ -95,6 +95,11 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         final MqttProtocolEnum protocol = MqttProtocolEnum.getByName(connectVariableHeader.protocolName());
         ValidateUtils.notNull(protocol, "invalid protocol", () -> {
             LOGGER.error("invalid protocol:{}", connectVariableHeader.protocolName());
+            //MQTT5.0规范：如果服务端不愿意接受CONNECT但希望表明其MQTT服务端身份，
+            // 可以发送包含原因码为0x84（不支持的协议版本）的CONNACK报文，然后必须关闭网络连接。
+            if (session.getMqttVersion() == MqttVersion.MQTT_5) {
+                connFailAck(UNSUPPORTED_PROTOCOL_VERSION, session);
+            }
             session.disconnect();
         });
 

@@ -1,6 +1,7 @@
 package org.smartboot.mqtt.common.message;
 
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
+import org.smartboot.mqtt.common.message.variable.properties.AbstractProperties;
 
 /**
  * 包含报文标识符的消息类型
@@ -11,7 +12,7 @@ import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public abstract class MqttPacketIdentifierMessage<T extends MqttPacketIdVariableHeader> extends MqttVariableMessage<T> {
+public abstract class MqttPacketIdentifierMessage<T extends MqttPacketIdVariableHeader<? extends AbstractProperties>> extends MqttVariableMessage<T> {
 
     public MqttPacketIdentifierMessage(MqttFixedHeader mqttFixedHeader) {
         super(mqttFixedHeader);
