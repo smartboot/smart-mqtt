@@ -9,6 +9,7 @@ import org.smartboot.mqtt.broker.eventbus.EventObject;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.broker.provider.SessionStateProvider;
 import org.smartboot.mqtt.broker.provider.impl.session.SessionState;
+import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.MqttMessageBuilders;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttProtocolEnum;
@@ -70,6 +71,17 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         //存储遗嘱消息
         storeWillMessage(session, mqttConnectMessage);
 
+        //存储连接属性
+        session.setProperties(mqttConnectMessage.getVariableHeader().getProperties());
+        int receiveMaximum;
+        if (session.getMqttVersion() == MqttVersion.MQTT_5) {
+            //客户端使用此值限制客户端愿意同时处理的QoS等级1和QoS等级2的发布消息最大数量。
+            receiveMaximum = Math.min(mqttConnectMessage.getVariableHeader().getProperties().getReceiveMaximum(), context.getBrokerConfigure().getMaxInflight());
+        } else {
+            receiveMaximum = context.getBrokerConfigure().getMaxInflight();
+        }
+        session.setInflightQueue(new InflightQueue(receiveMaximum));
+
         //如果服务端收到清理会话（CleanSession）标志为 1 的连接，除了将 CONNACK 报文中的返回码设置为 0 之外，
         // 还必须将 CONNACK 报文中的当前会话设置（Session Present）标志为 0。
         //如果服务端收到一个 CleanSession 为 0 的连接，当前会话标志的值取决于服务端是否已经保存了 ClientId 对应客户端的会话状态。
@@ -78,6 +90,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         ConnectAckProperties properties = null;
         if (session.getMqttVersion() == MqttVersion.MQTT_5) {
             properties = new ConnectAckProperties();
+            properties.setReceiveMaximum(receiveMaximum);
         }
         MqttConnAckMessage mqttConnAckMessage = connAck(MqttConnectReturnCode.CONNECTION_ACCEPTED, !mqttConnectMessage.getVariableHeader().isCleanSession(), properties);
 

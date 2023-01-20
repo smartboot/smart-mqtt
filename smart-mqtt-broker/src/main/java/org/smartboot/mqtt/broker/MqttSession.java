@@ -13,6 +13,7 @@ import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
+import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
 import org.smartboot.mqtt.common.util.TopicTokenUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.transport.AioSession;
@@ -37,7 +38,7 @@ public class MqttSession extends AbstractSession {
     private final Map<String, TopicFilterSubscriber> subscribers = new ConcurrentHashMap<>();
 
     private final BrokerContext mqttContext;
-    private final InflightQueue inflightQueue;
+    private InflightQueue inflightQueue;
     private String username;
     /**
      * 已授权
@@ -49,15 +50,27 @@ public class MqttSession extends AbstractSession {
     private MqttPublishMessage willMessage;
     private boolean cleanSession;
 
+    private ConnectProperties properties;
+
     public MqttSession(BrokerContext mqttContext, AioSession session, QosPublisher qosPublisher, MqttWriter mqttWriter) {
         super(qosPublisher, mqttContext.getEventBus());
         this.mqttContext = mqttContext;
         this.session = session;
         this.mqttWriter = mqttWriter;
-        this.inflightQueue = new InflightQueue(mqttContext.getBrokerConfigure().getMaxInflight());
         mqttContext.getEventBus().publish(ServerEventType.SESSION_CREATE, this);
     }
 
+    public ConnectProperties getProperties() {
+        return properties;
+    }
+
+    public void setProperties(ConnectProperties properties) {
+        this.properties = properties;
+    }
+
+    public void setInflightQueue(InflightQueue inflightQueue) {
+        this.inflightQueue = inflightQueue;
+    }
 
     public InflightQueue getInflightQueue() {
         return inflightQueue;
@@ -238,16 +251,15 @@ public class MqttSession extends AbstractSession {
         if (filterSubscriber == null) {
             return;
         }
-        filterSubscriber.getTopicSubscribers()
-                .values().forEach(subscriber -> {
-                    TopicSubscriber removeSubscriber = subscriber.getTopic().getConsumeOffsets().remove(this);
-                    retainOffsetCache.put(subscriber.getTopic(), subscriber.getRetainConsumerOffset());
-                    if (subscriber == removeSubscriber) {
-                        LOGGER.debug("remove subscriber:{} success!", subscriber.getTopic().getTopic());
-                    } else {
-                        LOGGER.error("remove subscriber:{} error!", removeSubscriber);
-                    }
-                });
+        filterSubscriber.getTopicSubscribers().values().forEach(subscriber -> {
+            TopicSubscriber removeSubscriber = subscriber.getTopic().getConsumeOffsets().remove(this);
+            retainOffsetCache.put(subscriber.getTopic(), subscriber.getRetainConsumerOffset());
+            if (subscriber == removeSubscriber) {
+                LOGGER.debug("remove subscriber:{} success!", subscriber.getTopic().getTopic());
+            } else {
+                LOGGER.error("remove subscriber:{} error!", removeSubscriber);
+            }
+        });
     }
 
 
