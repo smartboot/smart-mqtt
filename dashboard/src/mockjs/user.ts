@@ -9,7 +9,7 @@ let user: User = {
 const menus = [
   {
     id: "/dashboard",
-    icon: "layui-icon-home",
+    icon: "layui-icon-chart-screen",
     title: "仪表盘",
     children:[
       {
@@ -28,12 +28,12 @@ const menus = [
   },
   {
     id: "/connections",
-    icon: "layui-icon-home",
+    icon: "layui-icon-senior",
     title: "连接管理"
   },
   {
     id: "/subscriptions",
-    icon: "layui-icon-home",
+    icon: "layui-icon-note",
     title: "订阅管理",
     children:[
       {
@@ -48,7 +48,7 @@ const menus = [
   },
   {
     id: "/help",
-    icon: "layui-icon-home",
+    icon: "layui-icon-help",
     title: "帮助"
   },
   // {

@@ -12,7 +12,7 @@
     >
       <!-- side -->
       <lay-side :width="sideWidth" :class="appStore.sideTheme == 'dark' ? 'dark':'light'">
-        <lay-logo v-if="appStore.logo"><lay-icon type="layui-icon-vercode" color="#FF5722" size="24px"></lay-icon> smart-mqtt</lay-logo>
+        <lay-logo v-if="appStore.logo"><lay-icon type="layui-icon-cols" size="24px"></lay-icon> smart-mqtt</lay-logo>
         <lay-scroll style="height: calc(100% - 62px)">
           <global-menu :collapse="appStore.collapse"></global-menu>
         </lay-scroll>

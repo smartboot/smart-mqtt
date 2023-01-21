@@ -10,14 +10,14 @@
       <lay-input placeholder="节点" ></lay-input>
     </lay-col>
     <lay-col sm="6" md="6">
-      <lay-button native-type="submit">搜索</lay-button>
-      <lay-button native-type="submit">刷新</lay-button>
-      <lay-badge type="dot" theme="blue" ripple></lay-badge>
+      <lay-button prefix-icon="layui-icon-search">搜索</lay-button>
+      <lay-button prefix-icon="layui-icon-refresh-three">刷新</lay-button>
       <lay-button type="primary" radius="true" size="xs"><lay-icon type="layui-icon-down"></lay-icon></lay-button>
     </lay-col>
   </lay-row>
   <lay-row space="10">
-    <lay-table :columns="columns2" :data-source="dataSource2" :size="md" skin='nob'></lay-table>
+    <lay-table :columns="columns2" :data-source="dataSource2" :size="md" skin='nob'>
+    </lay-table>
   </lay-row>
 </template>
 
@@ -30,7 +30,7 @@ export default {
       {
         title:"客户端ID",
         width:"120px",
-        key:"clientId"
+        key:"clientId",
       },{
         title:"用户名",
         width: "120px",
