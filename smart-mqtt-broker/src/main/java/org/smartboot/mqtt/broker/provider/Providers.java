@@ -1,5 +1,6 @@
 package org.smartboot.mqtt.broker.provider;
 
+import org.smartboot.http.server.handler.HttpRouteHandler;
 import org.smartboot.mqtt.broker.provider.impl.message.MemoryPersistenceProvider;
 import org.smartboot.mqtt.broker.provider.impl.session.MemorySessionStateProvider;
 
@@ -16,6 +17,11 @@ public class Providers {
     private ConnectAuthenticationProvider connectAuthenticationProvider;
 
     private SubscribeProvider subscribeProvider = (topicFilter, session) -> true;
+
+    /**
+     * OpenAPI 处理器
+     */
+    private final HttpRouteHandler openApiHandler = new HttpRouteHandler();
 
     public SessionStateProvider getSessionStateProvider() {
         return sessionStateProvider;
@@ -55,5 +61,9 @@ public class Providers {
 
     public void setSubscribeProvider(SubscribeProvider subscribeProvider) {
         this.subscribeProvider = subscribeProvider;
+    }
+
+    public HttpRouteHandler getOpenApiHandler() {
+        return openApiHandler;
     }
 }

@@ -10,7 +10,7 @@ type TAxiosOption = {
  
 const config: TAxiosOption = {
     timeout: 5000,
-    baseURL: "http://localhost:8080"
+    baseURL: "http://localhost:11883/api/"
 }
  
 class Http {

@@ -5,20 +5,7 @@
     </lay-row>
   </lay-container>
   <lay-row space="10">
-    <lay-col md="12" sm="12" xs="24">
-      <lay-row space="10">
-        <lay-col md="24" sm="24" xs="24">
-<!--          <p class="agency">消息流入速率： {{ inflowRate }} 条/秒</p>-->
-          <div class="flowChart" ref="flowInRef"></div>
-        </lay-col>
-        <lay-col md="24" sm="24" xs="24">
-<!--          <p class="agency">消息流出速率： {{ outflowRate }} 条/秒</p>-->
-          <div class="flowChart" ref="flowOutRef"></div>
-        </lay-col>
-      </lay-row>
-
-    </lay-col>
-    <lay-col md="12" sm="12" xs="24">
+    <lay-col md="24" sm="24" xs="24">
       <lay-field title="资源指标">
         <lay-card>
           <lay-row :space="10">
@@ -27,7 +14,7 @@
                 <h3>连接数</h3>
                 <p>
                   <cite>
-                    <lay-count-up :end-val="18" :duration="2000"></lay-count-up>
+                    <lay-count-up :end-val="metric.connectCount" :duration="2000"></lay-count-up>
                   </cite>
                 </p>
               </a>
@@ -37,7 +24,7 @@
                 <h3>主题数</h3>
                 <p>
                   <cite>
-                    <lay-count-up :end-val="18" :duration="2000"></lay-count-up>
+                    <lay-count-up :end-val="metric.topicCount" :duration="2000"></lay-count-up>
                   </cite>
                 </p>
               </a>
@@ -47,7 +34,7 @@
                 <h3>订阅数</h3>
                 <p>
                   <cite>
-                    <lay-count-up :end-val="18" :duration="2000"></lay-count-up>
+                    <lay-count-up :end-val="metric.subscriberCount" :duration="2000"></lay-count-up>
                   </cite>
                 </p>
               </a>
@@ -56,6 +43,19 @@
         </lay-card>
       </lay-field>
     </lay-col>
+    <lay-col md="12" sm="24" xs="24">
+      <lay-card>
+        <template #title><p class="agency">消息流入速率： {{ inflowRate }} 条/秒</p></template>
+        <div class="flowChart" ref="flowInRef"></div>
+      </lay-card>
+    </lay-col>
+    <lay-col md="12" sm="24" xs="24">
+      <lay-card>
+        <template #title><p class="agency">消息流出速率： {{ outflowRate }} 条/秒</p></template>
+        <div class="flowChart" ref="flowOutRef"></div>
+      </lay-card>
+    </lay-col>
+
 
   </lay-row>
   <lay-row space="10">
@@ -93,104 +93,131 @@
   </lay-row>
 </template>
 
-<script lang="ts">
-import {defineComponent, onMounted, ref} from "vue";
+<script>
+import {onMounted, ref} from "vue";
+import {dashboard_overview} from "../../api/module/api";
+import {Chart} from '@antv/g2';
 
-import * as echarts from 'echarts';
-
-export default defineComponent({
-  name: 'Analysis',
+export default {
   setup() {
     const flowInRef = ref()
     const flowOutRef = ref()
     const inflowRate = ref()
     const outflowRate = ref()
-    onMounted(() => {
-      var chartDom = flowInRef.value;
-      // @ts-ignore
-      var myChart = echarts.init(chartDom);
-      var option = {
-        xAxis: {
-          type: 'category',
-          data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Bai', 'Fan', 'Yue', 'Qian']
-        },
-        yAxis: {
-          type: 'value'
-        },
-        grid: {
-          x: '50px',
-          y: '50px',
-          x2: '50px',
-          y2: '50px',
-        },
-        series: [
-          {
-            data: [120, 200, 150, 80, 70, 110, 130, 50, 40, 70, 100],
-            type: 'bar',
-            showBackground: true,
-            backgroundStyle: {
-              color: 'rgba(180, 180, 180, 0.2)'
-            },
-            itemStyle: {
-              normal: {
-                color: '#009688'
-              },
-            }
-          }
-        ]
-      };
-      option && myChart.setOption(option);
+    const metric = ref({})
 
-      var flowOutChartDom = flowOutRef.value;
+    //加载 JVM 相关配置
+    const loadJvm = async () => {
+      const {data} = await dashboard_overview();
+      console.log(data.metricTO)
+      metric.value = data.metricTO;
+      // console.log(metric.value)
+    };
+    loadJvm()
+
+    onMounted(() => {
+      const flowInChartDom = flowInRef.value;
+      const flowOutChartDom = flowOutRef.value;
       // @ts-ignore
-      var flowOutChart = echarts.init(flowOutChartDom);
-      var flowOutOption = {
-        xAxis: {
-          type: 'category',
-          data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Bai', 'Fan', 'Yue', 'Qian']
+      const data = [
+        {
+          "Data": "2023-01-01 19:02:00",
+          "flowBytes": 10
         },
-        yAxis: {
-          type: 'value'
+        {
+          "Data": "2023-01-01 19:02:01",
+          "flowBytes": 12
         },
-        grid: {
-          x: '50px',
-          y: '50px',
-          x2: '50px',
-          y2: '50px',
+        {
+          "Data": "2023-01-01 19:14:00",
+          "flowBytes": 15
         },
-        series: [
-          {
-            data: [120, 200, 150, 80, 70, 110, 130, 50, 40, 70, 100],
-            type: 'bar',
-            showBackground: true,
-            backgroundStyle: {
-              color: 'rgba(180, 180, 180, 0.2)'
+        {
+          "Data": "2023-01-01 20:03:00",
+          "flowBytes": 14
+        },
+        {
+          "Data": "2023-01-01 21:03:00",
+          "flowBytes": 14
+        },
+        {
+          "Data": "2023-01-01 22:03:00",
+          "flowBytes": 24
+        }
+      ];
+
+      function flowChart(dom, data) {
+        var chart = new Chart({
+          container: dom,
+          // forceFit: true,
+          height: 250,
+          autoFit: true,
+          padding: [20, 20, 40, 50]
+        });
+        chart.data(data);
+        chart.scale('Data', {
+          range: [0, 1],
+          mask: "YYYY-MM-DD HH:mm:ss",
+          tickCount: 50,
+          type: 'timeCat'
+        });
+        chart.axis('Data', {
+          label: {
+            textStyle: {
+              fill: '#aaaaaa'
             },
-            itemStyle: {
-              normal: {
-                color: '#009688'
-              },
+            formatter: function formatter(text) {
+              const array = text.split(" ");
+              return array && array.length === 2 ? array[1] : "Nan";
             }
           }
-        ]
-      };
-      flowOutOption && flowOutChart.setOption(flowOutOption);
-    })
+        });
+        chart.axis('flowBytes', {
+          label: {
+            textStyle: {
+              fill: '#aaaaaa'
+            },
+            formatter: function formatter(text) {
+              return text.replace(/(\d)(?=(?:\d{3})+$)/g, '$1,');
+            }
+          }
+        });
+        chart.tooltip({
+          crosshairs: 'y',
+          share: true
+        });
+        chart.legend({
+          attachLast: true
+        });
+        // chart.annotation().text({
+        //   content:"aaaa"
+        // })
+
+        chart.line().position('Data*flowBytes');
+        chart.area().position('Data*flowBytes');
+        chart.render();
+      }
+
+      flowChart(flowInChartDom, data);
+      flowChart(flowOutChartDom, data);
+    });
 
     return {
+      metric,
       flowInRef,
       flowOutRef,
       inflowRate,
       outflowRate
     }
   }
-})
+}
 </script>
 <style>
 .flowChart {
   width: 100%;
-  height: 150px;
+  /*height: 150px;*/
 }
+
 .grid-demo {
   padding: 10px;
   line-height: 50px;

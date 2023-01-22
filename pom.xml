@@ -11,6 +11,7 @@
     <properties>
         <smart.mqtt.version>0.13</smart.mqtt.version>
         <smart-socket.version>1.6.1</smart-socket.version>
+        <smart-http.version>1.1.20-SNAPSHOT</smart-http.version>
         <commons.lang.version>2.6</commons.lang.version>
         <commons.clollections.version>4.3</commons.clollections.version>
         <junit.version>4.13.2</junit.version>
@@ -21,6 +22,11 @@
                 <groupId>org.smartboot.socket</groupId>
                 <artifactId>aio-pro</artifactId>
                 <version>${smart-socket.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.smartboot.http</groupId>
+                <artifactId>smart-http-restful</artifactId>
+                <version>${smart-http.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.smartboot.mqtt</groupId>
@@ -177,7 +183,7 @@
                 <executions>
                     <execution>
                         <id>sign-artifacts</id>
-<!--                                                <phase>verify</phase>-->
+                        <!--                                                <phase>verify</phase>-->
                         <phase>deploy</phase>
                         <goals>
                             <goal>sign</goal>

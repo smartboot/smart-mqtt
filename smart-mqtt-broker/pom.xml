@@ -14,6 +14,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.smartboot.http</groupId>
+            <artifactId>smart-http-restful</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.smartboot.mqtt</groupId>
             <artifactId>smart-mqtt-common</artifactId>
         </dependency>
