@@ -78,6 +78,8 @@ public class BrokerContextImpl implements BrokerContext {
     private final EventBus eventBus = new EventBusImpl(ServerEventType.types());
     private final List<Plugin> plugins = new ArrayList<>();
     private final Providers providers = new Providers();
+
+    private final BrokerRuntime runtime = new BrokerRuntime();
     private ExecutorService pushThreadPool;
     private ExecutorService retainPushThreadPool;
     private BlockingQueue<BrokerTopic> pushTopicQueue;
@@ -119,7 +121,7 @@ public class BrokerContextImpl implements BrokerContext {
             } else {
                 System.out.println("\uD83C\uDF89start smart-mqtt success! [host:" + brokerConfigure.getHost() + " port:" + brokerConfigure.getPort() + "]");
             }
-
+            runtime.setStartTime(System.currentTimeMillis());
         } catch (Exception e) {
             destroy();
             throw e;
@@ -416,6 +418,11 @@ public class BrokerContextImpl implements BrokerContext {
     @Override
     public Providers getProviders() {
         return providers;
+    }
+
+    @Override
+    public BrokerRuntime getRuntime() {
+        return runtime;
     }
 
 

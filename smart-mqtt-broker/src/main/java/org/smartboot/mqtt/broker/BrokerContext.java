@@ -60,6 +60,10 @@ public interface BrokerContext {
 
     Providers getProviders();
 
+    /**
+     * Broker运行时
+     */
+    BrokerRuntime getRuntime();
 
     /**
      * 解析配置文件

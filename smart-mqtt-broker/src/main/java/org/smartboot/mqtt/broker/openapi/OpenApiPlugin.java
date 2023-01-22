@@ -26,7 +26,7 @@ public class OpenApiPlugin extends Plugin {
         }
         try {
             RestfulBootstrap restfulBootstrap = RestfulBootstrap.getInstance();
-            restfulBootstrap.controller(DashBoardController.class);
+            restfulBootstrap.controller(new DashBoardController(brokerContext));
             HttpBootstrap bootstrap = restfulBootstrap.bootstrap();
             bootstrap.setPort(config.getPort());
             bootstrap.configuration().bannerEnabled(false);
