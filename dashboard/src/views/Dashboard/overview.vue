@@ -58,45 +58,47 @@
 
 
   </lay-row>
-  <lay-row space="10">
-    <lay-col md="24" sm="24" xs="24">
-      <div class="grid-demo" style="height: 200px">3</div>
-    </lay-col>
-  </lay-row>
-  <lay-select v-model="value" placeholder="请选择">
-    <lay-select-option :value="1" label="过去1小时"></lay-select-option>
-    <lay-select-option :value="2" label="过去6小时"></lay-select-option>
-    <lay-select-option :value="3" label="过去12小时"></lay-select-option>
-    <lay-select-option :value="4" label="过去1天"></lay-select-option>
-    <lay-select-option :value="5" label="过去3天"></lay-select-option>
-    <lay-select-option :value="6" label="过去7天"></lay-select-option>
-  </lay-select>
-  <lay-row space="10">
-    <lay-col md="12" sm="12" xs="24">
-      <div class="grid-demo">1</div>
-    </lay-col>
-    <lay-col md="12" sm="12" xs="24">
-      <div class="grid1">2</div>
-    </lay-col>
-    <lay-col md="12" sm="12" xs="24">
-      <div class="grid1">2</div>
-    </lay-col>
-    <lay-col md="12" sm="12" xs="24">
-      <div class="grid1">1</div>
-    </lay-col>
-    <lay-col md="8" sm="12" xs="24">
-      <div class="grid1">2</div>
-    </lay-col>
-    <lay-col md="8" sm="12" xs="24">
-      <div class="grid1">2</div>
-    </lay-col>
-  </lay-row>
+
+  <!--  <lay-row space="10">-->
+  <!--    <lay-col md="24" sm="24" xs="24">-->
+  <!--      <div class="grid-demo" style="height: 200px">3</div>-->
+  <!--    </lay-col>-->
+  <!--  </lay-row>-->
+  <!--  <lay-select v-model="value" placeholder="请选择">-->
+  <!--    <lay-select-option :value="1" label="过去1小时"></lay-select-option>-->
+  <!--    <lay-select-option :value="2" label="过去6小时"></lay-select-option>-->
+  <!--    <lay-select-option :value="3" label="过去12小时"></lay-select-option>-->
+  <!--    <lay-select-option :value="4" label="过去1天"></lay-select-option>-->
+  <!--    <lay-select-option :value="5" label="过去3天"></lay-select-option>-->
+  <!--    <lay-select-option :value="6" label="过去7天"></lay-select-option>-->
+  <!--  </lay-select>-->
+  <!--  <lay-row space="10">-->
+  <!--    <lay-col md="12" sm="12" xs="24">-->
+  <!--      <div class="grid-demo">1</div>-->
+  <!--    </lay-col>-->
+  <!--    <lay-col md="12" sm="12" xs="24">-->
+  <!--      <div class="grid1">2</div>-->
+  <!--    </lay-col>-->
+  <!--    <lay-col md="12" sm="12" xs="24">-->
+  <!--      <div class="grid1">2</div>-->
+  <!--    </lay-col>-->
+  <!--    <lay-col md="12" sm="12" xs="24">-->
+  <!--      <div class="grid1">1</div>-->
+  <!--    </lay-col>-->
+  <!--    <lay-col md="8" sm="12" xs="24">-->
+  <!--      <div class="grid1">2</div>-->
+  <!--    </lay-col>-->
+  <!--    <lay-col md="8" sm="12" xs="24">-->
+  <!--      <div class="grid1">2</div>-->
+  <!--    </lay-col>-->
+  <!--  </lay-row>-->
 </template>
 
 <script>
 import {onMounted, ref} from "vue";
 import {dashboard_overview} from "../../api/module/api";
 import {Chart} from '@antv/g2';
+import {onUnmounted} from "@vue/runtime-core";
 
 export default {
   setup() {
@@ -108,29 +110,29 @@ export default {
     const outflowRate = ref()
     const metric = ref({})
 
-    const flowInData=[];
-    const flowOutData=[];
+    const flowInData = [];
+    const flowOutData = [];
 
+
+    let timer;
 
     onMounted(() => {
+      const flowInChart = flowChart(flowInRef.value);
+      const flowOutChart = flowChart(flowOutRef.value);
 
-
-      const flowInChart=flowChart(flowInRef.value);
-      const flowOutChart=flowChart(flowOutRef.value);
-
-      const loadJvm = async (render) => {
+      const loadData = async () => {
         const {data} = await dashboard_overview();
         console.log(data.metricTO)
         metric.value = data.metricTO;
-        inflowRate.value=data.flowInBytes;
-        outflowRate.value=data.flowOutBytes;
+        inflowRate.value = data.flowInBytes;
+        outflowRate.value = data.flowOutBytes;
 
-        flowInData.push({Data:new Date(),flowBytes:data.flowInBytes})
-        flowOutData.push({Data:new Date(),flowBytes:data.flowOutBytes})
-        if(flowInData.length>=20){
+        flowInData.push({Data: new Date(), flowBytes: data.flowInBytes})
+        flowOutData.push({Data: new Date(), flowBytes: data.flowOutBytes})
+        if (flowInData.length >= 20) {
           flowInData.shift()
         }
-        if(flowOutData.length>=20){
+        if (flowOutData.length >= 20) {
           flowOutData.shift()
         }
         // flowInChart.animate(false)
@@ -138,11 +140,15 @@ export default {
         flowInChart.changeData(flowInData)
         flowOutChart.changeData(flowOutData)
       };
-      loadJvm(true)
-      let timer = setInterval(() => {
-        loadJvm(false)
-      },2000)
+      loadData()
+      timer = setInterval(() => {
+        loadData(false)
+      }, 2000)
     });
+    onUnmounted(() => {
+      console.log("clear timer")
+      clearInterval(timer)
+    })
 
     return {
       metric,
