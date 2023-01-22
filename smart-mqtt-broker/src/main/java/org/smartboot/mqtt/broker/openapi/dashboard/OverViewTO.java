@@ -7,11 +7,31 @@ package org.smartboot.mqtt.broker.openapi.dashboard;
 public class OverViewTO {
     private MetricTO metricTO;
 
+    private int flowInBytes;
+
+    private int flowOutBytes;
+
     public MetricTO getMetricTO() {
         return metricTO;
     }
 
     public void setMetricTO(MetricTO metricTO) {
         this.metricTO = metricTO;
+    }
+
+    public int getFlowInBytes() {
+        return flowInBytes;
+    }
+
+    public void setFlowInBytes(int flowInBytes) {
+        this.flowInBytes = flowInBytes;
+    }
+
+    public int getFlowOutBytes() {
+        return flowOutBytes;
+    }
+
+    public void setFlowOutBytes(int flowOutBytes) {
+        this.flowOutBytes = flowOutBytes;
     }
 }

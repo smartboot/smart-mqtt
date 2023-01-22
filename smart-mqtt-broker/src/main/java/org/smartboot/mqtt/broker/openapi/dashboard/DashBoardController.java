@@ -20,10 +20,13 @@ public class DashBoardController {
         response.setHeader("Access-Control-Allow-Headers", "*");
         OverViewTO overViewTO = new OverViewTO();
         MetricTO metricTO = new MetricTO();
-        metricTO.setConnectCount(123);
-        metricTO.setTopicCount(423);
-        metricTO.setSubscriberCount(1213);
+        metricTO.setConnectCount(100 + (int) (Math.random() * 10));
+        metricTO.setTopicCount(300 + (int) (Math.random() * 10));
+        metricTO.setSubscriberCount(230 + (int) (Math.random() * 10));
         overViewTO.setMetricTO(metricTO);
+
+        overViewTO.setFlowInBytes(50 + (int) (Math.random() * 10));
+        overViewTO.setFlowOutBytes(50 + (int) (Math.random() * 10));
         return RestResult.ok(overViewTO);
     }
 }

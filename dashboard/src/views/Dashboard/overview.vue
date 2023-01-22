@@ -100,106 +100,48 @@ import {Chart} from '@antv/g2';
 
 export default {
   setup() {
+
     const flowInRef = ref()
     const flowOutRef = ref()
+
     const inflowRate = ref()
     const outflowRate = ref()
     const metric = ref({})
 
-    //加载 JVM 相关配置
-    const loadJvm = async () => {
-      const {data} = await dashboard_overview();
-      console.log(data.metricTO)
-      metric.value = data.metricTO;
-      // console.log(metric.value)
-    };
-    loadJvm()
+    const flowInData=[];
+    const flowOutData=[];
+
 
     onMounted(() => {
-      const flowInChartDom = flowInRef.value;
-      const flowOutChartDom = flowOutRef.value;
-      // @ts-ignore
-      const data = [
-        {
-          "Data": "2023-01-01 19:02:00",
-          "flowBytes": 10
-        },
-        {
-          "Data": "2023-01-01 19:02:01",
-          "flowBytes": 12
-        },
-        {
-          "Data": "2023-01-01 19:14:00",
-          "flowBytes": 15
-        },
-        {
-          "Data": "2023-01-01 20:03:00",
-          "flowBytes": 14
-        },
-        {
-          "Data": "2023-01-01 21:03:00",
-          "flowBytes": 14
-        },
-        {
-          "Data": "2023-01-01 22:03:00",
-          "flowBytes": 24
+
+
+      const flowInChart=flowChart(flowInRef.value);
+      const flowOutChart=flowChart(flowOutRef.value);
+
+      const loadJvm = async (render) => {
+        const {data} = await dashboard_overview();
+        console.log(data.metricTO)
+        metric.value = data.metricTO;
+        inflowRate.value=data.flowInBytes;
+        outflowRate.value=data.flowOutBytes;
+
+        flowInData.push({Data:new Date(),flowBytes:data.flowInBytes})
+        flowOutData.push({Data:new Date(),flowBytes:data.flowOutBytes})
+        if(flowInData.length>=20){
+          flowInData.shift()
         }
-      ];
-
-      function flowChart(dom, data) {
-        var chart = new Chart({
-          container: dom,
-          // forceFit: true,
-          height: 250,
-          autoFit: true,
-          padding: [20, 20, 40, 50]
-        });
-        chart.data(data);
-        chart.scale('Data', {
-          range: [0, 1],
-          mask: "YYYY-MM-DD HH:mm:ss",
-          tickCount: 50,
-          type: 'timeCat'
-        });
-        chart.axis('Data', {
-          label: {
-            textStyle: {
-              fill: '#aaaaaa'
-            },
-            formatter: function formatter(text) {
-              const array = text.split(" ");
-              return array && array.length === 2 ? array[1] : "Nan";
-            }
-          }
-        });
-        chart.axis('flowBytes', {
-          label: {
-            textStyle: {
-              fill: '#aaaaaa'
-            },
-            formatter: function formatter(text) {
-              return text.replace(/(\d)(?=(?:\d{3})+$)/g, '$1,');
-            }
-          }
-        });
-        chart.tooltip({
-          crosshairs: 'y',
-          share: true
-        });
-        chart.legend({
-          attachLast: true
-        });
-        // chart.annotation().text({
-        //   content:"aaaa"
-        // })
-
-        chart.line().position('Data*flowBytes');
-        chart.area().position('Data*flowBytes');
-        chart.render();
-      }
-
-      flowChart(flowInChartDom, data);
-      flowChart(flowOutChartDom, data);
+        if(flowOutData.length>=20){
+          flowOutData.shift()
+        }
+        // flowInChart.animate(false)
+        // flowOutChart.animate(false)
+        flowInChart.changeData(flowInData)
+        flowOutChart.changeData(flowOutData)
+      };
+      loadJvm(true)
+      let timer = setInterval(() => {
+        loadJvm(false)
+      },2000)
     });
 
     return {
@@ -209,8 +151,58 @@ export default {
       inflowRate,
       outflowRate
     }
+
+    function flowChart(dom) {
+      const chart = new Chart({
+        container: dom,
+        // forceFit: true,
+        height: 250,
+        autoFit: true,
+        padding: [20, 20, 40, 50]
+      });
+      chart.scale('Data', {
+        range: [0, 1],
+        mask: "YYYY-MM-DD HH:mm:ss",
+        tickCount: 50,
+        type: 'timeCat'
+      });
+      chart.axis('Data', {
+        label: {
+          textStyle: {
+            fill: '#aaaaaa'
+          },
+          formatter: function formatter(text) {
+            const array = text.split(" ");
+            return array && array.length === 2 ? array[1] : "Nan";
+          }
+        }
+      });
+      chart.axis('flowBytes', {
+        label: {
+          textStyle: {
+            fill: '#aaaaaa'
+          },
+          formatter: function formatter(text) {
+            return text.replace(/(\d)(?=(?:\d{3})+$)/g, '$1,');
+          }
+        }
+      });
+      chart.tooltip({
+        crosshairs: 'y',
+        share: true
+      });
+      chart.legend({
+        attachLast: true
+      });
+
+      chart.line().position('Data*flowBytes');
+      chart.area().position('Data*flowBytes');
+      chart.render();
+      return chart;
+    }
   }
 }
+
 </script>
 <style>
 .flowChart {
