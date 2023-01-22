@@ -3,6 +3,7 @@ package org.smartboot.mqtt.broker;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.JSONPath;
 import com.alibaba.fastjson2.JSONReader;
+import jdk.jfr.internal.JVM;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,6 +123,7 @@ public class BrokerContextImpl implements BrokerContext {
                 System.out.println("\uD83C\uDF89start smart-mqtt success! [host:" + brokerConfigure.getHost() + " port:" + brokerConfigure.getPort() + "]");
             }
             runtime.setStartTime(System.currentTimeMillis());
+            runtime.setPid(JVM.getJVM().getPid());
         } catch (Exception e) {
             destroy();
             throw e;

@@ -7,6 +7,13 @@ package org.smartboot.mqtt.broker;
  * @version V1.0 , 2023/1/22
  */
 public final class BrokerRuntime {
+    /**
+     * 进程ID
+     */
+    private String pid;
+    /**
+     * 启动时间
+     */
     private long startTime;
 
     BrokerRuntime() {
@@ -18,5 +25,13 @@ public final class BrokerRuntime {
 
     public void setStartTime(long startTime) {
         this.startTime = startTime;
+    }
+
+    public String getPid() {
+        return pid;
+    }
+
+    public void setPid(String pid) {
+        this.pid = pid;
     }
 }

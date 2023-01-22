@@ -1,13 +1,14 @@
 package org.smartboot.mqtt.broker.openapi.dashboard;
 
 import com.sun.management.OperatingSystemMXBean;
-import jdk.jfr.internal.JVM;
+import org.apache.commons.lang.StringUtils;
 import org.smartboot.http.restful.RestResult;
 import org.smartboot.http.restful.annotation.Controller;
 import org.smartboot.http.restful.annotation.RequestMapping;
 import org.smartboot.http.server.HttpResponse;
 import org.smartboot.mqtt.broker.BrokerConfigure;
 import org.smartboot.mqtt.broker.BrokerContext;
+import org.smartboot.mqtt.broker.BrokerRuntime;
 import org.smartboot.mqtt.broker.openapi.OpenApi;
 
 import java.lang.management.ManagementFactory;
@@ -49,15 +50,16 @@ public class DashBoardController {
     public RestResult<List<BrokerNodeTO>> nodes(HttpResponse response) {
         response.setHeader("Access-Control-Allow-Origin", "*");
         response.setHeader("Access-Control-Allow-Headers", "*");
-
+        BrokerRuntime brokerRuntime = brokerContext.getRuntime();
         BrokerNodeTO nodeTO = new BrokerNodeTO();
-        nodeTO.setNode("smart-mqtt@192.168.1.3");
+        nodeTO.setNode("smart-mqtt@" + (StringUtils.isBlank(brokerContext.getBrokerConfigure().getHost()) ? "::1" : brokerContext.getBrokerConfigure().getHost()));
         nodeTO.setStatus(1);
         nodeTO.setVersion(BrokerConfigure.VERSION);
-        nodeTO.setPid(JVM.getJVM().getPid());
+        nodeTO.setPid(brokerRuntime.getPid());
 
+        //运行时长
         StringBuilder sb = new StringBuilder();
-        long runtime = (System.currentTimeMillis() - brokerContext.getRuntime().getStartTime()) / 1000;
+        long runtime = (System.currentTimeMillis() - brokerRuntime.getStartTime()) / 1000;
         if (runtime >= DAY) {
             sb.append(runtime / DAY).append("天");
             runtime %= DAY;
@@ -71,6 +73,8 @@ public class DashBoardController {
         }
         sb.append(runtime % 60).append("秒");
         nodeTO.setRuntime(sb.toString());
+
+
         OperatingSystemMXBean systemMXBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
         nodeTO.setCpu((int) (systemMXBean.getSystemCpuLoad() * 100));
         nodeTO.setMemory((int) ((systemMXBean.getTotalPhysicalMemorySize() + systemMXBean.getTotalSwapSpaceSize() - systemMXBean.getFreeSwapSpaceSize() - systemMXBean.getFreePhysicalMemorySize()) * 100.0 / (systemMXBean.getTotalPhysicalMemorySize() + systemMXBean.getTotalSwapSpaceSize())));
