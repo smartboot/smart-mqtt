@@ -17,11 +17,24 @@
   </lay-row>
   <lay-row space="10">
     <lay-table :columns="columns2" :data-source="dataSource2" :size="md" skin='nob'>
+      <template #status="{ data }">
+        <div v-if="data.status==1">
+          <lay-badge type="dot" theme="green" ripple></lay-badge>
+          已连接
+        </div>
+        <div v-if="data.status==2">
+          <lay-badge type="dot"></lay-badge>
+          已离线
+        </div>
+      </template>
     </lay-table>
   </lay-row>
 </template>
 
 <script>
+
+import {onMounted, ref} from "vue";
+import {connections} from "../../api/module/api";
 
 export default {
   setup() {
@@ -38,34 +51,41 @@ export default {
       },{
         title:"状态",
         width: "80px",
-        key:"status"
+        key:"status",
+        customSlot: "status"
       },{
         title:"IP地址",
         width: "180px",
-        key:"ip"
+        key:"ip_address"
       },{
         title:"心跳",
         width: "80px",
-        key:"heart"
+        key:"keepalive"
       },{
         title:"Clean Start",
         width: "120px",
-        key:"memory"
+        key:"clean_start"
       },{
         title:"会话过期间隔",
         width: "180px",
-        key:"sessionExpire"
+        key:"expiry_interval"
       },{
         title:"连接时间",
         width: "180px",
-        key:"connectTime"
+        key:"connect_time"
       }
     ]
 
-    const dataSource2 = [
-      {node:"smart-mqtt@192.168.0.1", status:"运行中", runtime:"1 小时 4 分 14 秒",version:"v0.13",pid:1232,memory:'20%',cpu:'98%'},
-      {node:"smart-mqtt@192.168.0.2", status:"已暂停", runtime:"-",version:"v0.13",pid:232,memory:'40%',cpu:'30%'},
-    ]
+    const dataSource2 = ref([])
+
+    onMounted(() => {
+      const loadData = async () => {
+        const {data} = await connections();
+        console.log(data)
+        dataSource2.value=data
+      };
+      loadData()
+    })
 
     return {
       columns2,

@@ -11,4 +11,6 @@ public class OpenApi {
     public static final String DASHBOARD_OVERVIEW = DASHBOARD + "/overview";
 
     public static final String DASHBOARD_NODES = DASHBOARD + "/nodes";
+
+    public static final String CONNECTIONS = BASE_API + "/connections";
 }

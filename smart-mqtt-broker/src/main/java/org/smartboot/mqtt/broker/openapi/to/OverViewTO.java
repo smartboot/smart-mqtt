@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.broker.openapi.dashboard;
+package org.smartboot.mqtt.broker.openapi.to;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
