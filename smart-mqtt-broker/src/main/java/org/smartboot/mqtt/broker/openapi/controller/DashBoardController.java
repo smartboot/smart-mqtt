@@ -35,8 +35,6 @@ public class DashBoardController {
 
     @RequestMapping(OpenApi.DASHBOARD_OVERVIEW)
     public RestResult<OverViewTO> overview(HttpResponse response) {
-        response.setHeader("Access-Control-Allow-Origin", "*");
-        response.setHeader("Access-Control-Allow-Headers", "*");
         OverViewTO overViewTO = new OverViewTO();
         MetricTO metricTO = new MetricTO();
         metricTO.setConnectCount(100 + (int) (Math.random() * 10));
@@ -51,8 +49,6 @@ public class DashBoardController {
 
     @RequestMapping(OpenApi.DASHBOARD_NODES)
     public RestResult<List<BrokerNodeTO>> nodes(HttpResponse response) {
-        response.setHeader("Access-Control-Allow-Origin", "*");
-        response.setHeader("Access-Control-Allow-Headers", "*");
         BrokerRuntime brokerRuntime = brokerContext.getRuntime();
         BrokerNodeTO nodeTO = new BrokerNodeTO();
         nodeTO.setNode("smart-mqtt@" + (StringUtils.isBlank(brokerContext.getBrokerConfigure().getHost()) ? "::1" : brokerContext.getBrokerConfigure().getHost()));

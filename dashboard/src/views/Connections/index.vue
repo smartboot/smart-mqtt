@@ -18,7 +18,7 @@
   <lay-row space="10">
     <lay-table :columns="columns2" :data-source="dataSource2" :size="md" skin='nob'>
       <template #status="{ data }">
-        <div v-if="data.status==1">
+        <div v-if="data.status=='connected'">
           <lay-badge type="dot" theme="green" ripple></lay-badge>
           已连接
         </div>

@@ -28,6 +28,10 @@ public class OpenApiPlugin extends Plugin {
         }
         try {
             RestfulBootstrap restfulBootstrap = RestfulBootstrap.getInstance();
+            restfulBootstrap.inspect((httpRequest, response) -> {
+                response.setHeader("Access-Control-Allow-Origin", "*");
+                response.setHeader("Access-Control-Allow-Headers", "*");
+            });
             restfulBootstrap.controller(new DashBoardController(brokerContext));
             restfulBootstrap.controller(new ConnectionsController(brokerContext));
             restfulBootstrap.controller(new SubscriptionController(brokerContext));
@@ -35,6 +39,7 @@ public class OpenApiPlugin extends Plugin {
             bootstrap.setPort(config.getPort());
             bootstrap.configuration().bannerEnabled(false);
             bootstrap.start();
+            brokerContext.getProviders().setOpenApiBootStrap(restfulBootstrap);
             LOGGER.info("openapi server start success!");
         } catch (Exception e) {
             e.fillInStackTrace();

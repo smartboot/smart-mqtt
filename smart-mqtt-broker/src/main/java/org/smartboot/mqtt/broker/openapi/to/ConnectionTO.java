@@ -2,6 +2,8 @@ package org.smartboot.mqtt.broker.openapi.to;
 
 import com.alibaba.fastjson2.annotation.JSONField;
 
+import java.util.Date;
+
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/1/23
@@ -20,7 +22,7 @@ public class ConnectionTO {
     /**
      * 状态
      */
-    private int status;
+    private String status;
 
     /**
      * IP地址
@@ -46,8 +48,8 @@ public class ConnectionTO {
     /**
      * 连接时间
      */
-    @JSONField(name = "connect_time")
-    private String connectTime;
+    @JSONField(name = "connect_time", format = "yyyy-MM-dd HH:mm:ss")
+    private Date connectTime;
 
     public String getClientId() {
         return clientId;
@@ -65,11 +67,11 @@ public class ConnectionTO {
         this.username = username;
     }
 
-    public int getStatus() {
+    public String getStatus() {
         return status;
     }
 
-    public void setStatus(int status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 
@@ -105,11 +107,11 @@ public class ConnectionTO {
         this.expiryInterval = expiryInterval;
     }
 
-    public String getConnectTime() {
+    public Date getConnectTime() {
         return connectTime;
     }
 
-    public void setConnectTime(String connectTime) {
+    public void setConnectTime(Date connectTime) {
         this.connectTime = connectTime;
     }
 }

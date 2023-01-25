@@ -24,10 +24,6 @@ public class SubscriptionController {
 
     @RequestMapping(OpenApi.SUBSCRIPTIONS_SUBSCRIPTION)
     public RestResult<List<ConnectionTO>> subscription(HttpResponse response) {
-        response.setHeader("Access-Control-Allow-Origin", "*");
-        response.setHeader("Access-Control-Allow-Headers", "*");
-
-
         return RestResult.ok(null);
     }
 }
