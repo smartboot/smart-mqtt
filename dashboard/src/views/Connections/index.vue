@@ -22,7 +22,7 @@
           <lay-badge type="dot" theme="green" ripple></lay-badge>
           已连接
         </div>
-        <div v-if="data.status==2">
+        <div v-if="data.status=='disconnect'">
           <lay-badge type="dot"></lay-badge>
           已离线
         </div>

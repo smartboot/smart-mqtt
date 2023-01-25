@@ -7,6 +7,7 @@ import org.smartboot.mqtt.broker.TopicSubscriber;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
+import org.smartboot.mqtt.common.message.MqttTopicSubscription;
 
 import java.util.List;
 
@@ -39,6 +40,11 @@ public class ServerEventType<T> extends EventType<T> {
      * Broker接收到客户端发送过来的消息
      */
     public static final ServerEventType<EventObject<MqttPublishMessage>> RECEIVE_PUBLISH_MESSAGE = new ServerEventType<>("receivePublishMessage");
+
+    /**
+     * 接受订阅请求
+     */
+    public static final ServerEventType<EventObject<MqttTopicSubscription>> SUBSCRIBE_ACCEPT = new ServerEventType<>("subscribeAccept");
 
     /**
      * 客户端订阅Topic
