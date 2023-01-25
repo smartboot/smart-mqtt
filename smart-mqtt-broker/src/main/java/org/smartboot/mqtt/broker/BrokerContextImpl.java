@@ -124,6 +124,7 @@ public class BrokerContextImpl implements BrokerContext {
             }
             runtime.setStartTime(System.currentTimeMillis());
             runtime.setPid(JVM.getJVM().getPid());
+            runtime.setIpAddress(brokerConfigure.getHost() + ":" + brokerConfigure.getPort());
         } catch (Exception e) {
             destroy();
             throw e;

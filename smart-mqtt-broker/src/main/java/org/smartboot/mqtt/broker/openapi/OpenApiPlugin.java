@@ -7,6 +7,7 @@ import org.smartboot.http.server.HttpBootstrap;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.openapi.controller.ConnectionsController;
 import org.smartboot.mqtt.broker.openapi.controller.DashBoardController;
+import org.smartboot.mqtt.broker.openapi.controller.SubscriptionController;
 import org.smartboot.mqtt.broker.plugin.Plugin;
 import org.smartboot.mqtt.broker.plugin.PluginException;
 
@@ -29,6 +30,7 @@ public class OpenApiPlugin extends Plugin {
             RestfulBootstrap restfulBootstrap = RestfulBootstrap.getInstance();
             restfulBootstrap.controller(new DashBoardController(brokerContext));
             restfulBootstrap.controller(new ConnectionsController(brokerContext));
+            restfulBootstrap.controller(new SubscriptionController(brokerContext));
             HttpBootstrap bootstrap = restfulBootstrap.bootstrap();
             bootstrap.setPort(config.getPort());
             bootstrap.configuration().bannerEnabled(false);

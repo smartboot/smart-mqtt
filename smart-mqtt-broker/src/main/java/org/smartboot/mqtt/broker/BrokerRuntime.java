@@ -12,6 +12,10 @@ public final class BrokerRuntime {
      */
     private String pid;
     /**
+     * Broker IP地址
+     */
+    private String ipAddress;
+    /**
      * 启动时间
      */
     private long startTime;
@@ -33,5 +37,13 @@ public final class BrokerRuntime {
 
     public void setPid(String pid) {
         this.pid = pid;
+    }
+
+    public String getIpAddress() {
+        return ipAddress;
+    }
+
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
     }
 }
