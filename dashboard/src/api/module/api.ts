@@ -11,3 +11,11 @@ export const dashboard_nodes = function () {
 export const connections = function () {
     return Http.post('/connections')
 }
+
+export const subscriptions_subscription = function () {
+    return Http.post('/subscriptions/subscription')
+}
+
+export const subscriptions_topics = function () {
+    return Http.post('/subscriptions/topics')
+}

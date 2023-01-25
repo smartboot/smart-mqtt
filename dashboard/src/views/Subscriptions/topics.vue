@@ -1,7 +1,7 @@
 <template>
   <lay-row space="10">
     <lay-col sm="6" md="6">
-      <lay-input placeholder="主题" ></lay-input>
+      <lay-input placeholder="主题"></lay-input>
     </lay-col>
 
     <lay-col sm="6" md="6">
@@ -17,27 +17,38 @@
 
 <script>
 
+import {onMounted, ref} from "vue";
+import {subscriptions_topics} from "../../api/module/api";
+
 export default {
   setup() {
 
     const columns2 = [
       {
-        title:"主题",
+        title: "主题",
         width: "120px",
-        key:"topic"
-      },{
-        title:"节点",
+        key: "topic"
+      }, {
+        title: "节点",
         width: "80px",
-        key:"qos"
-      },{
-        title:"操作",
+        key: "brokerIpAddress"
+      }, {
+        title: "操作",
         width: "180px",
-        key:"ip"
+        key: "ip"
       }
     ]
 
-    const dataSource2 = [
-    ]
+    const dataSource2 = ref([])
+
+    onMounted(() => {
+      const loadData = async () => {
+        const {data} = await subscriptions_topics();
+        console.log(data)
+        dataSource2.value = data
+      };
+      loadData()
+    })
 
     return {
       columns2,

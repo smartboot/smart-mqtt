@@ -24,6 +24,9 @@
 
 <script>
 
+import {onMounted, ref} from "vue";
+import {subscriptions_subscription} from "../../api/module/api";
+
 export default {
   setup() {
 
@@ -51,10 +54,17 @@ export default {
       }
     ]
 
-    const dataSource2 = [
-      {node:"smart-mqtt@192.168.0.1", status:"运行中", runtime:"1 小时 4 分 14 秒",version:"v0.13",pid:1232,memory:'20%',cpu:'98%'},
-      {node:"smart-mqtt@192.168.0.2", status:"已暂停", runtime:"-",version:"v0.13",pid:232,memory:'40%',cpu:'30%'},
-    ]
+    const dataSource2 = ref([])
+
+    onMounted(() => {
+      const loadData = async () => {
+        const {data} = await subscriptions_subscription();
+        console.log(data)
+        dataSource2.value=data
+      };
+      loadData()
+    })
+
 
     return {
       columns2,

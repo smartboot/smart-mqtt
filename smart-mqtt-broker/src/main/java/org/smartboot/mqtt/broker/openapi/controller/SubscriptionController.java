@@ -6,7 +6,7 @@ import org.smartboot.http.restful.annotation.RequestMapping;
 import org.smartboot.http.server.HttpResponse;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.openapi.OpenApi;
-import org.smartboot.mqtt.broker.openapi.to.ConnectionTO;
+import org.smartboot.mqtt.broker.openapi.to.SubscriptionTO;
 
 import java.util.List;
 
@@ -23,7 +23,7 @@ public class SubscriptionController {
     }
 
     @RequestMapping(OpenApi.SUBSCRIPTIONS_SUBSCRIPTION)
-    public RestResult<List<ConnectionTO>> subscription(HttpResponse response) {
+    public RestResult<List<SubscriptionTO>> subscription(HttpResponse response) {
         return RestResult.ok(null);
     }
 }
