@@ -275,5 +275,7 @@ public class MqttSession extends AbstractSession {
         this.willMessage = willMessage;
     }
 
-
+    public Map<String, TopicFilterSubscriber> getSubscribers() {
+        return subscribers;
+    }
 }

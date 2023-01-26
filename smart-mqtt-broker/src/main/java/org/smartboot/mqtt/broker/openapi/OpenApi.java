@@ -12,6 +12,8 @@ public class OpenApi {
 
     public static final String DASHBOARD_NODES = DASHBOARD + "/nodes";
 
+    public static final String DASHBOARD_METRICS = DASHBOARD + "/metrics";
+
     public static final String CONNECTIONS = BASE_API + "/connections";
 
     public static final String SUBSCRIPTIONS = BASE_API + "/subscriptions";

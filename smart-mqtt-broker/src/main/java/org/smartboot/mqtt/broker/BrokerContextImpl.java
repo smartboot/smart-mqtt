@@ -41,6 +41,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
@@ -413,6 +414,11 @@ public class BrokerContextImpl implements BrokerContext {
     @Override
     public MqttSession getSession(String clientId) {
         return grantSessions.get(clientId);
+    }
+
+    @Override
+    public Collection<MqttSession> getSessions() {
+        return Collections.unmodifiableCollection(grantSessions.values());
     }
 
 

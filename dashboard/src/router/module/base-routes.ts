@@ -63,9 +63,5 @@ export default [
             },
         ]
 
-    },
-  {
-    path: '/help',
-    // redirect: 'https://www.baidu.com',
-  }
+    }
 ]

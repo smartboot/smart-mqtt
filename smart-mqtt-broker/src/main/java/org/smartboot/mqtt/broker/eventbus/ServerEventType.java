@@ -8,6 +8,7 @@ import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
+import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 
 import java.util.List;
 
@@ -45,6 +46,10 @@ public class ServerEventType<T> extends EventType<T> {
      * 接受订阅请求
      */
     public static final ServerEventType<EventObject<MqttTopicSubscription>> SUBSCRIBE_ACCEPT = new ServerEventType<>("subscribeAccept");
+    /**
+     * 接受取消订阅的请求
+     */
+    public static final ServerEventType<EventObject<MqttUnsubscribeMessage>> UNSUBSCRIBE_ACCEPT = new ServerEventType<>("unsubscribeAccept");
 
     /**
      * 客户端订阅Topic
@@ -62,9 +67,14 @@ public class ServerEventType<T> extends EventType<T> {
     public static final ServerEventType<BrokerTopic> MESSAGE_BUS_CONSUMED = new ServerEventType<>("messageBusProduced");
 
     /**
-     * 客户端连接
+     * 客户端连接请求
      */
     public static final ServerEventType<EventObject<MqttConnectMessage>> CONNECT = new ServerEventType<>("connect");
+
+    /**
+     * 连接响应
+     */
+    public static final ServerEventType<EventObject<MqttConnectMessage>> CONNACK = new ServerEventType<>("connect");
 
     protected ServerEventType(String name) {
         super(name);

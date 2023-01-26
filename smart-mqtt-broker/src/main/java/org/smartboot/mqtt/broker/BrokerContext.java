@@ -27,6 +27,8 @@ public interface BrokerContext {
 
     MqttSession getSession(String clientId);
 
+    Collection<MqttSession> getSessions();
+
     /**
      * 获取Topic，如果不存在将创建
      *
