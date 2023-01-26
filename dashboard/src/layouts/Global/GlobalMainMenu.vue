@@ -5,12 +5,10 @@
     :level="appStore.level"
     :inverted="appStore.inverted"
     :theme="appStore.sideTheme"
-    :openKeys="openKeys"
     :selectedKey="selectedKey"
-    @changeOpenKeys="changeOpenKeys"
     @changeSelectedKey="changeSelectedKey"
   >
-    <GlobalMenuItem :menus="menus"></GlobalMenuItem>
+    <GlobalMainMenuItem :menus="menus"></GlobalMainMenuItem>
   </lay-menu>
 </template>
 
@@ -22,26 +20,21 @@ export default {
 
 <script lang="ts" setup>
 import { useAppStore } from "../../store/app";
-import GlobalMenuItem from "./GlobalMenuItem.vue";
+import GlobalMainMenuItem from "./GlobalMainMenuItem.vue";
 
 const appStore = useAppStore();
 
 interface MenuProps {
   collapse: boolean;
-  selectedKey: string;
-  openKeys: string[];
   menus: any[];
+  selectedKey: string;
 }
 
 const props = withDefaults(defineProps<MenuProps>(), {
   collapse: false,
 });
 
-const emits = defineEmits(['changeOpenKeys', 'changeSelectedKey'])
-
-const changeOpenKeys = (keys: string[]) => {
-  emits("changeOpenKeys", keys);
-}
+const emits = defineEmits(['changeSelectedKey'])
 
 const changeSelectedKey = (key: string) => {
   emits("changeSelectedKey", key);

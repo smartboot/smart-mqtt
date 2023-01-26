@@ -1,5 +1,5 @@
 <template>
-    <div class="global-content">
+    <div class="global-content" :class="{'has-tab':appStore.tab}">
 			<router-view  v-slot="{ Component }" v-if="appStore.routerAlive">
       	<lay-transition type="fade">
 					<keep-alive :include="appStore.keepAliveList">
@@ -23,8 +23,12 @@ const appStore = useAppStore();
 </script>
 
 <style scoped>
-.global-content {
+.global-content.has-tab{
     height: calc(100% - 46px);
+    overflow: auto;
+}
+.global-content {
+    height: 100%;
     overflow: auto;
 }
 </style>

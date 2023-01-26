@@ -3,6 +3,7 @@ import {useRoute, useRouter} from "vue-router";
 import {useAppStore} from "../../store/app";
 
 export function useTab() {
+  
   const route = useRoute();
   const router = useRouter();
   const routes = router.getRoutes()

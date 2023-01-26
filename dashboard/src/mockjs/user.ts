@@ -51,24 +51,6 @@ const menus = [
     icon: "layui-icon-help",
     title: "帮助",
     type: "blank"
-  },{
-    id: "/page",
-    icon: "layui-icon-home",
-    title: "外链页面",
-    children: [
-      {
-        id: "http://www.bing.com",
-        icon: "layui-icon-home",
-        title: "弹层外链",
-        type: "modal"
-      },
-      {
-        id: "http://www.baidu.com",
-        icon: "layui-icon-home",
-        title: "原生跳转",
-        type: "blank"
-      }
-    ]
   }
 ]
 

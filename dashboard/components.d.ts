@@ -22,6 +22,7 @@ declare module '@vue/runtime-core' {
     LayDropdown: typeof import('@layui/layui-vue')['LayDropdown']
     LayDropdownMenu: typeof import('@layui/layui-vue')['LayDropdownMenu']
     LayDropdownMenuItem: typeof import('@layui/layui-vue')['LayDropdownMenuItem']
+    LayException: typeof import('@layui/layui-vue')['LayException']
     LayField: typeof import('@layui/layui-vue')['LayField']
     LayFooter: typeof import('@layui/layui-vue')['LayFooter']
     LayForm: typeof import('@layui/layui-vue')['LayForm']

@@ -1,5 +1,5 @@
 <template>
-  <ul class="global-setup-theme">
+  <ul class="global-setup-theme" :class="{'disabled': disabled}">
     <template v-for="(option, index) in options" :key="index">
       <li class="global-setup-theme-item" @click="handlerChange(option.value)">
       <a href="javascript:;">
@@ -29,6 +29,7 @@ export default {
 interface ColorProps {
   modelValue: string;
   options?: any [];
+  disabled?: boolean;
 }
 
 const props = withDefaults(defineProps<ColorProps>(), {
@@ -42,13 +43,24 @@ const props = withDefaults(defineProps<ColorProps>(), {
 const emits = defineEmits(['update:modelValue'])
 
 const handlerChange = function(color: string) {
+  if(!props.disabled) {
     emits('update:modelValue', color);
+  }
 }
 </script>
 
 <style lang="less" scoped>
 .global-setup-theme {
   padding: 10px 10px;
+}
+
+.global-setup-theme.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.global-setup-theme.disabled * {
+  cursor: not-allowed;
 }
 
 .global-setup-theme-item {

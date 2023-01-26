@@ -1,7 +1,6 @@
 <template>
-  <div class="global-tab">
+  <div class="global-tab" v-if="appStore.tab">
     <lay-tab
-      v-if="appStore.tab"
       :modelValue="currentPath"
       :allowClose="true"
       @change="to"
