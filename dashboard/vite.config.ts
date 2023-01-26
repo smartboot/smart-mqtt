@@ -8,10 +8,11 @@ import {visualizer} from "rollup-plugin-visualizer";
 const excludeComponents = ['LightIcon','DarkIcon']
 
 export default defineConfig({
+  base:'./',
   server:{
     proxy:{
       '/api': {
-        target: 'http://localhost:8080/api',
+        target: 'http://localhost:11883/api/',
         changeOrigin: true,
         rewrite: path => path.replace(/^\/api/, '')
       }

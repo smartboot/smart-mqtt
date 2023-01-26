@@ -3,6 +3,7 @@ package org.smartboot.mqtt.broker.openapi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.http.restful.RestfulBootstrap;
+import org.smartboot.http.restful.StaticResourceHandler;
 import org.smartboot.http.server.HttpBootstrap;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.openapi.controller.ConnectionsController;
@@ -27,7 +28,7 @@ public class OpenApiPlugin extends Plugin {
             return;
         }
         try {
-            RestfulBootstrap restfulBootstrap = RestfulBootstrap.getInstance();
+            RestfulBootstrap restfulBootstrap = RestfulBootstrap.getInstance(new StaticResourceHandler());
             restfulBootstrap.inspect((httpRequest, response) -> {
                 response.setHeader("Access-Control-Allow-Origin", "*");
                 response.setHeader("Access-Control-Allow-Headers", "*");
@@ -35,6 +36,7 @@ public class OpenApiPlugin extends Plugin {
             restfulBootstrap.controller(new DashBoardController(brokerContext));
             restfulBootstrap.controller(new ConnectionsController());
             restfulBootstrap.controller(new SubscriptionController());
+
             HttpBootstrap bootstrap = restfulBootstrap.bootstrap();
             bootstrap.setPort(config.getPort());
             bootstrap.configuration().bannerEnabled(false);

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <title>LDAP</title>
+    <g id="LDAP" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="编组-7">
+            <circle id="椭圆形" fill="#FFFFFF" cx="12" cy="12" r="12"></circle>
+            <polygon id="L" fill="#3D98FF" fill-rule="nonzero" points="16.1529626 17.1428571 16.6501055 14.64 11.6958198 14.64 13.6329626 4.93714286 10.7872483 4.93714286 8.33581975 17.1428571"></polygon>
+        </g>
+    </g>
+</svg>
