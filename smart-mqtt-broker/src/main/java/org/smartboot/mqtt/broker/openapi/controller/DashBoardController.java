@@ -2,6 +2,8 @@ package org.smartboot.mqtt.broker.openapi.controller;
 
 import com.sun.management.OperatingSystemMXBean;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartboot.http.restful.RestResult;
 import org.smartboot.http.restful.annotation.Controller;
 import org.smartboot.http.restful.annotation.RequestMapping;
@@ -15,8 +17,9 @@ import org.smartboot.mqtt.broker.openapi.OpenApi;
 import org.smartboot.mqtt.broker.openapi.to.BrokerNodeTO;
 import org.smartboot.mqtt.broker.openapi.to.MetricItemTO;
 import org.smartboot.mqtt.broker.openapi.to.MetricTO;
-import org.smartboot.mqtt.broker.openapi.to.OverViewTO;
+import org.smartboot.mqtt.broker.openapi.to.PeriodMetricItemTO;
 import org.smartboot.mqtt.common.enums.MqttMetricEnum;
+import org.smartboot.mqtt.common.enums.MqttPeriodMetricEnum;
 import org.smartboot.mqtt.common.eventbus.EventBus;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
@@ -24,11 +27,13 @@ import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.socket.extension.plugins.AbstractPlugin;
 import org.smartboot.socket.transport.AioSession;
+import org.smartboot.socket.util.QuickTimerTask;
 
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -37,6 +42,7 @@ import java.util.List;
  */
 @Controller
 public class DashBoardController {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DashBoardController.class);
     private static final int MINUTE = 60;
     private static final int HOUR = 60 * 60;
     private static final int DAY = 24 * 60 * 60;
@@ -77,6 +83,11 @@ public class DashBoardController {
      * 发送的 CONNACK 报文数量
      */
     private final MetricItemTO connAckSentMetric = new MetricItemTO(MqttMetricEnum.PACKETS_CONNACK_SENT);
+
+    private final PeriodMetricItemTO PERIOD_MESSAGE_SENT = new PeriodMetricItemTO(MqttPeriodMetricEnum.PERIOD_MESSAGE_SENT);
+
+    private final PeriodMetricItemTO PERIOD_MESSAGE_RECEIVED = new PeriodMetricItemTO(MqttPeriodMetricEnum.PERIOD_MESSAGE_RECEIVED);
+
     private final MetricTO metricTO = new MetricTO();
 
     public DashBoardController(BrokerContext brokerContext) {
@@ -102,11 +113,13 @@ public class DashBoardController {
         eventBus.subscribe(ServerEventType.SUBSCRIBE_ACCEPT, (eventType, object) -> subscribeMetric.getMetric().increment());
         eventBus.subscribe(ServerEventType.UNSUBSCRIBE_ACCEPT, (eventType, object) -> unsubscribeMetric.getMetric().increment());
         eventBus.subscribe(EventType.RECEIVE_MESSAGE, (eventType, object) -> {
+            PERIOD_MESSAGE_RECEIVED.getMetric().increment();
             if (object.getObject() instanceof MqttConnectMessage) {
                 connReceiveMetric.getMetric().increment();
             }
         });
         eventBus.subscribe(EventType.WRITE_MESSAGE, (eventType, object) -> {
+            PERIOD_MESSAGE_SENT.getMetric().increment();
             if (object.getObject() instanceof MqttConnAckMessage) {
                 connAckSentMetric.getMetric().increment();
             }
@@ -145,25 +158,49 @@ public class DashBoardController {
         //消息分发
         List<MetricItemTO> deliveryGroup = new ArrayList<>();
         metricTO.getGroup().put("delivery", deliveryGroup);
+
+        //周期性指标
+        metricTO.getMetric().put(MqttPeriodMetricEnum.PERIOD_MESSAGE_RECEIVED.getCode(), PERIOD_MESSAGE_RECEIVED);
+        metricTO.getMetric().put(MqttPeriodMetricEnum.PERIOD_MESSAGE_SENT.getCode(), PERIOD_MESSAGE_SENT);
+
+        QuickTimerTask.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                LOGGER.debug("reset period metric...");
+                Date date = new Date();
+                PERIOD_MESSAGE_SENT.getMetric().reset();
+                PERIOD_MESSAGE_SENT.setTime(date);
+                PERIOD_MESSAGE_RECEIVED.getMetric().reset();
+                PERIOD_MESSAGE_RECEIVED.setTime(date);
+            }
+        }, 0, 5000);
     }
 
     @RequestMapping(OpenApi.DASHBOARD_OVERVIEW)
-    public RestResult<OverViewTO> overview() {
-        OverViewTO overViewTO = new OverViewTO();
-        MetricTO metricTO = new MetricTO();
+    public RestResult<MetricTO> overview() {
         Collection<MqttSession> sessions = brokerContext.getSessions();
-        metricTO.setConnectCount(sessions.size());
+        MetricItemTO onlineClientCount = new MetricItemTO();
+        onlineClientCount.setCode("online_client_count");
+        onlineClientCount.setValue(sessions.size());
+        metricTO.getMetric().put(onlineClientCount.getCode(), onlineClientCount);
+
+        MetricItemTO topicCount = new MetricItemTO();
+        topicCount.setCode("topic_count");
+        topicCount.setValue(brokerContext.getTopics().size());
+        metricTO.getMetric().put(topicCount.getCode(), topicCount);
+
         int subCount = 0;
         for (MqttSession session : sessions) {
             subCount += session.getSubscribers().size();
         }
-        metricTO.setTopicCount(brokerContext.getTopics().size());
-        metricTO.setSubscriberCount(subCount);
-        overViewTO.setMetricTO(metricTO);
+        MetricItemTO subscribeTopicCount = new MetricItemTO();
+        subscribeTopicCount.setCode("subscribe_topic_count");
+        subscribeTopicCount.setValue(subCount);
+        metricTO.getMetric().put(subscribeTopicCount.getCode(), subscribeTopicCount);
 
-        overViewTO.setFlowInBytes(50 + (int) (Math.random() * 10));
-        overViewTO.setFlowOutBytes(50 + (int) (Math.random() * 10));
-        return RestResult.ok(overViewTO);
+//        PERIOD_MESSAGE_RECEIVED.setValue(50 + (int) (Math.random() * 10));
+//        PERIOD_MESSAGE_SENT.setValue(50 + (int) (Math.random() * 10));
+        return RestResult.ok(metricTO);
     }
 
     @RequestMapping(OpenApi.DASHBOARD_NODES)
@@ -199,8 +236,14 @@ public class DashBoardController {
         return RestResult.ok(Arrays.asList(nodeTO));
     }
 
+    /**
+     * 指标信息
+     *
+     * @return
+     */
     @RequestMapping(OpenApi.DASHBOARD_METRICS)
     public RestResult<MetricTO> metrics() {
         return RestResult.ok(metricTO);
     }
+
 }

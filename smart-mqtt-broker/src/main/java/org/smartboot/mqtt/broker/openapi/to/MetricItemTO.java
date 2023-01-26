@@ -51,12 +51,13 @@ public class MetricItemTO {
         this.desc = desc;
     }
 
-    public String getValue() {
-        return metric.toString();
+    public int getValue() {
+        return metric.intValue();
     }
 
-    public void setValue(String value) {
-        this.value = value;
+    public void setValue(int value) {
+        metric.reset();
+        metric.add(value);
     }
 
     public LongAdder getMetric() {

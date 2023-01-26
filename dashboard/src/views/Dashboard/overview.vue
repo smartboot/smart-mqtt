@@ -14,7 +14,7 @@
                 <h3>连接数</h3>
                 <p>
                   <cite>
-                    <lay-count-up :end-val="metric.connectCount" :duration="2000"></lay-count-up>
+                    <lay-count-up :end-val="metric.online_client_count.value" :duration="2000"></lay-count-up>
                   </cite>
                 </p>
               </a>
@@ -24,7 +24,7 @@
                 <h3>主题数</h3>
                 <p>
                   <cite>
-                    <lay-count-up :end-val="metric.topicCount" :duration="2000"></lay-count-up>
+                    <lay-count-up :end-val="metric.topic_count.value" :duration="2000"></lay-count-up>
                   </cite>
                 </p>
               </a>
@@ -34,7 +34,7 @@
                 <h3>订阅数</h3>
                 <p>
                   <cite>
-                    <lay-count-up :end-val="metric.subscriberCount" :duration="2000"></lay-count-up>
+                    <lay-count-up :end-val="metric.subscribe_topic_count.value" :duration="2000"></lay-count-up>
                   </cite>
                 </p>
               </a>
@@ -45,13 +45,13 @@
     </lay-col>
     <lay-col md="12" sm="24" xs="24">
       <lay-card>
-        <template #title><p class="agency">消息流入速率： {{ inflowRate }} 条/秒</p></template>
+        <template #title><p class="agency">消息流入速率： {{ inflowRate.value }} 条/秒</p></template>
         <div class="flowChart" ref="flowInRef"></div>
       </lay-card>
     </lay-col>
     <lay-col md="12" sm="24" xs="24">
       <lay-card>
-        <template #title><p class="agency">消息流出速率： {{ outflowRate }} 条/秒</p></template>
+        <template #title><p class="agency">消息流出速率： {{ outflowRate.value }} 条/秒</p></template>
         <div class="flowChart" ref="flowOutRef"></div>
       </lay-card>
     </lay-col>
@@ -106,9 +106,14 @@ export default {
     const flowInRef = ref()
     const flowOutRef = ref()
 
-    const inflowRate = ref()
-    const outflowRate = ref()
-    const metric = ref({})
+    const inflowRate = ref({value:0})
+    const outflowRate = ref({value:0})
+
+    const metric = ref({
+      online_client_count: {value: 0},
+      topic_count: {value: 0},
+      subscribe_topic_count: {value: 0}
+    })
 
     const flowInData = [];
     const flowOutData = [];
@@ -122,27 +127,36 @@ export default {
 
       const loadData = async () => {
         const {data} = await dashboard_overview();
-        console.log(data.metricTO)
-        metric.value = data.metricTO;
-        inflowRate.value = data.flowInBytes;
-        outflowRate.value = data.flowOutBytes;
+        metric.value = data.metric
+        console.log(metric.value)
+        inflowRate.value = data.metric.period_message_received;
+        outflowRate.value = data.metric.period_message_sent;
 
-        flowInData.push({Data: new Date(), flowBytes: data.flowInBytes})
-        flowOutData.push({Data: new Date(), flowBytes: data.flowOutBytes})
+        if (flowInData.length > 0 && flowInData[flowInData.length - 1].time === inflowRate.value.time) {
+          flowInData[flowInData.length - 1] = inflowRate.value;
+        } else {
+          flowInData.push(inflowRate.value)
+        }
+
+        if (flowOutData.length > 0 && flowOutData[flowOutData.length - 1].time === outflowRate.value.time) {
+          flowOutData[flowOutData.length - 1] = outflowRate.value;
+        } else {
+          flowOutData.push(outflowRate.value)
+        }
+
+
         if (flowInData.length >= 20) {
           flowInData.shift()
         }
         if (flowOutData.length >= 20) {
           flowOutData.shift()
         }
-        // flowInChart.animate(false)
-        // flowOutChart.animate(false)
         flowInChart.changeData(flowInData)
         flowOutChart.changeData(flowOutData)
       };
       loadData()
       timer = setInterval(() => {
-        loadData(false)
+        loadData()
       }, 2000)
     });
     onUnmounted(() => {
@@ -166,13 +180,13 @@ export default {
         autoFit: true,
         padding: [20, 20, 40, 50]
       });
-      chart.scale('Data', {
+      chart.scale('time', {
         range: [0, 1],
         mask: "YYYY-MM-DD HH:mm:ss",
         tickCount: 50,
         type: 'timeCat'
       });
-      chart.axis('Data', {
+      chart.axis('time', {
         label: {
           textStyle: {
             fill: '#aaaaaa'
@@ -183,7 +197,7 @@ export default {
           }
         }
       });
-      chart.axis('flowBytes', {
+      chart.axis('value', {
         label: {
           textStyle: {
             fill: '#aaaaaa'
@@ -201,8 +215,8 @@ export default {
         attachLast: true
       });
 
-      chart.line().position('Data*flowBytes');
-      chart.area().position('Data*flowBytes');
+      chart.line().position('time*value');
+      chart.area().position('time*value');
       chart.render();
       return chart;
     }

@@ -47,7 +47,7 @@ const menus = [
     ]
   },
   {
-    id: "https://www.baidu.com",
+    id: "https://smartboot.gitee.io/smart-mqtt/",
     icon: "layui-icon-help",
     title: "帮助",
     type: "blank"

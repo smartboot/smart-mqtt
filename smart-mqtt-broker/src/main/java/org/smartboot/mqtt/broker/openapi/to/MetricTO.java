@@ -10,51 +10,21 @@ import java.util.Map;
  */
 public class MetricTO {
     /**
-     * 连接数
+     * 指标项
      */
-    private int connectCount;
-
-    /**
-     * 主题数
-     */
-    private int topicCount;
-
-    /**
-     * 订阅数
-     */
-    private int subscriberCount;
+    private final Map<String, MetricItemTO> metric = new HashMap<>();
 
     /**
      * 指标分组
      */
     private final Map<String, List<MetricItemTO>> group = new HashMap<>();
 
-    public int getConnectCount() {
-        return connectCount;
-    }
-
-    public void setConnectCount(int connectCount) {
-        this.connectCount = connectCount;
-    }
-
-    public int getTopicCount() {
-        return topicCount;
-    }
-
-    public void setTopicCount(int topicCount) {
-        this.topicCount = topicCount;
-    }
-
-    public int getSubscriberCount() {
-        return subscriberCount;
-    }
-
-    public void setSubscriberCount(int subscriberCount) {
-        this.subscriberCount = subscriberCount;
-    }
 
     public Map<String, List<MetricItemTO>> getGroup() {
         return group;
     }
 
+    public Map<String, MetricItemTO> getMetric() {
+        return metric;
+    }
 }
