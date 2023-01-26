@@ -33,8 +33,8 @@ public class OpenApiPlugin extends Plugin {
                 response.setHeader("Access-Control-Allow-Headers", "*");
             });
             restfulBootstrap.controller(new DashBoardController(brokerContext));
-            restfulBootstrap.controller(new ConnectionsController(brokerContext));
-            restfulBootstrap.controller(new SubscriptionController(brokerContext));
+            restfulBootstrap.controller(new ConnectionsController());
+            restfulBootstrap.controller(new SubscriptionController());
             HttpBootstrap bootstrap = restfulBootstrap.bootstrap();
             bootstrap.setPort(config.getPort());
             bootstrap.configuration().bannerEnabled(false);

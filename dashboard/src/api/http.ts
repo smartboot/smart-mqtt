@@ -39,6 +39,11 @@ class Http {
                 case 200:
                     return response.data;
                 case 500:
+                    layer.notifiy({
+                        title:"Error",
+                        content:response.data.message,
+                        icon:2
+                    })
                     return response.data;
                 case 99998:
                     layer.confirm(

@@ -64,16 +64,8 @@ export default [
         ]
 
     },
-  // {
-  //   path: '/help',
-  //   component: BaseLayout,
-  //   children: [
-  //     {
-  //       path: '/help',
-  //       component: () => import('../../views/License/help.vue'),
-  //       meta: {title: '帮助手册', requireAuth: true},
-  //     },
-  //   ]
-  //
-  // }
+  {
+    path: '/help',
+    // redirect: 'https://www.baidu.com',
+  }
 ]

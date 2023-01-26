@@ -344,6 +344,9 @@ public class BrokerContextImpl implements BrokerContext {
             brokerConfigure.setThreadNum(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.THREAD_NUM)));
         }
 
+        if (StringUtils.isBlank(brokerConfigure.getHost())) {
+            brokerConfigure.setHost("0.0.0.0");
+        }
 
 //        System.out.println("brokerConfigure: " + brokerConfigure);
     }

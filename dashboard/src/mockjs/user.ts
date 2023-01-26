@@ -47,15 +47,29 @@ const menus = [
     ]
   },
   {
-    id: "/help",
+    id: "https://www.baidu.com",
     icon: "layui-icon-help",
-    title: "帮助"
-  },
-  // {
-  //   id: "/help",
-  //   icon: "layui-icon-home",
-  //   title: "帮助手册"
-  // },
+    title: "帮助",
+    type: "blank"
+  },{
+    id: "/page",
+    icon: "layui-icon-home",
+    title: "外链页面",
+    children: [
+      {
+        id: "http://www.bing.com",
+        icon: "layui-icon-home",
+        title: "弹层外链",
+        type: "modal"
+      },
+      {
+        id: "http://www.baidu.com",
+        icon: "layui-icon-home",
+        title: "原生跳转",
+        type: "blank"
+      }
+    ]
+  }
 ]
 
 const getInfo = (req: any, res: any)=> {
