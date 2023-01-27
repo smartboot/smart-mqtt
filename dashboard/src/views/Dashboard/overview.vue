@@ -217,6 +217,7 @@ export default {
 
       chart.line().position('time*value');
       chart.area().position('time*value');
+      chart.animate(false)
       chart.render();
       return chart;
     }
