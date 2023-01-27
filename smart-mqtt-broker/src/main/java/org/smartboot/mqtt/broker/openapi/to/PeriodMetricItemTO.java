@@ -10,6 +10,10 @@ import java.util.Date;
  * @version V1.0 , 2023/1/26
  */
 public class PeriodMetricItemTO extends MetricItemTO {
+    /**
+     * 采集周期，单位：秒
+     */
+    private int period;
     @JSONField(format = "yyyy-MM-dd HH:mm:ss")
     private Date time;
 
@@ -27,5 +31,13 @@ public class PeriodMetricItemTO extends MetricItemTO {
 
     public void setTime(Date time) {
         this.time = time;
+    }
+
+    public int getPeriod() {
+        return period;
+    }
+
+    public void setPeriod(int period) {
+        this.period = period;
     }
 }

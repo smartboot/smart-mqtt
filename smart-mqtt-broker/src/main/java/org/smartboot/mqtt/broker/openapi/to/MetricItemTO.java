@@ -18,10 +18,6 @@ public class MetricItemTO {
      * 指标描述
      */
     private String desc;
-    /**
-     * 指标值
-     */
-    private String value;
 
     @JSONField(serialize = false)
     private final LongAdder metric = new LongAdder();

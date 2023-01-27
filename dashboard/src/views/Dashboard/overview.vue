@@ -45,13 +45,13 @@
     </lay-col>
     <lay-col md="12" sm="24" xs="24">
       <lay-card>
-        <template #title><p class="agency">消息流入速率： {{ inflowRate.value }} 条/秒</p></template>
+        <template #title><p class="agency">消息流入速率： {{ inflowRate.value }} 条/{{inflowRate.period>1?inflowRate.period:""}}秒</p></template>
         <div class="flowChart" ref="flowInRef"></div>
       </lay-card>
     </lay-col>
     <lay-col md="12" sm="24" xs="24">
       <lay-card>
-        <template #title><p class="agency">消息流出速率： {{ outflowRate.value }} 条/秒</p></template>
+        <template #title><p class="agency">消息流出速率： {{ outflowRate.value }} 条/{{outflowRate.period>1?outflowRate.period:""}}秒</p></template>
         <div class="flowChart" ref="flowOutRef"></div>
       </lay-card>
     </lay-col>

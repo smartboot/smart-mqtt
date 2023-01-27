@@ -163,6 +163,9 @@ public class DashBoardController {
         metricTO.getMetric().put(MqttPeriodMetricEnum.PERIOD_MESSAGE_RECEIVED.getCode(), PERIOD_MESSAGE_RECEIVED);
         metricTO.getMetric().put(MqttPeriodMetricEnum.PERIOD_MESSAGE_SENT.getCode(), PERIOD_MESSAGE_SENT);
 
+        int period = 5;
+        PERIOD_MESSAGE_RECEIVED.setPeriod(period);
+        PERIOD_MESSAGE_SENT.setPeriod(period);
         QuickTimerTask.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
@@ -173,7 +176,7 @@ public class DashBoardController {
                 PERIOD_MESSAGE_RECEIVED.getMetric().reset();
                 PERIOD_MESSAGE_RECEIVED.setTime(date);
             }
-        }, 0, 5000);
+        }, 0, period * 1000);
     }
 
     @RequestMapping(OpenApi.DASHBOARD_OVERVIEW)
