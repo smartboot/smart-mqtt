@@ -39,7 +39,7 @@ public class OpenApiPlugin extends Plugin {
 
             HttpBootstrap bootstrap = restfulBootstrap.bootstrap();
             bootstrap.setPort(config.getPort());
-            bootstrap.configuration().bannerEnabled(false).host(config.getHost());
+            bootstrap.configuration().bannerEnabled(false).host(config.getHost()).readBufferSize(1024 * 8);
             bootstrap.start();
             brokerContext.getProviders().setOpenApiBootStrap(restfulBootstrap);
             LOGGER.info("openapi server start success!");
