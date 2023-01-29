@@ -63,12 +63,18 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
         MqttPubQosVariableHeader variableHeader;
         //todo
         if (session.getMqttVersion() == MqttVersion.MQTT_5) {
-            ReasonProperties properties = new ReasonProperties();
+            byte re = 0;
+            ReasonProperties properties = null;
+            if (re != 0) {
+                properties = new ReasonProperties();
+            }
             variableHeader = new MqttPubQosVariableHeader(messageId, properties);
+            variableHeader.setReasonCode(re);
         } else {
             variableHeader = new MqttPubQosVariableHeader(messageId, null);
         }
         MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(variableHeader);
+
 
         session.write(pubAckMessage);
 
@@ -81,7 +87,11 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
         //todo
         MqttPubQosVariableHeader variableHeader;
         if (mqttPublishMessage.getVersion() == MqttVersion.MQTT_5) {
-            ReasonProperties properties = new ReasonProperties();
+            byte re = 0;
+            ReasonProperties properties = null;
+            if (re != 0) {
+                properties = new ReasonProperties();
+            }
             variableHeader = new MqttPubQosVariableHeader(mqttPublishMessage.getVariableHeader().getPacketId(), properties);
         } else {
             variableHeader = new MqttPubQosVariableHeader(mqttPublishMessage.getVariableHeader().getPacketId(), null);
@@ -93,7 +103,11 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
             //todo
             MqttPubQosVariableHeader qosVariableHeader;
             if (mqttPublishMessage.getVersion() == MqttVersion.MQTT_5) {
-                ReasonProperties properties = new ReasonProperties();
+                byte re = 0;
+                ReasonProperties properties = null;
+                if (re != 0) {
+                    properties = new ReasonProperties();
+                }
                 qosVariableHeader = new MqttPubQosVariableHeader(message.getVariableHeader().getPacketId(), properties);
             } else {
                 qosVariableHeader = new MqttPubQosVariableHeader(message.getVariableHeader().getPacketId(), null);
