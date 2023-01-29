@@ -9,7 +9,7 @@ import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttUnsubAckMessage;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
-import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
+import org.smartboot.mqtt.common.message.payload.Mqtt5UnsubAckPayload;
 import org.smartboot.mqtt.common.message.variable.MqttReasonVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 
@@ -40,14 +40,18 @@ public class UnSubscribeProcessor extends AuthorizedMqttProcessor<MqttUnsubscrib
 
         //取消订阅确认
         MqttReasonVariableHeader variableHeader;
+        Mqtt5UnsubAckPayload payload;
         //todo
         if (unsubscribeMessage.getVersion() == MqttVersion.MQTT_5) {
             ReasonProperties properties = new ReasonProperties();
-            variableHeader = new MqttPubQosVariableHeader(unsubscribeMessage.getVariableHeader().getPacketId(), properties);
+            variableHeader = new MqttReasonVariableHeader(unsubscribeMessage.getVariableHeader().getPacketId(), properties);
+            //todo 暂时默认都成功
+            payload = new Mqtt5UnsubAckPayload(new byte[unsubscribeMessage.getMqttUnsubscribePayload().topics().size()]);
         } else {
-            variableHeader = new MqttPubQosVariableHeader(unsubscribeMessage.getVariableHeader().getPacketId(), null);
+            variableHeader = new MqttReasonVariableHeader(unsubscribeMessage.getVariableHeader().getPacketId(), null);
+            payload = new Mqtt5UnsubAckPayload(new byte[0]);
         }
-        MqttUnsubAckMessage mqttSubAckMessage = new MqttUnsubAckMessage(variableHeader);
+        MqttUnsubAckMessage mqttSubAckMessage = new MqttUnsubAckMessage(variableHeader, payload);
         session.write(mqttSubAckMessage);
     }
 }
