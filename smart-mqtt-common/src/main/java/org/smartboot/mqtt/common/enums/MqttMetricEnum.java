@@ -13,7 +13,17 @@ public enum MqttMetricEnum {
     BYTES_SENT("bytes_sent", "已发送字节数"),
 
     PACKETS_CONNECT_RECEIVED("packets_connect_received", "接收的 CONNECT 报文数量"),
-    PACKETS_CONNACK_SENT("packets_connack_sent", "发送的 CONNACK 报文数量");
+    PACKETS_CONNACK_SENT("packets_connack_sent", "发送的 CONNACK 报文数量"),
+    PACKETS_RECEIVED("packets_connect_received", "接收的报文数量"),
+    PACKETS_SENT("packets_connack_sent", "发送的报文数量"),
+
+
+    MESSAGE_QOS0_RECEIVED("messages_qos0_received", "接收来自客户端的 QoS 0 消息数量"),
+    MESSAGE_QOS1_RECEIVED("messages_qos1_received", "接收来自客户端的 QoS 1 消息数量"),
+    MESSAGE_QOS2_RECEIVED("messages_qos2_received", "接收来自客户端的 QoS 2 消息数量"),
+    MESSAGE_QOS0_SENT("messages_qos0_sent", "发送给客户端的 QoS 0 消息数量"),
+    MESSAGE_QOS1_SENT("messages_qos1_sent", "发送给客户端的 QoS 1 消息数量"),
+    MESSAGE_QOS2_SENT("messages_qos2_sent", "发送给客户端的 QoS 2 消息数量");
 
     private final String code;
     private final String desc;

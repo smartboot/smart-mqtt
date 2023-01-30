@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.http.restful.RestResult;
 import org.smartboot.http.restful.annotation.Controller;
 import org.smartboot.http.restful.annotation.RequestMapping;
-import org.smartboot.http.server.HttpResponse;
 import org.smartboot.mqtt.broker.BrokerConfigure;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.BrokerRuntime;
@@ -25,6 +24,7 @@ import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.socket.extension.plugins.AbstractPlugin;
 import org.smartboot.socket.transport.AioSession;
 import org.smartboot.socket.util.QuickTimerTask;
@@ -34,7 +34,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -47,42 +49,7 @@ public class DashBoardController {
     private static final int HOUR = 60 * 60;
     private static final int DAY = 24 * 60 * 60;
     private final BrokerContext brokerContext;
-    /**
-     * 客户端连接次数
-     */
-    private final MetricItemTO connectMetric = new MetricItemTO(MqttMetricEnum.CLIENT_CONNECT);
-    /**
-     * 客户端断开连接次数
-     */
-    private final MetricItemTO disconnectMetric = new MetricItemTO(MqttMetricEnum.CLIENT_DISCONNECT);
-
-    /**
-     * 订阅次数
-     */
-    private final MetricItemTO subscribeMetric = new MetricItemTO(MqttMetricEnum.CLIENT_SUBSCRIBE);
-
-    /**
-     * 取消订阅次数
-     */
-    private final MetricItemTO unsubscribeMetric = new MetricItemTO(MqttMetricEnum.CLIENT_UNSUBSCRIBE);
-
-    /**
-     * 流入字节数
-     */
-    private final MetricItemTO bytesReceivedMetric = new MetricItemTO(MqttMetricEnum.BYTES_RECEIVED);
-    /**
-     * 流出字节数
-     */
-    private final MetricItemTO bytesSentMetric = new MetricItemTO(MqttMetricEnum.BYTES_SENT);
-
-    /**
-     * 接收的 CONNECT 报文数量
-     */
-    private final MetricItemTO connReceiveMetric = new MetricItemTO(MqttMetricEnum.PACKETS_CONNECT_RECEIVED);
-    /**
-     * 发送的 CONNACK 报文数量
-     */
-    private final MetricItemTO connAckSentMetric = new MetricItemTO(MqttMetricEnum.PACKETS_CONNACK_SENT);
+    private final Map<MqttMetricEnum, MetricItemTO> metricMap = new HashMap<>();
 
     private final PeriodMetricItemTO PERIOD_MESSAGE_SENT = new PeriodMetricItemTO(MqttPeriodMetricEnum.PERIOD_MESSAGE_SENT);
 
@@ -91,48 +58,78 @@ public class DashBoardController {
     private final MetricTO metricTO = new MetricTO();
 
     public DashBoardController(BrokerContext brokerContext) {
+        for (MqttMetricEnum metricEnum : MqttMetricEnum.values()) {
+            metricMap.put(metricEnum, new MetricItemTO(metricEnum));
+        }
         brokerContext.getMessageProcessor().addPlugin(new AbstractPlugin<MqttMessage>() {
             @Override
             public void afterRead(AioSession session, int readSize) {
                 if (readSize > 0) {
-                    bytesReceivedMetric.getMetric().add(readSize);
+                    metricMap.get(MqttMetricEnum.BYTES_RECEIVED).getMetric().add(readSize);
                 }
             }
 
             @Override
             public void afterWrite(AioSession session, int writeSize) {
                 if (writeSize > 0) {
-                    bytesSentMetric.getMetric().add(writeSize);
+                    metricMap.get(MqttMetricEnum.BYTES_SENT).getMetric().add(writeSize);
                 }
             }
         });
         this.brokerContext = brokerContext;
         EventBus eventBus = brokerContext.getEventBus();
-        eventBus.subscribe(ServerEventType.CONNECT, (eventType, object) -> connectMetric.getMetric().increment());
-        eventBus.subscribe(ServerEventType.DISCONNECT, (eventType, object) -> disconnectMetric.getMetric().increment());
-        eventBus.subscribe(ServerEventType.SUBSCRIBE_ACCEPT, (eventType, object) -> subscribeMetric.getMetric().increment());
-        eventBus.subscribe(ServerEventType.UNSUBSCRIBE_ACCEPT, (eventType, object) -> unsubscribeMetric.getMetric().increment());
+        eventBus.subscribe(ServerEventType.CONNECT, (eventType, object) -> metricMap.get(MqttMetricEnum.CLIENT_CONNECT).getMetric().increment());
+        eventBus.subscribe(ServerEventType.DISCONNECT, (eventType, object) -> metricMap.get(MqttMetricEnum.CLIENT_DISCONNECT).getMetric().increment());
+        eventBus.subscribe(ServerEventType.SUBSCRIBE_ACCEPT, (eventType, object) -> metricMap.get(MqttMetricEnum.CLIENT_SUBSCRIBE).getMetric().increment());
+        eventBus.subscribe(ServerEventType.UNSUBSCRIBE_ACCEPT, (eventType, object) -> metricMap.get(MqttMetricEnum.CLIENT_UNSUBSCRIBE).getMetric().increment());
         eventBus.subscribe(EventType.RECEIVE_MESSAGE, (eventType, object) -> {
+            metricMap.get(MqttMetricEnum.PACKETS_RECEIVED).getMetric().increment();
             PERIOD_MESSAGE_RECEIVED.getMetric().increment();
             if (object.getObject() instanceof MqttConnectMessage) {
-                connReceiveMetric.getMetric().increment();
+                metricMap.get(MqttMetricEnum.PACKETS_CONNECT_RECEIVED).getMetric().increment();
             }
         });
         eventBus.subscribe(EventType.WRITE_MESSAGE, (eventType, object) -> {
+            metricMap.get(MqttMetricEnum.PACKETS_SENT).getMetric().increment();
             PERIOD_MESSAGE_SENT.getMetric().increment();
             if (object.getObject() instanceof MqttConnAckMessage) {
-                connAckSentMetric.getMetric().increment();
+                metricMap.get(MqttMetricEnum.PACKETS_CONNACK_SENT).getMetric().increment();
+            } else if (object.getObject() instanceof MqttPublishMessage) {
+                switch (object.getObject().getFixedHeader().getQosLevel()) {
+                    case AT_MOST_ONCE:
+                        metricMap.get(MqttMetricEnum.MESSAGE_QOS0_SENT).getMetric().increment();
+                        break;
+                    case AT_LEAST_ONCE:
+                        metricMap.get(MqttMetricEnum.MESSAGE_QOS1_SENT).getMetric().increment();
+                        break;
+                    case EXACTLY_ONCE:
+                        metricMap.get(MqttMetricEnum.MESSAGE_QOS2_SENT).getMetric().increment();
+                        break;
+                }
             }
         });
+        brokerContext.getMessageBus().consumer((brokerContext1, publishMessage) -> {
+            switch (publishMessage.getFixedHeader().getQosLevel()) {
+                case AT_MOST_ONCE:
+                    metricMap.get(MqttMetricEnum.MESSAGE_QOS0_RECEIVED).getMetric().increment();
+                    break;
+                case AT_LEAST_ONCE:
+                    metricMap.get(MqttMetricEnum.MESSAGE_QOS1_RECEIVED).getMetric().increment();
+                    break;
+                case EXACTLY_ONCE:
+                    metricMap.get(MqttMetricEnum.MESSAGE_QOS2_RECEIVED).getMetric().increment();
+                    break;
+            }
 
+        });
 
         //连接
         List<MetricItemTO> connectionGroup = new ArrayList<>();
         metricTO.getGroup().put("connection", connectionGroup);
-        connectionGroup.add(connectMetric);
-        connectionGroup.add(disconnectMetric);
-        connectionGroup.add(subscribeMetric);
-        connectionGroup.add(unsubscribeMetric);
+        connectionGroup.add(metricMap.get(MqttMetricEnum.CLIENT_CONNECT));
+        connectionGroup.add(metricMap.get(MqttMetricEnum.CLIENT_DISCONNECT));
+        connectionGroup.add(metricMap.get(MqttMetricEnum.CLIENT_SUBSCRIBE));
+        connectionGroup.add(metricMap.get(MqttMetricEnum.CLIENT_UNSUBSCRIBE));
 
         //会话
         List<MetricItemTO> sessionGroup = new ArrayList<>();
@@ -144,17 +141,27 @@ public class DashBoardController {
         //流量收发
         List<MetricItemTO> bytesGroup = new ArrayList<>();
         metricTO.getGroup().put("bytes", bytesGroup);
-        bytesGroup.add(bytesReceivedMetric);
-        bytesGroup.add(bytesSentMetric);
+        bytesGroup.add(metricMap.get(MqttMetricEnum.BYTES_RECEIVED));
+        bytesGroup.add(metricMap.get(MqttMetricEnum.BYTES_SENT));
         //报文
         List<MetricItemTO> packetGroup = new ArrayList<>();
         metricTO.getGroup().put("packet", packetGroup);
-        packetGroup.add(connReceiveMetric);
-        packetGroup.add(connAckSentMetric);
+        packetGroup.add(metricMap.get(MqttMetricEnum.PACKETS_RECEIVED));
+        packetGroup.add(metricMap.get(MqttMetricEnum.PACKETS_SENT));
+        packetGroup.add(metricMap.get(MqttMetricEnum.PACKETS_CONNECT_RECEIVED));
+        packetGroup.add(metricMap.get(MqttMetricEnum.PACKETS_CONNACK_SENT));
+
 
         //消息数量
         List<MetricItemTO> messageGroup = new ArrayList<>();
         metricTO.getGroup().put("message", messageGroup);
+        messageGroup.add(metricMap.get(MqttMetricEnum.MESSAGE_QOS0_RECEIVED));
+        messageGroup.add(metricMap.get(MqttMetricEnum.MESSAGE_QOS1_RECEIVED));
+        messageGroup.add(metricMap.get(MqttMetricEnum.MESSAGE_QOS2_RECEIVED));
+        messageGroup.add(metricMap.get(MqttMetricEnum.MESSAGE_QOS0_SENT));
+        messageGroup.add(metricMap.get(MqttMetricEnum.MESSAGE_QOS1_SENT));
+        messageGroup.add(metricMap.get(MqttMetricEnum.MESSAGE_QOS2_SENT));
+
         //消息分发
         List<MetricItemTO> deliveryGroup = new ArrayList<>();
         metricTO.getGroup().put("delivery", deliveryGroup);
@@ -200,14 +207,11 @@ public class DashBoardController {
         subscribeTopicCount.setCode("subscribe_topic_count");
         subscribeTopicCount.setValue(subCount);
         metricTO.getMetric().put(subscribeTopicCount.getCode(), subscribeTopicCount);
-
-//        PERIOD_MESSAGE_RECEIVED.setValue(50 + (int) (Math.random() * 10));
-//        PERIOD_MESSAGE_SENT.setValue(50 + (int) (Math.random() * 10));
         return RestResult.ok(metricTO);
     }
 
     @RequestMapping(OpenApi.DASHBOARD_NODES)
-    public RestResult<List<BrokerNodeTO>> nodes(HttpResponse response) {
+    public RestResult<List<BrokerNodeTO>> nodes() {
         BrokerRuntime brokerRuntime = brokerContext.getRuntime();
         BrokerNodeTO nodeTO = new BrokerNodeTO();
         nodeTO.setNode("smart-mqtt@" + (StringUtils.isBlank(brokerContext.getBrokerConfigure().getHost()) ? "::1" : brokerContext.getBrokerConfigure().getHost()));
