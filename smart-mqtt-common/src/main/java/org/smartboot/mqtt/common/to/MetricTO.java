@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.broker.openapi.to;
+package org.smartboot.mqtt.common.to;
 
 import java.util.HashMap;
 import java.util.List;

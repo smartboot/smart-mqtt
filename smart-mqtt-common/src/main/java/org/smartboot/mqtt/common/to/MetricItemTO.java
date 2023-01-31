@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.broker.openapi.to;
+package org.smartboot.mqtt.common.to;
 
 import com.alibaba.fastjson2.annotation.JSONField;
 import org.smartboot.mqtt.common.enums.MqttMetricEnum;

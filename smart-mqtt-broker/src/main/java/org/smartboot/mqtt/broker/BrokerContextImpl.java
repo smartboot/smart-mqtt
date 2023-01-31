@@ -20,19 +20,29 @@ import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.MqttMessageBuilders;
+import org.smartboot.mqtt.common.enums.MqttMetricEnum;
+import org.smartboot.mqtt.common.enums.MqttPeriodMetricEnum;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventBus;
 import org.smartboot.mqtt.common.eventbus.EventBusImpl;
 import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
 import org.smartboot.mqtt.common.eventbus.EventType;
+import org.smartboot.mqtt.common.message.MqttConnAckMessage;
+import org.smartboot.mqtt.common.message.MqttConnectMessage;
+import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
+import org.smartboot.mqtt.common.to.MetricItemTO;
+import org.smartboot.mqtt.common.to.PeriodMetricItemTO;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.buffer.BufferPagePool;
+import org.smartboot.socket.extension.plugins.AbstractPlugin;
 import org.smartboot.socket.transport.AioQuickServer;
+import org.smartboot.socket.transport.AioSession;
+import org.smartboot.socket.util.QuickTimerTask;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
@@ -43,7 +53,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -96,6 +109,13 @@ public class BrokerContextImpl implements BrokerContext {
     private String configJson;
     private final BrokerTopic SHUTDOWN_TOPIC = new BrokerTopic("");
 
+    /**
+     * 统计指标
+     */
+    private final Map<MqttMetricEnum, MetricItemTO> metricMap = new HashMap<>();
+
+    private final Map<MqttPeriodMetricEnum, PeriodMetricItemTO> periodMetricMap = new HashMap<>();
+
     @Override
     public void init() throws IOException {
 
@@ -110,6 +130,9 @@ public class BrokerContextImpl implements BrokerContext {
         loadAndInstallPlugins();
 
         initPushThread();
+
+        initMetric();
+
         try {
             pagePool = new BufferPagePool(10 * 1024 * 1024, brokerConfigure.getThreadNum(), true);
             server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(brokerConfigure.getMaxPacketSize()), processor);
@@ -135,6 +158,88 @@ public class BrokerContextImpl implements BrokerContext {
         eventBus.publish(ServerEventType.BROKER_STARTED, this);
         //释放内存
         configJson = null;
+    }
+
+    private void initMetric() {
+        for (MqttMetricEnum metricEnum : MqttMetricEnum.values()) {
+            metricMap.put(metricEnum, new MetricItemTO(metricEnum));
+        }
+        PeriodMetricItemTO PERIOD_MESSAGE_RECEIVED = new PeriodMetricItemTO(MqttPeriodMetricEnum.PERIOD_MESSAGE_RECEIVED);
+        PeriodMetricItemTO PERIOD_MESSAGE_SENT = new PeriodMetricItemTO(MqttPeriodMetricEnum.PERIOD_MESSAGE_SENT);
+        periodMetricMap.put(MqttPeriodMetricEnum.PERIOD_MESSAGE_RECEIVED, PERIOD_MESSAGE_RECEIVED);
+        periodMetricMap.put(MqttPeriodMetricEnum.PERIOD_MESSAGE_SENT, PERIOD_MESSAGE_SENT);
+        processor.addPlugin(new AbstractPlugin<MqttMessage>() {
+            @Override
+            public void afterRead(AioSession session, int readSize) {
+                if (readSize > 0) {
+                    metricMap.get(MqttMetricEnum.BYTES_RECEIVED).getMetric().add(readSize);
+                }
+            }
+
+            @Override
+            public void afterWrite(AioSession session, int writeSize) {
+                if (writeSize > 0) {
+                    metricMap.get(MqttMetricEnum.BYTES_SENT).getMetric().add(writeSize);
+                }
+            }
+        });
+        eventBus.subscribe(ServerEventType.CONNECT, (eventType, object) -> metricMap.get(MqttMetricEnum.CLIENT_CONNECT).getMetric().increment());
+        eventBus.subscribe(ServerEventType.DISCONNECT, (eventType, object) -> metricMap.get(MqttMetricEnum.CLIENT_DISCONNECT).getMetric().increment());
+        eventBus.subscribe(ServerEventType.SUBSCRIBE_ACCEPT, (eventType, object) -> metricMap.get(MqttMetricEnum.CLIENT_SUBSCRIBE).getMetric().increment());
+        eventBus.subscribe(ServerEventType.UNSUBSCRIBE_ACCEPT, (eventType, object) -> metricMap.get(MqttMetricEnum.CLIENT_UNSUBSCRIBE).getMetric().increment());
+        eventBus.subscribe(EventType.RECEIVE_MESSAGE, (eventType, object) -> {
+            metricMap.get(MqttMetricEnum.PACKETS_RECEIVED).getMetric().increment();
+            PERIOD_MESSAGE_RECEIVED.getMetric().increment();
+            if (object.getObject() instanceof MqttConnectMessage) {
+                metricMap.get(MqttMetricEnum.PACKETS_CONNECT_RECEIVED).getMetric().increment();
+            }
+        });
+        eventBus.subscribe(EventType.WRITE_MESSAGE, (eventType, object) -> {
+            metricMap.get(MqttMetricEnum.PACKETS_SENT).getMetric().increment();
+            PERIOD_MESSAGE_SENT.getMetric().increment();
+            if (object.getObject() instanceof MqttConnAckMessage) {
+                metricMap.get(MqttMetricEnum.PACKETS_CONNACK_SENT).getMetric().increment();
+            } else if (object.getObject() instanceof MqttPublishMessage) {
+                switch (object.getObject().getFixedHeader().getQosLevel()) {
+                    case AT_MOST_ONCE:
+                        metricMap.get(MqttMetricEnum.MESSAGE_QOS0_SENT).getMetric().increment();
+                        break;
+                    case AT_LEAST_ONCE:
+                        metricMap.get(MqttMetricEnum.MESSAGE_QOS1_SENT).getMetric().increment();
+                        break;
+                    case EXACTLY_ONCE:
+                        metricMap.get(MqttMetricEnum.MESSAGE_QOS2_SENT).getMetric().increment();
+                        break;
+                }
+            }
+        });
+        messageBusSubscriber.consumer((brokerContext1, publishMessage) -> {
+            switch (publishMessage.getFixedHeader().getQosLevel()) {
+                case AT_MOST_ONCE:
+                    metricMap.get(MqttMetricEnum.MESSAGE_QOS0_RECEIVED).getMetric().increment();
+                    break;
+                case AT_LEAST_ONCE:
+                    metricMap.get(MqttMetricEnum.MESSAGE_QOS1_RECEIVED).getMetric().increment();
+                    break;
+                case EXACTLY_ONCE:
+                    metricMap.get(MqttMetricEnum.MESSAGE_QOS2_RECEIVED).getMetric().increment();
+                    break;
+            }
+
+        });
+
+
+        int period = 5;
+        PERIOD_MESSAGE_RECEIVED.setPeriod(period);
+        PERIOD_MESSAGE_SENT.setPeriod(period);
+        QuickTimerTask.scheduleAtFixedRate(() -> {
+            LOGGER.debug("reset period metric...");
+            Date date = new Date();
+            PERIOD_MESSAGE_SENT.getMetric().reset();
+            PERIOD_MESSAGE_SENT.setTime(date);
+            PERIOD_MESSAGE_RECEIVED.getMetric().reset();
+            PERIOD_MESSAGE_RECEIVED.setTime(date);
+        }, 0, period * 1000);
     }
 
     private void initProvider() {
@@ -472,6 +577,21 @@ public class BrokerContextImpl implements BrokerContext {
     @Override
     public MqttBrokerMessageProcessor getMessageProcessor() {
         return processor;
+    }
+
+    @Override
+    public Map<MqttMetricEnum, MetricItemTO> metrics() {
+        return metricMap;
+    }
+
+    @Override
+    public MetricItemTO metric(MqttMetricEnum metricEnum) {
+        return metricMap.get(metricEnum);
+    }
+
+    @Override
+    public PeriodMetricItemTO metric(MqttPeriodMetricEnum metricEnum) {
+        return periodMetricMap.get(metricEnum);
     }
 
     @Override
