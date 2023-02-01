@@ -29,7 +29,7 @@ public class MetricItemTO {
     /**
      * 采集周期，单位：秒，非正整数表示禁用周期统计
      */
-    private int period;
+    private final int period;
     /**
      * 未启用周期采集改值为null
      */
@@ -38,7 +38,7 @@ public class MetricItemTO {
 
 
     public MetricItemTO() {
-        this(null);
+        this.period = 0;
     }
 
     public MetricItemTO(MqttMetricEnum metricEnum) {
