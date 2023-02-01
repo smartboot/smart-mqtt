@@ -41,16 +41,16 @@
   </lay-row>
   <lay-container fluid>
     <lay-row space="10">
-      <lay-col md="8">
-        <lay-table :columns="bytes_columns" :data-source="bytes_dataSource" :size="md" skin='nob'>
-          <template #metric="{ data }">
-            <div class="metric-cell">
-              <p>{{ data.code }}</p>
-              <span> {{ data.desc }} </span>
-            </div>
-          </template>
-        </lay-table>
-      </lay-col>
+<!--      <lay-col md="8">-->
+<!--        <lay-table :columns="bytes_columns" :data-source="bytes_dataSource" :size="md" skin='nob'>-->
+<!--          <template #metric="{ data }">-->
+<!--            <div class="metric-cell">-->
+<!--              <p>{{ data.code }}</p>-->
+<!--              <span> {{ data.desc }} </span>-->
+<!--            </div>-->
+<!--          </template>-->
+<!--        </lay-table>-->
+<!--      </lay-col>-->
 
       <lay-col md="8">
         <lay-table :columns="packet_columns" :data-source="packet_dataSource" :size="md" skin='nob'>
@@ -140,20 +140,20 @@ export default {
 
     const access_dataSource = ref([])
 
-    const bytes_columns = [
-      {
-        title:"流量收发（字节）",
-        width:"200px",
-        key:"metric",
-        customSlot: "metric"
-      },{
-        title:"",
-        width: "180px",
-        key:"value",
-      }
-    ]
-
-    const bytes_dataSource = ref([])
+    // const bytes_columns = [
+    //   {
+    //     title:"流量收发（字节）",
+    //     width:"200px",
+    //     key:"metric",
+    //     customSlot: "metric"
+    //   },{
+    //     title:"",
+    //     width: "180px",
+    //     key:"value",
+    //   }
+    // ]
+    //
+    // const bytes_dataSource = ref([])
 
     const packet_columns = [
       {
@@ -206,7 +206,7 @@ export default {
       const loadData = async () => {
         const {data} = await dashboard_metrics();
         console.log(data)
-        bytes_dataSource.value=data['group']['bytes'];
+        // bytes_dataSource.value=data['group']['bytes'];
         connect_dataSource.value=data['group']['connection'];
         session_dataSource.value=data['group']['session'];
         packet_dataSource.value=data['group']['packet'];
@@ -225,8 +225,8 @@ export default {
       packet_dataSource,
       access_columns,
       access_dataSource,
-      bytes_columns,
-      bytes_dataSource,
+      // bytes_columns,
+      // bytes_dataSource,
       message_columns,
       message_dataSource,
       delivery_columns,
