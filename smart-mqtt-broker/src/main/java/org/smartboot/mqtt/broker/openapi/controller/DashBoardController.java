@@ -14,7 +14,6 @@ import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.openapi.OpenApi;
 import org.smartboot.mqtt.broker.openapi.to.BrokerNodeTO;
 import org.smartboot.mqtt.common.enums.MqttMetricEnum;
-import org.smartboot.mqtt.common.enums.MqttPeriodMetricEnum;
 import org.smartboot.mqtt.common.to.MetricItemTO;
 import org.smartboot.mqtt.common.to.MetricTO;
 
@@ -63,8 +62,8 @@ public class DashBoardController {
         subscribeTopicCount.setValue(subCount);
         metricTO.getMetric().put(subscribeTopicCount.getCode(), subscribeTopicCount);
 
-        metricTO.getMetric().put(MqttPeriodMetricEnum.PERIOD_MESSAGE_RECEIVED.getCode(), brokerContext.metric(MqttPeriodMetricEnum.PERIOD_MESSAGE_RECEIVED));
-        metricTO.getMetric().put(MqttPeriodMetricEnum.PERIOD_MESSAGE_SENT.getCode(), brokerContext.metric(MqttPeriodMetricEnum.PERIOD_MESSAGE_SENT));
+        metricTO.getMetric().put(MqttMetricEnum.PERIOD_MESSAGE_RECEIVED.getCode(), brokerContext.metric(MqttMetricEnum.PERIOD_MESSAGE_RECEIVED));
+        metricTO.getMetric().put(MqttMetricEnum.PERIOD_MESSAGE_SENT.getCode(), brokerContext.metric(MqttMetricEnum.PERIOD_MESSAGE_SENT));
         return RestResult.ok(metricTO);
     }
 

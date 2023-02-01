@@ -21,7 +21,6 @@ import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.MqttMessageBuilders;
 import org.smartboot.mqtt.common.enums.MqttMetricEnum;
-import org.smartboot.mqtt.common.enums.MqttPeriodMetricEnum;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventBus;
@@ -35,7 +34,6 @@ import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.to.MetricItemTO;
-import org.smartboot.mqtt.common.to.PeriodMetricItemTO;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.buffer.BufferPagePool;
@@ -68,6 +66,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
+import java.util.stream.Collectors;
 
 /**
  * @author 三刀
@@ -113,8 +112,6 @@ public class BrokerContextImpl implements BrokerContext {
      * 统计指标
      */
     private final Map<MqttMetricEnum, MetricItemTO> metricMap = new HashMap<>();
-
-    private final Map<MqttPeriodMetricEnum, PeriodMetricItemTO> periodMetricMap = new HashMap<>();
 
     @Override
     public void init() throws IOException {
@@ -162,12 +159,13 @@ public class BrokerContextImpl implements BrokerContext {
 
     private void initMetric() {
         for (MqttMetricEnum metricEnum : MqttMetricEnum.values()) {
-            metricMap.put(metricEnum, new MetricItemTO(metricEnum));
+            if (metricEnum.isPeriod()) {
+                metricMap.put(metricEnum, new MetricItemTO(metricEnum, 5));
+            } else {
+                metricMap.put(metricEnum, new MetricItemTO(metricEnum));
+            }
         }
-        PeriodMetricItemTO PERIOD_MESSAGE_RECEIVED = new PeriodMetricItemTO(MqttPeriodMetricEnum.PERIOD_MESSAGE_RECEIVED);
-        PeriodMetricItemTO PERIOD_MESSAGE_SENT = new PeriodMetricItemTO(MqttPeriodMetricEnum.PERIOD_MESSAGE_SENT);
-        periodMetricMap.put(MqttPeriodMetricEnum.PERIOD_MESSAGE_RECEIVED, PERIOD_MESSAGE_RECEIVED);
-        periodMetricMap.put(MqttPeriodMetricEnum.PERIOD_MESSAGE_SENT, PERIOD_MESSAGE_SENT);
+
         processor.addPlugin(new AbstractPlugin<MqttMessage>() {
             @Override
             public void afterRead(AioSession session, int readSize) {
@@ -189,14 +187,14 @@ public class BrokerContextImpl implements BrokerContext {
         eventBus.subscribe(ServerEventType.UNSUBSCRIBE_ACCEPT, (eventType, object) -> metricMap.get(MqttMetricEnum.CLIENT_UNSUBSCRIBE).getMetric().increment());
         eventBus.subscribe(EventType.RECEIVE_MESSAGE, (eventType, object) -> {
             metricMap.get(MqttMetricEnum.PACKETS_RECEIVED).getMetric().increment();
-            PERIOD_MESSAGE_RECEIVED.getMetric().increment();
+            metricMap.get(MqttMetricEnum.PERIOD_MESSAGE_RECEIVED).getMetric().increment();
             if (object.getObject() instanceof MqttConnectMessage) {
                 metricMap.get(MqttMetricEnum.PACKETS_CONNECT_RECEIVED).getMetric().increment();
             }
         });
         eventBus.subscribe(EventType.WRITE_MESSAGE, (eventType, object) -> {
             metricMap.get(MqttMetricEnum.PACKETS_SENT).getMetric().increment();
-            PERIOD_MESSAGE_SENT.getMetric().increment();
+            metricMap.get(MqttMetricEnum.PERIOD_MESSAGE_SENT).getMetric().increment();
             if (object.getObject() instanceof MqttConnAckMessage) {
                 metricMap.get(MqttMetricEnum.PACKETS_CONNACK_SENT).getMetric().increment();
             } else if (object.getObject() instanceof MqttPublishMessage) {
@@ -228,18 +226,17 @@ public class BrokerContextImpl implements BrokerContext {
 
         });
 
-
-        int period = 5;
-        PERIOD_MESSAGE_RECEIVED.setPeriod(period);
-        PERIOD_MESSAGE_SENT.setPeriod(period);
-        QuickTimerTask.scheduleAtFixedRate(() -> {
-            LOGGER.debug("reset period metric...");
-            Date date = new Date();
-            PERIOD_MESSAGE_SENT.getMetric().reset();
-            PERIOD_MESSAGE_SENT.setTime(date);
-            PERIOD_MESSAGE_RECEIVED.getMetric().reset();
-            PERIOD_MESSAGE_RECEIVED.setTime(date);
-        }, 0, period * 1000);
+        //周期性重置指标值
+        metricMap.values().stream().filter(metricItemTO -> metricItemTO.getPeriod() > 0).collect(Collectors.groupingBy(MetricItemTO::getPeriod)).forEach((period, metrics) -> {
+            QuickTimerTask.scheduleAtFixedRate(() -> {
+                LOGGER.debug("reset period metric...");
+                Date date = new Date();
+                metrics.forEach(metricItemTO -> {
+                    metricItemTO.getMetric().reset();
+                    metricItemTO.setTime(date);
+                });
+            }, 0, period * 1000);
+        });
     }
 
     private void initProvider() {
@@ -580,18 +577,8 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     @Override
-    public Map<MqttMetricEnum, MetricItemTO> metrics() {
-        return metricMap;
-    }
-
-    @Override
     public MetricItemTO metric(MqttMetricEnum metricEnum) {
         return metricMap.get(metricEnum);
-    }
-
-    @Override
-    public PeriodMetricItemTO metric(MqttPeriodMetricEnum metricEnum) {
-        return periodMetricMap.get(metricEnum);
     }
 
     @Override

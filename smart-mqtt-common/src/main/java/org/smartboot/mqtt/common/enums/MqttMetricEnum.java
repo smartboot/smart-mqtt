@@ -23,14 +23,27 @@ public enum MqttMetricEnum {
     MESSAGE_QOS2_RECEIVED("messages_qos2_received", "接收来自客户端的 QoS 2 消息数量"),
     MESSAGE_QOS0_SENT("messages_qos0_sent", "发送给客户端的 QoS 0 消息数量"),
     MESSAGE_QOS1_SENT("messages_qos1_sent", "发送给客户端的 QoS 1 消息数量"),
-    MESSAGE_QOS2_SENT("messages_qos2_sent", "发送给客户端的 QoS 2 消息数量");
+    MESSAGE_QOS2_SENT("messages_qos2_sent", "发送给客户端的 QoS 2 消息数量"),
+
+    PERIOD_MESSAGE_RECEIVED("period_message_received", "周期内接收消息数", true),
+
+    PERIOD_MESSAGE_SENT("period_message_sent", "周期内发送消息数", true);
 
     private final String code;
     private final String desc;
+    /**
+     * 是否周期性指标
+     */
+    private final boolean period;
 
-    MqttMetricEnum(String code, String desc) {
+    MqttMetricEnum(String code, String desc, boolean period) {
         this.code = code;
         this.desc = desc;
+        this.period = period;
+    }
+
+    MqttMetricEnum(String code, String desc) {
+        this(code, desc, false);
     }
 
     public String getCode() {
@@ -39,5 +52,9 @@ public enum MqttMetricEnum {
 
     public String getDesc() {
         return desc;
+    }
+
+    public boolean isPeriod() {
+        return period;
     }
 }

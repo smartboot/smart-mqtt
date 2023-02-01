@@ -3,6 +3,7 @@ package org.smartboot.mqtt.common.to;
 import com.alibaba.fastjson2.annotation.JSONField;
 import org.smartboot.mqtt.common.enums.MqttMetricEnum;
 
+import java.util.Date;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
@@ -19,16 +20,35 @@ public class MetricItemTO {
      */
     private String desc;
 
+    /**
+     * 指标数据
+     */
     @JSONField(serialize = false)
     private final LongAdder metric = new LongAdder();
 
-    public MetricItemTO() {
+    /**
+     * 采集周期，单位：秒，非正整数表示禁用周期统计
+     */
+    private int period;
+    /**
+     * 未启用周期采集改值为null
+     */
+    @JSONField(format = "yyyy-MM-dd HH:mm:ss")
+    private Date time;
 
+
+    public MetricItemTO() {
+        this(null);
     }
 
     public MetricItemTO(MqttMetricEnum metricEnum) {
+        this(metricEnum, 0);
+    }
+
+    public MetricItemTO(MqttMetricEnum metricEnum, int period) {
         this.code = metricEnum.getCode();
         this.desc = metricEnum.getDesc();
+        this.period = period;
     }
 
     public String getCode() {
@@ -58,5 +78,17 @@ public class MetricItemTO {
 
     public LongAdder getMetric() {
         return metric;
+    }
+
+    public int getPeriod() {
+        return period;
+    }
+
+    public Date getTime() {
+        return time;
+    }
+
+    public void setTime(Date time) {
+        this.time = time;
     }
 }
