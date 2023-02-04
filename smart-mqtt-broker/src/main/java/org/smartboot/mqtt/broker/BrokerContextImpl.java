@@ -143,6 +143,12 @@ public class BrokerContextImpl implements BrokerContext {
             } else {
                 System.out.println("\uD83C\uDF89start smart-mqtt success! [host:" + brokerConfigure.getHost() + " port:" + brokerConfigure.getPort() + "]");
             }
+            if (StringUtils.isBlank(brokerConfigure.getName())) {
+                runtime.setName("smart-mqtt@" + (StringUtils.isBlank(brokerConfigure.getHost()) ? "0.0.0.0" : brokerConfigure.getHost()));
+            } else {
+                runtime.setName(brokerConfigure.getName());
+            }
+
             runtime.setStartTime(System.currentTimeMillis());
             runtime.setPid(JVM.getJVM().getPid());
             runtime.setIpAddress(brokerConfigure.getHost() + ":" + brokerConfigure.getPort());

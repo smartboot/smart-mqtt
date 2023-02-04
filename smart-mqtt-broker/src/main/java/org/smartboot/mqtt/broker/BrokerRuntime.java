@@ -8,6 +8,10 @@ package org.smartboot.mqtt.broker;
  */
 public final class BrokerRuntime {
     /**
+     * 节点名称
+     */
+    private String name;
+    /**
      * 进程ID
      */
     private String pid;
@@ -45,5 +49,13 @@ public final class BrokerRuntime {
 
     public void setIpAddress(String ipAddress) {
         this.ipAddress = ipAddress;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

@@ -8,12 +8,14 @@ public class BrokerNodeTO {
     /**
      * 节点名称
      */
-    private String node;
+    private String name;
 
     /**
      * 节点状态
+     *
+     * @see org.smartboot.mqtt.broker.openapi.enums.BrokerStatueEnum
      */
-    private int status;
+    private String status;
 
     /**
      * 运行时长
@@ -24,6 +26,10 @@ public class BrokerNodeTO {
      * broker版本
      */
     private String version;
+    /**
+     * Broker IP地址
+     */
+    private String ipAddress;
 
     /**
      * 服务进程
@@ -40,19 +46,19 @@ public class BrokerNodeTO {
      */
     private int cpu;
 
-    public String getNode() {
-        return node;
+    public String getName() {
+        return name;
     }
 
-    public void setNode(String node) {
-        this.node = node;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public int getStatus() {
+    public String getStatus() {
         return status;
     }
 
-    public void setStatus(int status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 
@@ -94,5 +100,13 @@ public class BrokerNodeTO {
 
     public void setCpu(int cpu) {
         this.cpu = cpu;
+    }
+
+    public String getIpAddress() {
+        return ipAddress;
+    }
+
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
     }
 }

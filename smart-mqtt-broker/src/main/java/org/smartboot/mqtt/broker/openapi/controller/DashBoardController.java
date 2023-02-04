@@ -12,6 +12,7 @@ import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.BrokerRuntime;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.openapi.OpenApi;
+import org.smartboot.mqtt.broker.openapi.enums.BrokerStatueEnum;
 import org.smartboot.mqtt.broker.openapi.to.BrokerNodeTO;
 import org.smartboot.mqtt.common.enums.MqttMetricEnum;
 import org.smartboot.mqtt.common.to.MetricItemTO;
@@ -71,8 +72,8 @@ public class DashBoardController {
     public RestResult<List<BrokerNodeTO>> nodes() {
         BrokerRuntime brokerRuntime = brokerContext.getRuntime();
         BrokerNodeTO nodeTO = new BrokerNodeTO();
-        nodeTO.setNode("smart-mqtt@" + (StringUtils.isBlank(brokerContext.getBrokerConfigure().getHost()) ? "::1" : brokerContext.getBrokerConfigure().getHost()));
-        nodeTO.setStatus(1);
+        nodeTO.setName("smart-mqtt@" + (StringUtils.isBlank(brokerContext.getBrokerConfigure().getHost()) ? "::1" : brokerContext.getBrokerConfigure().getHost()));
+        nodeTO.setStatus(BrokerStatueEnum.RUNNING.getCode());
         nodeTO.setVersion(BrokerConfigure.VERSION);
         nodeTO.setPid(brokerRuntime.getPid());
 

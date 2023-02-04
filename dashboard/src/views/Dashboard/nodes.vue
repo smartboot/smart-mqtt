@@ -1,11 +1,11 @@
 <template>
   <lay-table :columns="columns2" :data-source="dataSource2" :size="md" skin='nob'>
     <template #status="{ data }">
-      <div v-if="data.status==1">
+      <div v-if="data.status=='running'">
         <lay-badge type="dot" theme="blue" ripple></lay-badge>
         运行中
       </div>
-      <div v-if="data.status==2">
+      <div v-if="data.status=='stopped'">
         <lay-badge type="dot"></lay-badge>
         已离线
       </div>
@@ -36,7 +36,7 @@ export default {
       {
         title: "名称",
         width: "200px",
-        key: "node"
+        key: "name"
       }, {
         title: "状态",
         width: "180px",

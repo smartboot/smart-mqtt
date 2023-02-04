@@ -54,20 +54,24 @@ export default {
         key:"status",
         customSlot: "status"
       },{
-        title:"IP地址",
-        width: "180px",
+        title:"客户端IP地址",
+        width: "80px",
         key:"ip_address"
       },{
-        title:"心跳",
+        title:"Broker地址",
         width: "80px",
+        key:"broker_ip_address"
+      },{
+        title:"心跳",
+        width: "40px",
         key:"keepalive"
       },{
         title:"Clean Start",
-        width: "120px",
+        width: "80px",
         key:"clean_start"
       },{
         title:"会话过期间隔",
-        width: "180px",
+        width: "80px",
         key:"expiry_interval"
       },{
         title:"连接时间",

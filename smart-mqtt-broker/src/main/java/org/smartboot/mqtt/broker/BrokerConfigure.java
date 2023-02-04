@@ -1,5 +1,7 @@
 package org.smartboot.mqtt.broker;
 
+import org.smartboot.mqtt.common.ToString;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,7 +11,7 @@ import java.util.Map;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/30
  */
-public class BrokerConfigure {
+public class BrokerConfigure extends ToString {
     /**
      * http://patorjk.com/software/taag/
      * Font Name: Puffy
@@ -35,6 +37,10 @@ public class BrokerConfigure {
         SystemEnvironments.put(convertToEnvironment(SystemProperty.THREAD_NUM), SystemProperty.THREAD_NUM);
     }
 
+    /**
+     * 节点名称
+     */
+    private String name;
     /**
      * 地址
      */
@@ -188,6 +194,14 @@ public class BrokerConfigure {
 
     public void setTopicLimit(int topicLimit) {
         this.topicLimit = topicLimit;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     @Override

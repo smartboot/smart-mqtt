@@ -1,7 +1,7 @@
 package org.smartboot.mqtt.common;
 
 
-import org.apache.commons.lang.builder.ToStringBuilder;
+import com.alibaba.fastjson2.JSONObject;
 
 /**
  * @author 三刀
@@ -10,6 +10,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class ToString {
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return JSONObject.toJSONString(this);
     }
 }

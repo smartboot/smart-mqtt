@@ -31,6 +31,11 @@ public class ConnectionTO {
     private String ipAddress;
 
     /**
+     * Broker IP地址
+     */
+    @JSONField(name = "broker_ip_address")
+    private String brokerIpAddress;
+    /**
      * 心跳
      */
     private int keepalive;
@@ -113,5 +118,13 @@ public class ConnectionTO {
 
     public void setConnectTime(Date connectTime) {
         this.connectTime = connectTime;
+    }
+
+    public String getBrokerIpAddress() {
+        return brokerIpAddress;
+    }
+
+    public void setBrokerIpAddress(String brokerIpAddress) {
+        this.brokerIpAddress = brokerIpAddress;
     }
 }
