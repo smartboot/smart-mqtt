@@ -124,11 +124,12 @@ public class BrokerContextImpl implements BrokerContext {
 
         subscribeMessageBus();
 
-        loadAndInstallPlugins();
-
         initPushThread();
 
         initMetric();
+
+        loadAndInstallPlugins();
+
 
         try {
             pagePool = new BufferPagePool(10 * 1024 * 1024, brokerConfigure.getThreadNum(), true);
