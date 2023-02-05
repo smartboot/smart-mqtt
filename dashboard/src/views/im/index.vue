@@ -24,10 +24,11 @@
                           :key="n"
                           style="margin: 10px; padding: 10px"
                       >
-                        <lay-avatar
-                            src="https://portrait.gitee.com/uploads/avatars/user/117/351975_smartdms_1578921064.jpg!avatar60"></lay-avatar>
+                        <lay-avatar v-if="n.clientId==clientId"><span style="color: #2b2d42">我</span></lay-avatar>
+                        <lay-avatar v-if="n.clientId!=clientId"
+                                    src="https://portrait.gitee.com/uploads/avatars/user/117/351975_smartdms_1578921064.jpg!avatar60"></lay-avatar>
                         ：
-                        {{ n }}
+                        {{ n.message }}
                       </lay-panel
                       >
                     </lay-col>
@@ -53,7 +54,7 @@
       </lay-col>
       <lay-col sm="18" md="18">
         <lay-affix :offset="0" position="bottom">
-          <lay-textarea placeholder="请输入描述" :rows="2" :cols="10" v-model.trim="message"></lay-textarea>
+          <lay-textarea placeholder="有什么想要对我说的" :rows="2" :cols="10" v-model.trim="message"></lay-textarea>
         </lay-affix>
       </lay-col>
       <lay-col sm="2" md="2">
@@ -77,13 +78,14 @@ export default {
     const message_array: any[] = []
     const messages = ref(message_array)
     const message = ref();
+    const clientId = ref()
 
 
     let client: any
     const topic = "/im"
     const sendMessage = async () => {
       // let { data, code, msg } = await login(loginForm);
-      if (message.value == "") {
+      if (!message.value) {
         layer.notifiy({
           title: "Error",
           content: "无法发送空内容",
@@ -94,13 +96,14 @@ export default {
           clientId: client.options.clientId,
           message: message.value
         }
-        client.publish(topic, JSON.stringify(payload));
+        client.publish(topic, JSON.stringify(payload), {retain: true});
       }
     }
 
     onMounted(() => {
       client = mqtt.connect('ws://82.157.162.230:1884');
       client.on('connect', function () {
+        clientId.value = client.options.clientId
         client.subscribe(topic, function () {
 
         });
@@ -114,10 +117,11 @@ export default {
     })
 
     onUnmounted(() => {
-      client.end()
+      // client.end()
     })
 
     return {
+      clientId,
       messages,
       message,
       sendMessage
