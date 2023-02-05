@@ -63,5 +63,15 @@ export default [
             },
         ]
 
-    }
+    },{
+        path: '/im',
+        component: BaseLayout,
+        children:[
+            {
+                path: '/im',
+                component: () => import('../../views/im/index.vue'),
+                meta: {title: 'ChatMQTT', requireAuth: true},
+            },
+        ]
+    },
 ]

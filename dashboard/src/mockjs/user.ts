@@ -47,6 +47,12 @@ const menus = [
     ]
   },
   {
+
+    id: "/im",
+    icon: "layui-icon-senior",
+    title: "ChatMQTT"
+  },
+  {
     id: "https://smartboot.gitee.io/smart-mqtt/",
     icon: "layui-icon-help",
     title: "帮助",

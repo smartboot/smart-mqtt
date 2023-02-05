@@ -7,6 +7,8 @@ export {}
 
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    LayAffix: typeof import('@layui/layui-vue')['LayAffix']
+    LayAvatar: typeof import('@layui/layui-vue')['LayAvatar']
     LayBadge: typeof import('@layui/layui-vue')['LayBadge']
     LayBody: typeof import('@layui/layui-vue')['LayBody']
     LayBreadcrumb: typeof import('@layui/layui-vue')['LayBreadcrumb']
@@ -34,6 +36,7 @@ declare module '@vue/runtime-core' {
     LayLogo: typeof import('@layui/layui-vue')['LayLogo']
     LayMenu: typeof import('@layui/layui-vue')['LayMenu']
     LayMenuItem: typeof import('@layui/layui-vue')['LayMenuItem']
+    LayPanel: typeof import('@layui/layui-vue')['LayPanel']
     LayProgress: typeof import('@layui/layui-vue')['LayProgress']
     LayRow: typeof import('@layui/layui-vue')['LayRow']
     LayScroll: typeof import('@layui/layui-vue')['LayScroll']
@@ -44,6 +47,7 @@ declare module '@vue/runtime-core' {
     LayTab: typeof import('@layui/layui-vue')['LayTab']
     LayTabItem: typeof import('@layui/layui-vue')['LayTabItem']
     LayTable: typeof import('@layui/layui-vue')['LayTable']
+    LayTextarea: typeof import('@layui/layui-vue')['LayTextarea']
     LayTransition: typeof import('@layui/layui-vue')['LayTransition']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
