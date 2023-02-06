@@ -49,13 +49,14 @@
   </lay-row>
 
   <div style="width:100%;height:100px">
+    <lay-affix style="width: 100%;padding: 10px;box-sizing: border-box" :offset="0" position="bottom">
     <lay-row space="10">
       <lay-col sm="2" md="2">
       </lay-col>
       <lay-col sm="18" md="18">
-        <lay-affix :offset="0" position="bottom">
+
           <lay-textarea placeholder="有什么想要对我说的" :rows="2" :cols="10" v-model.trim="message"></lay-textarea>
-        </lay-affix>
+
       </lay-col>
       <lay-col sm="2" md="2">
         <lay-button type="normal" @click="sendMessage">发送消息</lay-button>
@@ -63,6 +64,7 @@
       <lay-col sm="2" md="2">
       </lay-col>
     </lay-row>
+    </lay-affix>
   </div>
 </template>
 
