@@ -5,8 +5,7 @@ import org.smartboot.http.restful.annotation.Controller;
 import org.smartboot.http.restful.annotation.RequestMapping;
 import org.smartboot.mqtt.broker.openapi.OpenApi;
 import org.smartboot.mqtt.broker.openapi.to.ConnectionTO;
-
-import java.util.List;
+import org.smartboot.mqtt.broker.openapi.to.Pagination;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -16,7 +15,7 @@ import java.util.List;
 public class ConnectionsController {
 
     @RequestMapping(OpenApi.CONNECTIONS)
-    public RestResult<List<ConnectionTO>> connections() {
+    public RestResult<Pagination<ConnectionTO>> connections() {
         return RestResult.fail(OpenApi.MESSAGE_UPGRADE);
     }
 }

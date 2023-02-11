@@ -15,26 +15,31 @@
               ...
             </template>
             <template v-slot:body>
-              <lay-scroll height="400px" style="background-color: whitesmoke" thumbColor="#000000">
                 <lay-container>
                   <lay-row>
-                    <lay-col span="24">
-                      <lay-panel
-                          v-for="(n, index) in messages"
-                          :key="n"
-                          style="margin: 10px; padding: 10px"
-                      >
-                        <lay-avatar v-if="n.clientId==clientId"><span style="color: #2b2d42">我</span></lay-avatar>
-                        <lay-avatar v-if="n.clientId!=clientId"
-                                    src="https://portrait.gitee.com/uploads/avatars/user/117/351975_smartdms_1578921064.jpg!avatar60"></lay-avatar>
-                        ：
-                        {{ n.message }}
-                      </lay-panel
-                      >
+                    <lay-col>
+                      <!-- 需要用一个 div 包裹触发滚动事件的目标元素和 lay-backtop 组件 -->
+                      <div ref="scrollContent" style="overflow-y:auto; overflow-x:auto; height:500px;background-color:whitesmoke;">
+                        <div  id="scrollContent" >
+                          <lay-panel
+                              v-for="(n, index) in messages"
+                              :key="n"
+                              style="margin: 15px; padding: 15px"
+                          >
+                            <lay-avatar v-if="n.clientId==clientId"><span style="color: #2b2d42">我</span></lay-avatar>
+                            <lay-avatar v-if="n.clientId!=clientId"
+                                        src="https://portrait.gitee.com/uploads/avatars/user/117/351975_smartdms_1578921064.jpg!avatar60"></lay-avatar>
+                            ：
+                          {{ n.message }}
+                          </lay-panel
+                          >
+                        </div>
+<!--                        <lay-backtop target="#scrollContent" :showHeight="100" :bottom="30" position="absolute"></lay-backtop>-->
+                      </div>
+
                     </lay-col>
                   </lay-row>
                 </lay-container>
-              </lay-scroll>
             </template>
           </lay-card>
         </lay-body>
@@ -77,6 +82,7 @@ import {layer} from "@layui/layer-vue";
 
 export default {
   setup() {
+    const scrollContent=ref();
     const message_array: any[] = []
     const messages = ref(message_array)
     const message = ref();
@@ -98,7 +104,7 @@ export default {
           clientId: client.options.clientId,
           message: message.value
         }
-        client.publish(topic, JSON.stringify(payload), {retain: true});
+        client.publish(topic, JSON.stringify(payload), {retain: true,qos:1});
       }
     }
 
@@ -115,6 +121,8 @@ export default {
         console.log("topic:" + topic)
         console.log("payload:" + payload)
         messages.value.push(JSON.parse(payload))
+        console.log(scrollContent.value.scrollHeight)
+        scrollContent.value.scrollTo(0,scrollContent.value.scrollHeight)
       })
     })
 
@@ -123,6 +131,7 @@ export default {
     })
 
     return {
+      scrollContent,
       clientId,
       messages,
       message,

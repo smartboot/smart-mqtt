@@ -16,7 +16,7 @@
     </lay-col>
   </lay-row>
   <lay-row space="10">
-    <lay-table :columns="columns2" :data-source="dataSource2" :size="md" skin='nob'>
+    <lay-table :columns="columns2" :data-source="dataSource" :page="page" @change="change" :size="md" skin='nob'>
       <template #status="{ data }">
         <div v-if="data.status=='connected'">
           <lay-badge type="dot" theme="green" ripple></lay-badge>
@@ -33,11 +33,17 @@
 
 <script>
 
-import {onMounted, ref} from "vue";
+import {ref} from "vue";
 import {connections} from "../../api/module/api";
 
 export default {
   setup() {
+    const page = ref({
+      total: 0,
+      limit: 10,
+      current: 1,
+      showRefresh: true,
+    })
 
     const columns2 = [
       {
@@ -80,20 +86,26 @@ export default {
       }
     ]
 
-    const dataSource2 = ref([])
+    const dataSource = ref([])
+    const change = ({ current, limit }) => {
+      // layer.msg("current:" + current + " limit:" + limit);
+      loadData(current,limit)
+    }
 
-    onMounted(() => {
-      const loadData = async () => {
-        const {data} = await connections();
-        console.log(data)
-        dataSource2.value=data
-      };
-      loadData()
-    })
+    const loadData = async (pageNo,pageSize) => {
+      const {data} = await connections({pageSize:pageSize,pageNo:pageNo});
+      console.log(data)
+      dataSource.value=data.list
+      page.value.total=data.total;
+      page.value.limit=data.pageSize;
+    };
+    loadData(page.value.current,page.value.limit)
 
     return {
+      page,
+      change,
       columns2,
-      dataSource2
+      dataSource
     }
   }
 }

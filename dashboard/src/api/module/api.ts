@@ -12,8 +12,8 @@ export const dashboard_metrics = function () {
     return Http.post('/dashboard/metrics')
 }
 
-export const connections = function () {
-    return Http.post('/connections')
+export const connections = function (query: {}) {
+    return Http.post('/connections', query)
 }
 
 export const subscriptions_subscription = function () {
