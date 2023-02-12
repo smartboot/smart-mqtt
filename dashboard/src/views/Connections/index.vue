@@ -43,6 +43,7 @@ export default {
       limit: 10,
       current: 1,
       showRefresh: true,
+      showCount:true
     })
 
     const columns2 = [

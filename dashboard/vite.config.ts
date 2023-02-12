@@ -3,7 +3,6 @@ import vue from "@vitejs/plugin-vue";
 import AutoImport from "unplugin-auto-import/vite";
 import Components from "unplugin-vue-components/vite";
 import {LayuiVueResolver} from "unplugin-layui-vue-resolver";
-import {visualizer} from "rollup-plugin-visualizer";
 
 const excludeComponents = ['LightIcon','DarkIcon']
 
@@ -12,7 +11,7 @@ export default defineConfig({
   server:{
     proxy:{
       '/api': {
-        target: 'http://82.157.162.230:8083/api/',
+        target: 'http://127.0.0.1:18083/api/',
         changeOrigin: true,
         rewrite: path => path.replace(/^\/api/, '')
       }
@@ -32,13 +31,13 @@ export default defineConfig({
         }),
       ],
     }),
-    visualizer({
-      emitFile: true,
-      filename: "visualizer.html",
-      gzipSize: true,
-      brotliSize: true,
-      open: true,
-    }),
+    // visualizer({
+    //   emitFile: true,
+    //   filename: "visualizer.html",
+    //   gzipSize: true,
+    //   brotliSize: true,
+    //   open: true,
+    // }),
     vue(),
   ],
 });
