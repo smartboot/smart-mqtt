@@ -16,10 +16,10 @@ export const connections = function (query: {}) {
     return Http.post('/connections', query)
 }
 
-export const subscriptions_subscription = function () {
-    return Http.post('/subscriptions/subscription')
+export const subscriptions_subscription = function (query: {}) {
+    return Http.post('/subscriptions/subscription',query)
 }
 
-export const subscriptions_topics = function () {
-    return Http.post('/subscriptions/topics')
+export const subscriptions_topics = function (query: {}) {
+    return Http.post('/subscriptions/topics',query)
 }

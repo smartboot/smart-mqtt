@@ -7,15 +7,15 @@ import java.util.List;
  * @version V1.0 , 2023/2/11
  */
 public class Pagination<T> {
-    private int total;
+    private long total;
     private int pageSize;
     private List<T> list;
 
-    public int getTotal() {
+    public long getTotal() {
         return total;
     }
 
-    public void setTotal(int total) {
+    public void setTotal(long total) {
         this.total = total;
     }
 

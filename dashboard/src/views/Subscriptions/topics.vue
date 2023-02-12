@@ -10,20 +10,21 @@
     </lay-col>
   </lay-row>
   <lay-row space="10">
-    <lay-table :columns="columns2" :data-source="dataSource2" :size="md" skin='nob'></lay-table>
+    <lay-table :columns="columns" :data-source="dataSource" :page="page" @change="change" :size="md"
+               skin='nob'></lay-table>
   </lay-row>
 
 </template>
 
 <script>
 
-import {onMounted, ref} from "vue";
+import {ref} from "vue";
 import {subscriptions_topics} from "../../api/module/api";
 
 export default {
   setup() {
 
-    const columns2 = [
+    const columns = [
       {
         title: "主题",
         width: "120px",
@@ -39,20 +40,33 @@ export default {
       }
     ]
 
-    const dataSource2 = ref([])
+    const dataSource = ref([])
 
-    onMounted(() => {
-      const loadData = async () => {
-        const {data} = await subscriptions_topics();
-        console.log(data)
-        dataSource2.value = data
-      };
-      loadData()
+    const page = ref({
+      total: 0,
+      limit: 10,
+      current: 1,
+      showRefresh: true,
+      showCount: true
     })
+    const change = ({current, limit}) => {
+      loadData(current, limit)
+    }
+
+    const loadData = async (pageNo, pageSize) => {
+      const {data} = await subscriptions_topics({pageSize: pageSize, pageNo: pageNo});
+      console.log(data)
+      dataSource.value = data.list
+      page.value.total = data.total;
+      page.value.limit = data.pageSize;
+    };
+    loadData(page.value.current, page.value.limit)
 
     return {
-      columns2,
-      dataSource2
+      page,
+      change,
+      columns,
+      dataSource
     }
   }
 }
