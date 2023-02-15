@@ -45,53 +45,37 @@
     </lay-col>
     <lay-col md="12" sm="24" xs="24">
       <lay-card>
-        <template #title><p class="agency">消息流入速率： {{ inflowRate.value }} 条/{{inflowRate.period>1?inflowRate.period:""}}秒</p></template>
+        <template #title><p class="agency">消息流入速率： {{ inflowRate.value }}
+          条/{{ inflowRate.period > 1 ? inflowRate.period : "" }}秒</p></template>
         <div class="flowChart" ref="flowInRef"></div>
       </lay-card>
     </lay-col>
     <lay-col md="12" sm="24" xs="24">
       <lay-card>
-        <template #title><p class="agency">消息流出速率： {{ outflowRate.value }} 条/{{outflowRate.period>1?outflowRate.period:""}}秒</p></template>
+        <template #title><p class="agency">消息流出速率： {{ outflowRate.value }}
+          条/{{ outflowRate.period > 1 ? outflowRate.period : "" }}秒</p></template>
         <div class="flowChart" ref="flowOutRef"></div>
       </lay-card>
     </lay-col>
 
+    <lay-col md="12" sm="24" xs="24">
+      <lay-card>
+        <template #title><p class="agency">在线连接数： {{ outflowRate.value }}
+          条/{{ outflowRate.period > 1 ? outflowRate.period : "" }}秒</p></template>
+        <div class="flowChart" ref="flowOutRef"></div>
+      </lay-card>
+    </lay-col>
+
+    <lay-col md="12" sm="24" xs="24">
+      <lay-card>
+        <template #title><p class="agency">主题数： {{ outflowRate.value }}
+          条/{{ outflowRate.period > 1 ? outflowRate.period : "" }}秒</p></template>
+        <div class="flowChart" ref="flowOutRef"></div>
+      </lay-card>
+    </lay-col>
 
   </lay-row>
 
-  <!--  <lay-row space="10">-->
-  <!--    <lay-col md="24" sm="24" xs="24">-->
-  <!--      <div class="grid-demo" style="height: 200px">3</div>-->
-  <!--    </lay-col>-->
-  <!--  </lay-row>-->
-  <!--  <lay-select v-model="value" placeholder="请选择">-->
-  <!--    <lay-select-option :value="1" label="过去1小时"></lay-select-option>-->
-  <!--    <lay-select-option :value="2" label="过去6小时"></lay-select-option>-->
-  <!--    <lay-select-option :value="3" label="过去12小时"></lay-select-option>-->
-  <!--    <lay-select-option :value="4" label="过去1天"></lay-select-option>-->
-  <!--    <lay-select-option :value="5" label="过去3天"></lay-select-option>-->
-  <!--    <lay-select-option :value="6" label="过去7天"></lay-select-option>-->
-  <!--  </lay-select>-->
-  <!--  <lay-row space="10">-->
-  <!--    <lay-col md="12" sm="12" xs="24">-->
-  <!--      <div class="grid-demo">1</div>-->
-  <!--    </lay-col>-->
-  <!--    <lay-col md="12" sm="12" xs="24">-->
-  <!--      <div class="grid1">2</div>-->
-  <!--    </lay-col>-->
-  <!--    <lay-col md="12" sm="12" xs="24">-->
-  <!--      <div class="grid1">2</div>-->
-  <!--    </lay-col>-->
-  <!--    <lay-col md="12" sm="12" xs="24">-->
-  <!--      <div class="grid1">1</div>-->
-  <!--    </lay-col>-->
-  <!--    <lay-col md="8" sm="12" xs="24">-->
-  <!--      <div class="grid1">2</div>-->
-  <!--    </lay-col>-->
-  <!--    <lay-col md="8" sm="12" xs="24">-->
-  <!--      <div class="grid1">2</div>-->
-  <!--    </lay-col>-->
-  <!--  </lay-row>-->
 </template>
 
 <script>
@@ -106,8 +90,8 @@ export default {
     const flowInRef = ref()
     const flowOutRef = ref()
 
-    const inflowRate = ref({value:0})
-    const outflowRate = ref({value:0})
+    const inflowRate = ref({value: 0})
+    const outflowRate = ref({value: 0})
 
     const metric = ref({
       online_client_count: {value: 0},
@@ -115,8 +99,8 @@ export default {
       subscribe_topic_count: {value: 0}
     })
 
-    const flowInData = [];
-    const flowOutData = [];
+    const flowInQueue = [];
+    const flowOutQueue = [];
 
 
     let timer;
@@ -131,29 +115,30 @@ export default {
         console.log(metric.value)
         inflowRate.value = data.metric.period_message_received;
         outflowRate.value = data.metric.period_message_sent;
+        //流入速率
+        updateChart(flowInQueue,inflowRate,flowInChart)
+        //流出速率
+        updateChart(flowOutQueue,outflowRate,flowOutChart)
 
-        if (flowInData.length > 0 && flowInData[flowInData.length - 1].time === inflowRate.value.time) {
-          flowInData[flowInData.length - 1] = inflowRate.value;
-        } else {
-          flowInData.push(inflowRate.value)
-        }
-
-        if (flowOutData.length > 0 && flowOutData[flowOutData.length - 1].time === outflowRate.value.time) {
-          flowOutData[flowOutData.length - 1] = outflowRate.value;
-        } else {
-          flowOutData.push(outflowRate.value)
-        }
-
-
-        if (flowInData.length >= 20) {
-          flowInData.shift()
-        }
-        if (flowOutData.length >= 20) {
-          flowOutData.shift()
-        }
-        flowInChart.changeData(flowInData)
-        flowOutChart.changeData(flowOutData)
       };
+
+      /**
+       * 刷新Chart
+       * @param queue
+       * @param metric
+       * @param chart
+       */
+      const updateChart =  (queue,metric,chart) => {
+        if (queue.length > 0 && queue[queue.length - 1].time === metric.value.time) {
+          queue[queue.length - 1] = metric.value;
+        } else {
+          queue.push(metric.value)
+        }
+        if (queue.length >= 20) {
+          queue.shift()
+        }
+        chart.changeData(queue)
+      }
       loadData()
       timer = setInterval(() => {
         loadData()
