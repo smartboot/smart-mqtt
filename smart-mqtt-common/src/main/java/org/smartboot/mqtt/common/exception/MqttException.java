@@ -4,16 +4,18 @@ package org.smartboot.mqtt.common.exception;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/23
  */
-public class MqttProcessException extends RuntimeException {
-
+public class MqttException extends RuntimeException {
+    private static final Runnable DEFAULT_RUNNABLE = () -> {
+    };
     private static final long serialVersionUID = 2726736059967518427L;
-    private Runnable callback;
+    private final Runnable callback;
 
-    public MqttProcessException(Throwable cause) {
-        super(cause.getMessage(), cause);
+    public MqttException(String message, Throwable cause) {
+        super(message, cause);
+        this.callback = DEFAULT_RUNNABLE;
     }
 
-    public MqttProcessException(String showMessage, Runnable callback) {
+    public MqttException(String showMessage, Runnable callback) {
         super(showMessage);
         this.callback = callback;
     }

@@ -2,7 +2,7 @@ package org.smartboot.mqtt.common.util;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.smartboot.mqtt.common.exception.MqttProcessException;
+import org.smartboot.mqtt.common.exception.MqttException;
 
 import java.util.Collection;
 
@@ -59,10 +59,10 @@ public class ValidateUtils {
      * 抛出异常信息
      */
     public static void throwException(String showMsg, Runnable runnable) {
-        throw new MqttProcessException(showMsg, runnable);
+        throw new MqttException(showMsg, runnable);
     }
 
     public static void throwException(String showMsg) {
-        throw new MqttProcessException(showMsg, DEFAULT_RUNNABLE);
+        throw new MqttException(showMsg, DEFAULT_RUNNABLE);
     }
 }

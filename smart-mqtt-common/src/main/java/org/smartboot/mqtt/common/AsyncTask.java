@@ -2,7 +2,7 @@ package org.smartboot.mqtt.common;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.common.exception.MqttProcessException;
+import org.smartboot.mqtt.common.exception.MqttException;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -15,7 +15,7 @@ public abstract class AsyncTask implements Runnable {
     public final void run() {
         try {
             execute();
-        } catch (MqttProcessException e) {
+        } catch (MqttException e) {
             if (e.getCallback() != null) {
                 e.getCallback().run();
             } else {

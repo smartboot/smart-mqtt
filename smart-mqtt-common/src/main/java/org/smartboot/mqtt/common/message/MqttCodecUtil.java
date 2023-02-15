@@ -3,7 +3,7 @@ package org.smartboot.mqtt.common.message;
 
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.enums.MqttQoS;
-import org.smartboot.mqtt.common.exception.MqttProcessException;
+import org.smartboot.mqtt.common.exception.MqttException;
 import org.smartboot.socket.util.BufferUtils;
 import org.smartboot.socket.util.DecoderException;
 
@@ -128,7 +128,7 @@ public final class MqttCodecUtil {
         }
 
         if (utflen > 65535) {
-            throw new MqttProcessException("encoded string too long: " + utflen + " bytes", () -> {
+            throw new MqttException("encoded string too long: " + utflen + " bytes", () -> {
             });
         }
         byte[] bytearr = new byte[utflen + 2];

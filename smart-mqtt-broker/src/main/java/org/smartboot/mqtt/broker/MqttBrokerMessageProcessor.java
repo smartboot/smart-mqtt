@@ -14,7 +14,7 @@ import org.smartboot.mqtt.common.DefaultMqttWriter;
 import org.smartboot.mqtt.common.QosPublisher;
 import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
-import org.smartboot.mqtt.common.exception.MqttProcessException;
+import org.smartboot.mqtt.common.exception.MqttException;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttDisconnectMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
@@ -95,9 +95,9 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
                 onlineSessions.remove(session.getSessionID()).disconnect();
                 break;
             case PROCESS_EXCEPTION:
-                if (throwable instanceof MqttProcessException) {
+                if (throwable instanceof MqttException) {
                     LOGGER.warn("process exception", throwable);
-                    ((MqttProcessException) throwable).getCallback().run();
+                    ((MqttException) throwable).getCallback().run();
                 }
                 break;
             default:
