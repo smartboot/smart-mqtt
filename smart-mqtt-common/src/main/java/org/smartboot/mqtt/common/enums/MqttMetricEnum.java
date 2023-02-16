@@ -5,6 +5,7 @@ package org.smartboot.mqtt.common.enums;
  * @version V1_0 , 2023/1/26
  */
 public enum MqttMetricEnum {
+    CLIENT_ONLINE("client_online", "客户端在线数"),
     CLIENT_CONNECT("client_connect", "客户端连接次数"),
     CLIENT_DISCONNECT("client_disconnected", "客户端断开连接次数"),
     CLIENT_SUBSCRIBE("client_subscribe", "订阅次数"),
@@ -14,9 +15,15 @@ public enum MqttMetricEnum {
 
     PACKETS_CONNECT_RECEIVED("packets_connect_received", "接收的 CONNECT 报文数量"),
     PACKETS_CONNACK_SENT("packets_connack_sent", "发送的 CONNACK 报文数量"),
+
+    PACKETS_PUBLISH_RECEIVED("packets_publish_received", "接收的 PUBLISH 报文数量"),
+    PACKETS_PUBLISH_SENT("packets_publish_sent", "发送的 PUBLISH 报文数量"),
+
     PACKETS_RECEIVED("packets_connect_received", "接收的报文数量"),
     PACKETS_SENT("packets_connack_sent", "发送的报文数量"),
 
+
+    TOPIC_COUNT("topic_count", "Topic数量"),
 
     MESSAGE_QOS0_RECEIVED("messages_qos0_received", "接收来自客户端的 QoS 0 消息数量"),
     MESSAGE_QOS1_RECEIVED("messages_qos1_received", "接收来自客户端的 QoS 1 消息数量"),

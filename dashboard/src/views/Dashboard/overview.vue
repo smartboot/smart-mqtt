@@ -14,7 +14,7 @@
                 <h3>连接数</h3>
                 <p>
                   <cite>
-                    <lay-count-up :end-val="metric.online_client_count.value" :duration="2000"></lay-count-up>
+                    <lay-count-up :end-val="metric.client_online.value" :duration="2000"></lay-count-up>
                   </cite>
                 </p>
               </a>
@@ -94,7 +94,7 @@ export default {
     const outflowRate = ref({value: 0})
 
     const metric = ref({
-      online_client_count: {value: 0},
+      client_online: {value: 0},
       topic_count: {value: 0},
       subscribe_topic_count: {value: 0}
     })

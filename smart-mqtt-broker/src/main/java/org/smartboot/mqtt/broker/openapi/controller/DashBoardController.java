@@ -44,15 +44,9 @@ public class DashBoardController {
     public RestResult<MetricTO> overview() {
         MetricTO metricTO = new MetricTO();
         Collection<MqttSession> sessions = brokerContext.getSessions();
-        MetricItemTO onlineClientCount = new MetricItemTO();
-        onlineClientCount.setCode("online_client_count");
-        onlineClientCount.setValue(sessions.size());
-        metricTO.getMetric().put(onlineClientCount.getCode(), onlineClientCount);
+        metricTO.getMetric().put(MqttMetricEnum.CLIENT_ONLINE.getCode(), brokerContext.metric(MqttMetricEnum.CLIENT_ONLINE));
 
-        MetricItemTO topicCount = new MetricItemTO();
-        topicCount.setCode("topic_count");
-        topicCount.setValue(brokerContext.getTopics().size());
-        metricTO.getMetric().put(topicCount.getCode(), topicCount);
+        metricTO.getMetric().put(MqttMetricEnum.TOPIC_COUNT.getCode(), brokerContext.metric(MqttMetricEnum.TOPIC_COUNT));
 
         int subCount = 0;
         for (MqttSession session : sessions) {

@@ -492,6 +492,7 @@ public class BrokerContextImpl implements BrokerContext {
             ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topicName), "invalid topicName: " + topicName);
             BrokerTopic newTopic = new BrokerTopic(topicName);
             eventBus.publish(ServerEventType.TOPIC_CREATE, newTopic);
+            metric(MqttMetricEnum.TOPIC_COUNT).getMetric().increment();
             return newTopic;
         });
     }

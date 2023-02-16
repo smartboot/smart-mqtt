@@ -12,6 +12,7 @@ import org.smartboot.mqtt.broker.processor.SubscribeProcessor;
 import org.smartboot.mqtt.broker.processor.UnSubscribeProcessor;
 import org.smartboot.mqtt.common.DefaultMqttWriter;
 import org.smartboot.mqtt.common.QosPublisher;
+import org.smartboot.mqtt.common.enums.MqttMetricEnum;
 import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.exception.MqttException;
@@ -87,11 +88,13 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
     public void stateEvent0(AioSession session, StateMachineEnum stateMachineEnum, Throwable throwable) {
         switch (stateMachineEnum) {
             case NEW_SESSION:
+                mqttContext.metric(MqttMetricEnum.CLIENT_ONLINE).getMetric().increment();
                 session.setAttachment(new Attachment());
                 MqttSession mqttSession = new MqttSession(mqttContext, session, qosPublisher, new DefaultMqttWriter(session.writeBuffer()));
                 onlineSessions.put(session.getSessionID(), mqttSession);
                 break;
             case SESSION_CLOSED:
+                mqttContext.metric(MqttMetricEnum.CLIENT_ONLINE).getMetric().decrement();
                 onlineSessions.remove(session.getSessionID()).disconnect();
                 break;
             case PROCESS_EXCEPTION:
