@@ -19,8 +19,8 @@ public enum MqttMetricEnum {
     PACKETS_PUBLISH_RECEIVED("packets_publish_received", "接收的 PUBLISH 报文数量"),
     PACKETS_PUBLISH_SENT("packets_publish_sent", "发送的 PUBLISH 报文数量"),
 
-    PACKETS_RECEIVED("packets_connect_received", "接收的报文数量"),
-    PACKETS_SENT("packets_connack_sent", "发送的报文数量"),
+    PACKETS_RECEIVED("packets_received", "接收的报文数量"),
+    PACKETS_SENT("packets_sent", "发送的报文数量"),
 
 
     TOPIC_COUNT("topic_count", "Topic数量"),
