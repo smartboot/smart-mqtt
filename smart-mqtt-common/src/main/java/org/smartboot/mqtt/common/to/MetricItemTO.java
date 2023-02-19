@@ -27,6 +27,10 @@ public class MetricItemTO {
     private final LongAdder metric = new LongAdder();
 
     /**
+     * 采集周期，单位：秒，非正整数表示禁用周期统计
+     */
+    private final int period;
+    /**
      * 未启用周期采集改值为null
      */
     @JSONField(format = "yyyy-MM-dd HH:mm:ss")
@@ -34,12 +38,17 @@ public class MetricItemTO {
 
 
     public MetricItemTO() {
-
+        this.period = 0;
     }
 
     public MetricItemTO(MqttMetricEnum metricEnum) {
+        this(metricEnum, 0);
+    }
+
+    public MetricItemTO(MqttMetricEnum metricEnum, int period) {
         this.code = metricEnum.getCode();
         this.desc = metricEnum.getDesc();
+        this.period = period;
     }
 
     public String getCode() {
@@ -69,6 +78,10 @@ public class MetricItemTO {
 
     public LongAdder getMetric() {
         return metric;
+    }
+
+    public int getPeriod() {
+        return period;
     }
 
     public Date getTime() {

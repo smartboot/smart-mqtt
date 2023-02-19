@@ -51,25 +51,27 @@
     </lay-col>
     <lay-col md="12" sm="24" xs="24">
       <lay-card>
-        <template v-if="metric.period_message_received" #title>消息流入速率：<p class="agency">
+        <template v-if="metric.period_message_received" #title><p class="agency">消息流入速率：
           {{ metric.period_message_received.value }}
           条/{{ metric.period_message_received.period > 1 ? metric.period_message_received.period : "" }}秒</p>
         </template>
         <template #body>
-          <div v-if="metric.period_message_received" class="flowChart" ref="period_message_received_chart"></div>
-          <lay-result v-else status="failure"
-                      :describe="message" title="消息流入速率"></lay-result>
+          <div class="flowChart" ref="period_message_received_chart">
+            <lay-result v-if="!metric.period_message_received"  status="failure"
+                        :describe="message" title="消息流入速率"></lay-result>
+          </div>
         </template>
       </lay-card>
     </lay-col>
     <lay-col md="12" sm="24" xs="24">
       <lay-card>
-        <template v-if="metric.period_message_sent" #title>消息流出速率： <p class="agency">
+        <template v-if="metric.period_message_sent" #title> <p class="agency">消息流出速率：
           {{ metric.period_message_sent.value }}
           条/{{ metric.period_message_sent.period > 1 ? metric.period_message_sent.period : "" }}秒</p></template>
         <template #body>
-          <div v-if="metric.period_message_sent" class="flowChart" ref="period_message_sent_chart"></div>
-          <lay-result v-else status="failure" :describe="message" title="消息流出速率"></lay-result>
+          <div class="flowChart" ref="period_message_sent_chart">
+            <lay-result v-if="!metric.period_message_sent"  status="failure" :describe="message" title="消息流出速率"></lay-result>
+          </div>
         </template>
       </lay-card>
     </lay-col>
@@ -109,13 +111,12 @@ export default {
 
         //客户端在线连接数
         updateChart(chartGroup, onlineClientChart, 'client_online', metric.value.client_online)
-
         //流入速率
         if (metric.value.period_message_received) {
           updateChart(chartGroup, period_message_received_chart, 'period_message_received_queue', metric.value.period_message_received)
         }
 
-        //流出速率
+        // //流出速率
         if (metric.value.period_message_sent) {
           updateChart(chartGroup, period_message_sent_chart, 'period_message_sent', metric.value.period_message_sent)
         }
