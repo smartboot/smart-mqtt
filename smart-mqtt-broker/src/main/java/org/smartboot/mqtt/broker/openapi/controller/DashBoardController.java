@@ -22,6 +22,7 @@ import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -44,9 +45,16 @@ public class DashBoardController {
     public RestResult<MetricTO> overview() {
         MetricTO metricTO = new MetricTO();
         Collection<MqttSession> sessions = brokerContext.getSessions();
-        metricTO.getMetric().put(MqttMetricEnum.CLIENT_ONLINE.getCode(), brokerContext.metric(MqttMetricEnum.CLIENT_ONLINE));
+        Date date = new Date();
+        //在线客户端数量
+        MetricItemTO online = brokerContext.metric(MqttMetricEnum.CLIENT_ONLINE);
+        online.setTime(date);
+        metricTO.getMetric().put(MqttMetricEnum.CLIENT_ONLINE.getCode(), online);
 
-        metricTO.getMetric().put(MqttMetricEnum.TOPIC_COUNT.getCode(), brokerContext.metric(MqttMetricEnum.TOPIC_COUNT));
+        //主题数
+        MetricItemTO topicCount = brokerContext.metric(MqttMetricEnum.TOPIC_COUNT);
+        topicCount.setTime(date);
+        metricTO.getMetric().put(MqttMetricEnum.TOPIC_COUNT.getCode(), topicCount);
 
         int subCount = 0;
         for (MqttSession session : sessions) {
@@ -57,8 +65,6 @@ public class DashBoardController {
         subscribeTopicCount.setValue(subCount);
         metricTO.getMetric().put(subscribeTopicCount.getCode(), subscribeTopicCount);
 
-        metricTO.getMetric().put(MqttMetricEnum.PERIOD_MESSAGE_RECEIVED.getCode(), brokerContext.metric(MqttMetricEnum.PERIOD_MESSAGE_RECEIVED));
-        metricTO.getMetric().put(MqttMetricEnum.PERIOD_MESSAGE_SENT.getCode(), brokerContext.metric(MqttMetricEnum.PERIOD_MESSAGE_SENT));
         return RestResult.ok(metricTO);
     }
 

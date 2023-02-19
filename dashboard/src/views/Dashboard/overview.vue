@@ -45,34 +45,35 @@
     </lay-col>
     <lay-col md="12" sm="24" xs="24">
       <lay-card>
-        <template #title><p class="agency">消息流入速率： {{ inflowRate.value }}
-          条/{{ inflowRate.period > 1 ? inflowRate.period : "" }}秒</p></template>
-        <div class="flowChart" ref="flowInRef"></div>
+        <template #title><p class="agency">在线连接数：</p></template>
+        <div class="flowChart" ref="onlineClientChart"></div>
       </lay-card>
     </lay-col>
     <lay-col md="12" sm="24" xs="24">
       <lay-card>
-        <template #title><p class="agency">消息流出速率： {{ outflowRate.value }}
-          条/{{ outflowRate.period > 1 ? outflowRate.period : "" }}秒</p></template>
-        <div class="flowChart" ref="flowOutRef"></div>
+        <template v-if="metric.period_message_received" #title>消息流入速率：<p class="agency">
+          {{ metric.period_message_received.value }}
+          条/{{ metric.period_message_received.period > 1 ? metric.period_message_received.period : "" }}秒</p>
+        </template>
+        <template #body>
+          <div v-if="metric.period_message_received" class="flowChart" ref="period_message_received_chart"></div>
+          <lay-result v-else status="failure"
+                      :describe="message" title="消息流入速率"></lay-result>
+        </template>
+      </lay-card>
+    </lay-col>
+    <lay-col md="12" sm="24" xs="24">
+      <lay-card>
+        <template v-if="metric.period_message_sent" #title>消息流出速率： <p class="agency">
+          {{ metric.period_message_sent.value }}
+          条/{{ metric.period_message_sent.period > 1 ? metric.period_message_sent.period : "" }}秒</p></template>
+        <template #body>
+          <div v-if="metric.period_message_sent" class="flowChart" ref="period_message_sent_chart"></div>
+          <lay-result v-else status="failure" :describe="message" title="消息流出速率"></lay-result>
+        </template>
       </lay-card>
     </lay-col>
 
-    <lay-col md="12" sm="24" xs="24">
-      <lay-card>
-        <template #title><p class="agency">在线连接数： {{ outflowRate.value }}
-          条/{{ outflowRate.period > 1 ? outflowRate.period : "" }}秒</p></template>
-        <div class="flowChart" ref="flowOutRef"></div>
-      </lay-card>
-    </lay-col>
-
-    <lay-col md="12" sm="24" xs="24">
-      <lay-card>
-        <template #title><p class="agency">主题数： {{ outflowRate.value }}
-          条/{{ outflowRate.period > 1 ? outflowRate.period : "" }}秒</p></template>
-        <div class="flowChart" ref="flowOutRef"></div>
-      </lay-card>
-    </lay-col>
 
   </lay-row>
 
@@ -86,12 +87,12 @@ import {onUnmounted} from "@vue/runtime-core";
 
 export default {
   setup() {
+    const message = "升级企业版解锁该指标视图";
+    const chartGroup = {}
 
-    const flowInRef = ref()
-    const flowOutRef = ref()
-
-    const inflowRate = ref({value: 0})
-    const outflowRate = ref({value: 0})
+    const onlineClientChart = ref();
+    const period_message_received_chart = ref();
+    const period_message_sent_chart = ref();
 
     const metric = ref({
       client_online: {value: 0},
@@ -99,45 +100,54 @@ export default {
       subscribe_topic_count: {value: 0}
     })
 
-    const flowInQueue = [];
-    const flowOutQueue = [];
-
-
     let timer;
 
     onMounted(() => {
-      const flowInChart = flowChart(flowInRef.value);
-      const flowOutChart = flowChart(flowOutRef.value);
-
       const loadData = async () => {
         const {data} = await dashboard_overview();
         metric.value = data.metric
-        console.log(metric.value)
-        inflowRate.value = data.metric.period_message_received;
-        outflowRate.value = data.metric.period_message_sent;
-        //流入速率
-        updateChart(flowInQueue,inflowRate,flowInChart)
-        //流出速率
-        updateChart(flowOutQueue,outflowRate,flowOutChart)
 
+        //客户端在线连接数
+        updateChart(chartGroup, onlineClientChart, 'client_online', metric.value.client_online)
+
+        //流入速率
+        if (metric.value.period_message_received) {
+          updateChart(chartGroup, period_message_received_chart, 'period_message_received_queue', metric.value.period_message_received)
+        }
+
+        //流出速率
+        if (metric.value.period_message_sent) {
+          updateChart(chartGroup, period_message_sent_chart, 'period_message_sent', metric.value.period_message_sent)
+        }
       };
 
       /**
        * 刷新Chart
-       * @param queue
-       * @param metric
-       * @param chart
        */
-      const updateChart =  (queue,metric,chart) => {
-        if (queue.length > 0 && queue[queue.length - 1].time === metric.value.time) {
-          queue[queue.length - 1] = metric.value;
+      const updateChart = (chartGroup, metricRef, metricKey, metric) => {
+        console.log("kk")
+        let historyQueue = chartGroup[metricKey + '_queue']
+        let chart = chartGroup[metricKey]
+        if (!chart) {
+          chartGroup[metricKey] = flowChart(metricRef.value)
+          chartGroup[metricKey + '_queue'] = []
+          historyQueue = chartGroup[metricKey + '_queue'];
+          chart = chartGroup[metricKey]
+        }
+        console.log("aaa")
+
+
+        if (historyQueue.length > 0 && historyQueue[historyQueue.length - 1].time === metric.time) {
+
+          console.log(metric)
+          historyQueue[historyQueue.length - 1] = metric;
         } else {
-          queue.push(metric.value)
+          historyQueue.push(metric)
         }
-        if (queue.length >= 20) {
-          queue.shift()
+        if (historyQueue.length >= 20) {
+          historyQueue.shift()
         }
-        chart.changeData(queue)
+        chart.changeData(historyQueue)
       }
       loadData()
       timer = setInterval(() => {
@@ -150,11 +160,11 @@ export default {
     })
 
     return {
+      onlineClientChart,
+      period_message_received_chart,
+      period_message_sent_chart,
+      message,
       metric,
-      flowInRef,
-      flowOutRef,
-      inflowRate,
-      outflowRate
     }
 
     function flowChart(dom) {

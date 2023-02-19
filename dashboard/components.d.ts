@@ -38,6 +38,7 @@ declare module '@vue/runtime-core' {
     LayMenuItem: typeof import('@layui/layui-vue')['LayMenuItem']
     LayPanel: typeof import('@layui/layui-vue')['LayPanel']
     LayProgress: typeof import('@layui/layui-vue')['LayProgress']
+    LayResult: typeof import('@layui/layui-vue')['LayResult']
     LayRow: typeof import('@layui/layui-vue')['LayRow']
     LayScroll: typeof import('@layui/layui-vue')['LayScroll']
     LaySide: typeof import('@layui/layui-vue')['LaySide']
