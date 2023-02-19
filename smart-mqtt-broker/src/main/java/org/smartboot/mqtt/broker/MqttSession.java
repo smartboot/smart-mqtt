@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.broker.provider.impl.session.SessionState;
 import org.smartboot.mqtt.common.AbstractSession;
-import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.QosPublisher;
 import org.smartboot.mqtt.common.TopicToken;
@@ -38,7 +37,7 @@ public class MqttSession extends AbstractSession {
     private final Map<String, TopicFilterSubscriber> subscribers = new ConcurrentHashMap<>();
 
     private final BrokerContext mqttContext;
-    private InflightQueue inflightQueue;
+
     private String username;
     /**
      * 已授权
@@ -66,14 +65,6 @@ public class MqttSession extends AbstractSession {
 
     public void setProperties(ConnectProperties properties) {
         this.properties = properties;
-    }
-
-    public void setInflightQueue(InflightQueue inflightQueue) {
-        this.inflightQueue = inflightQueue;
-    }
-
-    public InflightQueue getInflightQueue() {
-        return inflightQueue;
     }
 
     public boolean isCleanSession() {

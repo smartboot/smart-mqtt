@@ -59,6 +59,8 @@ public abstract class AbstractSession {
 
     private MqttVersion mqttVersion;
 
+    private InflightQueue inflightQueue;
+
     public AbstractSession(QosPublisher publisher, EventBus eventBus) {
         this.qosPublisher = publisher;
         this.eventBus = eventBus;
@@ -193,4 +195,13 @@ public abstract class AbstractSession {
         Attachment attachment = session.getAttachment();
         attachment.put(MqttProtocol.MQTT_VERSION_ATTACH_KEY, mqttVersion);
     }
+
+    public void setInflightQueue(InflightQueue inflightQueue) {
+        this.inflightQueue = inflightQueue;
+    }
+
+    public InflightQueue getInflightQueue() {
+        return inflightQueue;
+    }
+
 }

@@ -40,7 +40,6 @@ import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.extension.plugins.AbstractPlugin;
 import org.smartboot.socket.transport.AioQuickServer;
 import org.smartboot.socket.transport.AioSession;
-import org.smartboot.socket.util.QuickTimerTask;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
@@ -51,7 +50,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +64,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
-import java.util.stream.Collectors;
 
 /**
  * @author 三刀
@@ -166,11 +163,7 @@ public class BrokerContextImpl implements BrokerContext {
 
     private void initMetric() {
         for (MqttMetricEnum metricEnum : MqttMetricEnum.values()) {
-            if (metricEnum.isPeriod()) {
-                metricMap.put(metricEnum, new MetricItemTO(metricEnum, 5));
-            } else {
-                metricMap.put(metricEnum, new MetricItemTO(metricEnum));
-            }
+            metricMap.put(metricEnum, new MetricItemTO(metricEnum));
         }
 
         processor.addPlugin(new AbstractPlugin<MqttMessage>() {
@@ -194,14 +187,12 @@ public class BrokerContextImpl implements BrokerContext {
         eventBus.subscribe(ServerEventType.UNSUBSCRIBE_ACCEPT, (eventType, object) -> metricMap.get(MqttMetricEnum.CLIENT_UNSUBSCRIBE).getMetric().increment());
         eventBus.subscribe(EventType.RECEIVE_MESSAGE, (eventType, object) -> {
             metricMap.get(MqttMetricEnum.PACKETS_RECEIVED).getMetric().increment();
-            metricMap.get(MqttMetricEnum.PERIOD_MESSAGE_RECEIVED).getMetric().increment();
             if (object.getObject() instanceof MqttConnectMessage) {
                 metricMap.get(MqttMetricEnum.PACKETS_CONNECT_RECEIVED).getMetric().increment();
             }
         });
         eventBus.subscribe(EventType.WRITE_MESSAGE, (eventType, object) -> {
             metricMap.get(MqttMetricEnum.PACKETS_SENT).getMetric().increment();
-            metricMap.get(MqttMetricEnum.PERIOD_MESSAGE_SENT).getMetric().increment();
             if (object.getObject() instanceof MqttConnAckMessage) {
                 metricMap.get(MqttMetricEnum.PACKETS_CONNACK_SENT).getMetric().increment();
             } else if (object.getObject() instanceof MqttPublishMessage) {
@@ -231,18 +222,6 @@ public class BrokerContextImpl implements BrokerContext {
                     break;
             }
 
-        });
-
-        //周期性重置指标值
-        metricMap.values().stream().filter(metricItemTO -> metricItemTO.getPeriod() > 0).collect(Collectors.groupingBy(MetricItemTO::getPeriod)).forEach((period, metrics) -> {
-            QuickTimerTask.scheduleAtFixedRate(() -> {
-                LOGGER.debug("reset period metric...");
-                Date date = new Date();
-                metrics.forEach(metricItemTO -> {
-                    metricItemTO.getMetric().reset();
-                    metricItemTO.setTime(date);
-                });
-            }, 0, period * 1000);
         });
     }
 
@@ -393,9 +372,6 @@ public class BrokerContextImpl implements BrokerContext {
             LOGGER.info("刷新订阅关系, {} 订阅了topic: {}", subscriber.getTopicFilterToken().getTopicFilter(), subscriber.getTopic().getTopic());
             subscriber.setReady(true);
         });
-        //打印消息日志
-//        eventBus.subscribe(Arrays.asList(EventType.RECEIVE_MESSAGE, EventType.WRITE_MESSAGE), new
-//        MessageLoggerSubscriber());
     }
 
     private void notifyPush(BrokerTopic topic) {

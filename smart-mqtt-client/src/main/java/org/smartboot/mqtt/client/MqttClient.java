@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.AckMessage;
 import org.smartboot.mqtt.common.DefaultMqttWriter;
+import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.MqttMessageBuilders;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
@@ -153,6 +154,7 @@ public class MqttClient extends AbstractSession {
 
             //连接成功,注册订阅消息
             if (mqttConnAckMessage.getVariableHeader().connectReturnCode() == MqttConnectReturnCode.CONNECTION_ACCEPTED) {
+                setInflightQueue(new InflightQueue(16));
                 connected = true;
                 Runnable runnable;
                 while ((runnable = registeredTasks.poll()) != null) {
@@ -385,6 +387,32 @@ public class MqttClient extends AbstractSession {
         } else {
             registeredTasks.offer(() -> publish(message, consumer));
         }
+    }
+
+    @Override
+    public synchronized void publish(MqttPublishMessage message, Consumer<Integer> consumer) {
+        InflightQueue inflightQueue = getInflightQueue();
+        int index = inflightQueue.offer(message, 1);
+        if (index == -1) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            publish(message, consumer);
+            return;
+        }
+        super.publish(message, packetId -> {
+            consumer.accept(packetId);
+            //最早发送的消息若收到响应，则更新点位
+            long offset = inflightQueue.commit(index);
+            if (offset != -1) {
+                synchronized (MqttClient.this) {
+                    MqttClient.this.notifyAll();
+                }
+            }
+
+        }, false);
     }
 
     public MqttClientConfigure getClientConfigure() {
