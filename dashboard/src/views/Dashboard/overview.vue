@@ -51,6 +51,12 @@
     </lay-col>
     <lay-col md="12" sm="24" xs="24">
       <lay-card>
+        <template #title><p class="agency">在线主题数：</p></template>
+        <div class="flowChart" ref="topicCountChart"></div>
+      </lay-card>
+    </lay-col>
+    <lay-col md="12" sm="24" xs="24">
+      <lay-card>
         <template v-if="metric.period_message_received" #title><p class="agency">消息流入速率：
           {{ metric.period_message_received.value }}
           条/{{ metric.period_message_received.period > 1 ? metric.period_message_received.period : "" }}秒</p>
@@ -93,6 +99,7 @@ export default {
     const chartGroup = {}
 
     const onlineClientChart = ref();
+    const topicCountChart = ref();
     const period_message_received_chart = ref();
     const period_message_sent_chart = ref();
 
@@ -111,6 +118,10 @@ export default {
 
         //客户端在线连接数
         updateChart(chartGroup, onlineClientChart, 'client_online', metric.value.client_online)
+
+        //在线主题连接数
+        updateChart(chartGroup, topicCountChart, 'topic_count', metric.value.topic_count)
+
         //流入速率
         if (metric.value.period_message_received) {
           updateChart(chartGroup, period_message_received_chart, 'period_message_received_queue', metric.value.period_message_received)
@@ -126,17 +137,15 @@ export default {
        * 刷新Chart
        */
       const updateChart = (chartGroup, metricRef, metricKey, metric) => {
-        console.log("kk")
         let historyQueue = chartGroup[metricKey + '_queue']
         let chart = chartGroup[metricKey]
         if (!chart) {
           chartGroup[metricKey] = flowChart(metricRef.value)
           chartGroup[metricKey + '_queue'] = []
           historyQueue = chartGroup[metricKey + '_queue'];
+          historyQueue.push({value:0})
           chart = chartGroup[metricKey]
         }
-        console.log("aaa")
-
 
         if (historyQueue.length > 0 && historyQueue[historyQueue.length - 1].time === metric.time) {
 
@@ -162,6 +171,7 @@ export default {
 
     return {
       onlineClientChart,
+      topicCountChart,
       period_message_received_chart,
       period_message_sent_chart,
       message,

@@ -97,7 +97,7 @@ public class DashBoardController {
 
         OperatingSystemMXBean systemMXBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
         nodeTO.setCpu((int) (systemMXBean.getSystemCpuLoad() * 100));
-        nodeTO.setMemory((int) ((systemMXBean.getTotalPhysicalMemorySize() - systemMXBean.getFreePhysicalMemorySize()) * 100.0 / (systemMXBean.getTotalPhysicalMemorySize())));
+        nodeTO.setMemory((int) ((Runtime.getRuntime().totalMemory()) * 100.0 / (Runtime.getRuntime().maxMemory())));
         return RestResult.ok(Arrays.asList(nodeTO));
     }
 
