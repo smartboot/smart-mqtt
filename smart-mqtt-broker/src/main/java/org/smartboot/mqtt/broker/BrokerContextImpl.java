@@ -3,7 +3,6 @@ package org.smartboot.mqtt.broker;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.JSONPath;
 import com.alibaba.fastjson2.JSONReader;
-import jdk.jfr.internal.JVM;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +43,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -148,7 +148,7 @@ public class BrokerContextImpl implements BrokerContext {
             }
 
             runtime.setStartTime(System.currentTimeMillis());
-            runtime.setPid(JVM.getJVM().getPid());
+            runtime.setPid(ManagementFactory.getRuntimeMXBean().getName().split("@")[0]);
             runtime.setIpAddress(brokerConfigure.getHost() + ":" + brokerConfigure.getPort());
         } catch (Exception e) {
             destroy();
