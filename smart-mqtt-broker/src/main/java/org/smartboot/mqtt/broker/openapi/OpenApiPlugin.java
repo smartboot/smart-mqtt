@@ -44,7 +44,7 @@ public class OpenApiPlugin extends Plugin {
             brokerContext.getProviders().setOpenApiBootStrap(restfulBootstrap);
             LOGGER.info("openapi server start success!");
         } catch (Exception e) {
-            e.fillInStackTrace();
+            LOGGER.error("start openapi exception", e);
             throw new PluginException("start openapi exception");
         }
     }

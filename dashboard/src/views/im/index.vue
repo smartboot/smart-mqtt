@@ -27,8 +27,7 @@
                               style="margin: 15px; padding: 15px"
                           >
                             <lay-avatar v-if="n.clientId==clientId"><span style="color: #2b2d42">我</span></lay-avatar>
-                            <lay-avatar v-if="n.clientId!=clientId"
-                                        src="https://portrait.gitee.com/uploads/avatars/user/117/351975_smartdms_1578921064.jpg!avatar60"></lay-avatar>
+                            <lay-avatar v-if="n.clientId!=clientId"><span style="color: #2b2d42">匿名</span></lay-avatar>
                             ：
                           {{ n.message }}
                           </lay-panel
