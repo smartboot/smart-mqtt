@@ -56,7 +56,6 @@ public class InflightQueue {
             }
             count--;
         }
-        System.out.println("offset:" + offset);
         return offset;
     }
 }
