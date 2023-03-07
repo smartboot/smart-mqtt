@@ -412,7 +412,7 @@ public class MqttClient extends AbstractSession {
                 }
             }
 
-        }, false);
+        }, true);
     }
 
     public MqttClientConfigure getClientConfigure() {

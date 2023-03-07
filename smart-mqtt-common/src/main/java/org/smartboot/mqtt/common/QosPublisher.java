@@ -68,8 +68,8 @@ public abstract class QosPublisher {
             retry(pubRelFuture, session, pubRelMessage);
             session.write(pubRelMessage);
         }));
-        session.write(publishMessage, false);
         retry(publishFuture, session, publishMessage);
+        session.write(publishMessage, autoFlush);
     }
 
     protected abstract void retry(CompletableFuture<Boolean> future, AbstractSession session, MqttMessage mqttMessage);
