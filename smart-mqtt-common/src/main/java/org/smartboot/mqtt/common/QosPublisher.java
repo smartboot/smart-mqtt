@@ -61,7 +61,6 @@ public abstract class QosPublisher {
                 ValidateUtils.isTrue(compMessage.getFixedHeader().getMessageType() == MqttMessageType.PUBCOMP, "invalid message type");
                 ValidateUtils.isTrue(Objects.equals(compMessage.getVariableHeader().getPacketId(), pubRelMessage.getVariableHeader().getPacketId()), "invalid packetId");
                 pubRelFuture.complete(true);
-                LOGGER.info("Qos2消息发送成功...");
                 consumer.accept(compMessage.getVariableHeader().getPacketId());
             }));
             //注册重试
