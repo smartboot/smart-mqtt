@@ -57,7 +57,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class MqttClient extends AbstractSession {
-    private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
+    private static final Logger LOGGER = LoggerFactory.getLogger(MqttClient.class);
     /**
      * 客户端配置项
      */
