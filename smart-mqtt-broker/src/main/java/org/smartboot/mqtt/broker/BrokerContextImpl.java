@@ -271,7 +271,7 @@ public class BrokerContextImpl implements BrokerContext {
                             //存在待输出消息
                             Collection<TopicSubscriber> subscribers = brokerTopic.getConsumeOffsets().values();
                             subscribers.stream().filter(topicSubscriber -> topicSubscriber.isReady() && topicSubscriber.getPushVersion() != brokerTopic.getVersion().get()).forEach(topicSubscriber -> topicSubscriber.batchPublish(BrokerContextImpl.this));
-                            brokerTopic.setPushing(false);
+                            brokerTopic.getSemaphore().release();
                             for (TopicSubscriber subscriber : subscribers) {
                                 if (subscriber.getPushVersion() != brokerTopic.getVersion().get()) {
                                     notifyPush(brokerTopic);
@@ -375,20 +375,14 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     private void notifyPush(BrokerTopic topic) {
-        if (topic.isPushing()) {
+        if (!topic.getSemaphore().tryAcquire()) {
             return;
         }
-        synchronized (topic) {
-            //已加入推送队列
-            if (topic.isPushing()) {
-                return;
-            }
-            try {
-                topic.setPushing(true);
-                pushTopicQueue.put(topic);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+        //已加入推送队列
+        try {
+            pushTopicQueue.put(topic);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 

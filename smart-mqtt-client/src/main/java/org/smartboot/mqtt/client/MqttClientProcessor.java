@@ -32,24 +32,24 @@ import java.util.Map;
 public class MqttClientProcessor extends AbstractMessageProcessor<MqttMessage> {
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttClientProcessor.class);
     private final MqttClient mqttClient;
-    private final Map<Class<? extends MqttMessage>, MqttProcessor<? extends MqttMessage>> processorMap = new HashMap<>();
+    private static final Map<Class<? extends MqttMessage>, MqttProcessor<? extends MqttMessage>> processors = new HashMap<>();
 
     public MqttClientProcessor(MqttClient mqttClient) {
         this.mqttClient = mqttClient;
-        processorMap.put(MqttConnAckMessage.class, new ConnAckProcessor());
-        processorMap.put(MqttPubAckMessage.class, new MqttAckProcessor<MqttPubAckMessage>());
-        processorMap.put(MqttPublishMessage.class, new PublishProcessor());
-        processorMap.put(MqttPubRecMessage.class, new MqttAckProcessor<MqttPubRecMessage>());
-        processorMap.put(MqttPubCompMessage.class, new MqttAckProcessor<MqttPubCompMessage>());
-        processorMap.put(MqttPubRelMessage.class, new MqttAckProcessor<MqttPubRelMessage>());
-        processorMap.put(MqttSubAckMessage.class, new MqttAckProcessor<MqttPubRelMessage>());
-        processorMap.put(MqttPingRespMessage.class, new MqttPingRespProcessor());
+        processors.put(MqttConnAckMessage.class, new ConnAckProcessor());
+        processors.put(MqttPubAckMessage.class, new MqttAckProcessor<MqttPubAckMessage>());
+        processors.put(MqttPublishMessage.class, new PublishProcessor());
+        processors.put(MqttPubRecMessage.class, new MqttAckProcessor<MqttPubRecMessage>());
+        processors.put(MqttPubCompMessage.class, new MqttAckProcessor<MqttPubCompMessage>());
+        processors.put(MqttPubRelMessage.class, new MqttAckProcessor<MqttPubRelMessage>());
+        processors.put(MqttSubAckMessage.class, new MqttAckProcessor<MqttPubRelMessage>());
+        processors.put(MqttPingRespMessage.class, new MqttPingRespProcessor());
     }
 
     @Override
     public void process0(AioSession session, MqttMessage msg) {
         mqttClient.getEventBus().publish(EventType.RECEIVE_MESSAGE, EventObject.newEventObject(mqttClient, msg));
-        MqttProcessor processor = processorMap.get(msg.getClass());
+        MqttProcessor processor = processors.get(msg.getClass());
 //        LOGGER.info("receive msg:{}", msg);
         if (processor != null) {
             processor.process(mqttClient, msg);

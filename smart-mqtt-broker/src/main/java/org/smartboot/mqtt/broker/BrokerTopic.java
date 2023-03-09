@@ -4,6 +4,7 @@ import org.smartboot.mqtt.common.Topic;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -21,7 +22,7 @@ public class BrokerTopic extends Topic {
     /**
      * 当前Topic是否圈闭推送完成
      */
-    private boolean pushing;
+    private final Semaphore semaphore = new Semaphore(1);
 
     public BrokerTopic(String topic) {
         super(topic);
@@ -35,11 +36,7 @@ public class BrokerTopic extends Topic {
         return version;
     }
 
-    public boolean isPushing() {
-        return pushing;
-    }
-
-    public void setPushing(boolean pushing) {
-        this.pushing = pushing;
+    public Semaphore getSemaphore() {
+        return semaphore;
     }
 }
