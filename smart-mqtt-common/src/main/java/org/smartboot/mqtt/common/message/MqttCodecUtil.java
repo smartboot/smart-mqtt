@@ -39,8 +39,7 @@ public final class MqttCodecUtil {
                             mqttFixedHeader.getMessageType(),
                             false,
                             MqttQoS.AT_MOST_ONCE,
-                            false,
-                            mqttFixedHeader.remainingLength());
+                            false);
                 }
                 return mqttFixedHeader;
             case PUBREL:
@@ -51,8 +50,7 @@ public final class MqttCodecUtil {
                             mqttFixedHeader.getMessageType(),
                             mqttFixedHeader.isDup(),
                             mqttFixedHeader.getQosLevel(),
-                            false,
-                            mqttFixedHeader.remainingLength());
+                            false);
                 }
                 return mqttFixedHeader;
             default:

@@ -79,7 +79,7 @@ public final class MqttMessageBuilders {
         }
 
         public MqttPublishMessage build() {
-            MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false, qos, retained, 0);
+            MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false, qos, retained);
             if (qos != MqttQoS.AT_LEAST_ONCE && qos != MqttQoS.EXACTLY_ONCE) {
                 packetId = -1;
             }
@@ -119,7 +119,7 @@ public final class MqttMessageBuilders {
         }
 
         public MqttSubscribeMessage build() {
-            MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.SUBSCRIBE, false, MqttQoS.AT_LEAST_ONCE, false, 0);
+            MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.SUBSCRIBE, false, MqttQoS.AT_LEAST_ONCE, false);
             MqttSubscribePayload mqttSubscribePayload = new MqttSubscribePayload();
             mqttSubscribePayload.setTopicSubscriptions(subscriptions);
             MqttSubscribeVariableHeader variableHeader = new MqttSubscribeVariableHeader(packetId, subscribeProperties);

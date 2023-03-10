@@ -32,6 +32,10 @@ public abstract class MqttMessage extends ToString {
      */
     protected final MqttFixedHeader fixedHeader;
     protected MqttVersion version;
+    /**
+     * 剩余长度
+     */
+    private int remainingLength;
 
     public MqttMessage(MqttFixedHeader mqttFixedHeader) {
         this.fixedHeader = mqttFixedHeader;
@@ -84,6 +88,13 @@ public abstract class MqttMessage extends ToString {
         return messageId;
     }
 
+    public int getRemainingLength() {
+        return remainingLength;
+    }
+
+    public void setRemainingLength(int remainingLength) {
+        this.remainingLength = remainingLength;
+    }
 
     public final MqttVersion getVersion() {
         return version;

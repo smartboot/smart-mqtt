@@ -41,7 +41,7 @@ public class MqttSubAckMessage extends MqttPacketIdentifierMessage<MqttReasonVar
 
     @Override
     public void decodePlayLoad(ByteBuffer buffer) {
-        int payloadLength = fixedHeader.remainingLength() - getVariableHeaderLength();
+        int payloadLength = getRemainingLength() - getVariableHeaderLength();
         final List<Integer> grantedQos = new ArrayList<Integer>();
         int limit = buffer.limit();
         buffer.limit(buffer.position() + payloadLength);

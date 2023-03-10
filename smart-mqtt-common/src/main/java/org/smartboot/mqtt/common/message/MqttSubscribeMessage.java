@@ -47,7 +47,7 @@ public class MqttSubscribeMessage extends MqttPacketIdentifierMessage<MqttSubscr
     @Override
     public void decodePlayLoad(ByteBuffer buffer) {
         final List<MqttTopicSubscription> subscribeTopics = new ArrayList<>();
-        int payloadLength = fixedHeader.remainingLength() - getVariableHeaderLength();
+        int payloadLength = getRemainingLength() - getVariableHeaderLength();
         ValidateUtils.isTrue(buffer.remaining() >= payloadLength, "数据不足");
         int limit = buffer.limit();
         buffer.limit(buffer.position() + payloadLength);

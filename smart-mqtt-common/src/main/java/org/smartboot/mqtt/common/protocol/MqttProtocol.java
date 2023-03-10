@@ -3,9 +3,7 @@ package org.smartboot.mqtt.common.protocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
-import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
-import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.util.ValidateUtils;
@@ -83,27 +81,19 @@ public class MqttProtocol implements Protocol<MqttMessage> {
                 }
                 buffer.mark();
 
-                MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(messageType, dupFlag, MqttQoS.valueOf(qosLevel), retain, remainingLength);
-                MqttCodecUtil.resetUnusedFields(mqttFixedHeader);
-//                    switch (mqttFixedHeader.getMessageType()) {
-//                        case PUBREL:
-//                        case SUBSCRIBE:
-//                        case UNSUBSCRIBE:
-//                            if (mqttFixedHeader.getQosLevel() != MqttQoS.AT_LEAST_ONCE) {
-//                                throw new DecoderException(mqttFixedHeader.getMessageType().name() + " message must have QoS 1");
-//                            }
-//                    }
-                    unit.mqttMessage = MqttMessageFactory.newMessage(mqttFixedHeader);
-                    //非MqttConnectMessage对象为null,
-                    if (unit.mqttMessage.getVersion() == null) {
-                        unit.mqttMessage.setVersion(attachment.get(MQTT_VERSION_ATTACH_KEY));
-                    }
+                MqttFixedHeader mqttFixedHeader = MqttMessageFactory.newMqttFixedHeader(messageType, dupFlag, qosLevel, retain);
+                unit.mqttMessage = MqttMessageFactory.newMessage(mqttFixedHeader);
+                unit.mqttMessage.setRemainingLength(remainingLength);
+                //非MqttConnectMessage对象为null,
+                if (unit.mqttMessage.getVersion() == null) {
+                    unit.mqttMessage.setVersion(attachment.get(MQTT_VERSION_ATTACH_KEY));
+                }
 
-                    unit.state = READ_VARIABLE_HEADER;
+                unit.state = READ_VARIABLE_HEADER;
 
             }
             case READ_VARIABLE_HEADER: {
-                int remainingLength = unit.mqttMessage.getFixedHeader().remainingLength();
+                int remainingLength = unit.mqttMessage.getRemainingLength();
                 if (remainingLength > maxBytesInMessage) {
                     throw new DecoderException("too large message: " + remainingLength + " bytes");
                 }

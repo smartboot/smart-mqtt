@@ -48,7 +48,7 @@ public class MqttUnsubscribeMessage extends MqttPacketIdentifierMessage<MqttReas
     @Override
     public void decodePlayLoad(ByteBuffer buffer) {
         final List<String> unsubscribeTopics = new ArrayList<String>();
-        int payloadLength = fixedHeader.remainingLength() - getVariableHeaderLength();
+        int payloadLength = getRemainingLength() - getVariableHeaderLength();
         int limit = buffer.limit();
         buffer.limit(buffer.position() + payloadLength);
         while (buffer.hasRemaining()) {
