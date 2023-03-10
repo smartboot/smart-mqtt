@@ -39,7 +39,19 @@ final class MqttMessageFactory {
             case UNSUBSCRIBE:
                 return MqttFixedHeader.UNSUBSCRIBE_HEADER;
             case PUBLISH:
-                return new MqttFixedHeader(messageType, dup, MqttQoS.valueOf(qosLevel), retain);
+                if (dup || retain) {
+                    return new MqttFixedHeader(messageType, dup, MqttQoS.valueOf(qosLevel), retain);
+                }
+                switch (qosLevel) {
+                    case 0:
+                        return MqttFixedHeader.PUB_QOS0_HEADER;
+                    case 1:
+                        return MqttFixedHeader.PUB_QOS1_HEADER;
+                    case 2:
+                        return MqttFixedHeader.PUB_QOS2_HEADER;
+                    default:
+                        return MqttFixedHeader.PUB_FAILURE_HEADER;
+                }
             case PUBACK:
                 return MqttFixedHeader.PUB_ACK_HEADER;
             case PUBREC:
