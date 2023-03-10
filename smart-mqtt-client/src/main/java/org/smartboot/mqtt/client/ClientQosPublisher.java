@@ -1,5 +1,7 @@
 package org.smartboot.mqtt.client;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.QosPublisher;
@@ -14,6 +16,7 @@ import java.util.concurrent.TimeUnit;
  * @version V1.0 , 2022/4/25
  */
 public class ClientQosPublisher extends QosPublisher {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClientQosPublisher.class);
 
     @Override
     protected void retry(CompletableFuture<Boolean> future, AbstractSession session, MqttMessage mqttMessage) {
@@ -22,6 +25,7 @@ public class ClientQosPublisher extends QosPublisher {
             @Override
             public void execute() {
                 if (!future.isDone()) {
+                    LOGGER.info("retry...");
                     session.write(mqttMessage);
                 }
             }
