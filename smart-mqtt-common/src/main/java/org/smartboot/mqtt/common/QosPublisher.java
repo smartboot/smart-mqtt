@@ -30,7 +30,6 @@ public abstract class QosPublisher {
             ValidateUtils.isTrue(message.getFixedHeader().getMessageType() == MqttMessageType.PUBACK, "invalid message type");
             future.complete(true);
             session.responseConsumers.remove(cacheKey);
-            LOGGER.info("Qos1消息发送成功...");
             consumer.accept(publishMessage.getVariableHeader().getPacketId());
         }));
         session.write(publishMessage, autoFlush);
