@@ -34,6 +34,10 @@ public class InflightQueue {
         return index;
     }
 
+    public boolean isFull() {
+        return count == queue.length;
+    }
+
     public synchronized long commit(int commitIndex) {
         if (commitIndex != takeIndex) {
             //转负数表示以提交

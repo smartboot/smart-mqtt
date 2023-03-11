@@ -64,6 +64,9 @@ public class TopicSubscriber {
     }
 
     private long publish0(BrokerContext brokerContext, int depth, long expectConsumerOffset) {
+        if (mqttSession.getInflightQueue().isFull()) {
+            return expectConsumerOffset;
+        }
         PersistenceProvider persistenceProvider = brokerContext.getProviders().getPersistenceProvider();
         int version = topic.getVersion().get();
         PersistenceMessage persistenceMessage = persistenceProvider.get(topic.getTopic(), expectConsumerOffset);
@@ -74,6 +77,7 @@ public class TopicSubscriber {
         }
         if (depth > 16) {
             mqttSession.flush();
+            LOGGER.info("退出递归...");
 //            System.out.println("退出递归...");
             return expectConsumerOffset;
         }
@@ -93,7 +97,7 @@ public class TopicSubscriber {
         // 飞行队列已满
         if (index == -1) {
             mqttSession.flush();
-//            System.out.println("queue is full..." + expectConsumerOffset);
+            LOGGER.info("queue is full..." + expectConsumerOffset);
             return expectConsumerOffset;
         }
         long start = System.currentTimeMillis();
