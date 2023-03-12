@@ -60,26 +60,21 @@ public class TopicSubscriber {
     }
 
     public void batchPublish(BrokerContext brokerContext) {
-        nextConsumerOffset = publish0(brokerContext, 0, nextConsumerOffset);
+        publish0(brokerContext, 0);
+        mqttSession.flush();
     }
 
-    private long publish0(BrokerContext brokerContext, int depth, long expectConsumerOffset) {
-        if (mqttSession.getInflightQueue().isFull()) {
-            return expectConsumerOffset;
-        }
+    private void publish0(BrokerContext brokerContext, int depth) {
         PersistenceProvider persistenceProvider = brokerContext.getProviders().getPersistenceProvider();
         int version = topic.getVersion().get();
-        PersistenceMessage persistenceMessage = persistenceProvider.get(topic.getTopic(), expectConsumerOffset);
+        PersistenceMessage persistenceMessage = persistenceProvider.get(topic.getTopic(), nextConsumerOffset);
         if (persistenceMessage == null) {
             pushVersion = version;
-            mqttSession.flush();
-            return expectConsumerOffset;
+            return;
         }
         if (depth > 16) {
-            mqttSession.flush();
-            LOGGER.info("退出递归...");
-//            System.out.println("退出递归...");
-            return expectConsumerOffset;
+//            LOGGER.info("退出递归...");
+            return;
         }
 
         MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(persistenceMessage.getPayload()).qos(mqttQoS).topicName(persistenceMessage.getTopic());
@@ -96,11 +91,11 @@ public class TopicSubscriber {
         int index = inflightQueue.offer(publishMessage, persistenceMessage.getOffset());
         // 飞行队列已满
         if (index == -1) {
-            mqttSession.flush();
-            LOGGER.info("queue is full..." + expectConsumerOffset);
-            return expectConsumerOffset;
+//            LOGGER.info("queue is full..." + expectConsumerOffset);
+            return;
         }
         long start = System.currentTimeMillis();
+        nextConsumerOffset++;
         mqttSession.publish(publishMessage, packetId -> {
             //最早发送的消息若收到响应，则更新点位
             long offset = inflightQueue.commit(index);
@@ -119,7 +114,7 @@ public class TopicSubscriber {
         }
         brokerContext.getEventBus().publish(EventType.PUSH_PUBLISH_MESSAGE, mqttSession);
         //递归处理下一个消息
-        return publish0(brokerContext, ++depth, expectConsumerOffset + 1);
+        publish0(brokerContext, ++depth);
     }
 
     public BrokerTopic getTopic() {
