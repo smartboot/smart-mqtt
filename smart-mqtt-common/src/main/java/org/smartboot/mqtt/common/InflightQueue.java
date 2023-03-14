@@ -58,4 +58,8 @@ public class InflightQueue {
         }
         return offset;
     }
+
+    public int getCount() {
+        return count;
+    }
 }

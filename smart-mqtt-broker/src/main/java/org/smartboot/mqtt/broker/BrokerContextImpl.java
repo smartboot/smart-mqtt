@@ -287,18 +287,15 @@ public class BrokerContextImpl implements BrokerContext {
                             subscribers.offer(BREAK);
                             TopicSubscriber subscriber = null;
                             int version = brokerTopic.getVersion().get();
-                            while ((subscriber = subscribers.poll()) != null) {
-                                if (subscriber == BREAK) {
-                                    break;
-                                }
+                            while ((subscriber = subscribers.poll()) != BREAK) {
+//                                if (subscriber == BREAK) {
+//                                    break;
+//                                }
                                 subscriber.batchPublish(BrokerContextImpl.this);
                             }
                             brokerTopic.getSemaphore().release();
                             if (version != brokerTopic.getVersion().get() && !subscribers.isEmpty()) {
-                                System.out.println("continue..." + brokerTopic.getTopic());
                                 notifyPush(brokerTopic);
-                            } else {
-//                                System.out.println("empty...." + brokerTopic.getTopic());
                             }
                         } catch (Exception e) {
                             LOGGER.error("brokerTopic:{} push message exception", brokerTopic.getTopic(), e);

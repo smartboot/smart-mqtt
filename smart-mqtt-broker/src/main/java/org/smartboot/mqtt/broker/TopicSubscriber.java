@@ -13,6 +13,8 @@ import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 
+import java.util.concurrent.Semaphore;
+
 /**
  * Topic订阅者
  *
@@ -48,7 +50,7 @@ public class TopicSubscriber {
 
     private TopicToken topicFilterToken;
 
-    private boolean inQueue = true;
+    private final Semaphore semaphore = new Semaphore(0);
 
     public TopicSubscriber(BrokerTopic topic, MqttSession session, MqttQoS mqttQoS, long nextConsumerOffset, long retainConsumerOffset) {
         this.topic = topic;
@@ -59,7 +61,7 @@ public class TopicSubscriber {
     }
 
     public void batchPublish(BrokerContext brokerContext) {
-        inQueue = false;
+        semaphore.release();
         publish0(brokerContext, 0);
         mqttSession.flush();
     }
@@ -68,8 +70,7 @@ public class TopicSubscriber {
         PersistenceProvider persistenceProvider = brokerContext.getProviders().getPersistenceProvider();
         PersistenceMessage persistenceMessage = persistenceProvider.get(topic.getTopic(), nextConsumerOffset);
         if (persistenceMessage == null) {
-            if (!inQueue) {
-                inQueue = true;
+            if (semaphore.tryAcquire()) {
                 topic.getQueue().offer(this);
             }
             return;
@@ -109,7 +110,10 @@ public class TopicSubscriber {
                 setRetainConsumerOffset(getRetainConsumerOffset() + 1);
             }
             commitRetainConsumerTimestamp(persistenceMessage.getCreateTime());
-            batchPublish(brokerContext);
+            if (inflightQueue.getCount() == 0) {
+                publish0(brokerContext, 0);
+                mqttSession.flush();
+            }
         }, false);
         long cost = System.currentTimeMillis() - start;
         if (cost > 100) {
