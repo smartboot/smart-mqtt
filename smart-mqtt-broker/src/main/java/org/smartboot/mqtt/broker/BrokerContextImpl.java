@@ -67,6 +67,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author 三刀
@@ -96,7 +97,9 @@ public class BrokerContextImpl implements BrokerContext {
     private final BrokerRuntime runtime = new BrokerRuntime();
     private ExecutorService pushThreadPool;
     private ExecutorService retainPushThreadPool;
+    private ExecutorService executorService;
     private BlockingQueue<BrokerTopic> pushTopicQueue;
+    private ConcurrentLinkedQueue<Runnable> pushTaskQueue;
     /**
      * Broker Server
      */
@@ -259,50 +262,125 @@ public class BrokerContextImpl implements BrokerContext {
             }
         });
 
+        pushTaskQueue = new ConcurrentLinkedQueue<>();
+        executorService = Executors.newFixedThreadPool(2);
+        executorService.execute(new AsyncTask() {
+            @Override
+            public void execute() {
+                while (true) {
+                    BrokerTopic brokerTopic;
+                    try {
+                        brokerTopic = pushTopicQueue.take();
+
+                        int size = pushTopicQueue.size();
+                        if (size > 1024) {
+                            System.out.println("queue:" + size);
+                        }
+                        //Broker停止服务
+                        if (SHUTDOWN_TOPIC == brokerTopic) {
+                            pushTopicQueue.put(SHUTDOWN_TOPIC);
+                            break;
+                        }
+                    } catch (InterruptedException e) {
+                        LOGGER.error("pushTopicQueue exception", e);
+                        break;
+                    }
+                    try {
+                        //存在待输出消息
+                        ConcurrentLinkedQueue<TopicSubscriber> subscribers = brokerTopic.getQueue();
+                        AtomicInteger cnt = new AtomicInteger(subscribers.size());
+                        subscribers.offer(BREAK);
+                        TopicSubscriber subscriber = null;
+                        int version = brokerTopic.getVersion().get();
+                        while ((subscriber = subscribers.poll()) != null) {
+                            if (subscriber == BREAK) {
+                                break;
+                            }
+
+                            TopicSubscriber finalTs = subscriber;
+                            pushTaskQueue.offer(() -> {
+                                try {
+                                    finalTs.batchPublish(BrokerContextImpl.this);
+                                } finally {
+                                    int val = cnt.decrementAndGet();
+                                    if (val == 0 && version != brokerTopic.getVersion().get() && !subscribers.isEmpty()) {
+                                        brokerTopic.getSemaphore().release();
+                                        System.out.println("continue..." + brokerTopic.getTopic());
+                                        notifyPush(brokerTopic);
+                                    }
+                                }
+                            });
+                        }
+                        //brokerTopic.getSemaphore().release();
+//                        if (version != brokerTopic.getVersion().get() && !subscribers.isEmpty()) {
+//                            System.out.println("continue..." + brokerTopic.getTopic());
+//                            notifyPush(brokerTopic);
+//                        } else {
+////                                System.out.println("empty...." + brokerTopic.getTopic());
+//                        }
+                    } catch (Exception e) {
+                        LOGGER.error("brokerTopic:{} push message exception", brokerTopic.getTopic(), e);
+                    }
+                }
+            }
+        });
+
+
         for (int i = 0; i < getBrokerConfigure().getPushThreadNum(); i++) {
             pushThreadPool.execute(new AsyncTask() {
                 @Override
                 public void execute() {
                     while (true) {
-                        BrokerTopic brokerTopic;
                         try {
-                            brokerTopic = pushTopicQueue.take();
-
-                            int size = pushTopicQueue.size();
-                            if (size > 1024) {
-                                System.out.println("queue:" + size);
+                            Runnable take = pushTaskQueue.poll();
+                            if (take != null) {
+                                take.run();
+                            } else {
+                                Thread.yield();
                             }
-                            //Broker停止服务
-                            if (SHUTDOWN_TOPIC == brokerTopic) {
-                                pushTopicQueue.put(SHUTDOWN_TOPIC);
-                                break;
-                            }
-                        } catch (InterruptedException e) {
+                        } catch (Exception e) {
                             LOGGER.error("pushTopicQueue exception", e);
                             break;
                         }
-                        try {
-                            //存在待输出消息
-                            ConcurrentLinkedQueue<TopicSubscriber> subscribers = brokerTopic.getQueue();
-                            subscribers.offer(BREAK);
-                            TopicSubscriber subscriber = null;
-                            int version = brokerTopic.getVersion().get();
-                            while ((subscriber = subscribers.poll()) != null) {
-                                if (subscriber == BREAK) {
-                                    break;
-                                }
-                                subscriber.batchPublish(BrokerContextImpl.this);
-                            }
-                            brokerTopic.getSemaphore().release();
-                            if (version != brokerTopic.getVersion().get() && !subscribers.isEmpty()) {
-                                System.out.println("continue..." + brokerTopic.getTopic());
-                                notifyPush(brokerTopic);
-                            } else {
-//                                System.out.println("empty...." + brokerTopic.getTopic());
-                            }
-                        } catch (Exception e) {
-                            LOGGER.error("brokerTopic:{} push message exception", brokerTopic.getTopic(), e);
-                        }
+//                        BrokerTopic brokerTopic;
+//                        try {
+//                            brokerTopic = pushTopicQueue.take();
+//
+//                            int size = pushTopicQueue.size();
+//                            if (size > 1024) {
+//                                System.out.println("queue:" + size);
+//                            }
+//                            //Broker停止服务
+//                            if (SHUTDOWN_TOPIC == brokerTopic) {
+//                                pushTopicQueue.put(SHUTDOWN_TOPIC);
+//                                break;
+//                            }
+//                        } catch (InterruptedException e) {
+//                            LOGGER.error("pushTopicQueue exception", e);
+//                            break;
+//                        }
+//                        try {
+//                            //存在待输出消息
+//                            ConcurrentLinkedQueue<TopicSubscriber> subscribers = brokerTopic.getQueue();
+//                            subscribers.offer(BREAK);
+//                            TopicSubscriber subscriber = null;
+//                            int version = brokerTopic.getVersion().get();
+//                            while ((subscriber = subscribers.poll()) != null) {
+//                                if (subscriber == BREAK) {
+//                                    break;
+//                                }
+//                                subscriber.batchPublish(BrokerContextImpl.this);
+//                            }
+//                            brokerTopic.getSemaphore().release();
+//                            if (version != brokerTopic.getVersion().get() && !subscribers.isEmpty()) {
+//                                System.out.println("continue..." + brokerTopic.getTopic());
+//                                notifyPush(brokerTopic);
+//                            } else {
+////                                System.out.println("empty...." + brokerTopic.getTopic());
+//                            }
+//                        } catch (Exception e) {
+//                            LOGGER.error("brokerTopic:{} push message exception", brokerTopic.getTopic(), e);
+//                        }
                     }
                 }
             });
