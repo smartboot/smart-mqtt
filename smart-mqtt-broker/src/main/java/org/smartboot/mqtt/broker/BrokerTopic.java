@@ -4,6 +4,7 @@ import org.smartboot.mqtt.common.Topic;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -24,6 +25,8 @@ public class BrokerTopic extends Topic {
      */
     private final Semaphore semaphore = new Semaphore(1);
 
+    private final ConcurrentLinkedQueue<TopicSubscriber> queue = new ConcurrentLinkedQueue<>();
+
     public BrokerTopic(String topic) {
         super(topic);
     }
@@ -38,5 +41,9 @@ public class BrokerTopic extends Topic {
 
     public Semaphore getSemaphore() {
         return semaphore;
+    }
+
+    public ConcurrentLinkedQueue<TopicSubscriber> getQueue() {
+        return queue;
     }
 }

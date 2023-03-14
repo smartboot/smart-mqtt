@@ -60,6 +60,7 @@ import java.util.ServiceLoader;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -241,6 +242,8 @@ public class BrokerContextImpl implements BrokerContext {
         providers.setConnectAuthenticationProvider(new ConfiguredConnectAuthenticationProviderImpl(this));
     }
 
+    private final TopicSubscriber BREAK = new TopicSubscriber(null, null, null, 0, 0);
+
     private void initPushThread() {
         if (brokerConfigure.getTopicLimit() <= 0) {
             brokerConfigure.setTopicLimit(10);
@@ -280,14 +283,22 @@ public class BrokerContextImpl implements BrokerContext {
                         }
                         try {
                             //存在待输出消息
-                            Collection<TopicSubscriber> subscribers = brokerTopic.getConsumeOffsets().values();
-                            subscribers.stream().filter(topicSubscriber -> topicSubscriber.isReady() && topicSubscriber.getPushVersion() != brokerTopic.getVersion().get()).forEach(topicSubscriber -> topicSubscriber.batchPublish(BrokerContextImpl.this));
-                            brokerTopic.getSemaphore().release();
-                            for (TopicSubscriber subscriber : subscribers) {
-                                if (subscriber.getPushVersion() != brokerTopic.getVersion().get()) {
-                                    notifyPush(brokerTopic);
+                            ConcurrentLinkedQueue<TopicSubscriber> subscribers = brokerTopic.getQueue();
+                            subscribers.offer(BREAK);
+                            TopicSubscriber subscriber = null;
+                            int version = brokerTopic.getVersion().get();
+                            while ((subscriber = subscribers.poll()) != null) {
+                                if (subscriber == BREAK) {
                                     break;
                                 }
+                                subscriber.batchPublish(BrokerContextImpl.this);
+                            }
+                            brokerTopic.getSemaphore().release();
+                            if (version != brokerTopic.getVersion().get() && !subscribers.isEmpty()) {
+                                System.out.println("continue..." + brokerTopic.getTopic());
+                                notifyPush(brokerTopic);
+                            } else {
+//                                System.out.println("empty...." + brokerTopic.getTopic());
                             }
                         } catch (Exception e) {
                             LOGGER.error("brokerTopic:{} push message exception", brokerTopic.getTopic(), e);
@@ -344,8 +355,8 @@ public class BrokerContextImpl implements BrokerContext {
                         AsyncTask task = this;
                         PersistenceMessage storedMessage = providers.getRetainMessageProvider().get(subscriber.getTopic().getTopic(), subscriber.getRetainConsumerOffset());
                         if (storedMessage == null || storedMessage.getCreateTime() > subscriber.getLatestSubscribeTime()) {
-                            subscriber.setReady(true);
                             BrokerTopic topic = subscriber.getTopic();
+                            topic.getQueue().offer(subscriber);
                             notifyPush(topic);
 
                             //完成retain消息的消费，正式开始监听Topic
@@ -381,11 +392,11 @@ public class BrokerContextImpl implements BrokerContext {
         });
         eventBus.subscribe(ServerEventType.SUBSCRIBE_REFRESH_TOPIC, (eventType, subscriber) -> {
             LOGGER.info("刷新订阅关系, {} 订阅了topic: {}", subscriber.getTopicFilterToken().getTopicFilter(), subscriber.getTopic().getTopic());
-            subscriber.setReady(true);
+            subscriber.getTopic().getQueue().offer(subscriber);
         });
     }
 
-    private void notifyPush(BrokerTopic topic) {
+    void notifyPush(BrokerTopic topic) {
         if (!topic.getSemaphore().tryAcquire()) {
             return;
         }

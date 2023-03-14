@@ -47,9 +47,8 @@ public class TopicSubscriber {
     private final long latestSubscribeTime = System.currentTimeMillis();
 
     private TopicToken topicFilterToken;
-    private int pushVersion = -1;
 
-    private boolean ready = false;
+    private boolean inQueue = true;
 
     public TopicSubscriber(BrokerTopic topic, MqttSession session, MqttQoS mqttQoS, long nextConsumerOffset, long retainConsumerOffset) {
         this.topic = topic;
@@ -60,20 +59,23 @@ public class TopicSubscriber {
     }
 
     public void batchPublish(BrokerContext brokerContext) {
+        inQueue = false;
         publish0(brokerContext, 0);
         mqttSession.flush();
     }
 
-    private void publish0(BrokerContext brokerContext, int depth) {
+    private synchronized void publish0(BrokerContext brokerContext, int depth) {
         PersistenceProvider persistenceProvider = brokerContext.getProviders().getPersistenceProvider();
-        int version = topic.getVersion().get();
         PersistenceMessage persistenceMessage = persistenceProvider.get(topic.getTopic(), nextConsumerOffset);
         if (persistenceMessage == null) {
-            pushVersion = version;
+            if (!inQueue) {
+                inQueue = true;
+                topic.getQueue().offer(this);
+            }
             return;
         }
         if (depth > 16) {
-//            LOGGER.info("退出递归...");
+            LOGGER.info("退出递归...");
             return;
         }
 
@@ -107,6 +109,7 @@ public class TopicSubscriber {
                 setRetainConsumerOffset(getRetainConsumerOffset() + 1);
             }
             commitRetainConsumerTimestamp(persistenceMessage.getCreateTime());
+            batchPublish(brokerContext);
         }, false);
         long cost = System.currentTimeMillis() - start;
         if (cost > 100) {
@@ -160,17 +163,5 @@ public class TopicSubscriber {
 
     public void setTopicFilterToken(TopicToken topicFilterToken) {
         this.topicFilterToken = topicFilterToken;
-    }
-
-    public boolean isReady() {
-        return ready;
-    }
-
-    public void setReady(boolean ready) {
-        this.ready = ready;
-    }
-
-    public int getPushVersion() {
-        return pushVersion;
     }
 }
