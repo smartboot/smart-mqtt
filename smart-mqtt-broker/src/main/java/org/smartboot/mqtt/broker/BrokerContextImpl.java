@@ -289,22 +289,29 @@ public class BrokerContextImpl implements BrokerContext {
                         //存在待输出消息
                         ConcurrentLinkedQueue<TopicSubscriber> subscribers = brokerTopic.getQueue();
                         AtomicInteger cnt = new AtomicInteger(subscribers.size());
-                        subscribers.offer(BREAK);
+                        //subscribers.offer(BREAK);
                         TopicSubscriber subscriber = null;
                         int version = brokerTopic.getVersion().get();
-                        while ((subscriber = subscribers.poll()) != null) {
-                            if (subscriber == BREAK) {
-                                break;
-                            }
+
+                        int expect = cnt.get();
+
+                        while ((subscriber = subscribers.poll()) != null && expect-- > 0) {
+//                            if (subscriber == BREAK) {
+//                                break;
+//                            }
 
                             TopicSubscriber finalTs = subscriber;
                             pushTaskQueue.offer(() -> {
                                 try {
                                     finalTs.batchPublish(BrokerContextImpl.this);
                                 } finally {
+
                                     int val = cnt.decrementAndGet();
-                                    if (val == 0 && version != brokerTopic.getVersion().get() && !subscribers.isEmpty()) {
+                                    if (val == 0) {
                                         brokerTopic.getSemaphore().release();
+                                    }
+
+                                    if (val == 0 && version != brokerTopic.getVersion().get() && !subscribers.isEmpty()) {
                                         System.out.println("continue..." + brokerTopic.getTopic());
                                         notifyPush(brokerTopic);
                                     }
