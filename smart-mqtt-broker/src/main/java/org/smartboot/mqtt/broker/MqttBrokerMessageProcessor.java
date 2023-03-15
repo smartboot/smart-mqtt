@@ -11,7 +11,6 @@ import org.smartboot.mqtt.broker.processor.PublishProcessor;
 import org.smartboot.mqtt.broker.processor.SubscribeProcessor;
 import org.smartboot.mqtt.broker.processor.UnSubscribeProcessor;
 import org.smartboot.mqtt.common.DefaultMqttWriter;
-import org.smartboot.mqtt.common.QosPublisher;
 import org.smartboot.mqtt.common.enums.MqttMetricEnum;
 import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
@@ -51,7 +50,6 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
      */
     private final Map<String, MqttSession> onlineSessions = new ConcurrentHashMap<>();
     private final Map<Class<? extends MqttMessage>, MqttProcessor> processorMap = new HashMap<>();
-    private final QosPublisher qosPublisher;
 
     {
         processorMap.put(MqttPingReqMessage.class, new PingReqProcessor());
@@ -68,7 +66,6 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
 
     public MqttBrokerMessageProcessor(BrokerContext mqttContext) {
         this.mqttContext = mqttContext;
-        qosPublisher = new BrokerQosPublisher(mqttContext);
     }
 
     @Override
@@ -90,7 +87,7 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
             case NEW_SESSION:
                 mqttContext.metric(MqttMetricEnum.CLIENT_ONLINE).getMetric().increment();
                 session.setAttachment(new Attachment());
-                MqttSession mqttSession = new MqttSession(mqttContext, session, qosPublisher, new DefaultMqttWriter(session.writeBuffer()));
+                MqttSession mqttSession = new MqttSession(mqttContext, session, new DefaultMqttWriter(session.writeBuffer()));
                 onlineSessions.put(session.getSessionID(), mqttSession);
                 break;
             case SESSION_CLOSED:
@@ -115,7 +112,4 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
         return onlineSessions;
     }
 
-    public QosPublisher getQosPublisher() {
-        return qosPublisher;
-    }
 }

@@ -11,7 +11,7 @@ public abstract class MqttPacketIdVariableHeader<T extends AbstractProperties> e
     /**
      * 报文标识符
      */
-    private final int packetId;
+    private int packetId;
 
     public MqttPacketIdVariableHeader(int packetId, T properties) {
         super(properties);
@@ -21,5 +21,9 @@ public abstract class MqttPacketIdVariableHeader<T extends AbstractProperties> e
 
     public int getPacketId() {
         return packetId;
+    }
+
+    public void setPacketId(int packetId) {
+        this.packetId = packetId;
     }
 }

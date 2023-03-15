@@ -20,7 +20,6 @@ import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.MqttMessageBuilders;
 import org.smartboot.mqtt.common.enums.MqttMetricEnum;
-import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventBus;
 import org.smartboot.mqtt.common.eventbus.EventBusImpl;
@@ -363,18 +362,13 @@ public class BrokerContextImpl implements BrokerContext {
                         MqttSession session = subscriber.getMqttSession();
 
                         MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(storedMessage.getPayload()).qos(subscriber.getMqttQoS()).topicName(storedMessage.getTopic());
-                        if (subscriber.getMqttQoS() == MqttQoS.AT_LEAST_ONCE || subscriber.getMqttQoS() == MqttQoS.EXACTLY_ONCE) {
-                            publishBuilder.packetId(session.newPacketId());
-                        }
                         if (session.getMqttVersion() == MqttVersion.MQTT_5) {
                             publishBuilder.publishProperties(new PublishProperties());
                         }
-                        MqttPublishMessage publishMessage = publishBuilder.build();
                         InflightQueue inflightQueue = session.getInflightQueue();
-                        int index = inflightQueue.offer(publishMessage, storedMessage.getOffset());
-                        session.publish(publishMessage, packetId -> {
-                            LOGGER.info("publish retain to client:{} success ,message:{} ", session.getClientId(), publishMessage);
-                            long offset = inflightQueue.commit(index);
+                        inflightQueue.offer(publishBuilder, integer -> {
+                            LOGGER.info("publish retain to client:{} success  ", session.getClientId());
+                            long offset = inflightQueue.commit(integer);
                             if (offset != -1) {
                                 subscriber.setRetainConsumerOffset(offset + 1);
                                 retainPushThreadPool.execute(task);
@@ -382,7 +376,7 @@ public class BrokerContextImpl implements BrokerContext {
                                 LOGGER.error("error...");
                             }
 
-                        });
+                        }, storedMessage.getOffset());
                     }
                 });
             }

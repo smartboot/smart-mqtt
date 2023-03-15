@@ -7,11 +7,12 @@ import org.smartboot.mqtt.client.Subscribe;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
+import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
 import org.smartboot.mqtt.common.message.MqttPubCompMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
-import org.smartboot.mqtt.common.message.MqttPubRelMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
+import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttPublishVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
@@ -95,17 +96,20 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
         MqttPubQosVariableHeader variableHeader = new MqttPubQosVariableHeader(messageId, properties);
 
         MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(variableHeader);
-        session.write(pubRecMessage, (Consumer<MqttPubRelMessage>) message -> {
-            //todo
-            ReasonProperties reasonProperties = null;
-            if (mqttPublishMessage.getVersion() == MqttVersion.MQTT_5) {
-                reasonProperties = new ReasonProperties();
-            }
-            MqttPubQosVariableHeader qosVariableHeader = new MqttPubQosVariableHeader(message.getVariableHeader().getPacketId(), reasonProperties);
-            MqttPubCompMessage pubRelMessage = new MqttPubCompMessage(qosVariableHeader);
-            session.write(pubRelMessage);
+        session.write(pubRecMessage, new Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>>() {
+            @Override
+            public void accept(MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> message) {
+                //todo
+                ReasonProperties reasonProperties = null;
+                if (mqttPublishMessage.getVersion() == MqttVersion.MQTT_5) {
+                    reasonProperties = new ReasonProperties();
+                }
+                MqttPubQosVariableHeader qosVariableHeader = new MqttPubQosVariableHeader(message.getVariableHeader().getPacketId(), reasonProperties);
+                MqttPubCompMessage pubRelMessage = new MqttPubCompMessage(qosVariableHeader);
+                session.write(pubRelMessage);
 
-            processPublishMessage(mqttPublishMessage, session);
+                processPublishMessage(mqttPublishMessage, session);
+            }
         });
     }
 

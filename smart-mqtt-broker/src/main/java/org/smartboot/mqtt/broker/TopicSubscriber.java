@@ -10,7 +10,6 @@ import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventType;
-import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 
 import java.util.concurrent.Semaphore;
@@ -81,27 +80,17 @@ public class TopicSubscriber {
         }
 
         MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(persistenceMessage.getPayload()).qos(mqttQoS).topicName(persistenceMessage.getTopic());
-        if (mqttQoS == MqttQoS.AT_LEAST_ONCE || mqttQoS == MqttQoS.EXACTLY_ONCE) {
-            publishBuilder.packetId(mqttSession.newPacketId());
-        }
         if (mqttSession.getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());
         }
 
-        MqttPublishMessage publishMessage = publishBuilder.build();
-
         InflightQueue inflightQueue = mqttSession.getInflightQueue();
-        int index = inflightQueue.offer(publishMessage, persistenceMessage.getOffset());
-        // 飞行队列已满
-        if (index == -1) {
-//            LOGGER.info("queue is full..." + expectConsumerOffset);
-            return;
-        }
-        long start = System.currentTimeMillis();
-        nextConsumerOffset++;
-        mqttSession.publish(publishMessage, packetId -> {
+        int index = inflightQueue.offer(publishBuilder, packetId -> {
+            if (mqttQoS == MqttQoS.AT_MOST_ONCE) {
+                nextConsumerOffset++;
+            }
             //最早发送的消息若收到响应，则更新点位
-            long offset = inflightQueue.commit(index);
+            long offset = inflightQueue.commit(packetId);
             if (offset == -1) {
                 return;
             }
@@ -114,7 +103,17 @@ public class TopicSubscriber {
                 publish0(brokerContext, 0);
                 mqttSession.flush();
             }
-        }, false);
+        }, persistenceMessage.getOffset());
+        // 飞行队列已满
+        if (index == -1) {
+//            LOGGER.info("queue is full..." + expectConsumerOffset);
+            return;
+        }
+        long start = System.currentTimeMillis();
+        if (mqttQoS != MqttQoS.AT_MOST_ONCE) {
+            nextConsumerOffset++;
+        }
+
         long cost = System.currentTimeMillis() - start;
         if (cost > 100) {
             System.out.println("publish busy ,cost: " + cost);

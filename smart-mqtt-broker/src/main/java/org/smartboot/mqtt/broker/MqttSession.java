@@ -6,7 +6,6 @@ import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.broker.provider.impl.session.SessionState;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.MqttWriter;
-import org.smartboot.mqtt.common.QosPublisher;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
@@ -51,8 +50,8 @@ public class MqttSession extends AbstractSession {
 
     private ConnectProperties properties;
 
-    public MqttSession(BrokerContext mqttContext, AioSession session, QosPublisher qosPublisher, MqttWriter mqttWriter) {
-        super(qosPublisher, mqttContext.getEventBus());
+    public MqttSession(BrokerContext mqttContext, AioSession session, MqttWriter mqttWriter) {
+        super(mqttContext.getEventBus());
         this.mqttContext = mqttContext;
         this.session = session;
         this.mqttWriter = mqttWriter;
@@ -86,7 +85,6 @@ public class MqttSession extends AbstractSession {
                 //当清理会话标志为 0 的会话连接断开之后，服务端必须将之后的 QoS 1 和 QoS 2 级别的消息保存为会话状态的一部分，
                 // 如果这些消息匹配断开连接时客户端的任何订阅
                 SessionState sessionState = new SessionState();
-                sessionState.getResponseConsumers().putAll(responseConsumers);
                 subscribers.values().forEach(topicSubscriber -> sessionState.getSubscribers().put(topicSubscriber.getTopicFilterToken().getTopicFilter(), topicSubscriber.getMqttQoS()));
                 mqttContext.getProviders().getSessionStateProvider().store(clientId, sessionState);
             }
