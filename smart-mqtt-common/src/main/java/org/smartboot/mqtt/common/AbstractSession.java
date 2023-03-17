@@ -61,9 +61,9 @@ public abstract class AbstractSession {
         this.eventBus = eventBus;
     }
 
-    public final synchronized void write(MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> mqttMessage, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
+    public final void write(MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> mqttMessage, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
         responseConsumers.put(mqttMessage.getVariableHeader().getPacketId(), consumer);
-        write(mqttMessage);
+        write(mqttMessage, false);
     }
 
     public final void notifyResponse(MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> message) {
@@ -93,7 +93,7 @@ public abstract class AbstractSession {
         }
     }
 
-    public final synchronized void write(MqttMessage mqttMessage) {
+    public final void write(MqttMessage mqttMessage) {
         write(mqttMessage, true);
     }
 

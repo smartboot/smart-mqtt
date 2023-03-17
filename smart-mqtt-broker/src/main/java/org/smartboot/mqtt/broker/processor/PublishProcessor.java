@@ -10,16 +10,12 @@ import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttReasonCode;
 import org.smartboot.mqtt.common.enums.MqttVersion;
-import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
 import org.smartboot.mqtt.common.message.MqttPubCompMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
-import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
-
-import java.util.function.Consumer;
 
 /**
  * 发布Topic
@@ -79,7 +75,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
             variableHeader = new MqttPubQosVariableHeader(messageId, null);
         }
         MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(variableHeader);
-        session.write(pubAckMessage);
+        session.write(pubAckMessage, false);
         // 消息投递至消息总线
         context.getEventBus().publish(ServerEventType.RECEIVE_PUBLISH_MESSAGE, EventObject.newEventObject(session, mqttPublishMessage));
     }
@@ -104,26 +100,23 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
         MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(variableHeader);
 
         //响应监听
-        session.write(pubRecMessage, new Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>>() {
-            @Override
-            public void accept(MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> message) {
-                //发送pubRel消息。
-                //todo
-                MqttPubQosVariableHeader qosVariableHeader;
-                //todo
-                byte code = 0;
-                if (code != 0) {
-                    ReasonProperties properties = new ReasonProperties();
-                    qosVariableHeader = new MqttPubQosVariableHeader(mqttPublishMessage.getVariableHeader().getPacketId(), properties);
-                    qosVariableHeader.setReasonCode(code);
-                } else {
-                    qosVariableHeader = new MqttPubQosVariableHeader(mqttPublishMessage.getVariableHeader().getPacketId(), null);
-                }
-                MqttPubCompMessage pubRelMessage = new MqttPubCompMessage(qosVariableHeader);
-                session.write(pubRelMessage);
-                // 消息投递至消息总线
-                context.getEventBus().publish(ServerEventType.RECEIVE_PUBLISH_MESSAGE, EventObject.newEventObject(session, mqttPublishMessage));
+        session.write(pubRecMessage, message -> {
+            //发送pubRel消息。
+            //todo
+            MqttPubQosVariableHeader qosVariableHeader;
+            //todo
+            byte code = 0;
+            if (code != 0) {
+                ReasonProperties properties = new ReasonProperties();
+                qosVariableHeader = new MqttPubQosVariableHeader(mqttPublishMessage.getVariableHeader().getPacketId(), properties);
+                qosVariableHeader.setReasonCode(code);
+            } else {
+                qosVariableHeader = new MqttPubQosVariableHeader(mqttPublishMessage.getVariableHeader().getPacketId(), null);
             }
+            MqttPubCompMessage pubRelMessage = new MqttPubCompMessage(qosVariableHeader);
+            session.write(pubRelMessage, false);
+            // 消息投递至消息总线
+            context.getEventBus().publish(ServerEventType.RECEIVE_PUBLISH_MESSAGE, EventObject.newEventObject(session, mqttPublishMessage));
         });
     }
 }

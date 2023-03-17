@@ -65,7 +65,7 @@ public class TopicSubscriber {
         mqttSession.flush();
     }
 
-    private synchronized void publish0(BrokerContext brokerContext, int depth) {
+    private void publish0(BrokerContext brokerContext, int depth) {
         PersistenceProvider persistenceProvider = brokerContext.getProviders().getPersistenceProvider();
         PersistenceMessage persistenceMessage = persistenceProvider.get(topic.getTopic(), nextConsumerOffset);
         if (persistenceMessage == null) {
@@ -95,10 +95,9 @@ public class TopicSubscriber {
                 setRetainConsumerOffset(getRetainConsumerOffset() + 1);
             }
             commitRetainConsumerTimestamp(persistenceMessage.getCreateTime());
-            if (inflightQueue.getCount() == 0) {
-                publish0(brokerContext, 0);
-                mqttSession.flush();
-            }
+//            if (inflightQueue.getCount() == 0) {
+            publish0(brokerContext, 0);
+//            }
         }, persistenceMessage.getOffset());
         // 飞行队列已满
         if (!suc) {
