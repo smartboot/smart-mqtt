@@ -26,7 +26,7 @@ public class InflightQueue {
     private int putIndex;
     private int count;
 
-    private AtomicInteger packetId = new AtomicInteger(0);
+    private final AtomicInteger packetId = new AtomicInteger(0);
 
     private final AbstractSession session;
 
@@ -36,25 +36,32 @@ public class InflightQueue {
         this.session = session;
     }
 
-    public synchronized int offer(MqttMessageBuilders.PublishBuilder publishBuilder, Consumer<Integer> consumer, long offset) {
-        if (count == queue.length) {
-            return -1;
+    public boolean offer(MqttMessageBuilders.PublishBuilder publishBuilder, Consumer<Long> consumer, long offset) {
+        int id = 0;
+        MqttPublishMessage mqttMessage;
+        synchronized (this) {
+            if (count == queue.length) {
+                return false;
+            }
+            id = packetId.incrementAndGet();
+            publishBuilder.packetId(id);
+            mqttMessage = publishBuilder.build();
+            queue[putIndex++] = new AckMessage(mqttMessage, id, consumer, offset);
+            if (putIndex == queue.length) {
+                putIndex = 0;
+            }
+            count++;
+//        System.out.println("publish...");
+
         }
-        int id = packetId.incrementAndGet();
-        publishBuilder.packetId(id);
-        MqttPublishMessage mqttMessage = publishBuilder.build();
-        queue[putIndex] = new AckMessage(mqttMessage, id, consumer, offset);
-        int index = putIndex++;
-        if (putIndex == queue.length) {
-            putIndex = 0;
-        }
-        count++;
-        session.write(mqttMessage);
+        session.write(mqttMessage, false);
         // QOS直接响应
         if (mqttMessage.getFixedHeader().getQosLevel() == MqttQoS.AT_MOST_ONCE) {
-            consumer.accept(id);
+            long offset1 = commit(id);
+            ValidateUtils.isTrue(offset1 == offset, "invalid offset");
+            consumer.accept(offset);
         }
-        return index;
+        return true;
     }
 
     public void notify(MqttPubQosMessage message) {
@@ -62,7 +69,8 @@ public class InflightQueue {
         ValidateUtils.isTrue(message.getFixedHeader().getMessageType() == ackMessage.getExpectMessageType(), "invalid message type");
         switch (message.getFixedHeader().getMessageType()) {
             case PUBACK: {
-                ackMessage.getConsumer().accept(message.getVariableHeader().getPacketId());
+                long offset = commit(message.getVariableHeader().getPacketId());
+                ackMessage.getConsumer().accept(offset);
                 break;
             }
             case PUBREC:
@@ -77,14 +85,15 @@ public class InflightQueue {
                 session.write(pubRelMessage);
                 break;
             case PUBCOMP:
-                ackMessage.getConsumer().accept(message.getVariableHeader().getPacketId());
+                long offset = commit(message.getVariableHeader().getPacketId());
+                ackMessage.getConsumer().accept(offset);
                 break;
             default:
                 throw new RuntimeException();
         }
     }
 
-    public synchronized long commit(int packetId) {
+    private synchronized long commit(int packetId) {
         int commitIndex = (packetId - 1) % queue.length;
         AckMessage ackMessage = queue[commitIndex];
         ValidateUtils.isTrue(ackMessage.getPacketId() == packetId, "invalid message");

@@ -392,21 +392,23 @@ public class MqttClient extends AbstractSession {
         }
     }
 
-    private synchronized void publish(MqttMessageBuilders.PublishBuilder publishBuilder, Consumer<Integer> consumer) {
+    private void publish(MqttMessageBuilders.PublishBuilder publishBuilder, Consumer<Integer> consumer) {
         InflightQueue inflightQueue = getInflightQueue();
-        int index = inflightQueue.offer(publishBuilder, packetId -> {
-            consumer.accept(packetId);
+        boolean suc = inflightQueue.offer(publishBuilder, offset -> {
+            consumer.accept(publishBuilder.getPacketId());
             //最早发送的消息若收到响应，则更新点位
-            long offset = inflightQueue.commit(packetId);
             if (offset != -1) {
                 synchronized (MqttClient.this) {
                     MqttClient.this.notifyAll();
                 }
             }
         }, 1);
-        if (index == -1) {
+        flush();
+        if (!suc) {
             try {
-                wait();
+                synchronized (this) {
+                    wait();
+                }
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }

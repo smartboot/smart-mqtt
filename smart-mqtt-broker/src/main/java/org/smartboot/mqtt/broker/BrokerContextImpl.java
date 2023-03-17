@@ -290,7 +290,11 @@ public class BrokerContextImpl implements BrokerContext {
 //                                if (subscriber == BREAK) {
 //                                    break;
 //                                }
-                                subscriber.batchPublish(BrokerContextImpl.this);
+                                try {
+                                    subscriber.batchPublish(BrokerContextImpl.this);
+                                } catch (Exception e) {
+                                    LOGGER.error("batch publish exception:{}", e.getMessage());
+                                }
                             }
                             brokerTopic.getSemaphore().release();
                             if (version != brokerTopic.getVersion().get() && !subscribers.isEmpty()) {
@@ -366,17 +370,12 @@ public class BrokerContextImpl implements BrokerContext {
                             publishBuilder.publishProperties(new PublishProperties());
                         }
                         InflightQueue inflightQueue = session.getInflightQueue();
-                        inflightQueue.offer(publishBuilder, integer -> {
+                        inflightQueue.offer(publishBuilder, offset -> {
                             LOGGER.info("publish retain to client:{} success  ", session.getClientId());
-                            long offset = inflightQueue.commit(integer);
-                            if (offset != -1) {
-                                subscriber.setRetainConsumerOffset(offset + 1);
-                                retainPushThreadPool.execute(task);
-                            } else {
-                                LOGGER.error("error...");
-                            }
-
+                            subscriber.setRetainConsumerOffset(offset + 1);
+                            retainPushThreadPool.execute(task);
                         }, storedMessage.getOffset());
+                        session.flush();
                     }
                 });
             }

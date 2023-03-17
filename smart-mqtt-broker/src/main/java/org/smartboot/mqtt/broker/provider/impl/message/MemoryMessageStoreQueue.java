@@ -17,7 +17,7 @@ class MemoryMessageStoreQueue {
 
     public void put(MqttPublishMessage msg) {
         PersistenceMessage message = new PersistenceMessage(msg, putOffset.incrementAndGet());
-//        LOGGER.info("store message, offset:{}", msg.getOffset());
+//        LOGGER.info("store message, offset:{}", message.getOffset());
         store[(int) (message.getOffset() % store.length)] = message;
     }
 

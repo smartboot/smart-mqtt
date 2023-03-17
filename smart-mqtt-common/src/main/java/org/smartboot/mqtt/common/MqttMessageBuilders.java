@@ -78,6 +78,10 @@ public final class MqttMessageBuilders {
             return this;
         }
 
+        public int getPacketId() {
+            return packetId;
+        }
+
         public MqttPublishMessage build() {
             MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false, qos, retained);
             if (qos != MqttQoS.AT_LEAST_ONCE && qos != MqttQoS.EXACTLY_ONCE) {

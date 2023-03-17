@@ -20,7 +20,7 @@ public class AckMessage {
     /**
      * 回调事件
      */
-    private final Consumer<Integer> consumer;
+    private final Consumer<Long> consumer;
 
     private final long offset;
 
@@ -28,7 +28,7 @@ public class AckMessage {
 
     private final int packetId;
 
-    public AckMessage(MqttPublishMessage originalMessage, int packetId, Consumer<Integer> consumer, long offset) {
+    public AckMessage(MqttPublishMessage originalMessage, int packetId, Consumer<Long> consumer, long offset) {
         this.originalMessage = originalMessage;
         this.consumer = consumer;
         this.offset = offset;
@@ -45,7 +45,7 @@ public class AckMessage {
     }
 
 
-    public Consumer<Integer> getConsumer() {
+    public Consumer<Long> getConsumer() {
         return consumer;
     }
 
