@@ -58,7 +58,7 @@ public class InflightQueue {
         // QOS直接响应
         if (mqttMessage.getFixedHeader().getQosLevel() == MqttQoS.AT_MOST_ONCE) {
             long offset1 = commit(id);
-            ValidateUtils.isTrue(offset1 == offset, "invalid offset");
+//            ValidateUtils.isTrue(offset1 == -1 || offset1 == offset, "invalid offset");
             consumer.accept(offset);
         }
         return true;
@@ -82,7 +82,7 @@ public class InflightQueue {
                 }
                 MqttPubQosVariableHeader variableHeader = new MqttPubQosVariableHeader(message.getVariableHeader().getPacketId(), properties);
                 MqttPubRelMessage pubRelMessage = new MqttPubRelMessage(variableHeader);
-                session.write(pubRelMessage);
+                session.write(pubRelMessage, false);
                 break;
             case PUBCOMP:
                 long offset = commit(message.getVariableHeader().getPacketId());

@@ -75,7 +75,7 @@ public class TopicSubscriber {
             return;
         }
         if (depth > 16) {
-            LOGGER.info("退出递归...");
+//            LOGGER.info("退出递归...");
             return;
         }
 
