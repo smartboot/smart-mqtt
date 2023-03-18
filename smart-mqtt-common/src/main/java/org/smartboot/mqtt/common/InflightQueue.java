@@ -46,7 +46,7 @@ public class InflightQueue {
             id = packetId.incrementAndGet();
             // 16位无符号最大值65535
             if (id > 65535) {
-                id = id % queue.length;
+                id = id % queue.length + queue.length;
                 packetId.set(id);
             }
             publishBuilder.packetId(id);
