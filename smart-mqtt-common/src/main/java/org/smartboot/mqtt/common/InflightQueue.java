@@ -44,6 +44,10 @@ public class InflightQueue {
                 return false;
             }
             id = packetId.incrementAndGet();
+            // 16位无符号最大值65535
+            if (id > 65535) {
+                id = packetId.getAndSet(1);
+            }
             publishBuilder.packetId(id);
             mqttMessage = publishBuilder.build();
             queue[putIndex++] = new AckMessage(mqttMessage, id, consumer, offset);
