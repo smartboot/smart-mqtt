@@ -10,14 +10,11 @@ import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
 import org.smartboot.mqtt.common.message.MqttPubCompMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
-import org.smartboot.mqtt.common.message.MqttPubRelMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttPublishVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 import org.smartboot.mqtt.common.util.TopicTokenUtil;
-
-import java.util.function.Consumer;
 
 /**
  * 发布Topic
@@ -82,7 +79,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
         }
         MqttPubQosVariableHeader variableHeader = new MqttPubQosVariableHeader(mqttPublishMessage.getVariableHeader().getPacketId(), properties);
         MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(variableHeader);
-        mqttClient.write(pubAckMessage);
+        mqttClient.write(pubAckMessage, false);
     }
 
     private void processQos2(MqttClient session, MqttPublishMessage mqttPublishMessage) {
@@ -95,7 +92,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
         MqttPubQosVariableHeader variableHeader = new MqttPubQosVariableHeader(messageId, properties);
 
         MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(variableHeader);
-        session.write(pubRecMessage, (Consumer<MqttPubRelMessage>) message -> {
+        session.write(pubRecMessage, message -> {
             //todo
             ReasonProperties reasonProperties = null;
             if (mqttPublishMessage.getVersion() == MqttVersion.MQTT_5) {
@@ -103,7 +100,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
             }
             MqttPubQosVariableHeader qosVariableHeader = new MqttPubQosVariableHeader(message.getVariableHeader().getPacketId(), reasonProperties);
             MqttPubCompMessage pubRelMessage = new MqttPubCompMessage(qosVariableHeader);
-            session.write(pubRelMessage);
+            session.write(pubRelMessage, false);
 
             processPublishMessage(mqttPublishMessage, session);
         });

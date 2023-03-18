@@ -17,16 +17,21 @@ class MemoryMessageStoreQueue {
 
     public void put(MqttPublishMessage msg) {
         PersistenceMessage message = new PersistenceMessage(msg, putOffset.incrementAndGet());
-//        LOGGER.info("store message, offset:{}", msg.getOffset());
+//        LOGGER.info("store message, offset:{}", message.getOffset());
         store[(int) (message.getOffset() % store.length)] = message;
     }
 
     public PersistenceMessage get(long offset) {
         PersistenceMessage storedMessage = store[(int) (offset % store.length)];
-        if (storedMessage == null) {
+        if (storedMessage != null && storedMessage.getOffset() == offset) {
+            return storedMessage;
+        }
+        if (offset < putOffset.get()) {
+//            System.out.println("skip...");
+            return store[(int) (putOffset.get() % store.length)];
+        } else {
             return null;
         }
-        return storedMessage.getOffset() == offset ? storedMessage : null;
     }
 
     /**

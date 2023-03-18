@@ -2,14 +2,14 @@ package org.smartboot.mqtt.common;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventBus;
 import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
-import org.smartboot.mqtt.common.message.MqttPublishMessage;
-import org.smartboot.mqtt.common.message.MqttVariableMessage;
+import org.smartboot.mqtt.common.message.MqttPubQosMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.ValidateUtils;
@@ -30,11 +30,6 @@ import java.util.function.Consumer;
 public abstract class AbstractSession {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSession.class);
     private static final int QOS0_PACKET_ID = 0;
-    /**
-     * req-resp 消息模式的处理回调
-     */
-    protected final Map<Integer, AckMessage> responseConsumers = new ConcurrentHashMap<>();
-    private final QosPublisher qosPublisher;
     /**
      * 用于生成当前会话的报文标识符
      */
@@ -60,26 +55,22 @@ public abstract class AbstractSession {
     private MqttVersion mqttVersion;
 
     private InflightQueue inflightQueue;
+    protected Map<Integer, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>>> responseConsumers = new ConcurrentHashMap<>();
 
-    public AbstractSession(QosPublisher publisher, EventBus eventBus) {
-        this.qosPublisher = publisher;
+    public AbstractSession(EventBus eventBus) {
         this.eventBus = eventBus;
     }
 
-    public final synchronized void write(MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> mqttMessage, Consumer<? extends MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
-        responseConsumers.put(mqttMessage.getVariableHeader().getPacketId(), new AckMessage(mqttMessage, consumer));
-        write(mqttMessage);
+    public final void write(MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> mqttMessage, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
+        responseConsumers.put(mqttMessage.getVariableHeader().getPacketId(), consumer);
+        write(mqttMessage, false);
     }
 
-    public Map<Integer, AckMessage> getResponseConsumers() {
-        return responseConsumers;
-    }
-
-    public final void notifyResponse(MqttVariableMessage<? extends MqttPacketIdVariableHeader> message) {
-        AckMessage ackMessage = responseConsumers.remove(message.getVariableHeader().getPacketId());
-        if (ackMessage != null) {
-            ackMessage.setDone(true);
-            ackMessage.getConsumer().accept(message);
+    public final void notifyResponse(MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> message) {
+        if (message instanceof MqttPubQosMessage && message.getFixedHeader().getMessageType() != MqttMessageType.PUBREL) {
+            inflightQueue.notify((MqttPubQosMessage) message);
+        } else {
+            responseConsumers.remove(message.getVariableHeader().getPacketId()).accept(message);
         }
     }
 
@@ -102,39 +93,13 @@ public abstract class AbstractSession {
         }
     }
 
-    public final synchronized void write(MqttMessage mqttMessage) {
+    public final void write(MqttMessage mqttMessage) {
         write(mqttMessage, true);
     }
 
     public synchronized void flush() {
         if (!disconnect) {
             mqttWriter.flush();
-        }
-    }
-
-    public void publish(MqttPublishMessage message, Consumer<Integer> consumer) {
-        publish(message, consumer, true);
-    }
-
-    /**
-     * 若发送的Qos为0，则回调的consumer packetId为0
-     */
-    public void publish(MqttPublishMessage message, Consumer<Integer> consumer, boolean autoFlush) {
-//        LOGGER.info("publish to client:{}, topic:{} packetId:{}", clientId, message.getMqttPublishVariableHeader().topicName(), message.getMqttPublishVariableHeader().packetId());
-        switch (message.getFixedHeader().getQosLevel()) {
-            case AT_MOST_ONCE:
-                try {
-                    write(message, autoFlush);
-                } finally {
-                    consumer.accept(QOS0_PACKET_ID);
-                }
-                break;
-            case AT_LEAST_ONCE:
-                qosPublisher.publishQos1(this, message, consumer, autoFlush);
-                break;
-            case EXACTLY_ONCE:
-                qosPublisher.publishQos2(this, message, consumer, autoFlush);
-                break;
         }
     }
 
@@ -161,9 +126,6 @@ public abstract class AbstractSession {
         int packageId = packetIdCreator.getAndIncrement();
         if (packageId <= 0) {
             packetIdCreator.set(0);
-            return newPacketId();
-        }
-        if (responseConsumers.containsKey(packageId)) {
             return newPacketId();
         }
         return packageId;

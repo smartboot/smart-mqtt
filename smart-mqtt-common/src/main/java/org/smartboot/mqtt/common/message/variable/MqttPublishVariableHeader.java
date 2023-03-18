@@ -3,6 +3,7 @@ package org.smartboot.mqtt.common.message.variable;
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
+import org.smartboot.mqtt.common.util.MqttUtil;
 
 import java.io.IOException;
 
@@ -31,7 +32,7 @@ public class MqttPublishVariableHeader extends MqttPacketIdVariableHeader<Publis
     @Override
     protected int preEncode0() {
         int length = getPacketId() > 0 ? 2 : 0;
-        topicNameBytes = MqttCodecUtil.encodeUTF8(topicName);
+        topicNameBytes = MqttUtil.encodeCache(topicName);
         length += topicNameBytes.length;
         return length;
     }

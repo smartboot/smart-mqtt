@@ -3,8 +3,11 @@ package org.smartboot.mqtt.common.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.AbstractSession;
+import org.smartboot.mqtt.common.message.MqttCodecUtil;
 
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -16,6 +19,8 @@ public class MqttUtil {
      * Topic 通配符
      */
     private static final char[] TOPIC_WILDCARDS = {'#', '+'};
+
+    private static final Map<String, byte[]> cache = new ConcurrentHashMap<>();
 
     public static boolean containsTopicWildcards(String topicName) {
         for (char c : TOPIC_WILDCARDS) {
@@ -37,5 +42,9 @@ public class MqttUtil {
             LOGGER.error("getRemoteAddress exception", e);
             return "";
         }
+    }
+
+    public static byte[] encodeCache(String topicName) {
+        return cache.computeIfAbsent(topicName, s -> MqttCodecUtil.encodeUTF8(topicName));
     }
 }

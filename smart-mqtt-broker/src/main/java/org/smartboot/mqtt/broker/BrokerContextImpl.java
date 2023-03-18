@@ -20,7 +20,6 @@ import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.MqttMessageBuilders;
 import org.smartboot.mqtt.common.enums.MqttMetricEnum;
-import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventBus;
 import org.smartboot.mqtt.common.eventbus.EventBusImpl;
@@ -36,6 +35,7 @@ import org.smartboot.mqtt.common.to.MetricItemTO;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.buffer.BufferPagePool;
+import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import org.smartboot.socket.extension.plugins.AbstractPlugin;
 import org.smartboot.socket.transport.AioQuickServer;
 import org.smartboot.socket.transport.AioSession;
@@ -44,6 +44,7 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.management.ManagementFactory;
+import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -58,6 +59,7 @@ import java.util.ServiceLoader;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -109,6 +111,7 @@ public class BrokerContextImpl implements BrokerContext {
      * 统计指标
      */
     private final Map<MqttMetricEnum, MetricItemTO> metricMap = new HashMap<>();
+    private AsynchronousChannelGroup asynchronousChannelGroup;
 
     @Override
     public void init() throws IOException {
@@ -129,10 +132,18 @@ public class BrokerContextImpl implements BrokerContext {
 
 
         try {
+            asynchronousChannelGroup = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
+                int i;
+
+                @Override
+                public Thread newThread(Runnable r) {
+                    return new Thread(r, "smart-mqtt-broker-" + (++i));
+                }
+            });
             pagePool = new BufferPagePool(10 * 1024 * 1024, brokerConfigure.getThreadNum(), true);
             server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(brokerConfigure.getMaxPacketSize()), processor);
             server.setBannerEnabled(false).setReadBufferSize(brokerConfigure.getBufferSize()).setWriteBuffer(brokerConfigure.getBufferSize(), Math.min(brokerConfigure.getMaxInflight(), 16)).setBufferPagePool(pagePool).setThreadNum(Math.max(2, brokerConfigure.getThreadNum()));
-            server.start();
+            server.start(asynchronousChannelGroup);
             System.out.println(BrokerConfigure.BANNER + "\r\n :: smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
             System.out.println("❤️Gitee: https://gitee.com/smartboot/smart-mqtt");
             System.out.println("Github: https://github.com/smartboot/smart-mqtt");
@@ -230,6 +241,8 @@ public class BrokerContextImpl implements BrokerContext {
         providers.setConnectAuthenticationProvider(new ConfiguredConnectAuthenticationProviderImpl(this));
     }
 
+    private final TopicSubscriber BREAK = new TopicSubscriber(null, null, null, 0, 0);
+
     private void initPushThread() {
         if (brokerConfigure.getTopicLimit() <= 0) {
             brokerConfigure.setTopicLimit(10);
@@ -269,14 +282,23 @@ public class BrokerContextImpl implements BrokerContext {
                         }
                         try {
                             //存在待输出消息
-                            Collection<TopicSubscriber> subscribers = brokerTopic.getConsumeOffsets().values();
-                            subscribers.stream().filter(topicSubscriber -> topicSubscriber.isReady() && topicSubscriber.getPushVersion() != brokerTopic.getVersion().get()).forEach(topicSubscriber -> topicSubscriber.batchPublish(BrokerContextImpl.this));
-                            brokerTopic.setPushing(false);
-                            for (TopicSubscriber subscriber : subscribers) {
-                                if (subscriber.getPushVersion() != brokerTopic.getVersion().get()) {
-                                    notifyPush(brokerTopic);
-                                    break;
+                            ConcurrentLinkedQueue<TopicSubscriber> subscribers = brokerTopic.getQueue();
+                            subscribers.offer(BREAK);
+                            TopicSubscriber subscriber = null;
+                            int version = brokerTopic.getVersion().get();
+                            while ((subscriber = subscribers.poll()) != BREAK) {
+//                                if (subscriber == BREAK) {
+//                                    break;
+//                                }
+                                try {
+                                    subscriber.batchPublish(BrokerContextImpl.this);
+                                } catch (Exception e) {
+                                    LOGGER.error("batch publish exception:{}", e.getMessage());
                                 }
+                            }
+                            brokerTopic.getSemaphore().release();
+                            if (version != brokerTopic.getVersion().get() && !subscribers.isEmpty()) {
+                                notifyPush(brokerTopic);
                             }
                         } catch (Exception e) {
                             LOGGER.error("brokerTopic:{} push message exception", brokerTopic.getTopic(), e);
@@ -333,8 +355,8 @@ public class BrokerContextImpl implements BrokerContext {
                         AsyncTask task = this;
                         PersistenceMessage storedMessage = providers.getRetainMessageProvider().get(subscriber.getTopic().getTopic(), subscriber.getRetainConsumerOffset());
                         if (storedMessage == null || storedMessage.getCreateTime() > subscriber.getLatestSubscribeTime()) {
-                            subscriber.setReady(true);
                             BrokerTopic topic = subscriber.getTopic();
+                            topic.getQueue().offer(subscriber);
                             notifyPush(topic);
 
                             //完成retain消息的消费，正式开始监听Topic
@@ -344,51 +366,35 @@ public class BrokerContextImpl implements BrokerContext {
                         MqttSession session = subscriber.getMqttSession();
 
                         MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(storedMessage.getPayload()).qos(subscriber.getMqttQoS()).topicName(storedMessage.getTopic());
-                        if (subscriber.getMqttQoS() == MqttQoS.AT_LEAST_ONCE || subscriber.getMqttQoS() == MqttQoS.EXACTLY_ONCE) {
-                            publishBuilder.packetId(session.newPacketId());
-                        }
                         if (session.getMqttVersion() == MqttVersion.MQTT_5) {
                             publishBuilder.publishProperties(new PublishProperties());
                         }
-                        MqttPublishMessage publishMessage = publishBuilder.build();
                         InflightQueue inflightQueue = session.getInflightQueue();
-                        int index = inflightQueue.offer(publishMessage, storedMessage.getOffset());
-                        session.publish(publishMessage, packetId -> {
-                            LOGGER.info("publish retain to client:{} success ,message:{} ", session.getClientId(), publishMessage);
-                            long offset = inflightQueue.commit(index);
-                            if (offset != -1) {
-                                subscriber.setRetainConsumerOffset(offset + 1);
-                                retainPushThreadPool.execute(task);
-                            } else {
-                                LOGGER.error("error...");
-                            }
-
-                        });
+                        inflightQueue.offer(publishBuilder, offset -> {
+                            LOGGER.info("publish retain to client:{} success  ", session.getClientId());
+                            subscriber.setRetainConsumerOffset(offset + 1);
+                            retainPushThreadPool.execute(task);
+                        }, storedMessage.getOffset());
+                        session.flush();
                     }
                 });
             }
         });
         eventBus.subscribe(ServerEventType.SUBSCRIBE_REFRESH_TOPIC, (eventType, subscriber) -> {
             LOGGER.info("刷新订阅关系, {} 订阅了topic: {}", subscriber.getTopicFilterToken().getTopicFilter(), subscriber.getTopic().getTopic());
-            subscriber.setReady(true);
+            subscriber.getTopic().getQueue().offer(subscriber);
         });
     }
 
-    private void notifyPush(BrokerTopic topic) {
-        if (topic.isPushing()) {
+    void notifyPush(BrokerTopic topic) {
+        if (!topic.getSemaphore().tryAcquire()) {
             return;
         }
-        synchronized (topic) {
-            //已加入推送队列
-            if (topic.isPushing()) {
-                return;
-            }
-            try {
-                topic.setPushing(true);
-                pushTopicQueue.put(topic);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+        //已加入推送队列
+        try {
+            pushTopicQueue.put(topic);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -573,6 +579,7 @@ public class BrokerContextImpl implements BrokerContext {
         pushTopicQueue.offer(SHUTDOWN_TOPIC);
         pushThreadPool.shutdown();
         server.shutdown();
+        asynchronousChannelGroup.shutdown();
         pagePool.release();
         //卸载插件
         plugins.forEach(Plugin::uninstall);

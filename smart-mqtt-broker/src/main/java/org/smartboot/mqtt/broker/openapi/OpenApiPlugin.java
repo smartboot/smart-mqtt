@@ -11,6 +11,10 @@ import org.smartboot.mqtt.broker.openapi.controller.DashBoardController;
 import org.smartboot.mqtt.broker.openapi.controller.SubscriptionController;
 import org.smartboot.mqtt.broker.plugin.Plugin;
 import org.smartboot.mqtt.broker.plugin.PluginException;
+import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
+
+import java.nio.channels.AsynchronousChannelGroup;
+import java.util.concurrent.ThreadFactory;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -19,6 +23,9 @@ import org.smartboot.mqtt.broker.plugin.PluginException;
 public class OpenApiPlugin extends Plugin {
     private static final Logger LOGGER = LoggerFactory.getLogger(OpenApiPlugin.class);
     private static final String CONFIG_JSON_PATH = "$['broker']['openapi']";
+    private RestfulBootstrap restfulBootstrap;
+
+    private AsynchronousChannelGroup asynchronousChannelGroup;
 
     @Override
     protected void initPlugin(BrokerContext brokerContext) {
@@ -28,7 +35,15 @@ public class OpenApiPlugin extends Plugin {
             return;
         }
         try {
-            RestfulBootstrap restfulBootstrap = RestfulBootstrap.getInstance(new StaticResourceHandler());
+            asynchronousChannelGroup = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
+                int i;
+
+                @Override
+                public Thread newThread(Runnable r) {
+                    return new Thread(r, "openApi-" + (++i));
+                }
+            });
+            restfulBootstrap = RestfulBootstrap.getInstance(new StaticResourceHandler());
             restfulBootstrap.inspect((httpRequest, response) -> {
                 response.setHeader("Access-Control-Allow-Origin", "*");
                 response.setHeader("Access-Control-Allow-Headers", "*");
@@ -39,7 +54,8 @@ public class OpenApiPlugin extends Plugin {
 
             HttpBootstrap bootstrap = restfulBootstrap.bootstrap();
             bootstrap.setPort(config.getPort());
-            bootstrap.configuration().bannerEnabled(false).host(config.getHost()).readBufferSize(1024 * 8);
+            bootstrap.configuration().bannerEnabled(false).host(config.getHost()).readBufferSize(1024 * 8).group(asynchronousChannelGroup);
+
             bootstrap.start();
             brokerContext.getProviders().setOpenApiBootStrap(restfulBootstrap);
             LOGGER.info("openapi server start success!");
@@ -47,5 +63,11 @@ public class OpenApiPlugin extends Plugin {
             LOGGER.error("start openapi exception", e);
             throw new PluginException("start openapi exception");
         }
+    }
+
+    @Override
+    protected void destroyPlugin() {
+        restfulBootstrap.bootstrap().shutdown();
+        asynchronousChannelGroup.shutdown();
     }
 }

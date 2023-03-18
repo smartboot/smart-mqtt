@@ -80,7 +80,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         } else {
             receiveMaximum = context.getBrokerConfigure().getMaxInflight();
         }
-        session.setInflightQueue(new InflightQueue(receiveMaximum));
+        session.setInflightQueue(new InflightQueue(session, receiveMaximum));
 
         //如果服务端收到清理会话（CleanSession）标志为 1 的连接，除了将 CONNACK 报文中的返回码设置为 0 之外，
         // 还必须将 CONNACK 报文中的当前会话设置（Session Present）标志为 0。
@@ -160,15 +160,11 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
                 SessionStateProvider sessionStateProvider = context.getProviders().getSessionStateProvider();
                 SessionState sessionState = sessionStateProvider.get(session.getClientId());
                 if (sessionState != null) {
-                    session.getResponseConsumers().putAll(sessionState.getResponseConsumers());
                     sessionState.getSubscribers().forEach(session::subscribe);
                     //客户端设置清理会话（CleanSession）标志为 0 重连时，客户端和服务端必须使用原始的报文标识符重发
                     //任何未确认的 PUBLISH 报文（如果 QoS>0）和 PUBREL 报文 [MQTT-4.4.0-1]。这是唯一要求客户端或
                     //服务端重发消息的情况。
-                    session.getResponseConsumers().forEach((key, ackMessage) -> {
-                        session.getResponseConsumers().put(key, ackMessage);
-                        session.write(ackMessage.getOriginalMessage());
-                    });
+
                 }
             }
         }

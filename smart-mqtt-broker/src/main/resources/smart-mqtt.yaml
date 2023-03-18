@@ -1,7 +1,7 @@
 broker:
   name: smart-mqtt # 集群模式需确保唯一性
   port: 1883
-  maxInflight: 8
+  maxInflight: 256
   openapi:
     port: 18083
     host: 0.0.0.0

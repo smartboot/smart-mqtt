@@ -2,7 +2,6 @@ package org.smartboot.mqtt.common.message;
 
 
 import org.smartboot.mqtt.common.MqttWriter;
-import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.exception.MqttException;
 import org.smartboot.socket.util.BufferUtils;
 import org.smartboot.socket.util.DecoderException;
@@ -19,47 +18,6 @@ public final class MqttCodecUtil {
 
     private MqttCodecUtil() {
     }
-
-    public static MqttFixedHeader resetUnusedFields(MqttFixedHeader mqttFixedHeader) {
-        switch (mqttFixedHeader.getMessageType()) {
-            case CONNECT:
-            case CONNACK:
-            case PUBACK:
-            case PUBREC:
-            case PUBCOMP:
-            case SUBACK:
-            case UNSUBACK:
-            case PINGREQ:
-            case PINGRESP:
-            case DISCONNECT:
-                if (mqttFixedHeader.isDup() ||
-                        mqttFixedHeader.getQosLevel() != MqttQoS.AT_MOST_ONCE ||
-                        mqttFixedHeader.isRetain()) {
-                    return new MqttFixedHeader(
-                            mqttFixedHeader.getMessageType(),
-                            false,
-                            MqttQoS.AT_MOST_ONCE,
-                            false,
-                            mqttFixedHeader.remainingLength());
-                }
-                return mqttFixedHeader;
-            case PUBREL:
-            case SUBSCRIBE:
-            case UNSUBSCRIBE:
-                if (mqttFixedHeader.isRetain()) {
-                    return new MqttFixedHeader(
-                            mqttFixedHeader.getMessageType(),
-                            mqttFixedHeader.isDup(),
-                            mqttFixedHeader.getQosLevel(),
-                            false,
-                            mqttFixedHeader.remainingLength());
-                }
-                return mqttFixedHeader;
-            default:
-                return mqttFixedHeader;
-        }
-    }
-
 
     /**
      * 解码变长字节整数，规范1.5.5

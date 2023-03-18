@@ -13,12 +13,9 @@ import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
 import org.smartboot.mqtt.common.message.MqttPubCompMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
-import org.smartboot.mqtt.common.message.MqttPubRelMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
-
-import java.util.function.Consumer;
 
 /**
  * 发布Topic
@@ -78,7 +75,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
             variableHeader = new MqttPubQosVariableHeader(messageId, null);
         }
         MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(variableHeader);
-        session.write(pubAckMessage);
+        session.write(pubAckMessage, false);
         // 消息投递至消息总线
         context.getEventBus().publish(ServerEventType.RECEIVE_PUBLISH_MESSAGE, EventObject.newEventObject(session, mqttPublishMessage));
     }
@@ -101,8 +98,9 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
             variableHeader = new MqttPubQosVariableHeader(mqttPublishMessage.getVariableHeader().getPacketId(), null);
         }
         MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(variableHeader);
+
         //响应监听
-        session.write(pubRecMessage, (Consumer<MqttPubRelMessage>) message -> {
+        session.write(pubRecMessage, message -> {
             //发送pubRel消息。
             //todo
             MqttPubQosVariableHeader qosVariableHeader;
@@ -116,7 +114,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
                 qosVariableHeader = new MqttPubQosVariableHeader(mqttPublishMessage.getVariableHeader().getPacketId(), null);
             }
             MqttPubCompMessage pubRelMessage = new MqttPubCompMessage(qosVariableHeader);
-            session.write(pubRelMessage);
+            session.write(pubRelMessage, false);
             // 消息投递至消息总线
             context.getEventBus().publish(ServerEventType.RECEIVE_PUBLISH_MESSAGE, EventObject.newEventObject(session, mqttPublishMessage));
         });

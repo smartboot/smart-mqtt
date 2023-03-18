@@ -26,12 +26,20 @@ public class MqttFixedHeader {
     public static final MqttFixedHeader PUB_REC_HEADER = new MqttFixedHeader(MqttMessageType.PUBREC, MqttQoS.AT_MOST_ONCE);
     public static final MqttFixedHeader PUB_REL_HEADER = new MqttFixedHeader(MqttMessageType.PUBREL, MqttQoS.AT_LEAST_ONCE);
     public static final MqttFixedHeader PUB_COMP_HEADER = new MqttFixedHeader(MqttMessageType.PUBCOMP, MqttQoS.AT_MOST_ONCE);
+    public static final MqttFixedHeader SUBSCRIBE_HEADER = new MqttFixedHeader(MqttMessageType.SUBSCRIBE, MqttQoS.AT_LEAST_ONCE);
     public static final MqttFixedHeader SUB_ACK_HEADER = new MqttFixedHeader(MqttMessageType.SUBACK, MqttQoS.AT_MOST_ONCE);
     public static final MqttFixedHeader UNSUBSCRIBE_HEADER = new MqttFixedHeader(MqttMessageType.UNSUBSCRIBE, MqttQoS.AT_LEAST_ONCE);
     public static final MqttFixedHeader UNSUB_ACK_HEADER = new MqttFixedHeader(MqttMessageType.UNSUBACK, MqttQoS.AT_MOST_ONCE);
     public static final MqttFixedHeader PING_REQ_HEADER = new MqttFixedHeader(MqttMessageType.PINGREQ, MqttQoS.AT_MOST_ONCE);
     public static final MqttFixedHeader PING_RESP_HEADER = new MqttFixedHeader(MqttMessageType.PINGRESP, MqttQoS.AT_MOST_ONCE);
     public static final MqttFixedHeader DISCONNECT_HEADER = new MqttFixedHeader(MqttMessageType.DISCONNECT, MqttQoS.AT_MOST_ONCE);
+
+    public static final MqttFixedHeader PUB_QOS0_HEADER = new MqttFixedHeader(MqttMessageType.PUBLISH, false, MqttQoS.AT_MOST_ONCE, false);
+    public static final MqttFixedHeader PUB_QOS1_HEADER = new MqttFixedHeader(MqttMessageType.PUBLISH, false, MqttQoS.AT_LEAST_ONCE, false);
+    public static final MqttFixedHeader PUB_QOS2_HEADER = new MqttFixedHeader(MqttMessageType.PUBLISH, false, MqttQoS.EXACTLY_ONCE, false);
+
+    public static final MqttFixedHeader PUB_FAILURE_HEADER = new MqttFixedHeader(MqttMessageType.PUBLISH, false, MqttQoS.FAILURE, false);
+
     private final MqttMessageType messageType;
     /**
      * 重发标志
@@ -42,18 +50,16 @@ public class MqttFixedHeader {
      * 保留标志，是否存储消息
      */
     private final boolean retain;
-    private final int remainingLength;
 
-    public MqttFixedHeader(MqttMessageType messageType, boolean dup, MqttQoS qosLevel, boolean retain, int remainingLength) {
+    public MqttFixedHeader(MqttMessageType messageType, boolean dup, MqttQoS qosLevel, boolean retain) {
         this.messageType = messageType;
         this.dup = dup;
         this.qosLevel = qosLevel;
         this.retain = retain;
-        this.remainingLength = remainingLength;
     }
 
     public MqttFixedHeader(MqttMessageType messageType, MqttQoS qosLevel) {
-        this(messageType, false, qosLevel, false, 0);
+        this(messageType, false, qosLevel, false);
     }
 
     public MqttMessageType getMessageType() {
@@ -71,9 +77,4 @@ public class MqttFixedHeader {
     public boolean isRetain() {
         return retain;
     }
-
-    public int remainingLength() {
-        return remainingLength;
-    }
-
 }

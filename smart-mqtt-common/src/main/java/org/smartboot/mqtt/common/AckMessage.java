@@ -1,8 +1,8 @@
 package org.smartboot.mqtt.common;
 
-import org.smartboot.mqtt.common.message.MqttMessage;
-import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
-import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
+import org.smartboot.mqtt.common.enums.MqttMessageType;
+import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 import java.util.function.Consumer;
 
@@ -14,40 +14,62 @@ public class AckMessage {
     /**
      * 原始消息
      */
-    private final MqttMessage originalMessage;
+    private final MqttPublishMessage originalMessage;
+
+    private MqttMessageType expectMessageType;
     /**
      * 回调事件
      */
-    private Consumer<? extends MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer;
+    private final Consumer<Long> consumer;
 
-    /**
-     * 执行状态
-     */
-    private boolean done;
+    private final long offset;
 
-    public AckMessage(MqttMessage originalMessage, Consumer<? extends MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
+    private boolean commit;
+
+    private final int packetId;
+
+    public AckMessage(MqttPublishMessage originalMessage, int packetId, Consumer<Long> consumer, long offset) {
         this.originalMessage = originalMessage;
         this.consumer = consumer;
+        this.offset = offset;
+        this.packetId = packetId;
+        if (originalMessage.getFixedHeader().getQosLevel() == MqttQoS.AT_LEAST_ONCE) {
+            this.expectMessageType = MqttMessageType.PUBACK;
+        } else if (originalMessage.getFixedHeader().getQosLevel() == MqttQoS.EXACTLY_ONCE) {
+            this.expectMessageType = MqttMessageType.PUBREC;
+        }
     }
 
-    public MqttMessage getOriginalMessage() {
+    public MqttPublishMessage getOriginalMessage() {
         return originalMessage;
     }
 
 
-    public Consumer getConsumer() {
+    public Consumer<Long> getConsumer() {
         return consumer;
     }
 
-    public void setConsumer(Consumer<? extends MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
-        this.consumer = consumer;
+    public MqttMessageType getExpectMessageType() {
+        return expectMessageType;
     }
 
-    public boolean isDone() {
-        return done;
+    public void setExpectMessageType(MqttMessageType expectMessageType) {
+        this.expectMessageType = expectMessageType;
     }
 
-    public void setDone(boolean done) {
-        this.done = done;
+    public long getOffset() {
+        return offset;
+    }
+
+    public boolean isCommit() {
+        return commit;
+    }
+
+    public void setCommit(boolean commit) {
+        this.commit = commit;
+    }
+
+    public int getPacketId() {
+        return packetId;
     }
 }

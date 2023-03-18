@@ -53,7 +53,7 @@ public class MqttPublishMessage extends MqttVariableMessage<MqttPublishVariableH
 
     @Override
     public void decodePlayLoad(ByteBuffer buffer) {
-        int readLength = fixedHeader.remainingLength() - getVariableHeaderLength();
+        int readLength = getRemainingLength() - getVariableHeaderLength();
         if (readLength == 0) {
             payload = EMPTY_BYTES;
         } else {
