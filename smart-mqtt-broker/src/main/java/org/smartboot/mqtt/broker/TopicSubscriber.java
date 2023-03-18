@@ -60,6 +60,9 @@ public class TopicSubscriber {
     }
 
     public void batchPublish(BrokerContext brokerContext) {
+        if (mqttSession.isDisconnect()) {
+            return;
+        }
         semaphore.release();
         publish0(brokerContext, 0);
         mqttSession.flush();
