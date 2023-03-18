@@ -87,7 +87,7 @@ public class TopicSubscriber {
         InflightQueue inflightQueue = mqttSession.getInflightQueue();
         boolean suc = inflightQueue.offer(publishBuilder, offset -> {
             if (mqttQoS == MqttQoS.AT_MOST_ONCE) {
-                nextConsumerOffset++;
+                nextConsumerOffset = persistenceMessage.getOffset() + 1;
             }
             //最早发送的消息若收到响应，则更新点位
             commitNextConsumerOffset(offset + 1);
@@ -106,7 +106,7 @@ public class TopicSubscriber {
         }
         long start = System.currentTimeMillis();
         if (mqttQoS != MqttQoS.AT_MOST_ONCE) {
-            nextConsumerOffset++;
+            nextConsumerOffset = persistenceMessage.getOffset() + 1;
         }
 
         long cost = System.currentTimeMillis() - start;

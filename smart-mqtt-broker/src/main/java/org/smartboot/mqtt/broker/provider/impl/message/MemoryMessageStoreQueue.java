@@ -23,10 +23,15 @@ class MemoryMessageStoreQueue {
 
     public PersistenceMessage get(long offset) {
         PersistenceMessage storedMessage = store[(int) (offset % store.length)];
-        if (storedMessage == null) {
+        if (storedMessage != null && storedMessage.getOffset() == offset) {
+            return storedMessage;
+        }
+        if (offset < putOffset.get()) {
+//            System.out.println("skip...");
+            return store[(int) (putOffset.get() % store.length)];
+        } else {
             return null;
         }
-        return storedMessage.getOffset() == offset ? storedMessage : null;
     }
 
     /**
