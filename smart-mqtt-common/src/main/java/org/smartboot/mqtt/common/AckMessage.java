@@ -28,6 +28,10 @@ public class AckMessage {
 
     private final int packetId;
 
+    private int retryCount;
+
+    private long latestTime;
+
     public AckMessage(MqttPublishMessage originalMessage, int packetId, Consumer<Long> consumer, long offset) {
         this.originalMessage = originalMessage;
         this.consumer = consumer;
@@ -38,6 +42,7 @@ public class AckMessage {
         } else if (originalMessage.getFixedHeader().getQosLevel() == MqttQoS.EXACTLY_ONCE) {
             this.expectMessageType = MqttMessageType.PUBREC;
         }
+        this.latestTime = System.currentTimeMillis();
     }
 
     public MqttPublishMessage getOriginalMessage() {
@@ -71,5 +76,21 @@ public class AckMessage {
 
     public int getPacketId() {
         return packetId;
+    }
+
+    public int getRetryCount() {
+        return retryCount;
+    }
+
+    public void setRetryCount(int retryCount) {
+        this.retryCount = retryCount;
+    }
+
+    public long getLatestTime() {
+        return latestTime;
+    }
+
+    public void setLatestTime(long latestTime) {
+        this.latestTime = latestTime;
     }
 }

@@ -7,6 +7,7 @@ import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.DefaultMqttWriter;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.MqttMessageBuilders;
+import org.smartboot.mqtt.common.QosRetryPlugin;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttQoS;
@@ -206,6 +207,7 @@ public class MqttClient extends AbstractSession {
             }, clientConfigure.getKeepAliveInterval(), TimeUnit.SECONDS);
         }
 //        messageProcessor.addPlugin(new StreamMonitorPlugin<>());
+        messageProcessor.addPlugin(new QosRetryPlugin());
         client = new AioQuickClient(clientConfigure.getHost(), clientConfigure.getPort(), new MqttProtocol(clientConfigure.getMaxPacketSize()), messageProcessor);
         try {
             if (bufferPagePool != null) {
