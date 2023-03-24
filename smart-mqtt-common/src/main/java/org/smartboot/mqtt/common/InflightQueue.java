@@ -186,7 +186,8 @@ public class InflightQueue {
         if (count > 0) {
             //注册超时监听任务
             Attachment attachment = session.session.getAttachment();
-            attachment.put(RETRY_TASK_ATTACH_KEY, () -> session.getInflightQueue().retry(queue[takeIndex]));
+            AckMessage message = queue[takeIndex];
+            attachment.put(RETRY_TASK_ATTACH_KEY, () -> session.getInflightQueue().retry(message));
         }
         return ackMessage.getOffset();
     }
