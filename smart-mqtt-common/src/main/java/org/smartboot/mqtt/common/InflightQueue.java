@@ -85,6 +85,9 @@ public class InflightQueue {
      * 超时重发
      */
     void retry(AckMessage ackMessage) {
+        if (ackMessage.isCommit() || session.isDisconnect()) {
+            return;
+        }
         QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(new Runnable() {
             @Override
             public void run() {
