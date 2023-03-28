@@ -295,7 +295,7 @@ public class BrokerContextImpl implements BrokerContext {
                                 try {
                                     subscriber.batchPublish(BrokerContextImpl.this);
                                 } catch (Exception e) {
-                                    LOGGER.error("batch publish exception:{}", e.getMessage());
+                                    LOGGER.error("batch publish exception:{}", e.getMessage(), e);
                                 }
                             }
                             brokerTopic.getSemaphore().release();
@@ -372,7 +372,7 @@ public class BrokerContextImpl implements BrokerContext {
                             publishBuilder.publishProperties(new PublishProperties());
                         }
                         InflightQueue inflightQueue = session.getInflightQueue();
-                        inflightQueue.offer(publishBuilder, offset -> {
+                        inflightQueue.offer(publishBuilder, (mqtt, offset) -> {
                             LOGGER.info("publish retain to client:{} success  ", session.getClientId());
                             subscriber.setRetainConsumerOffset(offset + 1);
                             retainPushThreadPool.execute(task);

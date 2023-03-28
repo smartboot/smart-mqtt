@@ -1,7 +1,5 @@
 package org.smartboot.mqtt.common;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventBus;
@@ -10,17 +8,21 @@ import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPubQosMessage;
+import org.smartboot.mqtt.common.message.MqttPubRecMessage;
+import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
+import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.transport.AioSession;
 import org.smartboot.socket.util.Attachment;
+import org.smartboot.socket.util.QuickTimerTask;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
@@ -28,12 +30,6 @@ import java.util.function.Consumer;
  * @version V1.0 , 2022/4/12
  */
 public abstract class AbstractSession {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSession.class);
-    private static final int QOS0_PACKET_ID = 0;
-    /**
-     * 用于生成当前会话的报文标识符
-     */
-    private final AtomicInteger packetIdCreator = new AtomicInteger(1);
     private final EventBus eventBus;
     protected String clientId;
     protected AioSession session;
@@ -55,14 +51,31 @@ public abstract class AbstractSession {
     private MqttVersion mqttVersion;
 
     private InflightQueue inflightQueue;
-    protected Map<Integer, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>>> responseConsumers = new ConcurrentHashMap<>();
+    private final Map<Integer, QosMessage> ackMessageCacheMap = new ConcurrentHashMap<>();
 
     public AbstractSession(EventBus eventBus) {
         this.eventBus = eventBus;
     }
 
     public final void write(MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> mqttMessage, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
-        responseConsumers.put(mqttMessage.getVariableHeader().getPacketId(), consumer);
+        QosMessage ackMessage = new QosMessage(mqttMessage, consumer);
+        switch (mqttMessage.getFixedHeader().getQosLevel()) {
+            case AT_MOST_ONCE:
+                ValidateUtils.isTrue(mqttMessage instanceof MqttPubRecMessage, "invalid message instance");
+                //超时移除即可，
+                break;
+            case AT_LEAST_ONCE:
+                ValidateUtils.isTrue(mqttMessage instanceof MqttSubscribeMessage || mqttMessage instanceof MqttUnsubscribeMessage, "invalid message instance");
+                //重新发送subscribe或unSubscribe消息
+                QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(() -> {
+                    if (!ackMessage.isCommit()) {
+                        write(mqttMessage, consumer);
+                    }
+                }, 1, TimeUnit.SECONDS);
+            default:
+                throw new UnsupportedOperationException();
+        }
+        ackMessageCacheMap.put(mqttMessage.getVariableHeader().getPacketId(), ackMessage);
         write(mqttMessage, false);
     }
 
@@ -70,7 +83,9 @@ public abstract class AbstractSession {
         if (message instanceof MqttPubQosMessage && message.getFixedHeader().getMessageType() != MqttMessageType.PUBREL) {
             inflightQueue.notify((MqttPubQosMessage) message);
         } else {
-            responseConsumers.remove(message.getVariableHeader().getPacketId()).accept(message);
+            QosMessage qosMessage = ackMessageCacheMap.remove(message.getVariableHeader().getPacketId());
+            qosMessage.setCommit(true);
+            qosMessage.getConsumer().accept(message);
         }
     }
 
@@ -117,18 +132,6 @@ public abstract class AbstractSession {
 
     public final String getClientId() {
         return clientId;
-    }
-
-    /**
-     * 生成大于0的 packetId
-     */
-    public int newPacketId() {
-        int packageId = packetIdCreator.getAndIncrement();
-        if (packageId <= 0) {
-            packetIdCreator.set(0);
-            return newPacketId();
-        }
-        return packageId;
     }
 
     public InetSocketAddress getRemoteAddress() throws IOException {

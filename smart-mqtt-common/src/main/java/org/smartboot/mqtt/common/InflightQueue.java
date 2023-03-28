@@ -5,9 +5,10 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
-import org.smartboot.mqtt.common.message.MqttPubQosMessage;
+import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPubRelMessage;
-import org.smartboot.mqtt.common.message.MqttPublishMessage;
+import org.smartboot.mqtt.common.message.MqttVariableMessage;
+import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 import org.smartboot.mqtt.common.util.ValidateUtils;
@@ -17,7 +18,6 @@ import org.smartboot.socket.util.QuickTimerTask;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -42,22 +42,20 @@ public class InflightQueue {
         this.session = session;
     }
 
-    public boolean offer(MqttMessageBuilders.PublishBuilder publishBuilder, Consumer<Long> consumer, long offset) {
-        int id = 0;
-        MqttPublishMessage mqttMessage;
+    public <T> boolean offer(MqttMessageBuilders.MessageBuilder publishBuilder, InflightConsumer<T> consumer, T attach) {
+        AckMessage<T> ackMessage;
         synchronized (this) {
             if (count == queue.length) {
                 return false;
             }
-            id = packetId.incrementAndGet();
+            int id = packetId.incrementAndGet();
             // 16位无符号最大值65535
             if (id > 65535) {
                 id = id % queue.length + queue.length;
                 packetId.set(id);
             }
-            publishBuilder.packetId(id);
-            mqttMessage = publishBuilder.build();
-            AckMessage ackMessage = new AckMessage(mqttMessage, id, consumer, offset);
+            MqttPacketIdentifierMessage mqttMessage = publishBuilder.packetId(id).build();
+            ackMessage = new AckMessage<>(id, mqttMessage, consumer, attach);
             queue[putIndex++] = ackMessage;
             if (putIndex == queue.length) {
                 putIndex = 0;
@@ -71,12 +69,10 @@ public class InflightQueue {
 //        System.out.println("publish...");
 
         }
-        session.write(mqttMessage, false);
+        session.write(ackMessage.getOriginalMessage(), false);
         // QOS直接响应
-        if (mqttMessage.getFixedHeader().getQosLevel() == MqttQoS.AT_MOST_ONCE) {
-            long offset1 = commit(id);
-//            ValidateUtils.isTrue(offset1 == -1 || offset1 == offset, "invalid offset");
-            consumer.accept(offset);
+        if (ackMessage.getOriginalMessage().getFixedHeader().getQosLevel() == MqttQoS.AT_MOST_ONCE) {
+            commit(ackMessage);
         }
         return true;
     }
@@ -117,7 +113,8 @@ public class InflightQueue {
                         if (ackMessage.getOriginalMessage().getVersion() == MqttVersion.MQTT_5) {
                             properties = new ReasonProperties();
                         }
-                        MqttPubQosVariableHeader variableHeader = new MqttPubQosVariableHeader(ackMessage.getOriginalMessage().getVariableHeader().getPacketId(), properties);
+                        MqttVariableMessage<? extends MqttPacketIdVariableHeader> message = ackMessage.getOriginalMessage();
+                        MqttPubQosVariableHeader variableHeader = new MqttPubQosVariableHeader(message.getVariableHeader().getPacketId(), properties);
                         MqttPubRelMessage pubRelMessage = new MqttPubRelMessage(variableHeader);
                         session.write(pubRelMessage);
                         break;
@@ -134,14 +131,14 @@ public class InflightQueue {
     /**
      * 理论上该方法只会被读回调线程触发
      */
-    public void notify(MqttPubQosMessage message) {
+    public void notify(MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> message) {
         AckMessage ackMessage = queue[(message.getVariableHeader().getPacketId() - 1) % queue.length];
         ValidateUtils.isTrue(message.getFixedHeader().getMessageType() == ackMessage.getExpectMessageType(), "invalid message type");
+        ackMessage.setResponseMessage(message);
         ackMessage.setLatestTime(System.currentTimeMillis());
         switch (message.getFixedHeader().getMessageType()) {
             case PUBACK: {
-                long offset = commit(message.getVariableHeader().getPacketId());
-                ackMessage.getConsumer().accept(offset);
+                commit(ackMessage);
                 break;
             }
             case PUBREC:
@@ -156,30 +153,31 @@ public class InflightQueue {
                 session.write(pubRelMessage, false);
                 break;
             case PUBCOMP:
-                long offset = commit(message.getVariableHeader().getPacketId());
-                ackMessage.getConsumer().accept(offset);
+                commit(ackMessage);
                 break;
             default:
                 throw new RuntimeException();
         }
     }
 
-    private synchronized long commit(int packetId) {
-        int commitIndex = (packetId - 1) % queue.length;
-        AckMessage ackMessage = queue[commitIndex];
-        ValidateUtils.isTrue(ackMessage.getPacketId() == packetId, "invalid message");
+    private synchronized void commit(AckMessage ackMessage) {
+        int commitIndex = (ackMessage.getAssignedPacketId() - 1) % queue.length;
+        MqttVariableMessage<? extends MqttPacketIdVariableHeader> originalMessage = ackMessage.getOriginalMessage();
+        ValidateUtils.isTrue(originalMessage.getFixedHeader().getQosLevel().value() == 0 || originalMessage.getVariableHeader().getPacketId() == ackMessage.getAssignedPacketId(), "invalid message");
         ackMessage.setCommit(true);
 
         if (commitIndex != takeIndex) {
-            return -1;
+            return;
         }
         queue[takeIndex++] = null;
         count--;
         if (takeIndex == queue.length) {
             takeIndex = 0;
         }
+        ackMessage.getConsumer().accept(ackMessage.getResponseMessage(), ackMessage.getAttach());
         while (count > 0 && queue[takeIndex].isCommit()) {
             ackMessage = queue[takeIndex];
+            ackMessage.getConsumer().accept(ackMessage.getResponseMessage(), ackMessage.getAttach());
             queue[takeIndex++] = null;
             if (takeIndex == queue.length) {
                 takeIndex = 0;
@@ -189,10 +187,9 @@ public class InflightQueue {
         if (count > 0) {
             //注册超时监听任务
             Attachment attachment = session.session.getAttachment();
-            AckMessage message = queue[takeIndex];
-            attachment.put(RETRY_TASK_ATTACH_KEY, () -> session.getInflightQueue().retry(message));
+            AckMessage monitorMessage = queue[takeIndex];
+            attachment.put(RETRY_TASK_ATTACH_KEY, () -> session.getInflightQueue().retry(monitorMessage));
         }
-        return ackMessage.getOffset();
     }
 
     public int getCount() {

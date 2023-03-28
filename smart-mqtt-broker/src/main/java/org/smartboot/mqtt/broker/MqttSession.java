@@ -244,6 +244,7 @@ public class MqttSession extends AbstractSession {
             TopicSubscriber removeSubscriber = subscriber.getTopic().getConsumeOffsets().remove(this);
             retainOffsetCache.put(subscriber.getTopic(), subscriber.getRetainConsumerOffset());
             if (subscriber == removeSubscriber) {
+                removeSubscriber.setEnable(false);
                 LOGGER.debug("remove subscriber:{} success!", subscriber.getTopic().getTopic());
             } else {
                 LOGGER.error("remove subscriber:{} error!", removeSubscriber);

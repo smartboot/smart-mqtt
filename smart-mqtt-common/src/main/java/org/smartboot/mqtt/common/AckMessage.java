@@ -2,41 +2,42 @@ package org.smartboot.mqtt.common;
 
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
-import org.smartboot.mqtt.common.message.MqttPublishMessage;
-
-import java.util.function.Consumer;
+import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
+import org.smartboot.mqtt.common.message.MqttVariableMessage;
+import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/4/14
  */
-public class AckMessage {
+public class AckMessage<T> {
     /**
      * 原始消息
      */
-    private final MqttPublishMessage originalMessage;
+    private final MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> originalMessage;
+    private MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> responseMessage;
+
+    /**
+     * 飞行队列为其分配的packetId
+     */
+    private final int assignedPacketId;
 
     private MqttMessageType expectMessageType;
-    /**
-     * 回调事件
-     */
-    private final Consumer<Long> consumer;
-
-    private final long offset;
 
     private boolean commit;
 
-    private final int packetId;
+    private final InflightConsumer<T> consumer;
 
     private int retryCount;
 
     private long latestTime;
+    private final T attach;
 
-    public AckMessage(MqttPublishMessage originalMessage, int packetId, Consumer<Long> consumer, long offset) {
+    public AckMessage(int packetId, MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> originalMessage, InflightConsumer<T> consumer, T attach) {
+        this.assignedPacketId = packetId;
         this.originalMessage = originalMessage;
         this.consumer = consumer;
-        this.offset = offset;
-        this.packetId = packetId;
+        this.attach = attach;
         if (originalMessage.getFixedHeader().getQosLevel() == MqttQoS.AT_LEAST_ONCE) {
             this.expectMessageType = MqttMessageType.PUBACK;
         } else if (originalMessage.getFixedHeader().getQosLevel() == MqttQoS.EXACTLY_ONCE) {
@@ -45,14 +46,10 @@ public class AckMessage {
         this.latestTime = System.currentTimeMillis();
     }
 
-    public MqttPublishMessage getOriginalMessage() {
+    public MqttVariableMessage<? extends MqttPacketIdVariableHeader> getOriginalMessage() {
         return originalMessage;
     }
 
-
-    public Consumer<Long> getConsumer() {
-        return consumer;
-    }
 
     public MqttMessageType getExpectMessageType() {
         return expectMessageType;
@@ -62,20 +59,12 @@ public class AckMessage {
         this.expectMessageType = expectMessageType;
     }
 
-    public long getOffset() {
-        return offset;
-    }
-
     public boolean isCommit() {
         return commit;
     }
 
     public void setCommit(boolean commit) {
         this.commit = commit;
-    }
-
-    public int getPacketId() {
-        return packetId;
     }
 
     public int getRetryCount() {
@@ -92,5 +81,25 @@ public class AckMessage {
 
     public void setLatestTime(long latestTime) {
         this.latestTime = latestTime;
+    }
+
+    public final InflightConsumer<T> getConsumer() {
+        return consumer;
+    }
+
+    public int getAssignedPacketId() {
+        return assignedPacketId;
+    }
+
+    public MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> getResponseMessage() {
+        return responseMessage;
+    }
+
+    public void setResponseMessage(MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> responseMessage) {
+        this.responseMessage = responseMessage;
+    }
+
+    public T getAttach() {
+        return attach;
     }
 }

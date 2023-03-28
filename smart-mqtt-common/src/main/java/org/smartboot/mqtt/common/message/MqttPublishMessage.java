@@ -13,7 +13,7 @@ import java.nio.ByteBuffer;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttPublishMessage extends MqttVariableMessage<MqttPublishVariableHeader> {
+public class MqttPublishMessage extends MqttPacketIdentifierMessage<MqttPublishVariableHeader> {
     private static final MqttPublishPayload EMPTY_BYTES = new MqttPublishPayload(new byte[0]);
     private MqttPublishPayload payload;
 

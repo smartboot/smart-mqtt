@@ -50,6 +50,7 @@ public class TopicSubscriber {
     private TopicToken topicFilterToken;
 
     private final Semaphore semaphore = new Semaphore(0);
+    private boolean enable = true;
 
     public TopicSubscriber(BrokerTopic topic, MqttSession session, MqttQoS mqttQoS, long nextConsumerOffset, long retainConsumerOffset) {
         this.topic = topic;
@@ -60,7 +61,7 @@ public class TopicSubscriber {
     }
 
     public void batchPublish(BrokerContext brokerContext) {
-        if (mqttSession.isDisconnect()) {
+        if (mqttSession.isDisconnect() || !enable) {
             return;
         }
         semaphore.release();
@@ -88,7 +89,7 @@ public class TopicSubscriber {
         }
 
         InflightQueue inflightQueue = mqttSession.getInflightQueue();
-        boolean suc = inflightQueue.offer(publishBuilder, offset -> {
+        boolean suc = inflightQueue.offer(publishBuilder, (mqtt, offset) -> {
             if (mqttQoS == MqttQoS.AT_MOST_ONCE) {
                 nextConsumerOffset = persistenceMessage.getOffset() + 1;
             }
@@ -164,5 +165,13 @@ public class TopicSubscriber {
 
     public void setTopicFilterToken(TopicToken topicFilterToken) {
         this.topicFilterToken = topicFilterToken;
+    }
+
+    public boolean isEnable() {
+        return enable;
+    }
+
+    public void setEnable(boolean enable) {
+        this.enable = enable;
     }
 }
