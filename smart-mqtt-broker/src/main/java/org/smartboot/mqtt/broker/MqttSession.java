@@ -209,6 +209,7 @@ public class MqttSession extends AbstractSession {
             TopicSubscriber oldOffset = topicFilterSubscriber.getTopicSubscribers().remove(topic.getTopic());
             if (oldOffset != null) {
                 TopicSubscriber consumerOffset = oldOffset.getTopic().getConsumeOffsets().remove(this);
+                consumerOffset.setEnable(false);
                 LOGGER.info("remove topic:{} {},", topic, oldOffset == consumerOffset ? "success" : "fail");
             }
         });
