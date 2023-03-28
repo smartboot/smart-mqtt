@@ -13,12 +13,10 @@ import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventBusImpl;
 import org.smartboot.mqtt.common.eventbus.EventType;
-import org.smartboot.mqtt.common.inflight.InflightConsumer;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttDisconnectMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
-import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPingReqMessage;
 import org.smartboot.mqtt.common.message.MqttPingRespMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
@@ -29,7 +27,6 @@ import org.smartboot.mqtt.common.message.MqttUnsubAckMessage;
 import org.smartboot.mqtt.common.message.payload.MqttConnectPayload;
 import org.smartboot.mqtt.common.message.payload.WillMessage;
 import org.smartboot.mqtt.common.message.variable.MqttConnectVariableHeader;
-import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
@@ -285,16 +282,13 @@ public class MqttClient extends AbstractSession {
         }
 //        MqttUnsubscribeMessage unsubscribedMessage = unsubscribeBuilder.build();
         // wait ack message.
-        getInflightQueue().offer(unsubscribeBuilder, new InflightConsumer<Object>() {
-            @Override
-            public void accept(MqttPacketIdentifierMessage message, Object o) {
-                ValidateUtils.isTrue(message instanceof MqttUnsubAckMessage, "uncorrected message type.");
-                for (String unsubscribedTopic : unsubscribedTopics) {
-                    subscribes.remove(unsubscribedTopic);
-                    wildcardsToken.removeIf(topicToken -> StringUtils.equals(unsubscribedTopic, topicToken.getTopicFilter()));
-                }
+        getInflightQueue().offer(unsubscribeBuilder, (message, o) -> {
+            ValidateUtils.isTrue(message instanceof MqttUnsubAckMessage, "uncorrected message type.");
+            for (String unsubscribedTopic : unsubscribedTopics) {
+                subscribes.remove(unsubscribedTopic);
+                wildcardsToken.removeIf(topicToken -> StringUtils.equals(unsubscribedTopic, topicToken.getTopicFilter()));
             }
-        }, null);
+        });
 //        write(unsubscribedMessage, message -> {
 //            ValidateUtils.isTrue(message instanceof MqttUnsubAckMessage, "uncorrected message type.");
 //            for (String unsubscribedTopic : unsubscribedTopics) {
@@ -357,7 +351,7 @@ public class MqttClient extends AbstractSession {
                 }
                 subAckConsumer.accept(MqttClient.this, minQos);
             }
-        }, null);
+        });
     }
 
     public void notifyResponse(MqttConnAckMessage connAckMessage) {
@@ -397,16 +391,13 @@ public class MqttClient extends AbstractSession {
 
     private void publish(MqttMessageBuilders.PublishBuilder publishBuilder, Consumer<Integer> consumer) {
         InflightQueue inflightQueue = getInflightQueue();
-        boolean suc = inflightQueue.offer(publishBuilder, new InflightConsumer<Object>() {
-            @Override
-            public void accept(MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> message, Object attach) {
-                consumer.accept(message.getVariableHeader().getPacketId());
-                //最早发送的消息若收到响应，则更新点位
-                synchronized (MqttClient.this) {
-                    MqttClient.this.notifyAll();
-                }
+        boolean suc = inflightQueue.offer(publishBuilder, (message, attach) -> {
+            consumer.accept(message.getVariableHeader().getPacketId());
+            //最早发送的消息若收到响应，则更新点位
+            synchronized (MqttClient.this) {
+                MqttClient.this.notifyAll();
             }
-        }, null);
+        });
 
         flush();
         if (!suc) {

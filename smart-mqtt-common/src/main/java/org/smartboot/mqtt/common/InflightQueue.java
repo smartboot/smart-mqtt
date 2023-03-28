@@ -45,6 +45,10 @@ public class InflightQueue {
         this.session = session;
     }
 
+    public boolean offer(MqttMessageBuilders.MessageBuilder publishBuilder, InflightConsumer<Void> consumer) {
+        return offer(publishBuilder, consumer, null);
+    }
+
     public <T> boolean offer(MqttMessageBuilders.MessageBuilder publishBuilder, InflightConsumer<T> consumer, T attach) {
         InflightMessage<T> inflightMessage;
         synchronized (this) {
