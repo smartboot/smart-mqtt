@@ -10,7 +10,6 @@ import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.broker.provider.SessionStateProvider;
 import org.smartboot.mqtt.broker.provider.impl.session.SessionState;
 import org.smartboot.mqtt.common.InflightQueue;
-import org.smartboot.mqtt.common.MqttMessageBuilders;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttProtocolEnum;
 import org.smartboot.mqtt.common.enums.MqttQoS;
@@ -25,6 +24,7 @@ import org.smartboot.mqtt.common.message.variable.MqttConnAckVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttConnectVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectAckProperties;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
+import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 

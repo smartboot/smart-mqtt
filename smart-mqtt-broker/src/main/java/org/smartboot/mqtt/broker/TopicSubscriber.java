@@ -5,12 +5,12 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.provider.PersistenceProvider;
 import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
 import org.smartboot.mqtt.common.InflightQueue;
-import org.smartboot.mqtt.common.MqttMessageBuilders;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
+import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 
 import java.util.concurrent.Semaphore;
 

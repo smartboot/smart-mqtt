@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.common;
+package org.smartboot.mqtt.common.inflight;
 
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
@@ -10,7 +10,7 @@ import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/4/14
  */
-public class AckMessage<T> {
+public class InflightMessage<T> {
     /**
      * 原始消息
      */
@@ -33,7 +33,7 @@ public class AckMessage<T> {
     private long latestTime;
     private final T attach;
 
-    public AckMessage(int packetId, MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> originalMessage, InflightConsumer<T> consumer, T attach) {
+    public InflightMessage(int packetId, MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> originalMessage, InflightConsumer<T> consumer, T attach) {
         this.assignedPacketId = packetId;
         this.originalMessage = originalMessage;
         this.consumer = consumer;

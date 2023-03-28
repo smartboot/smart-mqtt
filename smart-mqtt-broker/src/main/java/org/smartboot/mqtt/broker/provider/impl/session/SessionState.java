@@ -1,7 +1,7 @@
 package org.smartboot.mqtt.broker.provider.impl.session;
 
-import org.smartboot.mqtt.common.AckMessage;
 import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.common.inflight.InflightMessage;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,11 +11,11 @@ import java.util.Map;
  * @version V1.0 , 2022/4/15
  */
 public class SessionState {
-    protected final Map<Integer, AckMessage> responseConsumers = new HashMap<>();
+    protected final Map<Integer, InflightMessage> responseConsumers = new HashMap<>();
     private final Map<String, MqttQoS> subscribers = new HashMap<>();
 
 
-    public Map<Integer, AckMessage> getResponseConsumers() {
+    public Map<Integer, InflightMessage> getResponseConsumers() {
         return responseConsumers;
     }
 

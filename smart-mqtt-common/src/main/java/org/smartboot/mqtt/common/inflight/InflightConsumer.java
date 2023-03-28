@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.common;
+package org.smartboot.mqtt.common.inflight;
 
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;

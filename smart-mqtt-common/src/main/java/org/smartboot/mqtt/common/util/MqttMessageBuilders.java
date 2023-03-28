@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.common;
+package org.smartboot.mqtt.common.util;
 
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
@@ -24,7 +24,7 @@ import java.util.List;
 
 public final class MqttMessageBuilders {
 
-    interface MessageBuilder<T extends MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> {
+    public interface MessageBuilder<T extends MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> {
         MessageBuilder packetId(int packetId);
 
         T build();
