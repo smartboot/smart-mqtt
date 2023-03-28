@@ -3,7 +3,9 @@ package org.smartboot.mqtt.common.inflight;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
-import org.smartboot.mqtt.common.message.MqttVariableMessage;
+import org.smartboot.mqtt.common.message.MqttPublishMessage;
+import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
+import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 
 /**
@@ -38,15 +40,24 @@ public class InflightMessage<T> {
         this.originalMessage = originalMessage;
         this.consumer = consumer;
         this.attach = attach;
-        if (originalMessage.getFixedHeader().getQosLevel() == MqttQoS.AT_LEAST_ONCE) {
-            this.expectMessageType = MqttMessageType.PUBACK;
-        } else if (originalMessage.getFixedHeader().getQosLevel() == MqttQoS.EXACTLY_ONCE) {
-            this.expectMessageType = MqttMessageType.PUBREC;
+        if (originalMessage instanceof MqttSubscribeMessage) {
+            this.expectMessageType = MqttMessageType.SUBACK;
+        } else if (originalMessage instanceof MqttUnsubscribeMessage) {
+            this.expectMessageType = MqttMessageType.UNSUBACK;
+        } else if (originalMessage instanceof MqttPublishMessage) {
+            if (originalMessage.getFixedHeader().getQosLevel() == MqttQoS.AT_LEAST_ONCE) {
+                this.expectMessageType = MqttMessageType.PUBACK;
+            } else if (originalMessage.getFixedHeader().getQosLevel() == MqttQoS.EXACTLY_ONCE) {
+                this.expectMessageType = MqttMessageType.PUBREC;
+            }
+        } else {
+            throw new UnsupportedOperationException();
         }
+
         this.latestTime = System.currentTimeMillis();
     }
 
-    public MqttVariableMessage<? extends MqttPacketIdVariableHeader> getOriginalMessage() {
+    public MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> getOriginalMessage() {
         return originalMessage;
     }
 

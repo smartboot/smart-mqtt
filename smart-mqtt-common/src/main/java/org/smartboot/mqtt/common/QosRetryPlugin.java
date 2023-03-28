@@ -14,6 +14,9 @@ public class QosRetryPlugin extends AbstractPlugin<MqttMessage> {
     @Override
     public void beforeRead(AioSession session) {
         Attachment attachment = session.getAttachment();
+        if (attachment == null) {
+            return;
+        }
         Runnable runnable = attachment.get(InflightQueue.RETRY_TASK_ATTACH_KEY);
         if (runnable != null) {
             try {

@@ -75,6 +75,7 @@ public class InflightQueue {
         session.write(inflightMessage.getOriginalMessage(), false);
         // QOS直接响应
         if (inflightMessage.getOriginalMessage().getFixedHeader().getQosLevel() == MqttQoS.AT_MOST_ONCE) {
+            inflightMessage.setResponseMessage(inflightMessage.getOriginalMessage());
             commit(inflightMessage);
         }
         return true;
@@ -140,7 +141,10 @@ public class InflightQueue {
         inflightMessage.setResponseMessage(message);
         inflightMessage.setLatestTime(System.currentTimeMillis());
         switch (message.getFixedHeader().getMessageType()) {
-            case PUBACK: {
+            case SUBACK:
+            case UNSUBACK:
+            case PUBACK:
+            case PUBCOMP: {
                 commit(inflightMessage);
                 break;
             }
@@ -154,9 +158,6 @@ public class InflightQueue {
                 MqttPubQosVariableHeader variableHeader = new MqttPubQosVariableHeader(message.getVariableHeader().getPacketId(), properties);
                 MqttPubRelMessage pubRelMessage = new MqttPubRelMessage(variableHeader);
                 session.write(pubRelMessage, false);
-                break;
-            case PUBCOMP:
-                commit(inflightMessage);
                 break;
             default:
                 throw new RuntimeException();

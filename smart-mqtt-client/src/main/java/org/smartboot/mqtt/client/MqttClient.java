@@ -313,7 +313,7 @@ public class MqttClient extends AbstractSession {
     }
 
     public MqttClient subscribe(String[] topics, MqttQoS[] qos, BiConsumer<MqttClient, MqttPublishMessage> consumer) {
-        subscribe0(topics, qos, consumer, (mqttClient, mqttQoS) -> {
+        subscribe(topics, qos, consumer, (mqttClient, mqttQoS) -> {
         });
         return this;
     }
