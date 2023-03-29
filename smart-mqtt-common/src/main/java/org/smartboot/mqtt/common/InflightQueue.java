@@ -105,7 +105,7 @@ public class InflightQueue {
                     return;
                 }
                 if (session.isDisconnect()) {
-                    LOGGER.warn("session is disconnect , pause qos monitor.");
+                    LOGGER.debug("session is disconnect , pause qos monitor.");
                     return;
                 }
                 long delay = System.currentTimeMillis() - inflightMessage.getLatestTime();
