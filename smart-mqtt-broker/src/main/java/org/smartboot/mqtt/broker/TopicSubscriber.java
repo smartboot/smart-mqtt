@@ -100,9 +100,7 @@ public class TopicSubscriber {
                 setRetainConsumerOffset(getRetainConsumerOffset() + 1);
             }
             commitRetainConsumerTimestamp(persistenceMessage.getCreateTime());
-//            if (inflightQueue.getCount() == 0) {
             publish0(brokerContext, 0);
-//            }
         });
         // 飞行队列已满
         if (!suc) {
@@ -168,11 +166,7 @@ public class TopicSubscriber {
         this.topicFilterToken = topicFilterToken;
     }
 
-    public boolean isEnable() {
-        return enable;
-    }
-
-    public void setEnable(boolean enable) {
-        this.enable = enable;
+    public void disable() {
+        this.enable = false;
     }
 }
