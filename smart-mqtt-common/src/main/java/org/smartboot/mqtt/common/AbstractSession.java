@@ -7,11 +7,8 @@ import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
-import org.smartboot.mqtt.common.message.MqttPubQosMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
-import org.smartboot.mqtt.common.message.MqttSubAckMessage;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
-import org.smartboot.mqtt.common.message.MqttUnsubAckMessage;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
@@ -82,7 +79,7 @@ public abstract class AbstractSession {
     }
 
     public final void notifyResponse(MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> message) {
-        if ((message instanceof MqttPubQosMessage && message.getFixedHeader().getMessageType() != MqttMessageType.PUBREL) || message instanceof MqttUnsubAckMessage || message instanceof MqttSubAckMessage) {
+        if (message.getFixedHeader().getMessageType() != MqttMessageType.PUBREL) {
             inflightQueue.notify(message);
         } else {
             QosMessage qosMessage = ackMessageCacheMap.remove(message.getVariableHeader().getPacketId());

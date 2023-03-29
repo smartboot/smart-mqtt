@@ -13,9 +13,11 @@ import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
 import org.smartboot.mqtt.common.message.MqttPubCompMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
+import org.smartboot.mqtt.common.message.MqttPubRelMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
+import org.smartboot.mqtt.common.util.ValidateUtils;
 
 /**
  * 发布Topic
@@ -101,6 +103,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
 
         //响应监听
         session.write(pubRecMessage, message -> {
+            ValidateUtils.isTrue(message instanceof MqttPubRelMessage, "invalid message");
             //发送pubRel消息。
             //todo
             MqttPubQosVariableHeader qosVariableHeader;
