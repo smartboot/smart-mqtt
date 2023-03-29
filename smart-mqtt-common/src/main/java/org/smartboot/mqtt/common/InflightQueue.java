@@ -37,11 +37,21 @@ public class InflightQueue {
     private final AtomicInteger packetId = new AtomicInteger(0);
 
     private final AbstractSession session;
+    private boolean lock;
 
     public InflightQueue(AbstractSession session, int size) {
         ValidateUtils.isTrue(size > 0, "inflight must >0");
         this.queue = new InflightMessage[size];
         this.session = session;
+    }
+
+    public synchronized void put(MqttMessageBuilders.MessageBuilder publishBuilder, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) throws InterruptedException {
+        while (count == queue.length) {
+            lock = true;
+            session.flush();
+            wait();
+        }
+        offer(publishBuilder, consumer);
     }
 
     public boolean offer(MqttMessageBuilders.MessageBuilder publishBuilder, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
@@ -72,7 +82,7 @@ public class InflightQueue {
 
         }
         session.write(inflightMessage.getOriginalMessage(), false);
-        // QOS直接响应
+        // QOS0直接响应
         if (inflightMessage.getOriginalMessage().getFixedHeader().getQosLevel() == MqttQoS.AT_MOST_ONCE) {
             inflightMessage.setResponseMessage(inflightMessage.getOriginalMessage());
             commit(inflightMessage);
@@ -186,6 +196,10 @@ public class InflightQueue {
                 takeIndex = 0;
             }
             count--;
+        }
+        if (lock) {
+            lock = false;
+            notifyAll();
         }
         if (count > 0) {
             //注册超时监听任务

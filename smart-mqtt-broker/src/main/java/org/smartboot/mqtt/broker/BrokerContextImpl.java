@@ -373,6 +373,7 @@ public class BrokerContextImpl implements BrokerContext {
                         }
                         InflightQueue inflightQueue = session.getInflightQueue();
                         long offset = storedMessage.getOffset();
+                        // retain消息逐个推送
                         inflightQueue.offer(publishBuilder, (mqtt) -> {
                             LOGGER.info("publish retain to client:{} success  ", session.getClientId());
                             subscriber.setRetainConsumerOffset(offset + 1);

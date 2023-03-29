@@ -13,6 +13,7 @@ import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventBusImpl;
 import org.smartboot.mqtt.common.eventbus.EventType;
+import org.smartboot.mqtt.common.exception.MqttException;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttDisconnectMessage;
@@ -259,7 +260,7 @@ public class MqttClient extends AbstractSession {
         return this;
     }
 
-    public void unsubscribe0(String[] topics) {
+    private void unsubscribe0(String[] topics) {
         Set<String> unsubscribedTopics = new HashSet<>(topics.length);
         for (String unsubscribedTopic : topics) {
             if (subscribes.containsKey(unsubscribedTopic)) {
@@ -280,22 +281,18 @@ public class MqttClient extends AbstractSession {
             ReasonProperties properties = new ReasonProperties();
             unsubscribeBuilder.properties(properties);
         }
-//        MqttUnsubscribeMessage unsubscribedMessage = unsubscribeBuilder.build();
         // wait ack message.
-        getInflightQueue().offer(unsubscribeBuilder, (message) -> {
-            ValidateUtils.isTrue(message instanceof MqttUnsubAckMessage, "uncorrected message type.");
-            for (String unsubscribedTopic : unsubscribedTopics) {
-                subscribes.remove(unsubscribedTopic);
-                wildcardsToken.removeIf(topicToken -> StringUtils.equals(unsubscribedTopic, topicToken.getTopicFilter()));
-            }
-        });
-//        write(unsubscribedMessage, message -> {
-//            ValidateUtils.isTrue(message instanceof MqttUnsubAckMessage, "uncorrected message type.");
-//            for (String unsubscribedTopic : unsubscribedTopics) {
-//                subscribes.remove(unsubscribedTopic);
-//                wildcardsToken.removeIf(topicToken -> StringUtils.equals(unsubscribedTopic, topicToken.getTopicFilter()));
-//            }
-//        });
+        try {
+            getInflightQueue().put(unsubscribeBuilder, (message) -> {
+                ValidateUtils.isTrue(message instanceof MqttUnsubAckMessage, "uncorrected message type.");
+                for (String unsubscribedTopic : unsubscribedTopics) {
+                    subscribes.remove(unsubscribedTopic);
+                    wildcardsToken.removeIf(topicToken -> StringUtils.equals(unsubscribedTopic, topicToken.getTopicFilter()));
+                }
+            });
+        } catch (InterruptedException e) {
+            throw new MqttException("unsubscribe topic exception", e);
+        }
     }
 
     public MqttClient subscribe(String topic, MqttQoS qos, BiConsumer<MqttClient, MqttPublishMessage> consumer) {
@@ -331,27 +328,30 @@ public class MqttClient extends AbstractSession {
             subscribeBuilder.subscribeProperties(new SubscribeProperties());
         }
         MqttSubscribeMessage subscribeMessage = subscribeBuilder.build();
-        getInflightQueue().offer(subscribeBuilder, (message) -> {
-            List<Integer> qosValues = ((MqttSubAckMessage) message).getPayload().grantedQoSLevels();
-            ValidateUtils.isTrue(qosValues.size() == qos.length, "invalid response");
-            ValidateUtils.isTrue(qosValues.size() == qos.length, "invalid response");
-            int i = 0;
-            for (MqttTopicSubscription subscription : subscribeMessage.getPayload().getTopicSubscriptions()) {
-                MqttQoS minQos = MqttQoS.valueOf(Math.min(subscription.getQualityOfService().value(), qosValues.get(i++)));
-                clientConfigure.getTopicListener().subscribe(subscription.getTopicFilter(), subscription.getQualityOfService() == MqttQoS.FAILURE ? MqttQoS.FAILURE : minQos);
-                if (subscription.getQualityOfService() != MqttQoS.FAILURE) {
-                    subscribes.put(subscription.getTopicFilter(), new Subscribe(subscription.getTopicFilter(), minQos, consumer));
-                    //缓存统配匹配的topic
-                    TopicToken topicToken = new TopicToken(subscription.getTopicFilter());
-                    if (topicToken.isWildcards()) {
-                        wildcardsToken.add(topicToken);
+        try {
+            getInflightQueue().put(subscribeBuilder, (message) -> {
+                List<Integer> qosValues = ((MqttSubAckMessage) message).getPayload().grantedQoSLevels();
+                ValidateUtils.isTrue(qosValues.size() == qos.length, "invalid response");
+                int i = 0;
+                for (MqttTopicSubscription subscription : subscribeMessage.getPayload().getTopicSubscriptions()) {
+                    MqttQoS minQos = MqttQoS.valueOf(Math.min(subscription.getQualityOfService().value(), qosValues.get(i++)));
+                    clientConfigure.getTopicListener().subscribe(subscription.getTopicFilter(), subscription.getQualityOfService() == MqttQoS.FAILURE ? MqttQoS.FAILURE : minQos);
+                    if (subscription.getQualityOfService() != MqttQoS.FAILURE) {
+                        subscribes.put(subscription.getTopicFilter(), new Subscribe(subscription.getTopicFilter(), minQos, consumer));
+                        //缓存统配匹配的topic
+                        TopicToken topicToken = new TopicToken(subscription.getTopicFilter());
+                        if (topicToken.isWildcards()) {
+                            wildcardsToken.add(topicToken);
+                        }
+                    } else {
+                        LOGGER.error("subscribe topic:{} fail", subscription.getTopicFilter());
                     }
-                } else {
-                    LOGGER.error("subscribe topic:{} fail", subscription.getTopicFilter());
+                    subAckConsumer.accept(MqttClient.this, minQos);
                 }
-                subAckConsumer.accept(MqttClient.this, minQos);
-            }
-        });
+            });
+        } catch (InterruptedException e) {
+            throw new MqttException("subscribe topic exception", e);
+        }
     }
 
     public void notifyResponse(MqttConnAckMessage connAckMessage) {
@@ -391,25 +391,18 @@ public class MqttClient extends AbstractSession {
 
     private void publish(MqttMessageBuilders.PublishBuilder publishBuilder, Consumer<Integer> consumer) {
         InflightQueue inflightQueue = getInflightQueue();
-        boolean suc = inflightQueue.offer(publishBuilder, (message) -> {
-            consumer.accept(message.getVariableHeader().getPacketId());
-            //最早发送的消息若收到响应，则更新点位
-            synchronized (MqttClient.this) {
-                MqttClient.this.notifyAll();
-            }
-        });
-
-        flush();
-        if (!suc) {
-            try {
-                synchronized (this) {
-                    wait();
+        try {
+            inflightQueue.put(publishBuilder, (message) -> {
+                consumer.accept(message.getVariableHeader().getPacketId());
+                //最早发送的消息若收到响应，则更新点位
+                synchronized (MqttClient.this) {
+                    MqttClient.this.notifyAll();
                 }
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            publish(publishBuilder, consumer);
+            });
+        } catch (InterruptedException e) {
+            throw new MqttException("publish message exception", e);
         }
+        flush();
     }
 
     public MqttClientConfigure getClientConfigure() {
