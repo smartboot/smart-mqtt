@@ -1,7 +1,7 @@
 package org.smartboot.mqtt.broker.provider.impl.session;
 
+import org.smartboot.mqtt.common.InflightMessage;
 import org.smartboot.mqtt.common.enums.MqttQoS;
-import org.smartboot.mqtt.common.inflight.InflightMessage;
 
 import java.util.HashMap;
 import java.util.Map;

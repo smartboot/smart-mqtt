@@ -5,8 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
-import org.smartboot.mqtt.common.inflight.InflightConsumer;
-import org.smartboot.mqtt.common.inflight.InflightMessage;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPubRelMessage;
 import org.smartboot.mqtt.common.message.MqttVariableMessage;
@@ -21,6 +19,7 @@ import org.smartboot.socket.util.QuickTimerTask;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -45,12 +44,8 @@ public class InflightQueue {
         this.session = session;
     }
 
-    public boolean offer(MqttMessageBuilders.MessageBuilder publishBuilder, InflightConsumer<Void> consumer) {
-        return offer(publishBuilder, consumer, null);
-    }
-
-    public <T> boolean offer(MqttMessageBuilders.MessageBuilder publishBuilder, InflightConsumer<T> consumer, T attach) {
-        InflightMessage<T> inflightMessage;
+    public boolean offer(MqttMessageBuilders.MessageBuilder publishBuilder, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
+        InflightMessage inflightMessage;
         synchronized (this) {
             if (count == queue.length) {
                 return false;
@@ -62,7 +57,7 @@ public class InflightQueue {
                 packetId.set(id);
             }
             MqttPacketIdentifierMessage mqttMessage = publishBuilder.packetId(id).build();
-            inflightMessage = new InflightMessage<>(id, mqttMessage, consumer, attach);
+            inflightMessage = new InflightMessage(id, mqttMessage, consumer);
             queue[putIndex++] = inflightMessage;
             if (putIndex == queue.length) {
                 putIndex = 0;
@@ -142,6 +137,7 @@ public class InflightQueue {
     public void notify(MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> message) {
         InflightMessage inflightMessage = queue[(message.getVariableHeader().getPacketId() - 1) % queue.length];
         ValidateUtils.isTrue(message.getFixedHeader().getMessageType() == inflightMessage.getExpectMessageType(), "invalid message type");
+        ValidateUtils.isTrue(message.getVariableHeader().getPacketId() == inflightMessage.getAssignedPacketId(), "invalid message packetId");
         inflightMessage.setResponseMessage(message);
         inflightMessage.setLatestTime(System.currentTimeMillis());
         switch (message.getFixedHeader().getMessageType()) {
@@ -169,12 +165,11 @@ public class InflightQueue {
     }
 
     private synchronized void commit(InflightMessage inflightMessage) {
-        int commitIndex = (inflightMessage.getAssignedPacketId() - 1) % queue.length;
         MqttVariableMessage<? extends MqttPacketIdVariableHeader> originalMessage = inflightMessage.getOriginalMessage();
         ValidateUtils.isTrue(originalMessage.getFixedHeader().getQosLevel().value() == 0 || originalMessage.getVariableHeader().getPacketId() == inflightMessage.getAssignedPacketId(), "invalid message");
         inflightMessage.setCommit(true);
 
-        if (commitIndex != takeIndex) {
+        if ((inflightMessage.getAssignedPacketId() - 1) % queue.length != takeIndex) {
             return;
         }
         queue[takeIndex++] = null;
@@ -182,10 +177,10 @@ public class InflightQueue {
         if (takeIndex == queue.length) {
             takeIndex = 0;
         }
-        inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage(), inflightMessage.getAttach());
+        inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
         while (count > 0 && queue[takeIndex].isCommit()) {
             inflightMessage = queue[takeIndex];
-            inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage(), inflightMessage.getAttach());
+            inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
             queue[takeIndex++] = null;
             if (takeIndex == queue.length) {
                 takeIndex = 0;

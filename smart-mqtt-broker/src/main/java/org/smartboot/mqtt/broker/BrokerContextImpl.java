@@ -372,11 +372,12 @@ public class BrokerContextImpl implements BrokerContext {
                             publishBuilder.publishProperties(new PublishProperties());
                         }
                         InflightQueue inflightQueue = session.getInflightQueue();
-                        inflightQueue.offer(publishBuilder, (mqtt, offset) -> {
+                        long offset = storedMessage.getOffset();
+                        inflightQueue.offer(publishBuilder, (mqtt) -> {
                             LOGGER.info("publish retain to client:{} success  ", session.getClientId());
                             subscriber.setRetainConsumerOffset(offset + 1);
                             retainPushThreadPool.execute(task);
-                        }, storedMessage.getOffset());
+                        });
                         session.flush();
                     }
                 });

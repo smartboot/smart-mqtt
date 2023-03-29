@@ -89,7 +89,8 @@ public class TopicSubscriber {
         }
 
         InflightQueue inflightQueue = mqttSession.getInflightQueue();
-        boolean suc = inflightQueue.offer(publishBuilder, (mqtt, offset) -> {
+        long offset = persistenceMessage.getOffset();
+        boolean suc = inflightQueue.offer(publishBuilder, (mqtt) -> {
             if (mqttQoS == MqttQoS.AT_MOST_ONCE) {
                 nextConsumerOffset = persistenceMessage.getOffset() + 1;
             }
@@ -102,7 +103,7 @@ public class TopicSubscriber {
 //            if (inflightQueue.getCount() == 0) {
             publish0(brokerContext, 0);
 //            }
-        }, persistenceMessage.getOffset());
+        });
         // 飞行队列已满
         if (!suc) {
 //            LOGGER.info("queue is full..." + expectConsumerOffset);

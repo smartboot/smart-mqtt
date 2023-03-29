@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.common.inflight;
+package org.smartboot.mqtt.common;
 
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
@@ -8,11 +8,13 @@ import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 
+import java.util.function.Consumer;
+
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/4/14
  */
-public class InflightMessage<T> {
+public class InflightMessage {
     /**
      * 原始消息
      */
@@ -28,18 +30,16 @@ public class InflightMessage<T> {
 
     private boolean commit;
 
-    private final InflightConsumer<T> consumer;
+    private final Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer;
 
     private int retryCount;
 
     private long latestTime;
-    private final T attach;
 
-    public InflightMessage(int packetId, MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> originalMessage, InflightConsumer<T> consumer, T attach) {
+    public InflightMessage(int packetId, MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> originalMessage, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
         this.assignedPacketId = packetId;
         this.originalMessage = originalMessage;
         this.consumer = consumer;
-        this.attach = attach;
         if (originalMessage instanceof MqttSubscribeMessage) {
             this.expectMessageType = MqttMessageType.SUBACK;
         } else if (originalMessage instanceof MqttUnsubscribeMessage) {
@@ -94,7 +94,7 @@ public class InflightMessage<T> {
         this.latestTime = latestTime;
     }
 
-    public final InflightConsumer<T> getConsumer() {
+    public final Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> getConsumer() {
         return consumer;
     }
 
@@ -110,7 +110,4 @@ public class InflightMessage<T> {
         this.responseMessage = responseMessage;
     }
 
-    public T getAttach() {
-        return attach;
-    }
 }

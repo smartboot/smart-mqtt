@@ -282,7 +282,7 @@ public class MqttClient extends AbstractSession {
         }
 //        MqttUnsubscribeMessage unsubscribedMessage = unsubscribeBuilder.build();
         // wait ack message.
-        getInflightQueue().offer(unsubscribeBuilder, (message, o) -> {
+        getInflightQueue().offer(unsubscribeBuilder, (message) -> {
             ValidateUtils.isTrue(message instanceof MqttUnsubAckMessage, "uncorrected message type.");
             for (String unsubscribedTopic : unsubscribedTopics) {
                 subscribes.remove(unsubscribedTopic);
@@ -331,7 +331,7 @@ public class MqttClient extends AbstractSession {
             subscribeBuilder.subscribeProperties(new SubscribeProperties());
         }
         MqttSubscribeMessage subscribeMessage = subscribeBuilder.build();
-        getInflightQueue().offer(subscribeBuilder, (message, attach) -> {
+        getInflightQueue().offer(subscribeBuilder, (message) -> {
             List<Integer> qosValues = ((MqttSubAckMessage) message).getPayload().grantedQoSLevels();
             ValidateUtils.isTrue(qosValues.size() == qos.length, "invalid response");
             ValidateUtils.isTrue(qosValues.size() == qos.length, "invalid response");
@@ -391,7 +391,7 @@ public class MqttClient extends AbstractSession {
 
     private void publish(MqttMessageBuilders.PublishBuilder publishBuilder, Consumer<Integer> consumer) {
         InflightQueue inflightQueue = getInflightQueue();
-        boolean suc = inflightQueue.offer(publishBuilder, (message, attach) -> {
+        boolean suc = inflightQueue.offer(publishBuilder, (message) -> {
             consumer.accept(message.getVariableHeader().getPacketId());
             //最早发送的消息若收到响应，则更新点位
             synchronized (MqttClient.this) {
