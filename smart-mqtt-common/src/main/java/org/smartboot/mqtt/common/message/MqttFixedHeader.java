@@ -1,5 +1,6 @@
 package org.smartboot.mqtt.common.message;
 
+import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 
@@ -19,7 +20,7 @@ import org.smartboot.mqtt.common.enums.MqttQoS;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttFixedHeader {
+public class MqttFixedHeader extends ToString {
     public static final MqttFixedHeader CONNECT_HEADER = new MqttFixedHeader(MqttMessageType.CONNECT, MqttQoS.AT_MOST_ONCE);
     public static final MqttFixedHeader CONN_ACK_HEADER = new MqttFixedHeader(MqttMessageType.CONNACK, MqttQoS.AT_MOST_ONCE);
     public static final MqttFixedHeader PUB_ACK_HEADER = new MqttFixedHeader(MqttMessageType.PUBACK, MqttQoS.AT_MOST_ONCE);

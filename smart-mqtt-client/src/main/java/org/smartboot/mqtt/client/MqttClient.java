@@ -237,8 +237,8 @@ public class MqttClient extends AbstractSession {
     }
 
     private void consumeTask() {
-        Runnable runnable;
-        while ((runnable = registeredTasks.poll()) != null) {
+        Runnable runnable = registeredTasks.poll();
+        if (runnable != null) {
             runnable.run();
         }
     }
@@ -293,12 +293,10 @@ public class MqttClient extends AbstractSession {
             }
             consumeTask();
         });
-        if (suc) {
-            flush();
-        } else {
+        flush();
+        if (!suc) {
             registeredTasks.offer(() -> unsubscribe0(topics));
         }
-
     }
 
     public MqttClient subscribe(String topic, MqttQoS qos, BiConsumer<MqttClient, MqttPublishMessage> consumer) {
@@ -352,12 +350,11 @@ public class MqttClient extends AbstractSession {
                     LOGGER.error("subscribe topic:{} fail", subscription.getTopicFilter());
                 }
                 subAckConsumer.accept(MqttClient.this, minQos);
-                consumeTask();
             }
+            consumeTask();
         });
-        if (suc) {
-            flush();
-        } else {
+        flush();
+        if (!suc) {
             registeredTasks.offer(() -> subscribe0(topic, qos, consumer, subAckConsumer));
         }
     }
@@ -405,7 +402,6 @@ public class MqttClient extends AbstractSession {
             synchronized (MqttClient.this) {
                 MqttClient.this.notifyAll();
             }
-            consumeTask();
         });
         if (suc) {
             flush();

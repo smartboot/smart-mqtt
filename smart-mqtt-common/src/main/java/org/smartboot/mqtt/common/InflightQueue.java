@@ -71,7 +71,7 @@ public class InflightQueue {
 //        System.out.println("publish...");
 
         }
-        session.write(inflightMessage.getOriginalMessage(), false);
+        session.write(inflightMessage.getOriginalMessage(), count == queue.length);
         // QOS0直接响应
         if (inflightMessage.getOriginalMessage().getFixedHeader().getQosLevel() == MqttQoS.AT_MOST_ONCE) {
             inflightMessage.setResponseMessage(inflightMessage.getOriginalMessage());
@@ -105,7 +105,7 @@ public class InflightQueue {
                     return;
                 }
                 inflightMessage.setLatestTime(System.currentTimeMillis());
-                LOGGER.info("message:{} time out,retry...", inflightMessage.getOriginalMessage());
+                LOGGER.info("message:{} time out,retry...", inflightMessage.getOriginalMessage().getFixedHeader());
                 switch (inflightMessage.getExpectMessageType()) {
                     case PUBACK:
                     case PUBREC:
@@ -195,7 +195,4 @@ public class InflightQueue {
         }
     }
 
-    public int getCount() {
-        return count;
-    }
 }
