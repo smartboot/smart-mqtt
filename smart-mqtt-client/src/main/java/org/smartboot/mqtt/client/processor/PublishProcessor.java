@@ -10,11 +10,13 @@ import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
 import org.smartboot.mqtt.common.message.MqttPubCompMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
+import org.smartboot.mqtt.common.message.MqttPubRelMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttPublishVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 import org.smartboot.mqtt.common.util.TopicTokenUtil;
+import org.smartboot.mqtt.common.util.ValidateUtils;
 
 /**
  * 发布Topic
@@ -93,6 +95,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
 
         MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(variableHeader);
         session.write(pubRecMessage, message -> {
+            ValidateUtils.isTrue(message instanceof MqttPubRelMessage, "invalid message");
             //todo
             ReasonProperties reasonProperties = null;
             if (mqttPublishMessage.getVersion() == MqttVersion.MQTT_5) {

@@ -1,14 +1,16 @@
-package org.smartboot.mqtt.common;
+package org.smartboot.mqtt.common.util;
 
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
+import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.mqtt.common.message.payload.MqttSubscribePayload;
 import org.smartboot.mqtt.common.message.payload.MqttUnsubscribePayload;
+import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttPublishVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttReasonVariableHeader;
@@ -21,6 +23,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class MqttMessageBuilders {
+
+    public interface MessageBuilder<T extends MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> {
+        MessageBuilder packetId(int packetId);
+
+        T build();
+    }
 
     private MqttMessageBuilders() {
     }
@@ -38,7 +46,7 @@ public final class MqttMessageBuilders {
         return new UnsubscribeBuilder();
     }
 
-    public static final class PublishBuilder {
+    public static final class PublishBuilder implements MessageBuilder<MqttPublishMessage> {
         private String topic;
         private boolean retained;
         private MqttQoS qos;
@@ -69,8 +77,9 @@ public final class MqttMessageBuilders {
             return this;
         }
 
-        public void packetId(int packetId) {
+        public PublishBuilder packetId(int packetId) {
             this.packetId = packetId;
+            return this;
         }
 
         public PublishBuilder publishProperties(PublishProperties publishProperties) {
@@ -92,7 +101,7 @@ public final class MqttMessageBuilders {
         }
     }
 
-    public static final class SubscribeBuilder {
+    public static final class SubscribeBuilder implements MessageBuilder<MqttSubscribeMessage> {
 
         private List<MqttTopicSubscription> subscriptions;
         private int packetId;
@@ -131,10 +140,11 @@ public final class MqttMessageBuilders {
         }
     }
 
-    public static final class UnsubscribeBuilder {
+    public static final class UnsubscribeBuilder implements MessageBuilder<MqttUnsubscribeMessage> {
 
         private List<String> topicFilters;
         private int packetId;
+        private ReasonProperties properties;
 
         UnsubscribeBuilder() {
         }
@@ -152,7 +162,11 @@ public final class MqttMessageBuilders {
             return this;
         }
 
-        public MqttUnsubscribeMessage build(ReasonProperties properties) {
+        public void properties(ReasonProperties properties) {
+            this.properties = properties;
+        }
+
+        public MqttUnsubscribeMessage build() {
             MqttUnsubscribePayload mqttSubscribePayload = new MqttUnsubscribePayload(topicFilters);
             MqttReasonVariableHeader variableHeader = new MqttPubQosVariableHeader(packetId, properties);
             return new MqttUnsubscribeMessage(MqttFixedHeader.UNSUBSCRIBE_HEADER, variableHeader, mqttSubscribePayload);

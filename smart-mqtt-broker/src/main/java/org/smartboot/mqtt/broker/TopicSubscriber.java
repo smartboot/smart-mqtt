@@ -5,12 +5,12 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.provider.PersistenceProvider;
 import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
 import org.smartboot.mqtt.common.InflightQueue;
-import org.smartboot.mqtt.common.MqttMessageBuilders;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
+import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 
 import java.util.concurrent.Semaphore;
 
@@ -50,6 +50,7 @@ public class TopicSubscriber {
     private TopicToken topicFilterToken;
 
     private final Semaphore semaphore = new Semaphore(0);
+    private boolean enable = true;
 
     public TopicSubscriber(BrokerTopic topic, MqttSession session, MqttQoS mqttQoS, long nextConsumerOffset, long retainConsumerOffset) {
         this.topic = topic;
@@ -60,7 +61,7 @@ public class TopicSubscriber {
     }
 
     public void batchPublish(BrokerContext brokerContext) {
-        if (mqttSession.isDisconnect()) {
+        if (mqttSession.isDisconnect() || !enable) {
             return;
         }
         semaphore.release();
@@ -88,7 +89,8 @@ public class TopicSubscriber {
         }
 
         InflightQueue inflightQueue = mqttSession.getInflightQueue();
-        boolean suc = inflightQueue.offer(publishBuilder, offset -> {
+        long offset = persistenceMessage.getOffset();
+        boolean suc = inflightQueue.offer(publishBuilder, (mqtt) -> {
             if (mqttQoS == MqttQoS.AT_MOST_ONCE) {
                 nextConsumerOffset = persistenceMessage.getOffset() + 1;
             }
@@ -98,10 +100,8 @@ public class TopicSubscriber {
                 setRetainConsumerOffset(getRetainConsumerOffset() + 1);
             }
             commitRetainConsumerTimestamp(persistenceMessage.getCreateTime());
-//            if (inflightQueue.getCount() == 0) {
             publish0(brokerContext, 0);
-//            }
-        }, persistenceMessage.getOffset());
+        });
         // 飞行队列已满
         if (!suc) {
 //            LOGGER.info("queue is full..." + expectConsumerOffset);
@@ -164,5 +164,9 @@ public class TopicSubscriber {
 
     public void setTopicFilterToken(TopicToken topicFilterToken) {
         this.topicFilterToken = topicFilterToken;
+    }
+
+    public void disable() {
+        this.enable = false;
     }
 }

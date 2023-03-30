@@ -18,7 +18,7 @@ import org.smartboot.mqtt.broker.provider.impl.ConfiguredConnectAuthenticationPr
 import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
-import org.smartboot.mqtt.common.MqttMessageBuilders;
+import org.smartboot.mqtt.common.QosRetryPlugin;
 import org.smartboot.mqtt.common.enums.MqttMetricEnum;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventBus;
@@ -32,6 +32,7 @@ import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.to.MetricItemTO;
+import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.buffer.BufferPagePool;
@@ -141,6 +142,7 @@ public class BrokerContextImpl implements BrokerContext {
                 }
             });
             pagePool = new BufferPagePool(10 * 1024 * 1024, brokerConfigure.getThreadNum(), true);
+            processor.addPlugin(new QosRetryPlugin());
             server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(brokerConfigure.getMaxPacketSize()), processor);
             server.setBannerEnabled(false).setReadBufferSize(brokerConfigure.getBufferSize()).setWriteBuffer(brokerConfigure.getBufferSize(), Math.min(brokerConfigure.getMaxInflight(), 16)).setBufferPagePool(pagePool).setThreadNum(Math.max(2, brokerConfigure.getThreadNum()));
             server.start(asynchronousChannelGroup);
@@ -293,7 +295,7 @@ public class BrokerContextImpl implements BrokerContext {
                                 try {
                                     subscriber.batchPublish(BrokerContextImpl.this);
                                 } catch (Exception e) {
-                                    LOGGER.error("batch publish exception:{}", e.getMessage());
+                                    LOGGER.error("batch publish exception:{}", e.getMessage(), e);
                                 }
                             }
                             brokerTopic.getSemaphore().release();
@@ -370,11 +372,13 @@ public class BrokerContextImpl implements BrokerContext {
                             publishBuilder.publishProperties(new PublishProperties());
                         }
                         InflightQueue inflightQueue = session.getInflightQueue();
-                        inflightQueue.offer(publishBuilder, offset -> {
+                        long offset = storedMessage.getOffset();
+                        // retain消息逐个推送
+                        inflightQueue.offer(publishBuilder, (mqtt) -> {
                             LOGGER.info("publish retain to client:{} success  ", session.getClientId());
                             subscriber.setRetainConsumerOffset(offset + 1);
                             retainPushThreadPool.execute(task);
-                        }, storedMessage.getOffset());
+                        });
                         session.flush();
                     }
                 });

@@ -6,18 +6,18 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.DefaultMqttWriter;
 import org.smartboot.mqtt.common.InflightQueue;
-import org.smartboot.mqtt.common.MqttMessageBuilders;
+import org.smartboot.mqtt.common.QosRetryPlugin;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventBusImpl;
 import org.smartboot.mqtt.common.eventbus.EventType;
+import org.smartboot.mqtt.common.exception.MqttException;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttDisconnectMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
-import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPingReqMessage;
 import org.smartboot.mqtt.common.message.MqttPingRespMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
@@ -25,16 +25,15 @@ import org.smartboot.mqtt.common.message.MqttSubAckMessage;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
 import org.smartboot.mqtt.common.message.MqttUnsubAckMessage;
-import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.mqtt.common.message.payload.MqttConnectPayload;
 import org.smartboot.mqtt.common.message.payload.WillMessage;
 import org.smartboot.mqtt.common.message.variable.MqttConnectVariableHeader;
-import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 import org.smartboot.mqtt.common.message.variable.properties.SubscribeProperties;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
+import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
@@ -206,6 +205,7 @@ public class MqttClient extends AbstractSession {
             }, clientConfigure.getKeepAliveInterval(), TimeUnit.SECONDS);
         }
 //        messageProcessor.addPlugin(new StreamMonitorPlugin<>());
+        messageProcessor.addPlugin(new QosRetryPlugin());
         client = new AioQuickClient(clientConfigure.getHost(), clientConfigure.getPort(), new MqttProtocol(clientConfigure.getMaxPacketSize()), messageProcessor);
         try {
             if (bufferPagePool != null) {
@@ -260,7 +260,7 @@ public class MqttClient extends AbstractSession {
         return this;
     }
 
-    public void unsubscribe0(String[] topics) {
+    private void unsubscribe0(String[] topics) {
         Set<String> unsubscribedTopics = new HashSet<>(topics.length);
         for (String unsubscribedTopic : topics) {
             if (subscribes.containsKey(unsubscribedTopic)) {
@@ -273,27 +273,26 @@ public class MqttClient extends AbstractSession {
             return;
         }
 
-        MqttMessageBuilders.UnsubscribeBuilder unsubscribeBuilder = MqttMessageBuilders.unsubscribe().packetId(newPacketId());
+        MqttMessageBuilders.UnsubscribeBuilder unsubscribeBuilder = MqttMessageBuilders.unsubscribe();
         unsubscribedTopics.forEach(unsubscribeBuilder::addTopicFilter);
 
         //todo
-        ReasonProperties properties = null;
         if (getMqttVersion() == MqttVersion.MQTT_5) {
-            properties = new ReasonProperties();
+            ReasonProperties properties = new ReasonProperties();
+            unsubscribeBuilder.properties(properties);
         }
-        MqttUnsubscribeMessage unsubscribedMessage = unsubscribeBuilder.build(properties);
         // wait ack message.
-        responseConsumers.put(unsubscribedMessage.getVariableHeader().getPacketId(), new Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>>() {
-            @Override
-            public void accept(MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> message) {
+        try {
+            getInflightQueue().put(unsubscribeBuilder, (message) -> {
                 ValidateUtils.isTrue(message instanceof MqttUnsubAckMessage, "uncorrected message type.");
                 for (String unsubscribedTopic : unsubscribedTopics) {
                     subscribes.remove(unsubscribedTopic);
                     wildcardsToken.removeIf(topicToken -> StringUtils.equals(unsubscribedTopic, topicToken.getTopicFilter()));
                 }
-            }
-        });
-        write(unsubscribedMessage);
+            });
+        } catch (InterruptedException e) {
+            throw new MqttException("unsubscribe topic exception", e);
+        }
     }
 
     public MqttClient subscribe(String topic, MqttQoS qos, BiConsumer<MqttClient, MqttPublishMessage> consumer) {
@@ -305,7 +304,7 @@ public class MqttClient extends AbstractSession {
     }
 
     public MqttClient subscribe(String[] topics, MqttQoS[] qos, BiConsumer<MqttClient, MqttPublishMessage> consumer) {
-        subscribe0(topics, qos, consumer, (mqttClient, mqttQoS) -> {
+        subscribe(topics, qos, consumer, (mqttClient, mqttQoS) -> {
         });
         return this;
     }
@@ -320,7 +319,7 @@ public class MqttClient extends AbstractSession {
     }
 
     private void subscribe0(String[] topic, MqttQoS[] qos, BiConsumer<MqttClient, MqttPublishMessage> consumer, BiConsumer<MqttClient, MqttQoS> subAckConsumer) {
-        MqttMessageBuilders.SubscribeBuilder subscribeBuilder = MqttMessageBuilders.subscribe().packetId(newPacketId());
+        MqttMessageBuilders.SubscribeBuilder subscribeBuilder = MqttMessageBuilders.subscribe();
         for (int i = 0; i < topic.length; i++) {
             subscribeBuilder.addSubscription(qos[i], topic[i]);
         }
@@ -329,12 +328,9 @@ public class MqttClient extends AbstractSession {
             subscribeBuilder.subscribeProperties(new SubscribeProperties());
         }
         MqttSubscribeMessage subscribeMessage = subscribeBuilder.build();
-
-        responseConsumers.put(subscribeMessage.getVariableHeader().getPacketId(), new Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>>() {
-            @Override
-            public void accept(MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> message) {
+        try {
+            getInflightQueue().put(subscribeBuilder, (message) -> {
                 List<Integer> qosValues = ((MqttSubAckMessage) message).getPayload().grantedQoSLevels();
-                ValidateUtils.isTrue(qosValues.size() == qos.length, "invalid response");
                 ValidateUtils.isTrue(qosValues.size() == qos.length, "invalid response");
                 int i = 0;
                 for (MqttTopicSubscription subscription : subscribeMessage.getPayload().getTopicSubscriptions()) {
@@ -352,9 +348,10 @@ public class MqttClient extends AbstractSession {
                     }
                     subAckConsumer.accept(MqttClient.this, minQos);
                 }
-            }
-        });
-        write(subscribeMessage);
+            });
+        } catch (InterruptedException e) {
+            throw new MqttException("subscribe topic exception", e);
+        }
     }
 
     public void notifyResponse(MqttConnAckMessage connAckMessage) {
@@ -394,26 +391,18 @@ public class MqttClient extends AbstractSession {
 
     private void publish(MqttMessageBuilders.PublishBuilder publishBuilder, Consumer<Integer> consumer) {
         InflightQueue inflightQueue = getInflightQueue();
-        boolean suc = inflightQueue.offer(publishBuilder, offset -> {
-            consumer.accept(publishBuilder.getPacketId());
-            //最早发送的消息若收到响应，则更新点位
-            if (offset != -1) {
+        try {
+            inflightQueue.put(publishBuilder, (message) -> {
+                consumer.accept(message.getVariableHeader().getPacketId());
+                //最早发送的消息若收到响应，则更新点位
                 synchronized (MqttClient.this) {
                     MqttClient.this.notifyAll();
                 }
-            }
-        }, 1);
-        flush();
-        if (!suc) {
-            try {
-                synchronized (this) {
-                    wait();
-                }
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            publish(publishBuilder, consumer);
+            });
+        } catch (InterruptedException e) {
+            throw new MqttException("publish message exception", e);
         }
+        flush();
     }
 
     public MqttClientConfigure getClientConfigure() {

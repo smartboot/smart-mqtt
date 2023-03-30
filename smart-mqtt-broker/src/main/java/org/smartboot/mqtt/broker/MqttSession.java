@@ -209,6 +209,7 @@ public class MqttSession extends AbstractSession {
             TopicSubscriber oldOffset = topicFilterSubscriber.getTopicSubscribers().remove(topic.getTopic());
             if (oldOffset != null) {
                 TopicSubscriber consumerOffset = oldOffset.getTopic().getConsumeOffsets().remove(this);
+                consumerOffset.disable();
                 LOGGER.info("remove topic:{} {},", topic, oldOffset == consumerOffset ? "success" : "fail");
             }
         });
@@ -244,6 +245,7 @@ public class MqttSession extends AbstractSession {
             TopicSubscriber removeSubscriber = subscriber.getTopic().getConsumeOffsets().remove(this);
             retainOffsetCache.put(subscriber.getTopic(), subscriber.getRetainConsumerOffset());
             if (subscriber == removeSubscriber) {
+                removeSubscriber.disable();
                 LOGGER.debug("remove subscriber:{} success!", subscriber.getTopic().getTopic());
             } else {
                 LOGGER.error("remove subscriber:{} error!", removeSubscriber);
