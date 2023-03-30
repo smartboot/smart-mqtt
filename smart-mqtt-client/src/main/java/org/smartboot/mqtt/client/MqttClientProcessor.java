@@ -34,8 +34,7 @@ public class MqttClientProcessor extends AbstractMessageProcessor<MqttMessage> {
     private final MqttClient mqttClient;
     private static final Map<Class<? extends MqttMessage>, MqttProcessor<? extends MqttMessage>> processors = new HashMap<>();
 
-    public MqttClientProcessor(MqttClient mqttClient) {
-        this.mqttClient = mqttClient;
+    static {
         processors.put(MqttConnAckMessage.class, new ConnAckProcessor());
         processors.put(MqttPubAckMessage.class, new MqttAckProcessor<MqttPubAckMessage>());
         processors.put(MqttPublishMessage.class, new PublishProcessor());
@@ -44,6 +43,10 @@ public class MqttClientProcessor extends AbstractMessageProcessor<MqttMessage> {
         processors.put(MqttPubRelMessage.class, new MqttAckProcessor<MqttPubRelMessage>());
         processors.put(MqttSubAckMessage.class, new MqttAckProcessor<MqttPubRelMessage>());
         processors.put(MqttPingRespMessage.class, new MqttPingRespProcessor());
+    }
+
+    public MqttClientProcessor(MqttClient mqttClient) {
+        this.mqttClient = mqttClient;
     }
 
     @Override
