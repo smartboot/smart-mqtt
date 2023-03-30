@@ -37,21 +37,11 @@ public class InflightQueue {
     private final AtomicInteger packetId = new AtomicInteger(0);
 
     private final AbstractSession session;
-    private boolean lock;
 
     public InflightQueue(AbstractSession session, int size) {
         ValidateUtils.isTrue(size > 0, "inflight must >0");
         this.queue = new InflightMessage[size];
         this.session = session;
-    }
-
-    public synchronized void put(MqttMessageBuilders.MessageBuilder publishBuilder, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) throws InterruptedException {
-        while (count == queue.length) {
-            lock = true;
-            session.flush();
-            wait();
-        }
-        offer(publishBuilder, consumer);
     }
 
     public boolean offer(MqttMessageBuilders.MessageBuilder publishBuilder, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
@@ -108,14 +98,14 @@ public class InflightQueue {
                     LOGGER.debug("session is disconnect , pause qos monitor.");
                     return;
                 }
-                long delay = System.currentTimeMillis() - inflightMessage.getLatestTime();
+                long delay = TimeUnit.SECONDS.toMillis(TIMEOUT) - System.currentTimeMillis() + inflightMessage.getLatestTime();
                 if (delay > 0) {
                     LOGGER.info("the time is not up, try again in {} milliseconds ", delay);
                     QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(this, delay, TimeUnit.MILLISECONDS);
                     return;
                 }
                 inflightMessage.setLatestTime(System.currentTimeMillis());
-                LOGGER.info("time out,retry...");
+                LOGGER.info("message:{} time out,retry...", inflightMessage.getOriginalMessage());
                 switch (inflightMessage.getExpectMessageType()) {
                     case PUBACK:
                     case PUBREC:
@@ -196,10 +186,6 @@ public class InflightQueue {
                 takeIndex = 0;
             }
             count--;
-        }
-        if (lock) {
-            lock = false;
-            notifyAll();
         }
         if (count > 0) {
             //注册超时监听任务
