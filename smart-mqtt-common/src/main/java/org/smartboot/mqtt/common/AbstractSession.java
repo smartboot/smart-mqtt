@@ -1,5 +1,7 @@
 package org.smartboot.mqtt.common;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventBus;
@@ -29,6 +31,7 @@ import java.util.function.Consumer;
  * @version V1.0 , 2022/4/12
  */
 public abstract class AbstractSession {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSession.class);
     private final EventBus eventBus;
     protected String clientId;
     protected AioSession session;
@@ -83,8 +86,12 @@ public abstract class AbstractSession {
             inflightQueue.notify(message);
         } else {
             QosMessage qosMessage = ackMessageCacheMap.remove(message.getVariableHeader().getPacketId());
-            qosMessage.setCommit(true);
-            qosMessage.getConsumer().accept(message);
+            if (qosMessage != null) {
+                qosMessage.setCommit(true);
+                qosMessage.getConsumer().accept(message);
+            } else {
+                LOGGER.info("message is null");
+            }
         }
     }
 

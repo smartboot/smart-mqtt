@@ -38,10 +38,13 @@ public class InflightQueue {
 
     private final AbstractSession session;
 
-    public InflightQueue(AbstractSession session, int size) {
+    private final boolean skipCommit;
+
+    public InflightQueue(AbstractSession session, int size, boolean skipCommit) {
         ValidateUtils.isTrue(size > 0, "inflight must >0");
         this.queue = new InflightMessage[size];
         this.session = session;
+        this.skipCommit = skipCommit;
     }
 
     public boolean offer(MqttMessageBuilders.MessageBuilder publishBuilder, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
@@ -177,15 +180,22 @@ public class InflightQueue {
         if (takeIndex == queue.length) {
             takeIndex = 0;
         }
-        inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
+        if (!skipCommit) {
+            inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
+        }
         while (count > 0 && queue[takeIndex].isCommit()) {
             inflightMessage = queue[takeIndex];
-            inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
+            if (!skipCommit) {
+                inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
+            }
             queue[takeIndex++] = null;
             if (takeIndex == queue.length) {
                 takeIndex = 0;
             }
             count--;
+        }
+        if (skipCommit) {
+            inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
         }
         if (count > 0) {
             //注册超时监听任务
