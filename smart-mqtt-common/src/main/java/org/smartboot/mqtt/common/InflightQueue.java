@@ -74,7 +74,7 @@ public class InflightQueue {
 //        System.out.println("publish...");
 
         }
-        session.write(inflightMessage.getOriginalMessage(), count == queue.length);
+        session.write(inflightMessage.getOriginalMessage(), false);
         // QOS0直接响应
         if (inflightMessage.getOriginalMessage().getFixedHeader().getQosLevel() == MqttQoS.AT_MOST_ONCE) {
             inflightMessage.setResponseMessage(inflightMessage.getOriginalMessage());
