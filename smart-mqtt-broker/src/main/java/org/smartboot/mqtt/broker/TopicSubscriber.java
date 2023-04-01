@@ -90,7 +90,7 @@ public class TopicSubscriber {
 
         InflightQueue inflightQueue = mqttSession.getInflightQueue();
         long offset = persistenceMessage.getOffset();
-        nextConsumerOffset = persistenceMessage.getOffset() + 1;
+        nextConsumerOffset = offset + 1;
         boolean suc = inflightQueue.offer(publishBuilder, (mqtt) -> {
             //最早发送的消息若收到响应，则更新点位
             commitNextConsumerOffset(offset + 1);
