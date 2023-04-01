@@ -51,9 +51,13 @@ public class InflightQueue {
     }
 
     public boolean offer(MqttMessageBuilders.MessageBuilder publishBuilder, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
+        return extracted(publishBuilder, consumer, true);
+    }
+
+    private boolean extracted(MqttMessageBuilders.MessageBuilder publishBuilder, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer, boolean flag) {
         InflightMessage inflightMessage;
         synchronized (this) {
-            if (count == queue.length) {
+            if (count == queue.length || (flag && !pendingQueue.isEmpty())) {
                 pendingQueue.add(new PendingUnit(publishBuilder, consumer));
                 return false;
             }
@@ -147,7 +151,7 @@ public class InflightQueue {
     public void notify(MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> message) {
         InflightMessage inflightMessage = queue[(message.getVariableHeader().getPacketId() - 1) % queue.length];
         ValidateUtils.isTrue(message.getFixedHeader().getMessageType() == inflightMessage.getExpectMessageType(), "invalid message type");
-        ValidateUtils.isTrue(message.getVariableHeader().getPacketId() == inflightMessage.getAssignedPacketId(), "invalid message packetId");
+        ValidateUtils.isTrue(message.getVariableHeader().getPacketId() == inflightMessage.getAssignedPacketId(), "invalid message packetId " + message.getVariableHeader().getPacketId() + " " + inflightMessage.getAssignedPacketId());
         inflightMessage.setResponseMessage(message);
         inflightMessage.setLatestTime(System.currentTimeMillis());
         switch (message.getFixedHeader().getMessageType()) {
@@ -203,7 +207,7 @@ public class InflightQueue {
         }
         PendingUnit pendingUnit;
         while ((pendingUnit = pendingQueue.poll()) != null) {
-            if (!offer(pendingUnit.publishBuilder, pendingUnit.consumer)) {
+            if (!extracted(pendingUnit.publishBuilder, pendingUnit.consumer, false)) {
                 break;
             }
         }
