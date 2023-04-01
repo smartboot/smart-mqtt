@@ -69,7 +69,7 @@ public class TopicSubscriber {
         mqttSession.flush();
     }
 
-    private void publish0(BrokerContext brokerContext, int depth) {
+    private void publish0(BrokerContext brokerContext, final int depth) {
         PersistenceProvider persistenceProvider = brokerContext.getProviders().getPersistenceProvider();
         PersistenceMessage persistenceMessage = persistenceProvider.get(topic.getTopic(), nextConsumerOffset);
         if (persistenceMessage == null) {
@@ -104,7 +104,7 @@ public class TopicSubscriber {
         // 飞行队列已满
         if (suc) {
             //递归处理下一个消息
-            publish0(brokerContext, ++depth);
+            publish0(brokerContext, depth + 1);
         }
 
     }
