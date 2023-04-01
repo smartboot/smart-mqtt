@@ -91,6 +91,7 @@ public class TopicSubscriber {
         InflightQueue inflightQueue = mqttSession.getInflightQueue();
         long offset = persistenceMessage.getOffset();
         nextConsumerOffset = offset + 1;
+        brokerContext.getEventBus().publish(EventType.PUSH_PUBLISH_MESSAGE, mqttSession);
         boolean suc = inflightQueue.offer(publishBuilder, (mqtt) -> {
             //最早发送的消息若收到响应，则更新点位
             commitNextConsumerOffset(offset + 1);
@@ -101,20 +102,11 @@ public class TopicSubscriber {
             publish0(brokerContext, 0);
         });
         // 飞行队列已满
-        if (!suc) {
-            nextConsumerOffset -= 1;
-//            LOGGER.info("queue is full..." + expectConsumerOffset);
-            return;
+        if (suc) {
+            //递归处理下一个消息
+            publish0(brokerContext, ++depth);
         }
-        long start = System.currentTimeMillis();
 
-        long cost = System.currentTimeMillis() - start;
-        if (cost > 100) {
-            System.out.println("publish busy ,cost: " + cost);
-        }
-        brokerContext.getEventBus().publish(EventType.PUSH_PUBLISH_MESSAGE, mqttSession);
-        //递归处理下一个消息
-        publish0(brokerContext, ++depth);
     }
 
     public BrokerTopic getTopic() {

@@ -17,6 +17,7 @@ import org.smartboot.socket.util.AttachKey;
 import org.smartboot.socket.util.Attachment;
 import org.smartboot.socket.util.QuickTimerTask;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -40,6 +41,8 @@ public class InflightQueue {
 
     private final boolean skipCommit;
 
+    private final ConcurrentLinkedQueue<PendingUnit> pendingQueue = new ConcurrentLinkedQueue();
+
     public InflightQueue(AbstractSession session, int size, boolean skipCommit) {
         ValidateUtils.isTrue(size > 0, "inflight must >0");
         this.queue = new InflightMessage[size];
@@ -51,6 +54,7 @@ public class InflightQueue {
         InflightMessage inflightMessage;
         synchronized (this) {
             if (count == queue.length) {
+                pendingQueue.add(new PendingUnit(publishBuilder, consumer));
                 return false;
             }
             int id = packetId.incrementAndGet();
@@ -197,6 +201,12 @@ public class InflightQueue {
             }
             count--;
         }
+        PendingUnit pendingUnit;
+        while ((pendingUnit = pendingQueue.poll()) != null) {
+            if (!offer(pendingUnit.publishBuilder, pendingUnit.consumer)) {
+                break;
+            }
+        }
         if (skipCommit) {
             inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
         }
@@ -208,4 +218,13 @@ public class InflightQueue {
         }
     }
 
+    class PendingUnit {
+        MqttMessageBuilders.MessageBuilder publishBuilder;
+        Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer;
+
+        public PendingUnit(MqttMessageBuilders.MessageBuilder publishBuilder, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
+            this.publishBuilder = publishBuilder;
+            this.consumer = consumer;
+        }
+    }
 }

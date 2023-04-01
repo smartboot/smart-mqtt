@@ -285,7 +285,7 @@ public class MqttClient extends AbstractSession {
             unsubscribeBuilder.properties(properties);
         }
         // wait ack message.
-        boolean suc = getInflightQueue().offer(unsubscribeBuilder, (message) -> {
+        getInflightQueue().offer(unsubscribeBuilder, (message) -> {
             ValidateUtils.isTrue(message instanceof MqttUnsubAckMessage, "uncorrected message type.");
             for (String unsubscribedTopic : unsubscribedTopics) {
                 subscribes.remove(unsubscribedTopic);
@@ -294,9 +294,6 @@ public class MqttClient extends AbstractSession {
             consumeTask();
         });
         flush();
-        if (!suc) {
-            registeredTasks.offer(() -> unsubscribe0(topics));
-        }
     }
 
     public MqttClient subscribe(String topic, MqttQoS qos, BiConsumer<MqttClient, MqttPublishMessage> consumer) {
@@ -332,7 +329,7 @@ public class MqttClient extends AbstractSession {
             subscribeBuilder.subscribeProperties(new SubscribeProperties());
         }
         MqttSubscribeMessage subscribeMessage = subscribeBuilder.build();
-        boolean suc = getInflightQueue().offer(subscribeBuilder, (message) -> {
+        getInflightQueue().offer(subscribeBuilder, (message) -> {
             List<Integer> qosValues = ((MqttSubAckMessage) message).getPayload().grantedQoSLevels();
             ValidateUtils.isTrue(qosValues.size() == qos.length, "invalid response");
             int i = 0;
@@ -354,9 +351,6 @@ public class MqttClient extends AbstractSession {
             consumeTask();
         });
         flush();
-        if (!suc) {
-            registeredTasks.offer(() -> subscribe0(topic, qos, consumer, subAckConsumer));
-        }
     }
 
     public void notifyResponse(MqttConnAckMessage connAckMessage) {
@@ -413,7 +407,6 @@ public class MqttClient extends AbstractSession {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            publish(publishBuilder, consumer);
         }
 
     }
