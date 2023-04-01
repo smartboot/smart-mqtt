@@ -90,10 +90,8 @@ public class TopicSubscriber {
 
         InflightQueue inflightQueue = mqttSession.getInflightQueue();
         long offset = persistenceMessage.getOffset();
+        nextConsumerOffset = persistenceMessage.getOffset() + 1;
         boolean suc = inflightQueue.offer(publishBuilder, (mqtt) -> {
-            if (mqttQoS == MqttQoS.AT_MOST_ONCE) {
-                nextConsumerOffset = persistenceMessage.getOffset() + 1;
-            }
             //最早发送的消息若收到响应，则更新点位
             commitNextConsumerOffset(offset + 1);
             if (persistenceMessage.isRetained()) {
@@ -104,13 +102,11 @@ public class TopicSubscriber {
         });
         // 飞行队列已满
         if (!suc) {
+            nextConsumerOffset -= 1;
 //            LOGGER.info("queue is full..." + expectConsumerOffset);
             return;
         }
         long start = System.currentTimeMillis();
-        if (mqttQoS != MqttQoS.AT_MOST_ONCE) {
-            nextConsumerOffset = persistenceMessage.getOffset() + 1;
-        }
 
         long cost = System.currentTimeMillis() - start;
         if (cost > 100) {

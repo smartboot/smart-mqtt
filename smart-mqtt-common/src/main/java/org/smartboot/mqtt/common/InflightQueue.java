@@ -74,11 +74,14 @@ public class InflightQueue {
 //        System.out.println("publish...");
 
         }
-        session.write(inflightMessage.getOriginalMessage(), false);
+        session.write(inflightMessage.getOriginalMessage(), count == queue.length);
         // QOS0直接响应
         if (inflightMessage.getOriginalMessage().getFixedHeader().getQosLevel() == MqttQoS.AT_MOST_ONCE) {
             inflightMessage.setResponseMessage(inflightMessage.getOriginalMessage());
-            commit(inflightMessage);
+            inflightMessage.setCommit(true);
+            if ((inflightMessage.getAssignedPacketId() - 1) % queue.length == takeIndex) {
+                commit(inflightMessage);
+            }
         }
         return true;
     }
