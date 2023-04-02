@@ -27,6 +27,8 @@ public final class MqttMessageBuilders {
     public interface MessageBuilder<T extends MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> {
         MessageBuilder packetId(int packetId);
 
+        MqttQoS qos();
+
         T build();
     }
 
@@ -82,6 +84,11 @@ public final class MqttMessageBuilders {
             return this;
         }
 
+        @Override
+        public MqttQoS qos() {
+            return qos;
+        }
+
         public PublishBuilder publishProperties(PublishProperties publishProperties) {
             this.publishProperties = publishProperties;
             return this;
@@ -94,7 +101,7 @@ public final class MqttMessageBuilders {
         public MqttPublishMessage build() {
             MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false, qos, retained);
             if (qos != MqttQoS.AT_LEAST_ONCE && qos != MqttQoS.EXACTLY_ONCE) {
-                packetId = -1;
+                packetId = -packetId;
             }
             MqttPublishVariableHeader mqttVariableHeader = new MqttPublishVariableHeader(packetId, topic, publishProperties);
             return new MqttPublishMessage(mqttFixedHeader, mqttVariableHeader, payload);
@@ -124,6 +131,11 @@ public final class MqttMessageBuilders {
         public SubscribeBuilder packetId(int packetId) {
             this.packetId = packetId;
             return this;
+        }
+
+        @Override
+        public MqttQoS qos() {
+            return MqttQoS.AT_LEAST_ONCE;
         }
 
         public SubscribeBuilder subscribeProperties(SubscribeProperties subscribeProperties) {
@@ -160,6 +172,11 @@ public final class MqttMessageBuilders {
         public UnsubscribeBuilder packetId(int packetId) {
             this.packetId = packetId;
             return this;
+        }
+
+        @Override
+        public MqttQoS qos() {
+            return MqttQoS.AT_LEAST_ONCE;
         }
 
         public void properties(ReasonProperties properties) {

@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.DefaultMqttWriter;
+import org.smartboot.mqtt.common.InflightMessage;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.QosRetryPlugin;
 import org.smartboot.mqtt.common.TopicToken;
@@ -390,15 +391,19 @@ public class MqttClient extends AbstractSession {
 
     private void publish(MqttMessageBuilders.PublishBuilder publishBuilder, Consumer<Integer> consumer) {
         InflightQueue inflightQueue = getInflightQueue();
-        boolean suc = inflightQueue.offer(publishBuilder, (message) -> {
+        InflightMessage inflightMessage = inflightQueue.offer(publishBuilder, (message) -> {
             consumer.accept(message.getVariableHeader().getPacketId());
             //最早发送的消息若收到响应，则更新点位
             synchronized (MqttClient.this) {
                 MqttClient.this.notifyAll();
             }
         });
-        if (suc) {
+        if (inflightMessage != null) {
             flush();
+            if (publishBuilder.qos() == MqttQoS.AT_MOST_ONCE) {
+                inflightMessage.setResponseMessage(inflightMessage.getOriginalMessage());
+                inflightQueue.commit(inflightMessage);
+            }
         } else {
             try {
                 synchronized (this) {
@@ -407,6 +412,7 @@ public class MqttClient extends AbstractSession {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
+            publish(publishBuilder, consumer);
         }
 
     }

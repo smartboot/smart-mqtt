@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.provider.PersistenceProvider;
 import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
+import org.smartboot.mqtt.common.InflightMessage;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
@@ -92,7 +93,7 @@ public class TopicSubscriber {
         long offset = persistenceMessage.getOffset();
         nextConsumerOffset = offset + 1;
         brokerContext.getEventBus().publish(EventType.PUSH_PUBLISH_MESSAGE, mqttSession);
-        boolean suc = inflightQueue.offer(publishBuilder, (mqtt) -> {
+        InflightMessage suc = inflightQueue.offer(publishBuilder, (mqtt) -> {
             //最早发送的消息若收到响应，则更新点位
             commitNextConsumerOffset(offset + 1);
             if (persistenceMessage.isRetained()) {
@@ -102,9 +103,13 @@ public class TopicSubscriber {
             publish0(brokerContext, 0);
         });
         // 飞行队列已满
-        if (suc) {
+        if (suc != null) {
             //递归处理下一个消息
             publish0(brokerContext, depth + 1);
+            if (mqttQoS == MqttQoS.AT_MOST_ONCE) {
+                suc.setResponseMessage(suc.getOriginalMessage());
+                inflightQueue.commit(suc);
+            }
         }
 
     }

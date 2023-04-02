@@ -3,7 +3,6 @@ package org.smartboot.mqtt.common;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
-import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPubRelMessage;
@@ -17,7 +16,6 @@ import org.smartboot.socket.util.AttachKey;
 import org.smartboot.socket.util.Attachment;
 import org.smartboot.socket.util.QuickTimerTask;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -41,8 +39,6 @@ public class InflightQueue {
 
     private final boolean skipCommit;
 
-    private final ConcurrentLinkedQueue<PendingUnit> pendingQueue = new ConcurrentLinkedQueue();
-
     public InflightQueue(AbstractSession session, int size, boolean skipCommit) {
         ValidateUtils.isTrue(size > 0, "inflight must >0");
         this.queue = new InflightMessage[size];
@@ -50,16 +46,11 @@ public class InflightQueue {
         this.skipCommit = skipCommit;
     }
 
-    public boolean offer(MqttMessageBuilders.MessageBuilder publishBuilder, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
-        return extracted(publishBuilder, consumer, true);
-    }
-
-    private boolean extracted(MqttMessageBuilders.MessageBuilder publishBuilder, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer, boolean flag) {
+    public InflightMessage offer(MqttMessageBuilders.MessageBuilder publishBuilder, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
         InflightMessage inflightMessage;
         synchronized (this) {
-            if (count == queue.length || (flag && !pendingQueue.isEmpty())) {
-                pendingQueue.add(new PendingUnit(publishBuilder, consumer));
-                return false;
+            if (count == queue.length) {
+                return null;
             }
             int id = packetId.incrementAndGet();
             // 16位无符号最大值65535
@@ -83,15 +74,7 @@ public class InflightQueue {
 
         }
         session.write(inflightMessage.getOriginalMessage(), count == queue.length);
-        // QOS0直接响应
-        if (inflightMessage.getOriginalMessage().getFixedHeader().getQosLevel() == MqttQoS.AT_MOST_ONCE) {
-            inflightMessage.setResponseMessage(inflightMessage.getOriginalMessage());
-            inflightMessage.setCommit(true);
-            if ((inflightMessage.getAssignedPacketId() - 1) % queue.length == takeIndex) {
-                commit(inflightMessage);
-            }
-        }
-        return true;
+        return inflightMessage;
     }
 
     /**
@@ -178,7 +161,7 @@ public class InflightQueue {
         }
     }
 
-    private synchronized void commit(InflightMessage inflightMessage) {
+    public synchronized void commit(InflightMessage inflightMessage) {
         MqttVariableMessage<? extends MqttPacketIdVariableHeader> originalMessage = inflightMessage.getOriginalMessage();
         ValidateUtils.isTrue(originalMessage.getFixedHeader().getQosLevel().value() == 0 || originalMessage.getVariableHeader().getPacketId() == inflightMessage.getAssignedPacketId(), "invalid message");
         inflightMessage.setCommit(true);
@@ -205,12 +188,7 @@ public class InflightQueue {
             }
             count--;
         }
-        PendingUnit pendingUnit;
-        while ((pendingUnit = pendingQueue.poll()) != null) {
-            if (!extracted(pendingUnit.publishBuilder, pendingUnit.consumer, false)) {
-                break;
-            }
-        }
+
         if (skipCommit) {
             inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
         }
@@ -219,16 +197,6 @@ public class InflightQueue {
             Attachment attachment = session.session.getAttachment();
             InflightMessage monitorMessage = queue[takeIndex];
             attachment.put(RETRY_TASK_ATTACH_KEY, () -> session.getInflightQueue().retry(monitorMessage));
-        }
-    }
-
-    class PendingUnit {
-        MqttMessageBuilders.MessageBuilder publishBuilder;
-        Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer;
-
-        public PendingUnit(MqttMessageBuilders.MessageBuilder publishBuilder, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
-            this.publishBuilder = publishBuilder;
-            this.consumer = consumer;
         }
     }
 }
