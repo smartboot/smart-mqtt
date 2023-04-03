@@ -86,9 +86,6 @@ public class InflightQueue {
      * 超时重发
      */
     void retry(InflightMessage inflightMessage) {
-        if (true) {
-            return;
-        }
         if (inflightMessage.isCommit() || session.isDisconnect()) {
             return;
         }
