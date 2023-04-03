@@ -196,8 +196,7 @@ public class InflightQueue {
             InflightMessage monitorMessage = queue[takeIndex];
             attachment.put(RETRY_TASK_ATTACH_KEY, () -> session.getInflightQueue().retry(monitorMessage));
         }
-        int i = queue.length - count;
-        while (i-- > 0) {
+        while (count < queue.length) {
             Runnable runnable = runnables.poll();
             if (runnable != null) {
                 runnable.run();
