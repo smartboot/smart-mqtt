@@ -93,8 +93,8 @@ public class TopicSubscriber {
         }
         //Qos0直接发送
         if (mqttQoS == MqttQoS.AT_MOST_ONCE) {
-            mqttSession.write(publishBuilder.build(),false);
-            publish0(brokerContext, depth+1);
+            mqttSession.write(publishBuilder.build(), false);
+            publish0(brokerContext, depth + 1);
             return;
         }
         InflightQueue inflightQueue = mqttSession.getInflightQueue();
@@ -102,15 +102,29 @@ public class TopicSubscriber {
         nextConsumerOffset = offset + 1;
         brokerContext.getEventBus().publish(EventType.PUSH_PUBLISH_MESSAGE, mqttSession);
 
-        InflightMessage suc = inflightQueue.offer(publishBuilder, (mqtt) -> {
-            //最早发送的消息若收到响应，则更新点位
-            commitNextConsumerOffset(offset + 1);
-            if (persistenceMessage.isRetained()) {
-                setRetainConsumerOffset(getRetainConsumerOffset() + 1);
-            }
-            commitRetainConsumerTimestamp(persistenceMessage.getCreateTime());
-            publish0(brokerContext, 0);
-        });
+        InflightMessage suc;
+        if (depth == 0) {
+            suc = inflightQueue.offer(publishBuilder, (mqtt) -> {
+                //最早发送的消息若收到响应，则更新点位
+                commitNextConsumerOffset(offset + 1);
+                if (persistenceMessage.isRetained()) {
+                    setRetainConsumerOffset(getRetainConsumerOffset() + 1);
+                }
+                commitRetainConsumerTimestamp(persistenceMessage.getCreateTime());
+                publish0(brokerContext, 1);
+            }, () -> publish0(brokerContext, 0));
+        } else {
+            suc = inflightQueue.offer(publishBuilder, (mqtt) -> {
+                //最早发送的消息若收到响应，则更新点位
+                commitNextConsumerOffset(offset + 1);
+                if (persistenceMessage.isRetained()) {
+                    setRetainConsumerOffset(getRetainConsumerOffset() + 1);
+                }
+                commitRetainConsumerTimestamp(persistenceMessage.getCreateTime());
+                publish0(brokerContext, 1);
+            });
+        }
+
         // 飞行队列已满
         if (suc != null) {
             //递归处理下一个消息

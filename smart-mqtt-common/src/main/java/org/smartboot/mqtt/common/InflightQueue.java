@@ -16,6 +16,7 @@ import org.smartboot.socket.util.AttachKey;
 import org.smartboot.socket.util.Attachment;
 import org.smartboot.socket.util.QuickTimerTask;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -36,6 +37,7 @@ public class InflightQueue {
     private final AtomicInteger packetId = new AtomicInteger(0);
 
     private final AbstractSession session;
+    private ConcurrentLinkedQueue<Runnable> runnables = new ConcurrentLinkedQueue<>();
 
 
     public InflightQueue(AbstractSession session, int size) {
@@ -45,9 +47,16 @@ public class InflightQueue {
     }
 
     public InflightMessage offer(MqttMessageBuilders.MessageBuilder publishBuilder, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
+        return offer(publishBuilder, consumer, null);
+    }
+
+    public InflightMessage offer(MqttMessageBuilders.MessageBuilder publishBuilder, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer, Runnable runnable) {
         InflightMessage inflightMessage;
         synchronized (this) {
             if (count == queue.length) {
+                if (runnable != null) {
+                    runnables.offer(runnable);
+                }
                 return null;
             }
             int id = packetId.incrementAndGet();
@@ -189,6 +198,15 @@ public class InflightQueue {
             Attachment attachment = session.session.getAttachment();
             InflightMessage monitorMessage = queue[takeIndex];
             attachment.put(RETRY_TASK_ATTACH_KEY, () -> session.getInflightQueue().retry(monitorMessage));
+        }
+        int i = queue.length - count;
+        while (i-- > 0) {
+            Runnable runnable = runnables.poll();
+            if (runnable != null) {
+                runnable.run();
+            } else {
+                break;
+            }
         }
     }
 }
