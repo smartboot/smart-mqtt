@@ -80,7 +80,10 @@ public class TopicSubscriber {
             return;
         }
         if (depth > 16) {
-//            LOGGER.info("退出递归...");
+            if (semaphore.tryAcquire()) {
+                topic.getQueue().offer(this);
+                topic.getVersion().incrementAndGet();
+            }
             return;
         }
 
@@ -88,11 +91,17 @@ public class TopicSubscriber {
         if (mqttSession.getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());
         }
-
+        //Qos0直接发送
+        if (mqttQoS == MqttQoS.AT_MOST_ONCE) {
+            mqttSession.write(publishBuilder.build(),false);
+            publish0(brokerContext, depth+1);
+            return;
+        }
         InflightQueue inflightQueue = mqttSession.getInflightQueue();
         long offset = persistenceMessage.getOffset();
         nextConsumerOffset = offset + 1;
         brokerContext.getEventBus().publish(EventType.PUSH_PUBLISH_MESSAGE, mqttSession);
+
         InflightMessage suc = inflightQueue.offer(publishBuilder, (mqtt) -> {
             //最早发送的消息若收到响应，则更新点位
             commitNextConsumerOffset(offset + 1);
@@ -106,10 +115,6 @@ public class TopicSubscriber {
         if (suc != null) {
             //递归处理下一个消息
             publish0(brokerContext, depth + 1);
-            if (mqttQoS == MqttQoS.AT_MOST_ONCE) {
-                suc.setResponseMessage(suc.getOriginalMessage());
-                inflightQueue.commit(suc);
-            }
         }
 
     }

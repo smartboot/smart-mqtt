@@ -154,7 +154,7 @@ public class MqttClient extends AbstractSession {
 
             //连接成功,注册订阅消息
             if (mqttConnAckMessage.getVariableHeader().connectReturnCode() == MqttConnectReturnCode.CONNECTION_ACCEPTED) {
-                setInflightQueue(new InflightQueue(this, 16, false));
+                setInflightQueue(new InflightQueue(this, 16));
                 connected = true;
                 consumeTask();
                 //重连情况下重新触发订阅逻辑

@@ -37,13 +37,11 @@ public class InflightQueue {
 
     private final AbstractSession session;
 
-    private final boolean skipCommit;
 
-    public InflightQueue(AbstractSession session, int size, boolean skipCommit) {
+    public InflightQueue(AbstractSession session, int size) {
         ValidateUtils.isTrue(size > 0, "inflight must >0");
         this.queue = new InflightMessage[size];
         this.session = session;
-        this.skipCommit = skipCommit;
     }
 
     public InflightMessage offer(MqttMessageBuilders.MessageBuilder publishBuilder, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
@@ -67,11 +65,9 @@ public class InflightQueue {
             count++;
 
             //启动消息质量监测
-            if (count == 1 && mqttMessage.getFixedHeader().getQosLevel().value() > 0) {
+            if (count == 1) {
                 retry(inflightMessage);
             }
-//        System.out.println("publish...");
-
         }
         session.write(inflightMessage.getOriginalMessage(), count == queue.length);
         return inflightMessage;
@@ -81,6 +77,9 @@ public class InflightQueue {
      * 超时重发
      */
     void retry(InflightMessage inflightMessage) {
+        if (true) {
+            return;
+        }
         if (inflightMessage.isCommit() || session.isDisconnect()) {
             return;
         }
@@ -174,14 +173,10 @@ public class InflightQueue {
         if (takeIndex == queue.length) {
             takeIndex = 0;
         }
-        if (!skipCommit) {
-            inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
-        }
+        inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
         while (count > 0 && queue[takeIndex].isCommit()) {
             inflightMessage = queue[takeIndex];
-            if (!skipCommit) {
-                inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
-            }
+            inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
             queue[takeIndex++] = null;
             if (takeIndex == queue.length) {
                 takeIndex = 0;
@@ -189,9 +184,6 @@ public class InflightQueue {
             count--;
         }
 
-        if (skipCommit) {
-            inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
-        }
         if (count > 0) {
             //注册超时监听任务
             Attachment attachment = session.session.getAttachment();
