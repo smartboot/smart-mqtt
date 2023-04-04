@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.DefaultMqttWriter;
+import org.smartboot.mqtt.common.InflightMessage;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.QosRetryPlugin;
 import org.smartboot.mqtt.common.TopicToken;
@@ -237,8 +238,8 @@ public class MqttClient extends AbstractSession {
     }
 
     private void consumeTask() {
-        Runnable runnable;
-        while ((runnable = registeredTasks.poll()) != null) {
+        Runnable runnable = registeredTasks.poll();
+        if (runnable != null) {
             runnable.run();
         }
     }
@@ -285,7 +286,7 @@ public class MqttClient extends AbstractSession {
             unsubscribeBuilder.properties(properties);
         }
         // wait ack message.
-        boolean suc = getInflightQueue().offer(unsubscribeBuilder, (message) -> {
+        getInflightQueue().offer(unsubscribeBuilder, (message) -> {
             ValidateUtils.isTrue(message instanceof MqttUnsubAckMessage, "uncorrected message type.");
             for (String unsubscribedTopic : unsubscribedTopics) {
                 subscribes.remove(unsubscribedTopic);
@@ -293,12 +294,7 @@ public class MqttClient extends AbstractSession {
             }
             consumeTask();
         });
-        if (suc) {
-            flush();
-        } else {
-            registeredTasks.offer(() -> unsubscribe0(topics));
-        }
-
+        flush();
     }
 
     public MqttClient subscribe(String topic, MqttQoS qos, BiConsumer<MqttClient, MqttPublishMessage> consumer) {
@@ -334,7 +330,7 @@ public class MqttClient extends AbstractSession {
             subscribeBuilder.subscribeProperties(new SubscribeProperties());
         }
         MqttSubscribeMessage subscribeMessage = subscribeBuilder.build();
-        boolean suc = getInflightQueue().offer(subscribeBuilder, (message) -> {
+        getInflightQueue().offer(subscribeBuilder, (message) -> {
             List<Integer> qosValues = ((MqttSubAckMessage) message).getPayload().grantedQoSLevels();
             ValidateUtils.isTrue(qosValues.size() == qos.length, "invalid response");
             int i = 0;
@@ -352,14 +348,10 @@ public class MqttClient extends AbstractSession {
                     LOGGER.error("subscribe topic:{} fail", subscription.getTopicFilter());
                 }
                 subAckConsumer.accept(MqttClient.this, minQos);
-                consumeTask();
             }
+            consumeTask();
         });
-        if (suc) {
-            flush();
-        } else {
-            registeredTasks.offer(() -> subscribe0(topic, qos, consumer, subAckConsumer));
-        }
+        flush();
     }
 
     public void notifyResponse(MqttConnAckMessage connAckMessage) {
@@ -398,17 +390,25 @@ public class MqttClient extends AbstractSession {
     }
 
     private void publish(MqttMessageBuilders.PublishBuilder publishBuilder, Consumer<Integer> consumer) {
+        if (publishBuilder.qos() == MqttQoS.AT_MOST_ONCE) {
+            write(publishBuilder.build());
+            consumer.accept(0);
+            return;
+        }
         InflightQueue inflightQueue = getInflightQueue();
-        boolean suc = inflightQueue.offer(publishBuilder, (message) -> {
+        InflightMessage inflightMessage = inflightQueue.offer(publishBuilder, (message) -> {
             consumer.accept(message.getVariableHeader().getPacketId());
             //最早发送的消息若收到响应，则更新点位
             synchronized (MqttClient.this) {
                 MqttClient.this.notifyAll();
             }
-            consumeTask();
         });
-        if (suc) {
+        if (inflightMessage != null) {
             flush();
+            if (publishBuilder.qos() == MqttQoS.AT_MOST_ONCE) {
+                inflightMessage.setResponseMessage(inflightMessage.getOriginalMessage());
+                inflightQueue.commit(inflightMessage);
+            }
         } else {
             try {
                 synchronized (this) {

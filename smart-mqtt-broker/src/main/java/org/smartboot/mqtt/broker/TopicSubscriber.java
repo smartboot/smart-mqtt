@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.provider.PersistenceProvider;
 import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
+import org.smartboot.mqtt.common.InflightMessage;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
@@ -69,7 +70,7 @@ public class TopicSubscriber {
         mqttSession.flush();
     }
 
-    private void publish0(BrokerContext brokerContext, int depth) {
+    private void publish0(BrokerContext brokerContext, final int depth) {
         PersistenceProvider persistenceProvider = brokerContext.getProviders().getPersistenceProvider();
         PersistenceMessage persistenceMessage = persistenceProvider.get(topic.getTopic(), nextConsumerOffset);
         if (persistenceMessage == null) {
@@ -79,7 +80,10 @@ public class TopicSubscriber {
             return;
         }
         if (depth > 16) {
-//            LOGGER.info("退出递归...");
+            if (semaphore.tryAcquire()) {
+                topic.getQueue().offer(this);
+                topic.getVersion().incrementAndGet();
+            }
             return;
         }
 
@@ -87,38 +91,46 @@ public class TopicSubscriber {
         if (mqttSession.getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());
         }
-
-        InflightQueue inflightQueue = mqttSession.getInflightQueue();
-        long offset = persistenceMessage.getOffset();
-        boolean suc = inflightQueue.offer(publishBuilder, (mqtt) -> {
-            if (mqttQoS == MqttQoS.AT_MOST_ONCE) {
-                nextConsumerOffset = persistenceMessage.getOffset() + 1;
-            }
-            //最早发送的消息若收到响应，则更新点位
-            commitNextConsumerOffset(offset + 1);
-            if (persistenceMessage.isRetained()) {
-                setRetainConsumerOffset(getRetainConsumerOffset() + 1);
-            }
-            commitRetainConsumerTimestamp(persistenceMessage.getCreateTime());
-            publish0(brokerContext, 0);
-        });
-        // 飞行队列已满
-        if (!suc) {
-//            LOGGER.info("queue is full..." + expectConsumerOffset);
+        //Qos0直接发送
+        if (mqttQoS == MqttQoS.AT_MOST_ONCE) {
+            mqttSession.write(publishBuilder.build(), false);
+            publish0(brokerContext, depth + 1);
             return;
         }
-        long start = System.currentTimeMillis();
-        if (mqttQoS != MqttQoS.AT_MOST_ONCE) {
-            nextConsumerOffset = persistenceMessage.getOffset() + 1;
+        InflightQueue inflightQueue = mqttSession.getInflightQueue();
+        long offset = persistenceMessage.getOffset();
+        nextConsumerOffset = offset + 1;
+        brokerContext.getEventBus().publish(EventType.PUSH_PUBLISH_MESSAGE, mqttSession);
+
+        InflightMessage suc;
+        if (depth == 0) {
+            suc = inflightQueue.offer(publishBuilder, (mqtt) -> {
+                //最早发送的消息若收到响应，则更新点位
+                commitNextConsumerOffset(offset + 1);
+                if (persistenceMessage.isRetained()) {
+                    setRetainConsumerOffset(getRetainConsumerOffset() + 1);
+                }
+                commitRetainConsumerTimestamp(persistenceMessage.getCreateTime());
+                publish0(brokerContext, 1);
+            }, () -> publish0(brokerContext, 0));
+        } else {
+            suc = inflightQueue.offer(publishBuilder, (mqtt) -> {
+                //最早发送的消息若收到响应，则更新点位
+                commitNextConsumerOffset(offset + 1);
+                if (persistenceMessage.isRetained()) {
+                    setRetainConsumerOffset(getRetainConsumerOffset() + 1);
+                }
+                commitRetainConsumerTimestamp(persistenceMessage.getCreateTime());
+                publish0(brokerContext, 1);
+            });
         }
 
-        long cost = System.currentTimeMillis() - start;
-        if (cost > 100) {
-            System.out.println("publish busy ,cost: " + cost);
+        // 飞行队列已满
+        if (suc != null) {
+            //递归处理下一个消息
+            publish0(brokerContext, depth + 1);
         }
-        brokerContext.getEventBus().publish(EventType.PUSH_PUBLISH_MESSAGE, mqttSession);
-        //递归处理下一个消息
-        publish0(brokerContext, ++depth);
+
     }
 
     public BrokerTopic getTopic() {
