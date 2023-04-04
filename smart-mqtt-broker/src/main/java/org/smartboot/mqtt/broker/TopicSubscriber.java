@@ -91,17 +91,17 @@ public class TopicSubscriber {
         if (mqttSession.getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());
         }
+
+        InflightQueue inflightQueue = mqttSession.getInflightQueue();
+        long offset = persistenceMessage.getOffset();
+        nextConsumerOffset = offset + 1;
+        brokerContext.getEventBus().publish(EventType.PUSH_PUBLISH_MESSAGE, mqttSession);
         //Qos0直接发送
         if (mqttQoS == MqttQoS.AT_MOST_ONCE) {
             mqttSession.write(publishBuilder.build(), false);
             publish0(brokerContext, depth + 1);
             return;
         }
-        InflightQueue inflightQueue = mqttSession.getInflightQueue();
-        long offset = persistenceMessage.getOffset();
-        nextConsumerOffset = offset + 1;
-        brokerContext.getEventBus().publish(EventType.PUSH_PUBLISH_MESSAGE, mqttSession);
-
         InflightMessage suc;
         if (depth == 0) {
             suc = inflightQueue.offer(publishBuilder, (mqtt) -> {
