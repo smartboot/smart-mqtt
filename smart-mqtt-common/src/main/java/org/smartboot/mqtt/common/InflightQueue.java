@@ -37,7 +37,7 @@ public class InflightQueue {
     private final AtomicInteger packetId = new AtomicInteger(0);
 
     private final AbstractSession session;
-    private ConcurrentLinkedQueue<Runnable> runnables = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Runnable> runnables = new ConcurrentLinkedQueue<>();
 
 
     public InflightQueue(AbstractSession session, int size) {

@@ -390,6 +390,11 @@ public class MqttClient extends AbstractSession {
     }
 
     private void publish(MqttMessageBuilders.PublishBuilder publishBuilder, Consumer<Integer> consumer) {
+        if (publishBuilder.qos() == MqttQoS.AT_MOST_ONCE) {
+            write(publishBuilder.build());
+            consumer.accept(0);
+            return;
+        }
         InflightQueue inflightQueue = getInflightQueue();
         InflightMessage inflightMessage = inflightQueue.offer(publishBuilder, (message) -> {
             consumer.accept(message.getVariableHeader().getPacketId());
