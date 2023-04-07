@@ -18,6 +18,11 @@ public class OpenApi {
 
     public static final String SUBSCRIPTIONS = BASE_API + "/subscriptions";
 
+    /**
+     * 获取Broker列表
+     */
+    public static final String BROKERS = BASE_API + "/brokers";
+
     public static final String SUBSCRIPTIONS_SUBSCRIPTION = SUBSCRIPTIONS + "/subscription";
     public static final String SUBSCRIPTIONS_TOPICS = SUBSCRIPTIONS + "/topics";
 
