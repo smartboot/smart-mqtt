@@ -106,7 +106,7 @@ export default {
             console.log(data)
             const array=[];
             data.map(broker=>{
-                array.push({label:broker["name"],value:broker['ipAddress']})
+                array.push({label:broker["name"],value:broker['ipAddress']+":"+broker['port']})
             })
             brokerList.value=array;
         }

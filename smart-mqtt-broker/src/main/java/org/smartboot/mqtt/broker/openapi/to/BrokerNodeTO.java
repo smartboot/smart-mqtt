@@ -32,6 +32,11 @@ public class BrokerNodeTO {
     private String ipAddress;
 
     /**
+     * Broker端口号
+     */
+    private int port;
+
+    /**
      * 服务进程
      */
     private String pid;
@@ -108,5 +113,13 @@ public class BrokerNodeTO {
 
     public void setIpAddress(String ipAddress) {
         this.ipAddress = ipAddress;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
     }
 }
