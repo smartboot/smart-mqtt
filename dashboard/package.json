@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@antv/g2": "v4.2.8",
-    "@layui/layui-vue": "1.8.6",
+    "@layui/layui-vue": "1.10.0",
     "axios": "^1.2.1",
     "echarts": "^5.4.1",
     "js-base64": "^3.7.2",
