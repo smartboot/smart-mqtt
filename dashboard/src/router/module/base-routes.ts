@@ -74,15 +74,15 @@ export default [
             },
         ]
     },
-    {
-        path: '/chatGPT',
-        component: BaseLayout,
-        children:[
-            {
-                path: '/chatGPT',
-                component: () => import('../../views/im/chatGPT.vue'),
-                meta: {title: 'ChatGPT', requireAuth: true},
-            },
-        ]
-    }
+    // {
+    //     path: '/chatGPT',
+    //     component: BaseLayout,
+    //     children:[
+    //         {
+    //             path: '/chatGPT',
+    //             component: () => import('../../views/im/chatGPT.vue'),
+    //             meta: {title: 'ChatGPT', requireAuth: true},
+    //         },
+    //     ]
+    // }
 ]
