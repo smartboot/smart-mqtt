@@ -10,27 +10,31 @@
         <lay-card>
           <lay-row :space="10">
             <lay-col :md="8">
-              <a class="agency">
+              <a >
                 <h3>连接数</h3>
                 <p>
                   <cite>
+                      <h1>
                     <lay-count-up :end-val="metric.client_online.value" :duration="2000"></lay-count-up>
+                      </h1>
                   </cite>
                 </p>
               </a>
             </lay-col>
             <lay-col :md="8">
-              <a class="agency">
+              <a >
                 <h3>主题数</h3>
                 <p>
                   <cite>
+                      <h1>
                     <lay-count-up :end-val="metric.topic_count.value" :duration="2000"></lay-count-up>
+                      </h1>
                   </cite>
                 </p>
               </a>
             </lay-col>
             <lay-col :md="8">
-              <a class="agency">
+              <a >
                 <h3>订阅数</h3>
                 <p>
                   <cite>
@@ -45,19 +49,19 @@
     </lay-col>
     <lay-col md="12" sm="24" xs="24">
       <lay-card>
-        <template #title><p class="agency">在线连接数：</p></template>
+        <template #title><p>在线连接数：</p></template>
         <div class="flowChart" ref="onlineClientChart"></div>
       </lay-card>
     </lay-col>
     <lay-col md="12" sm="24" xs="24">
       <lay-card>
-        <template #title><p class="agency">在线主题数：</p></template>
+        <template #title><p>在线主题数：</p></template>
         <div class="flowChart" ref="topicCountChart"></div>
       </lay-card>
     </lay-col>
     <lay-col md="12" sm="24" xs="24">
       <lay-card>
-        <template v-if="metric.period_message_received" #title><p class="agency">消息流入速率：
+        <template v-if="metric.period_message_received" #title><p>消息流入速率：
           {{ metric.period_message_received.value }}
           条/{{ metric.period_message_received.period > 1 ? metric.period_message_received.period : "" }}秒</p>
         </template>
@@ -71,7 +75,7 @@
     </lay-col>
     <lay-col md="12" sm="24" xs="24">
       <lay-card>
-        <template v-if="metric.period_message_sent" #title> <p class="agency">消息流出速率：
+        <template v-if="metric.period_message_sent" #title> <p>消息流出速率：
           {{ metric.period_message_sent.value }}
           条/{{ metric.period_message_sent.period > 1 ? metric.period_message_sent.period : "" }}秒</p></template>
         <template #body>
@@ -235,44 +239,6 @@ export default {
 .flowChart {
   width: 100%;
   /*height: 150px;*/
-}
-
-.grid-demo {
-  padding: 10px;
-  line-height: 50px;
-  border-radius: 2px;
-  text-align: center;
-  background-color: var(--global-checked-color);
-  color: #fff;
-}
-
-.card-demo {
-  padding: 10px;
-  line-height: 50px;
-  border-radius: 2px;
-  border: #5fb878;
-  text-align: center;
-  color: #000;
-}
-
-.agency {
-  display: block;
-  padding: 10.5px 16px;
-  background-color: #f8f8f8;
-  color: #999;
-  border-radius: 2px;
-}
-
-.agency h3 {
-  padding-bottom: 10px;
-  font-size: 12px;
-}
-
-.agency p cite {
-  font-style: normal;
-  font-size: 30px;
-  font-weight: 300;
-  color: #009688;
 }
 
 </style>

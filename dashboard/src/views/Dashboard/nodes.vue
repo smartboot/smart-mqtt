@@ -1,4 +1,5 @@
 <template>
+    <lay-card>
   <lay-table :columns="columns2" :data-source="dataSource2" :size="md" skin='nob'>
     <template #status="{ data }">
       <div v-if="data.status=='running'">
@@ -26,6 +27,7 @@
                     style="width:100px"></lay-progress>
     </template>
   </lay-table>
+    </lay-card>
 </template>
 
 <script>
