@@ -1,41 +1,61 @@
 <template>
+    <lay-container fluid="true" style="padding: 10px">
     <lay-row space="10">
-        <lay-col sm="6" md="6">
-            <lay-input v-model="clientId" placeholder="客户端ID"></lay-input>
+        <lay-col :md="24">
+            <lay-card>
+                <lay-form :model="form" ref="formRef">
+                    <lay-row>
+                        <lay-col :md="6">
+                            <lay-form-item label-width="0">
+                            <lay-input v-model="form.clientId" placeholder="客户端ID"></lay-input>
+                            </lay-form-item>
+                        </lay-col>
+                        <lay-col :md="6">
+                            <lay-form-item label-width="0">
+                            <lay-input v-model="form.username" placeholder="用户名"></lay-input>
+                            </lay-form-item>
+                        </lay-col>
+                        <lay-col :md="6">
+                            <lay-form-item label-width="0">
+                            <lay-select v-model="form.brokerIps" placeholder="Broker节点" multiple allow-clear>
+                                <lay-select-option v-for="(item) in brokerList" :value='item.value'
+                                                   :label="item.label"></lay-select-option>
+                            </lay-select>
+                            </lay-form-item>
+                        </lay-col>
+                        <lay-col :md="6">
+                            <lay-form-item label-width="0">
+                            <lay-button type="primary" @click="change({current:1,limit:page.limit})">查询</lay-button>
+                            <lay-button @click="reset">重置</lay-button>
+                            </lay-form-item>
+                        </lay-col>
+                    </lay-row>
+                </lay-form>
+            </lay-card>
         </lay-col>
-        <lay-col sm="6" md="6">
-            <lay-input v-model="username" placeholder="用户名"></lay-input>
-        </lay-col>
-        <lay-col sm="6" md="6">
-            <lay-select v-model="brokerIps" placeholder="Broker节点" multiple allow-clear>
-                <lay-select-option v-for="(item) in brokerList" :value='item.value'
-                                   :label="item.label"></lay-select-option>
-            </lay-select>
-        </lay-col>
-        <lay-col sm="6" md="6">
-            <lay-button prefix-icon="layui-icon-search"  @click="change({current:1,limit:page.limit})">搜索</lay-button>
-            <lay-button>重置</lay-button>
+        <lay-col :md="24">
+            <lay-card>
+                <lay-table :columns="columns2" :data-source="dataSource" :page="page" @change="change" :size="md" skin='nob'>
+                    <template #status="{ data }">
+                        <div v-if="data.status=='connected'">
+                            <lay-badge type="dot" theme="green" ripple></lay-badge>
+                            已连接
+                        </div>
+                        <div v-if="data.status=='disconnect'">
+                            <lay-badge type="dot"></lay-badge>
+                            已离线
+                        </div>
+                    </template>
+                </lay-table>
+            </lay-card>
         </lay-col>
     </lay-row>
-    <lay-row space="10">
-        <lay-table :columns="columns2" :data-source="dataSource" :page="page" @change="change" :size="md" skin='nob'>
-            <template #status="{ data }">
-                <div v-if="data.status=='connected'">
-                    <lay-badge type="dot" theme="green" ripple></lay-badge>
-                    已连接
-                </div>
-                <div v-if="data.status=='disconnect'">
-                    <lay-badge type="dot"></lay-badge>
-                    已离线
-                </div>
-            </template>
-        </lay-table>
-    </lay-row>
+    </lay-container>
 </template>
 
 <script>
 
-import {ref} from "vue";
+import {reactive, ref} from "vue";
 import {brokers, connections} from "../../api/module/api";
 
 export default {
@@ -47,9 +67,12 @@ export default {
             showRefresh: true,
             showCount: true,
         })
-        const username = ref("");
-        const clientId = ref("");
-        const brokerIps = ref([]);
+        const form=reactive({
+            username:"",
+            clientId:"",
+            brokerIps:[]
+        })
+        const formRef=ref(null);
         const brokerList = ref([
 
         ]);
@@ -96,8 +119,12 @@ export default {
         ]
 
         const dataSource = ref([])
+        const reset=()=>{
+            formRef.value.reset();
+            loadData(1, page.value.limit);
+        }
         const change = ({current, limit}) => {
-            layer.msg("current:" + current + " limit:" + limit);
+            // layer.msg("current:" + current + " limit:" + limit);
             loadData(current, limit)
         }
 
@@ -116,9 +143,9 @@ export default {
             const {data} = await connections({
                 pageSize: pageSize,
                 pageNo: pageNo,
-                clientId:clientId.value,
-                username:username.value,
-                brokers:brokerIps.value
+                clientId:form.clientId,
+                username:form.username,
+                brokers:form.brokerIps
             });
             console.log(data)
             dataSource.value = data.list
@@ -133,9 +160,9 @@ export default {
             columns2,
             dataSource,
             brokerList,
-            brokerIps,
-            clientId,
-            username
+            form,
+            formRef,
+            reset
         }
     }
 }

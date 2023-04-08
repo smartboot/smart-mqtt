@@ -1,40 +1,38 @@
 <template>
-    <lay-row space="10">
-        <lay-container fluid="true" style="padding: 10px">
-            <lay-row :space="10">
-                <lay-col :md="24">
-                    <lay-card>
-                        <lay-form :model="form" ref="formRef" style="margin-top: 20px">
-                            <lay-row>
-                                <lay-col :md="6">
-                                    <lay-form-item label="客户端ID：" label-width="70">
-                                        <lay-input v-model="form.clientId" style="width: 90%"></lay-input>
-                                    </lay-form-item>
-                                </lay-col>
-                                <lay-col :md="6">
-                                    <lay-form-item label="订阅主题：" label-width="70">
-                                        <lay-input v-model="form.topic" style="width: 90%"></lay-input>
-                                    </lay-form-item>
-                                </lay-col>
-                                <lay-col :md="6">
-                                    <lay-form-item label-width="0">
-                                        <lay-button type="primary" @click="change({current:1,limit:page.limit})">查询</lay-button>
-                                        <lay-button @click="reset">重置</lay-button>
-                                    </lay-form-item>
-                                </lay-col>
-                            </lay-row>
-                        </lay-form>
-                    </lay-card>
-                </lay-col>
-                <lay-col :md="24">
-                    <lay-card>
-                        <lay-table :columns="columns" :data-source="dataSource" :page="page" @change="change" :size="md"
-                                   skin='nob'></lay-table>
-                    </lay-card>
-                </lay-col>
-            </lay-row>
-        </lay-container>
-    </lay-row>
+    <lay-container fluid="true" style="padding: 10px">
+        <lay-row :space="10">
+            <lay-col :md="24">
+                <lay-card>
+                    <lay-form :model="form" ref="formRef">
+                        <lay-row>
+                            <lay-col :md="6">
+                                <lay-form-item label="客户端ID：" label-width="70">
+                                    <lay-input v-model="form.clientId" style="width: 90%"></lay-input>
+                                </lay-form-item>
+                            </lay-col>
+                            <lay-col :md="6">
+                                <lay-form-item label="订阅主题：" label-width="70">
+                                    <lay-input v-model="form.topic" style="width: 90%"></lay-input>
+                                </lay-form-item>
+                            </lay-col>
+                            <lay-col :md="6">
+                                <lay-form-item label-width="0">
+                                    <lay-button type="primary" @click="change({current:1,limit:page.limit})">查询</lay-button>
+                                    <lay-button @click="reset">重置</lay-button>
+                                </lay-form-item>
+                            </lay-col>
+                        </lay-row>
+                    </lay-form>
+                </lay-card>
+            </lay-col>
+            <lay-col :md="24">
+                <lay-card>
+                    <lay-table :columns="columns" :data-source="dataSource" :page="page" @change="change" :size="md"
+                               skin='nob'></lay-table>
+                </lay-card>
+            </lay-col>
+        </lay-row>
+    </lay-container>
 
 </template>
 
