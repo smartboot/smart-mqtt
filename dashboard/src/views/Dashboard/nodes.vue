@@ -9,6 +9,10 @@
         <lay-badge type="dot"></lay-badge>
         已离线
       </div>
+      <div v-if="data.status=='unknown'">
+          <lay-badge type="dot"></lay-badge>
+          未知
+      </div>
     </template>
 
     <template v-slot:memory="{ data }">
