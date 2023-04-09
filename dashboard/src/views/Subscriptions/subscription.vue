@@ -27,7 +27,7 @@
             </lay-col>
             <lay-col :md="24">
                 <lay-card>
-                    <lay-table :columns="columns" :data-source="dataSource" :page="page" @change="change" :size="md"
+                    <lay-table :columns="columns" :data-source="dataSource" :page="page" @change="change" size="md"
                                skin='nob'></lay-table>
                 </lay-card>
             </lay-col>
@@ -36,7 +36,7 @@
 
 </template>
 
-<script>
+<script lang="ts">
 
 import {reactive, ref} from "vue";
 import {subscriptions_subscription} from "../../api/module/api";

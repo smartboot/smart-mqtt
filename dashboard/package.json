@@ -34,6 +34,6 @@
     "unplugin-layui-vue-resolver": "^0.0.13",
     "unplugin-vue-components": "^0.22.7",
     "vite": "^4.0.0",
-    "vue-tsc": "^0.29.8"
+    "vue-tsc": "^1.2.0"
   }
 }

@@ -1,6 +1,6 @@
 <template>
     <lay-card>
-  <lay-table :columns="columns2" :data-source="dataSource2" :size="md" skin='nob'>
+  <lay-table :columns="columns2" :data-source="dataSource2" size="md" skin='nob'>
     <template #status="{ data }">
       <div v-if="data.status=='running'">
         <lay-badge type="dot" theme="blue" ripple></lay-badge>
@@ -30,7 +30,7 @@
     </lay-card>
 </template>
 
-<script>
+<script lang="ts">
 
 import {onMounted, ref} from "vue";
 import {dashboard_nodes} from "../../api/module/api";

@@ -35,7 +35,7 @@
         </lay-col>
         <lay-col :md="24">
             <lay-card>
-                <lay-table :columns="columns2" :data-source="dataSource" :page="page" @change="change" :size="md" skin='nob'>
+                <lay-table :columns="columns2" :data-source="dataSource" :page="page" @change="change" size="md" skin='nob'>
                     <template #status="{ data }">
                         <div v-if="data.status=='connected'">
                             <lay-badge type="dot" theme="green" ripple></lay-badge>
@@ -53,7 +53,7 @@
     </lay-container>
 </template>
 
-<script>
+<script lang="ts">
 
 import {reactive, ref} from "vue";
 import {brokers, connections} from "../../api/module/api";

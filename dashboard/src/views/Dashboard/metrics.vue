@@ -1,7 +1,7 @@
 <template>
   <lay-row space="10">
     <lay-col md="8">
-      <lay-table :columns="connect_columns" :data-source="connect_dataSource" :size="md" skin='nob'>
+      <lay-table :columns="connect_columns" :data-source="connect_dataSource" size="md" skin='nob'>
         <template #metric="{ data }">
           <div class="metric-cell">
           <p>{{ data.code }}</p>
@@ -12,7 +12,7 @@
     </lay-col>
 
     <lay-col md="8">
-      <lay-table :columns="session_columns" :data-source="session_dataSource" :size="md" skin='nob'>
+      <lay-table :columns="session_columns" :data-source="session_dataSource" size="md" skin='nob'>
         <template #metric="{ data }">
           <div class="metric-cell">
             <p>{{ data.code }}</p>
@@ -23,7 +23,7 @@
     </lay-col>
 
     <lay-col md="8">
-      <lay-table :columns="access_columns" :data-source="access_dataSource" :size="md" skin='nob'>
+      <lay-table :columns="access_columns" :data-source="access_dataSource" size="md" skin='nob'>
         <template #metric="{ data }">
           <div class="metric-cell">
             <p>{{ data.code }}</p>
@@ -42,7 +42,7 @@
   <lay-container fluid>
     <lay-row space="10">
 <!--      <lay-col md="8">-->
-<!--        <lay-table :columns="bytes_columns" :data-source="bytes_dataSource" :size="md" skin='nob'>-->
+<!--        <lay-table :columns="bytes_columns" :data-source="bytes_dataSource" size="md" skin='nob'>-->
 <!--          <template #metric="{ data }">-->
 <!--            <div class="metric-cell">-->
 <!--              <p>{{ data.code }}</p>-->
@@ -53,7 +53,7 @@
 <!--      </lay-col>-->
 
       <lay-col md="8">
-        <lay-table :columns="packet_columns" :data-source="packet_dataSource" :size="md" skin='nob'>
+        <lay-table :columns="packet_columns" :data-source="packet_dataSource" size="md" skin='nob'>
           <template #metric="{ data }">
             <div class="metric-cell">
               <p>{{ data.code }}</p>
@@ -64,7 +64,7 @@
       </lay-col>
 
       <lay-col md="8">
-        <lay-table :columns="message_columns" :data-source="message_dataSource" :size="md" skin='nob'>
+        <lay-table :columns="message_columns" :data-source="message_dataSource" size="md" skin='nob'>
           <template #metric="{ data }">
             <div class="metric-cell">
               <p>{{ data.code }}</p>
@@ -75,7 +75,7 @@
       </lay-col>
 
       <lay-col md="8">
-        <lay-table :columns="delivery_columns" :data-source="delivery_dataSource" :size="md" skin='nob'>
+        <lay-table :columns="delivery_columns" :data-source="delivery_dataSource" size="md" skin='nob'>
           <template #metric="{ data }">
             <div class="metric-cell">
               <p>{{ data.code }}</p>
@@ -88,7 +88,7 @@
   </lay-container>
 </template>
 
-<script>
+<script lang="ts">
 
 import {onMounted, ref} from "vue";
 import {dashboard_metrics} from "../../api/module/api";
