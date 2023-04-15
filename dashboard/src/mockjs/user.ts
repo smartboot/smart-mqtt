@@ -18,7 +18,7 @@ const menus = [
       },
       {
         id: "/dashboard/nodes",
-        title: "节点"
+        title: "Broker 节点"
       },
       {
         id: "/dashboard/metrics",
