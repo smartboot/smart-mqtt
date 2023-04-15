@@ -24,8 +24,6 @@ public class Providers {
     private PersistenceProvider retainMessageProvider = new MemoryPersistenceProvider();
     private PersistenceProvider persistenceProvider = new MemoryPersistenceProvider();
 
-    private ConnectAuthenticationProvider connectAuthenticationProvider;
-
     private SubscribeProvider subscribeProvider = (topicFilter, session) -> true;
 
     /**
@@ -55,14 +53,6 @@ public class Providers {
 
     public void setPersistenceProvider(PersistenceProvider persistenceProvider) {
         this.persistenceProvider = persistenceProvider;
-    }
-
-    public ConnectAuthenticationProvider getConnectAuthenticationProvider() {
-        return connectAuthenticationProvider;
-    }
-
-    public void setConnectAuthenticationProvider(ConnectAuthenticationProvider connectAuthenticationProvider) {
-        this.connectAuthenticationProvider = connectAuthenticationProvider;
     }
 
     public SubscribeProvider getSubscribeProvider() {

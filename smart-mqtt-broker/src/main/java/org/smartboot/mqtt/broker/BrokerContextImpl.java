@@ -24,7 +24,6 @@ import org.smartboot.mqtt.broker.eventbus.messagebus.MessageBusSubscriber;
 import org.smartboot.mqtt.broker.eventbus.messagebus.consumer.RetainPersistenceConsumer;
 import org.smartboot.mqtt.broker.plugin.Plugin;
 import org.smartboot.mqtt.broker.provider.Providers;
-import org.smartboot.mqtt.broker.provider.impl.ConfiguredConnectAuthenticationProviderImpl;
 import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
@@ -128,8 +127,6 @@ public class BrokerContextImpl implements BrokerContext {
     public void init() throws IOException {
 
         updateBrokerConfigure();
-
-        initProvider();
 
         subscribeEventBus();
 
@@ -246,11 +243,6 @@ public class BrokerContextImpl implements BrokerContext {
             }
 
         });
-    }
-
-    private void initProvider() {
-        //连接鉴权处理器
-        providers.setConnectAuthenticationProvider(new ConfiguredConnectAuthenticationProviderImpl(this));
     }
 
     private final TopicSubscriber BREAK = new TopicSubscriber(null, null, null, 0, 0);
@@ -439,12 +431,6 @@ public class BrokerContextImpl implements BrokerContext {
         }
         if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.MAX_INFLIGHT)) {
             brokerConfigure.setMaxInflight(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.MAX_INFLIGHT)));
-        }
-        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.USERNAME)) {
-            brokerConfigure.setUsername(brokerProperties.getProperty(BrokerConfigure.SystemProperty.USERNAME));
-        }
-        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.PASSWORD)) {
-            brokerConfigure.setPassword(brokerProperties.getProperty(BrokerConfigure.SystemProperty.PASSWORD));
         }
         if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.THREAD_NUM)) {
             brokerConfigure.setThreadNum(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.THREAD_NUM)));
