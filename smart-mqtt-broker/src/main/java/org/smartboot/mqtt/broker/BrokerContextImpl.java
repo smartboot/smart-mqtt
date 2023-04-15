@@ -115,7 +115,7 @@ public class BrokerContextImpl implements BrokerContext {
 
     //配置文件内容
     private String configJson;
-    private final BrokerTopic SHUTDOWN_TOPIC = new BrokerTopic("");
+    private final static BrokerTopic SHUTDOWN_TOPIC = new BrokerTopic("");
 
     /**
      * 统计指标
@@ -267,9 +267,8 @@ public class BrokerContextImpl implements BrokerContext {
                 @Override
                 public void execute() {
                     while (true) {
-                        BrokerTopic brokerTopic;
                         try {
-                            brokerTopic = pushTopicQueue.take();
+                            BrokerTopic brokerTopic = pushTopicQueue.take();
 
                             int size = pushTopicQueue.size();
                             if (size > 1024) {
@@ -280,20 +279,12 @@ public class BrokerContextImpl implements BrokerContext {
                                 pushTopicQueue.put(SHUTDOWN_TOPIC);
                                 break;
                             }
-                        } catch (InterruptedException e) {
-                            LOGGER.error("pushTopicQueue exception", e);
-                            break;
-                        }
-                        try {
                             //存在待输出消息
                             ConcurrentLinkedQueue<TopicSubscriber> subscribers = brokerTopic.getQueue();
                             subscribers.offer(BREAK);
-                            TopicSubscriber subscriber = null;
-                            int version = brokerTopic.getVersion().get();
+                            TopicSubscriber subscriber;
+                            int preVersion = brokerTopic.getVersion().get();
                             while ((subscriber = subscribers.poll()) != BREAK) {
-//                                if (subscriber == BREAK) {
-//                                    break;
-//                                }
                                 try {
                                     subscriber.batchPublish(BrokerContextImpl.this);
                                 } catch (Exception e) {
@@ -301,11 +292,14 @@ public class BrokerContextImpl implements BrokerContext {
                                 }
                             }
                             brokerTopic.getSemaphore().release();
-                            if (version != brokerTopic.getVersion().get() && !subscribers.isEmpty()) {
+                            if (preVersion != brokerTopic.getVersion().get() && !subscribers.isEmpty()) {
                                 notifyPush(brokerTopic);
                             }
+                        } catch (InterruptedException e) {
+                            LOGGER.error("pushTopicQueue exception", e);
+                            break;
                         } catch (Exception e) {
-                            LOGGER.error("brokerTopic:{} push message exception", brokerTopic.getTopic(), e);
+                            LOGGER.error("push message exception", e);
                         }
                     }
                 }
@@ -392,7 +386,7 @@ public class BrokerContextImpl implements BrokerContext {
         });
     }
 
-    void notifyPush(BrokerTopic topic) {
+    private void notifyPush(BrokerTopic topic) {
         if (!topic.getSemaphore().tryAcquire()) {
             return;
         }
