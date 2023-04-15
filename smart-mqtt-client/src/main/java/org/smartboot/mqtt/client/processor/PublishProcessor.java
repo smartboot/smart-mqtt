@@ -25,7 +25,7 @@ import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttPublishVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
-import org.smartboot.mqtt.common.util.TopicTokenUtil;
+import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 
 /**
@@ -78,7 +78,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
 
     private static Subscribe matchWildcardsSubscribe(MqttClient mqttClient, String topicName) {
         TopicToken publicTopicToken = new TopicToken(topicName);
-        TopicToken matchToken = mqttClient.getWildcardsToken().stream().filter(topicToken -> TopicTokenUtil.match(publicTopicToken, topicToken)).findFirst().orElse(null);
+        TopicToken matchToken = mqttClient.getWildcardsToken().stream().filter(topicToken -> MqttUtil.match(publicTopicToken, topicToken)).findFirst().orElse(null);
         return matchToken != null ? mqttClient.getSubscribes().get(matchToken.getTopicFilter()) : null;
     }
 
