@@ -2,8 +2,9 @@
     <lay-card>
         <lay-table :columns="columns2" :data-source="dataSource2" size="md" skin='nob'>
             <template #name="{data}">
-                {{ data.name }}
-                <lay-icon @click="editBroker(data)" type="layui-icon-edit" style="position: absolute;right: 10px;"></lay-icon>
+                <a @click="editBroker(data)" href="javascript:void(0);">
+                    {{ data.name }}<lay-icon type="layui-icon-edit" style="position: absolute;right: 10px;"></lay-icon>
+                </a>
             </template>
             <template #status="{ data }">
                 <div v-if="data.status=='running'">
@@ -82,15 +83,15 @@ export default {
                 customSlot: "status"
             }, {
                 title: "运行时长",
-                width: "180px",
+                width: "120px",
                 key: "runtime"
             }, {
                 title: "版本信息",
-                width: "180px",
+                width: "120px",
                 key: "version"
             }, {
                 title: "进程",
-                width: "180px",
+                width: "120px",
                 key: "pid"
             }, {
                 title: "操作系统内存",
@@ -161,7 +162,7 @@ export default {
             },
         ])
         const dataSource2 = ref([])
-        const modalVisible = ref(true)
+        const modalVisible = ref(false)
         const currentTab = ref(0)
         const brokerForm = reactive({
             host: '',
@@ -173,8 +174,8 @@ export default {
         })
         let timer;
 
-        const editBroker=(brokerId)=>{
-console.log(brokerId);
+        const editBroker = (brokerId) => {
+            modalVisible.value = true
         }
 
         onMounted(() => {

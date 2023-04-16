@@ -8,8 +8,8 @@
     <lay-col md="24" sm="24" xs="24">
       <lay-field title="资源指标">
         <lay-card>
-          <lay-row :space="10">
-            <lay-col :md="8">
+          <lay-row space="10">
+            <lay-col md="8">
               <a >
                 <h3>连接数</h3>
                 <p>
@@ -21,7 +21,7 @@
                 </p>
               </a>
             </lay-col>
-            <lay-col :md="8">
+            <lay-col md="8">
               <a >
                 <h3>主题数</h3>
                 <p>
@@ -33,7 +33,7 @@
                 </p>
               </a>
             </lay-col>
-            <lay-col :md="8">
+            <lay-col md="8">
               <a >
                 <h3>订阅数</h3>
                 <p>
