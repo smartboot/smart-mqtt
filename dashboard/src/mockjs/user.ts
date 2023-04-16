@@ -18,7 +18,7 @@ const menus = [
       },
       {
         id: "/dashboard/nodes",
-        title: "节点"
+        title: "Broker 节点"
       },
       {
         id: "/dashboard/metrics",
@@ -52,12 +52,12 @@ const menus = [
     icon: "layui-icon-senior",
     title: "ChatMQTT"
   },
-  {
-
-    id: "/chatGPT",
-    icon: "layui-icon-senior",
-    title: "ChatGPT"
-  },
+  // {
+  //
+  //   id: "/chatGPT",
+  //   icon: "layui-icon-senior",
+  //   title: "ChatGPT"
+  // },
   {
     id: "https://smartboot.gitee.io/smart-mqtt/",
     icon: "layui-icon-help",

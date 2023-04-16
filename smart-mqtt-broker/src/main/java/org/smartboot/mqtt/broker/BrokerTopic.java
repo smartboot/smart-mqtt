@@ -1,6 +1,16 @@
+/*
+ * Copyright (C) [2022] smartboot [zhengjunweimail@163.com]
+ *
+ *  企业用户未经smartboot组织特别许可，需遵循AGPL-3.0开源协议合理合法使用本项目。
+ *
+ *  Enterprise users are required to use this project reasonably
+ *  and legally in accordance with the AGPL-3.0 open source agreement
+ *  without special permission from the smartboot organization.
+ */
+
 package org.smartboot.mqtt.broker;
 
-import org.smartboot.mqtt.common.Topic;
+import org.smartboot.mqtt.common.TopicToken;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author 三刀
  * @version V1.0 , 2018/5/3
  */
-public class BrokerTopic extends Topic {
+public class BrokerTopic {
     /**
      * 当前订阅的消费者
      */
@@ -24,11 +34,15 @@ public class BrokerTopic extends Topic {
      * 当前Topic是否圈闭推送完成
      */
     private final Semaphore semaphore = new Semaphore(1);
+    private final TopicToken topicToken;
 
+    /**
+     * 当前Topic处于监听状态的订阅者
+     */
     private final ConcurrentLinkedQueue<TopicSubscriber> queue = new ConcurrentLinkedQueue<>();
 
     public BrokerTopic(String topic) {
-        super(topic);
+        this.topicToken = new TopicToken(topic);
     }
 
     public Map<MqttSession, TopicSubscriber> getConsumeOffsets() {
@@ -45,5 +59,18 @@ public class BrokerTopic extends Topic {
 
     public ConcurrentLinkedQueue<TopicSubscriber> getQueue() {
         return queue;
+    }
+
+    public TopicToken getTopicToken() {
+        return topicToken;
+    }
+
+    public String getTopic() {
+        return topicToken.getTopicFilter();
+    }
+
+    @Override
+    public String toString() {
+        return getTopic();
     }
 }

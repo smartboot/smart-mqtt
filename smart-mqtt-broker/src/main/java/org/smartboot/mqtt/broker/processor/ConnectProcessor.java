@@ -1,3 +1,13 @@
+/*
+ * Copyright (C) [2022] smartboot [zhengjunweimail@163.com]
+ *
+ *  企业用户未经smartboot组织特别许可，需遵循AGPL-3.0开源协议合理合法使用本项目。
+ *
+ *  Enterprise users are required to use this project reasonably
+ *  and legally in accordance with the AGPL-3.0 open source agreement
+ *  without special permission from the smartboot organization.
+ */
+
 package org.smartboot.mqtt.broker.processor;
 
 import org.apache.commons.lang.StringUtils;
@@ -56,15 +66,8 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         //服务端必须按照 3.1 节的要求验证 CONNECT 报文，如果报文不符合规范，服务端不发送CONNACK 报文直接关闭网络连接
         checkMessage(session, mqttConnectMessage);
 
-        //连接鉴权
-        ValidateUtils.isTrue(context.getProviders().getConnectAuthenticationProvider().authentication(mqttConnectMessage, session), "Client authentication failed", () -> connFailAck(CONNECTION_REFUSED_NOT_AUTHORIZED, session));
-
-        session.setAuthorized(true);
-        session.setUsername(mqttConnectMessage.getPayload().userName());
-
-
         context.getEventBus().publish(ServerEventType.CONNECT, EventObject.newEventObject(session, mqttConnectMessage));
-
+        session.setAuthorized(true);
         //清理会话
         refreshSession(context, session, mqttConnectMessage);
 

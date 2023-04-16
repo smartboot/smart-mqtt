@@ -1,3 +1,13 @@
+/*
+ * Copyright (C) [2022] smartboot [zhengjunweimail@163.com]
+ *
+ *  企业用户未经smartboot组织特别许可，需遵循AGPL-3.0开源协议合理合法使用本项目。
+ *
+ *  Enterprise users are required to use this project reasonably
+ *  and legally in accordance with the AGPL-3.0 open source agreement
+ *  without special permission from the smartboot organization.
+ */
+
 package org.smartboot.mqtt.broker.openapi;
 
 import org.slf4j.Logger;
@@ -6,6 +16,7 @@ import org.smartboot.http.restful.RestfulBootstrap;
 import org.smartboot.http.restful.StaticResourceHandler;
 import org.smartboot.http.server.HttpBootstrap;
 import org.smartboot.mqtt.broker.BrokerContext;
+import org.smartboot.mqtt.broker.openapi.controller.BrokerController;
 import org.smartboot.mqtt.broker.openapi.controller.ConnectionsController;
 import org.smartboot.mqtt.broker.openapi.controller.DashBoardController;
 import org.smartboot.mqtt.broker.openapi.controller.SubscriptionController;
@@ -51,6 +62,7 @@ public class OpenApiPlugin extends Plugin {
             restfulBootstrap.controller(new DashBoardController(brokerContext));
             restfulBootstrap.controller(new ConnectionsController());
             restfulBootstrap.controller(new SubscriptionController());
+            restfulBootstrap.controller(new BrokerController());
 
             HttpBootstrap bootstrap = restfulBootstrap.bootstrap();
             bootstrap.setPort(config.getPort());

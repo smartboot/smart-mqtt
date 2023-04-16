@@ -1,3 +1,13 @@
+/*
+ * Copyright (C) [2022] smartboot [zhengjunweimail@163.com]
+ *
+ *  企业用户未经smartboot组织特别许可，需遵循AGPL-3.0开源协议合理合法使用本项目。
+ *
+ *  Enterprise users are required to use this project reasonably
+ *  and legally in accordance with the AGPL-3.0 open source agreement
+ *  without special permission from the smartboot organization.
+ */
+
 package org.smartboot.mqtt.broker;
 
 import com.alibaba.fastjson2.JSONObject;
@@ -14,7 +24,6 @@ import org.smartboot.mqtt.broker.eventbus.messagebus.MessageBusSubscriber;
 import org.smartboot.mqtt.broker.eventbus.messagebus.consumer.RetainPersistenceConsumer;
 import org.smartboot.mqtt.broker.plugin.Plugin;
 import org.smartboot.mqtt.broker.provider.Providers;
-import org.smartboot.mqtt.broker.provider.impl.ConfiguredConnectAuthenticationProviderImpl;
 import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
@@ -106,7 +115,7 @@ public class BrokerContextImpl implements BrokerContext {
 
     //配置文件内容
     private String configJson;
-    private final BrokerTopic SHUTDOWN_TOPIC = new BrokerTopic("");
+    private final static BrokerTopic SHUTDOWN_TOPIC = new BrokerTopic("");
 
     /**
      * 统计指标
@@ -118,8 +127,6 @@ public class BrokerContextImpl implements BrokerContext {
     public void init() throws IOException {
 
         updateBrokerConfigure();
-
-        initProvider();
 
         subscribeEventBus();
 
@@ -238,11 +245,6 @@ public class BrokerContextImpl implements BrokerContext {
         });
     }
 
-    private void initProvider() {
-        //连接鉴权处理器
-        providers.setConnectAuthenticationProvider(new ConfiguredConnectAuthenticationProviderImpl(this));
-    }
-
     private final TopicSubscriber BREAK = new TopicSubscriber(null, null, null, 0, 0);
 
     private void initPushThread() {
@@ -265,9 +267,8 @@ public class BrokerContextImpl implements BrokerContext {
                 @Override
                 public void execute() {
                     while (true) {
-                        BrokerTopic brokerTopic;
                         try {
-                            brokerTopic = pushTopicQueue.take();
+                            BrokerTopic brokerTopic = pushTopicQueue.take();
 
                             int size = pushTopicQueue.size();
                             if (size > 1024) {
@@ -278,20 +279,12 @@ public class BrokerContextImpl implements BrokerContext {
                                 pushTopicQueue.put(SHUTDOWN_TOPIC);
                                 break;
                             }
-                        } catch (InterruptedException e) {
-                            LOGGER.error("pushTopicQueue exception", e);
-                            break;
-                        }
-                        try {
                             //存在待输出消息
                             ConcurrentLinkedQueue<TopicSubscriber> subscribers = brokerTopic.getQueue();
                             subscribers.offer(BREAK);
-                            TopicSubscriber subscriber = null;
-                            int version = brokerTopic.getVersion().get();
+                            TopicSubscriber subscriber;
+                            int preVersion = brokerTopic.getVersion().get();
                             while ((subscriber = subscribers.poll()) != BREAK) {
-//                                if (subscriber == BREAK) {
-//                                    break;
-//                                }
                                 try {
                                     subscriber.batchPublish(BrokerContextImpl.this);
                                 } catch (Exception e) {
@@ -299,11 +292,14 @@ public class BrokerContextImpl implements BrokerContext {
                                 }
                             }
                             brokerTopic.getSemaphore().release();
-                            if (version != brokerTopic.getVersion().get() && !subscribers.isEmpty()) {
+                            if (preVersion != brokerTopic.getVersion().get() && !subscribers.isEmpty()) {
                                 notifyPush(brokerTopic);
                             }
+                        } catch (InterruptedException e) {
+                            LOGGER.error("pushTopicQueue exception", e);
+                            break;
                         } catch (Exception e) {
-                            LOGGER.error("brokerTopic:{} push message exception", brokerTopic.getTopic(), e);
+                            LOGGER.error("push message exception", e);
                         }
                     }
                 }
@@ -390,7 +386,7 @@ public class BrokerContextImpl implements BrokerContext {
         });
     }
 
-    void notifyPush(BrokerTopic topic) {
+    private void notifyPush(BrokerTopic topic) {
         if (!topic.getSemaphore().tryAcquire()) {
             return;
         }
@@ -429,12 +425,6 @@ public class BrokerContextImpl implements BrokerContext {
         }
         if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.MAX_INFLIGHT)) {
             brokerConfigure.setMaxInflight(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.MAX_INFLIGHT)));
-        }
-        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.USERNAME)) {
-            brokerConfigure.setUsername(brokerProperties.getProperty(BrokerConfigure.SystemProperty.USERNAME));
-        }
-        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.PASSWORD)) {
-            brokerConfigure.setPassword(brokerProperties.getProperty(BrokerConfigure.SystemProperty.PASSWORD));
         }
         if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.THREAD_NUM)) {
             brokerConfigure.setThreadNum(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.THREAD_NUM)));

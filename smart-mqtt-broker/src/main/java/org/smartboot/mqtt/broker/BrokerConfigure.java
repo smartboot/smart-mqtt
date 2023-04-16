@@ -1,3 +1,13 @@
+/*
+ * Copyright (C) [2022] smartboot [zhengjunweimail@163.com]
+ *
+ *  企业用户未经smartboot组织特别许可，需遵循AGPL-3.0开源协议合理合法使用本项目。
+ *
+ *  Enterprise users are required to use this project reasonably
+ *  and legally in accordance with the AGPL-3.0 open source agreement
+ *  without special permission from the smartboot organization.
+ */
+
 package org.smartboot.mqtt.broker;
 
 import org.smartboot.mqtt.common.ToString;
@@ -28,7 +38,7 @@ public class BrokerConfigure extends ToString {
     /**
      * 当前smart-mqtt
      */
-    public static final String VERSION = "v0.17";
+    public static final String VERSION = "v0.18";
 
     static final Map<String, String> SystemEnvironments = new HashMap<>();
 
@@ -90,16 +100,6 @@ public class BrokerConfigure extends ToString {
      */
     private int maxInflight = 8;
 
-    /**
-     * 客户端连接鉴权账号
-     */
-    private String username;
-
-    /**
-     * 客户端连接鉴权密码
-     */
-    private String password;
-
     public int getPort() {
         return port;
     }
@@ -146,22 +146,6 @@ public class BrokerConfigure extends ToString {
 
     public void setMaxInflight(int maxInflight) {
         this.maxInflight = maxInflight;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public int getThreadNum() {
@@ -249,18 +233,5 @@ public class BrokerConfigure extends ToString {
          */
         String MAX_INFLIGHT = "broker.maxInflight";
 
-        /**
-         * 客户端连接鉴权账号
-         */
-        String USERNAME = "broker.username";
-
-        /**
-         * 客户端连接鉴权密码
-         */
-        String PASSWORD = "broker.password";
-        /**
-         * 集群节点数量上限
-         */
-        String CLUSTER_NODE_LIMIT = "cluster.node.limit";
     }
 }

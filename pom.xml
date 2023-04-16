@@ -4,13 +4,13 @@
     <groupId>org.smartboot.mqtt</groupId>
     <artifactId>smart-mqtt</artifactId>
     <name>smart-mqtt</name>
-    <version>0.17</version>
+    <version>0.18</version>
     <modelVersion>4.0.0</modelVersion>
     <description>mqtt broker</description>
 
     <properties>
-        <smart.mqtt.version>0.17</smart.mqtt.version>
-        <smart-socket.version>1.5.25</smart-socket.version>
+        <smart.mqtt.version>0.18</smart.mqtt.version>
+        <smart-socket.version>1.5.26</smart-socket.version>
         <smart-http.version>1.1.22</smart-http.version>
         <commons.lang.version>2.6</commons.lang.version>
         <commons.clollections.version>4.3</commons.clollections.version>

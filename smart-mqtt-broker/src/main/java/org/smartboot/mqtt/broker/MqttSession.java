@@ -1,3 +1,13 @@
+/*
+ * Copyright (C) [2022] smartboot [zhengjunweimail@163.com]
+ *
+ *  企业用户未经smartboot组织特别许可，需遵循AGPL-3.0开源协议合理合法使用本项目。
+ *
+ *  Enterprise users are required to use this project reasonably
+ *  and legally in accordance with the AGPL-3.0 open source agreement
+ *  without special permission from the smartboot organization.
+ */
+
 package org.smartboot.mqtt.broker;
 
 import org.slf4j.Logger;
@@ -12,7 +22,7 @@ import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
-import org.smartboot.mqtt.common.util.TopicTokenUtil;
+import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.transport.AioSession;
 
@@ -147,7 +157,7 @@ public class MqttSession extends AbstractSession {
 
         //通配符匹配存量Topic
         for (BrokerTopic topic : mqttContext.getTopics()) {
-            if (TopicTokenUtil.match(topic.getTopicToken(), topicToken) && mqttContext.getProviders().getSubscribeProvider().subscribeTopic(topic.getTopic(), this)) {
+            if (MqttUtil.match(topic.getTopicToken(), topicToken) && mqttContext.getProviders().getSubscribeProvider().subscribeTopic(topic.getTopic(), this)) {
                 TopicSubscriber subscription = subscribeSuccess(mqttQoS, topicToken, topic);
                 if (newSubscribe) {
                     mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, subscription);
@@ -174,7 +184,7 @@ public class MqttSession extends AbstractSession {
 
                 @Override
                 public void subscribe(EventType<BrokerTopic> eventType, BrokerTopic object) {
-                    if (TopicTokenUtil.match(object.getTopicToken(), topicToken) && mqttContext.getProviders().getSubscribeProvider().subscribeTopic(object.getTopic(), MqttSession.this)) {
+                    if (MqttUtil.match(object.getTopicToken(), topicToken) && mqttContext.getProviders().getSubscribeProvider().subscribeTopic(object.getTopic(), MqttSession.this)) {
                         TopicSubscriber subscription = MqttSession.this.subscribeSuccess(mqttQoS, topicToken, object);
                         mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, subscription);
                     }

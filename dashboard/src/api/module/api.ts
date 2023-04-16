@@ -16,10 +16,17 @@ export const connections = function (query: {}) {
     return Http.post('/connections', query)
 }
 
+/**
+ * 获取所有mqtt broker
+ */
+export const brokers = function () {
+    return Http.post('/brokers')
+}
+
 export const subscriptions_subscription = function (query: {}) {
-    return Http.post('/subscriptions/subscription',query)
+    return Http.post('/subscriptions/subscription', query)
 }
 
 export const subscriptions_topics = function (query: {}) {
-    return Http.post('/subscriptions/topics',query)
+    return Http.post('/subscriptions/topics', query)
 }

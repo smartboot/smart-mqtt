@@ -10,13 +10,13 @@
     </lay-col>
   </lay-row>
   <lay-row space="10">
-    <lay-table :columns="columns" :data-source="dataSource" :page="page" @change="change" :size="md"
+    <lay-table :columns="columns" :data-source="dataSource" :page="page" @change="change" size="md"
                skin='nob'></lay-table>
   </lay-row>
 
 </template>
 
-<script>
+<script lang="ts">
 
 import {ref} from "vue";
 import {subscriptions_topics} from "../../api/module/api";
@@ -49,11 +49,11 @@ export default {
       showRefresh: true,
       showCount: true
     })
-    const change = ({current, limit}) => {
+    const change = (current:number, limit:number) => {
       loadData(current, limit)
     }
 
-    const loadData = async (pageNo, pageSize) => {
+    const loadData = async (pageNo:number, pageSize:number) => {
       const {data} = await subscriptions_topics({pageSize: pageSize, pageNo: pageNo});
       console.log(data)
       dataSource.value = data.list
