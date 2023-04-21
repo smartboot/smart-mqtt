@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttVersion;
+import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPubRelMessage;
 import org.smartboot.mqtt.common.message.MqttVariableMessage;
@@ -48,12 +49,13 @@ public class InflightQueue {
 
     private final AbstractSession session;
     private final ConcurrentLinkedQueue<Runnable> runnables = new ConcurrentLinkedQueue<>();
+    private final boolean client;
 
-
-    public InflightQueue(AbstractSession session, int size) {
+    public InflightQueue(AbstractSession session, int size, boolean client) {
         ValidateUtils.isTrue(size > 0, "inflight must >0");
         this.queue = new InflightMessage[size];
         this.session = session;
+        this.client = client;
     }
 
     public InflightMessage offer(MqttMessageBuilders.MessageBuilder publishBuilder, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
@@ -121,7 +123,9 @@ public class InflightQueue {
                 switch (inflightMessage.getExpectMessageType()) {
                     case PUBACK:
                     case PUBREC:
-                        session.write(inflightMessage.getOriginalMessage());
+                        MqttMessage mqttMessage = inflightMessage.getOriginalMessage();
+                        mqttMessage.getFixedHeader().setDup(true);
+                        session.write(mqttMessage);
                         break;
                     case PUBCOMP:
                         ReasonProperties properties = null;
@@ -131,6 +135,7 @@ public class InflightQueue {
                         MqttVariableMessage<? extends MqttPacketIdVariableHeader> message = inflightMessage.getOriginalMessage();
                         MqttPubQosVariableHeader variableHeader = new MqttPubQosVariableHeader(message.getVariableHeader().getPacketId(), properties);
                         MqttPubRelMessage pubRelMessage = new MqttPubRelMessage(variableHeader);
+                        pubRelMessage.getFixedHeader().setDup(true);
                         session.write(pubRelMessage);
                         break;
                     default:
@@ -148,19 +153,24 @@ public class InflightQueue {
      */
     public void notify(MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> message) {
         InflightMessage inflightMessage = queue[(message.getVariableHeader().getPacketId() - 1) % queue.length];
-        ValidateUtils.isTrue(message.getFixedHeader().getMessageType() == inflightMessage.getExpectMessageType(), "invalid message type");
-        ValidateUtils.isTrue(message.getVariableHeader().getPacketId() == inflightMessage.getAssignedPacketId(), "invalid message packetId " + message.getVariableHeader().getPacketId() + " " + inflightMessage.getAssignedPacketId());
-        inflightMessage.setResponseMessage(message);
-        inflightMessage.setLatestTime(System.currentTimeMillis());
         switch (message.getFixedHeader().getMessageType()) {
             case SUBACK:
             case UNSUBACK:
             case PUBACK:
             case PUBCOMP: {
+                ValidateUtils.isTrue(message.getFixedHeader().getMessageType() == inflightMessage.getExpectMessageType(), "invalid message type :" + message + "expect message type:" + inflightMessage.getExpectMessageType());
+                ValidateUtils.isTrue(message.getVariableHeader().getPacketId() == inflightMessage.getAssignedPacketId(), "invalid message packetId " + message.getVariableHeader().getPacketId() + " " + inflightMessage.getAssignedPacketId());
+                inflightMessage.setResponseMessage(message);
+                inflightMessage.setLatestTime(System.currentTimeMillis());
                 commit(inflightMessage);
                 break;
             }
             case PUBREC:
+                boolean dup = inflightMessage.getExpectMessageType() == MqttMessageType.PUBCOMP;
+                ValidateUtils.isTrue(message.getFixedHeader().getMessageType() == inflightMessage.getExpectMessageType() || dup, "invalid message type :" + message + "expect message type:" + inflightMessage.getExpectMessageType());
+                ValidateUtils.isTrue(message.getVariableHeader().getPacketId() == inflightMessage.getAssignedPacketId(), "invalid message packetId " + message.getVariableHeader().getPacketId() + " " + inflightMessage.getAssignedPacketId());
+                inflightMessage.setResponseMessage(message);
+                inflightMessage.setLatestTime(System.currentTimeMillis());
                 inflightMessage.setExpectMessageType(MqttMessageType.PUBCOMP);
                 //todo
                 ReasonProperties properties = null;
@@ -169,6 +179,9 @@ public class InflightQueue {
                 }
                 MqttPubQosVariableHeader variableHeader = new MqttPubQosVariableHeader(message.getVariableHeader().getPacketId(), properties);
                 MqttPubRelMessage pubRelMessage = new MqttPubRelMessage(variableHeader);
+                if (dup) {
+                    pubRelMessage.getFixedHeader().setDup(true);
+                }
                 session.write(pubRelMessage, false);
                 break;
             default:
@@ -189,10 +202,14 @@ public class InflightQueue {
         if (takeIndex == queue.length) {
             takeIndex = 0;
         }
-        inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
+        if (client) {
+            inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
+        }
         while (count > 0 && queue[takeIndex].isCommit()) {
             inflightMessage = queue[takeIndex];
-            inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
+            if (client) {
+                inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
+            }
             queue[takeIndex++] = null;
             if (takeIndex == queue.length) {
                 takeIndex = 0;
@@ -205,6 +222,9 @@ public class InflightQueue {
             Attachment attachment = session.session.getAttachment();
             InflightMessage monitorMessage = queue[takeIndex];
             attachment.put(RETRY_TASK_ATTACH_KEY, () -> session.getInflightQueue().retry(monitorMessage));
+        }
+        if (!client) {
+            inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
         }
         while (count < queue.length) {
             Runnable runnable = runnables.poll();

@@ -81,6 +81,7 @@ public abstract class AbstractSession {
                 //重新发送subscribe或unSubscribe消息
                 QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(() -> {
                     if (!ackMessage.isCommit()) {
+                        mqttMessage.getFixedHeader().setDup(true);
                         write(mqttMessage, consumer);
                     }
                 }, 1, TimeUnit.SECONDS);
@@ -100,7 +101,7 @@ public abstract class AbstractSession {
                 qosMessage.setCommit(true);
                 qosMessage.getConsumer().accept(message);
             } else {
-                LOGGER.info("message is null");
+                LOGGER.info("message is null," + message);
             }
         }
     }

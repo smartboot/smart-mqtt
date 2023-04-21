@@ -41,13 +41,13 @@ final class MqttMessageFactory {
             case CONNACK:
                 return MqttFixedHeader.CONN_ACK_HEADER;
             case SUBSCRIBE:
-                return MqttFixedHeader.SUBSCRIBE_HEADER;
+                return dup ? MqttFixedHeader.SUBSCRIBE_HEADER_DUP : MqttFixedHeader.SUBSCRIBE_HEADER;
             case SUBACK:
                 return MqttFixedHeader.SUB_ACK_HEADER;
             case UNSUBACK:
                 return MqttFixedHeader.UNSUB_ACK_HEADER;
             case UNSUBSCRIBE:
-                return MqttFixedHeader.UNSUBSCRIBE_HEADER;
+                return dup ? MqttFixedHeader.UNSUBSCRIBE_HEADER_DUP : MqttFixedHeader.UNSUBSCRIBE_HEADER;
             case PUBLISH:
                 if (dup || retain) {
                     return new MqttFixedHeader(messageType, dup, MqttQoS.valueOf(qosLevel), retain);
@@ -67,7 +67,7 @@ final class MqttMessageFactory {
             case PUBREC:
                 return MqttFixedHeader.PUB_REC_HEADER;
             case PUBREL:
-                return MqttFixedHeader.PUB_REL_HEADER;
+                return dup ? MqttFixedHeader.PUB_REL_HEADER_DUP : MqttFixedHeader.PUB_REL_HEADER;
             case PUBCOMP:
                 return MqttFixedHeader.PUB_COMP_HEADER;
             case PINGREQ:
