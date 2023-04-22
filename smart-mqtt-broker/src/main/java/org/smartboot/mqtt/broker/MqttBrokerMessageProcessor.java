@@ -38,7 +38,6 @@ import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.socket.StateMachineEnum;
-import org.smartboot.socket.extension.plugins.RateLimiterPlugin;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioSession;
 import org.smartboot.socket.util.Attachment;
@@ -74,7 +73,7 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
         processorMap.put(MqttPubRecMessage.class, new MqttAckProcessor<>());
         processorMap.put(MqttPubCompMessage.class, new MqttAckProcessor<>());
         processorMap.put(MqttDisconnectMessage.class, new DisConnectProcessor());
-        addPlugin(new RateLimiterPlugin<>(1024 * 512, 1024 * 512));
+//        addPlugin(new RateLimiterPlugin<>(1024 * 512, 1024 * 512));
     }
 
     public MqttBrokerMessageProcessor(BrokerContext mqttContext) {
