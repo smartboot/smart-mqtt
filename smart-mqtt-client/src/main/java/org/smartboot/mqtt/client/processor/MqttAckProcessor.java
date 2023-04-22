@@ -20,6 +20,6 @@ import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 public class MqttAckProcessor<T extends MqttPacketIdentifierMessage> implements MqttProcessor<T> {
     @Override
     public void process(MqttClient mqttClient, T message) {
-        mqttClient.notifyResponse(message);
+        mqttClient.getInflightQueue().notify(message);
     }
 }

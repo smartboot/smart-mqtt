@@ -17,6 +17,7 @@ import org.smartboot.mqtt.broker.processor.DisConnectProcessor;
 import org.smartboot.mqtt.broker.processor.MqttAckProcessor;
 import org.smartboot.mqtt.broker.processor.MqttProcessor;
 import org.smartboot.mqtt.broker.processor.PingReqProcessor;
+import org.smartboot.mqtt.broker.processor.PubRelProcessor;
 import org.smartboot.mqtt.broker.processor.PublishProcessor;
 import org.smartboot.mqtt.broker.processor.SubscribeProcessor;
 import org.smartboot.mqtt.broker.processor.UnSubscribeProcessor;
@@ -37,6 +38,7 @@ import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.socket.StateMachineEnum;
+import org.smartboot.socket.extension.plugins.RateLimiterPlugin;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioSession;
 import org.smartboot.socket.util.Attachment;
@@ -68,10 +70,11 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
         processorMap.put(MqttSubscribeMessage.class, new SubscribeProcessor());
         processorMap.put(MqttUnsubscribeMessage.class, new UnSubscribeProcessor());
         processorMap.put(MqttPubAckMessage.class, new MqttAckProcessor<>());
-        processorMap.put(MqttPubRelMessage.class, new MqttAckProcessor<>());
+        processorMap.put(MqttPubRelMessage.class, new PubRelProcessor());
         processorMap.put(MqttPubRecMessage.class, new MqttAckProcessor<>());
         processorMap.put(MqttPubCompMessage.class, new MqttAckProcessor<>());
         processorMap.put(MqttDisconnectMessage.class, new DisConnectProcessor());
+        addPlugin(new RateLimiterPlugin<>(1024 * 512, 1024 * 512));
     }
 
     public MqttBrokerMessageProcessor(BrokerContext mqttContext) {

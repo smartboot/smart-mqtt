@@ -21,13 +21,10 @@ import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttReasonCode;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
-import org.smartboot.mqtt.common.message.MqttPubCompMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
-import org.smartboot.mqtt.common.message.MqttPubRelMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
-import org.smartboot.mqtt.common.util.ValidateUtils;
 
 /**
  * 发布Topic
@@ -112,24 +109,6 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
         MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(variableHeader);
 
         //响应监听
-        session.write(pubRecMessage, message -> {
-            ValidateUtils.isTrue(message instanceof MqttPubRelMessage, "invalid message");
-            //发送pubRel消息。
-            //todo
-            MqttPubQosVariableHeader qosVariableHeader;
-            //todo
-            byte code = 0;
-            if (code != 0) {
-                ReasonProperties properties = new ReasonProperties();
-                qosVariableHeader = new MqttPubQosVariableHeader(mqttPublishMessage.getVariableHeader().getPacketId(), properties);
-                qosVariableHeader.setReasonCode(code);
-            } else {
-                qosVariableHeader = new MqttPubQosVariableHeader(mqttPublishMessage.getVariableHeader().getPacketId(), null);
-            }
-            MqttPubCompMessage pubRelMessage = new MqttPubCompMessage(qosVariableHeader);
-            session.write(pubRelMessage, false);
-            // 消息投递至消息总线
-            context.getEventBus().publish(ServerEventType.RECEIVE_PUBLISH_MESSAGE, EventObject.newEventObject(session, mqttPublishMessage));
-        });
+        session.write(pubRecMessage, () -> context.getEventBus().publish(ServerEventType.RECEIVE_PUBLISH_MESSAGE, EventObject.newEventObject(session, mqttPublishMessage)));
     }
 }

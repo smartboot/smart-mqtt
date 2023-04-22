@@ -16,6 +16,7 @@ import org.smartboot.mqtt.client.processor.ConnAckProcessor;
 import org.smartboot.mqtt.client.processor.MqttAckProcessor;
 import org.smartboot.mqtt.client.processor.MqttPingRespProcessor;
 import org.smartboot.mqtt.client.processor.MqttProcessor;
+import org.smartboot.mqtt.client.processor.PubRelProcessor;
 import org.smartboot.mqtt.client.processor.PublishProcessor;
 import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
@@ -50,7 +51,7 @@ public class MqttClientProcessor extends AbstractMessageProcessor<MqttMessage> {
         processors.put(MqttPublishMessage.class, new PublishProcessor());
         processors.put(MqttPubRecMessage.class, new MqttAckProcessor<MqttPubRecMessage>());
         processors.put(MqttPubCompMessage.class, new MqttAckProcessor<MqttPubCompMessage>());
-        processors.put(MqttPubRelMessage.class, new MqttAckProcessor<MqttPubRelMessage>());
+        processors.put(MqttPubRelMessage.class, new PubRelProcessor());
         processors.put(MqttSubAckMessage.class, new MqttAckProcessor<MqttPubRelMessage>());
         processors.put(MqttPingRespMessage.class, new MqttPingRespProcessor());
     }

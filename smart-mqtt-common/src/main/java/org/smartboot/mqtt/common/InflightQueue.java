@@ -119,13 +119,14 @@ public class InflightQueue {
                     return;
                 }
                 inflightMessage.setLatestTime(System.currentTimeMillis());
-                LOGGER.info("message:{} time out,retry...", inflightMessage.getOriginalMessage().getFixedHeader());
+                LOGGER.info("message:{} time out,retry...", inflightMessage.getExpectMessageType());
                 switch (inflightMessage.getExpectMessageType()) {
                     case PUBACK:
                     case PUBREC:
                         MqttMessage mqttMessage = inflightMessage.getOriginalMessage();
                         mqttMessage.getFixedHeader().setDup(true);
                         session.write(mqttMessage);
+                        System.out.println("relPublish..");
                         break;
                     case PUBCOMP:
                         ReasonProperties properties = null;
@@ -158,17 +159,21 @@ public class InflightQueue {
             case UNSUBACK:
             case PUBACK:
             case PUBCOMP: {
-                ValidateUtils.isTrue(message.getFixedHeader().getMessageType() == inflightMessage.getExpectMessageType(), "invalid message type :" + message + "expect message type:" + inflightMessage.getExpectMessageType());
-                ValidateUtils.isTrue(message.getVariableHeader().getPacketId() == inflightMessage.getAssignedPacketId(), "invalid message packetId " + message.getVariableHeader().getPacketId() + " " + inflightMessage.getAssignedPacketId());
+                if (message.getFixedHeader().getMessageType() != inflightMessage.getExpectMessageType() || message.getVariableHeader().getPacketId() != inflightMessage.getAssignedPacketId()) {
+                    System.out.println("maybe dup ack,ignore:" + message.getFixedHeader().getMessageType());
+                    break;
+                }
                 inflightMessage.setResponseMessage(message);
                 inflightMessage.setLatestTime(System.currentTimeMillis());
                 commit(inflightMessage);
                 break;
             }
             case PUBREC:
-                boolean dup = inflightMessage.getExpectMessageType() == MqttMessageType.PUBCOMP;
-                ValidateUtils.isTrue(message.getFixedHeader().getMessageType() == inflightMessage.getExpectMessageType() || dup, "invalid message type :" + message + "expect message type:" + inflightMessage.getExpectMessageType());
-                ValidateUtils.isTrue(message.getVariableHeader().getPacketId() == inflightMessage.getAssignedPacketId(), "invalid message packetId " + message.getVariableHeader().getPacketId() + " " + inflightMessage.getAssignedPacketId());
+                //说明此前出现过重复publish，切已经收到过REC,并发送过REL消息
+                if (message.getFixedHeader().getMessageType() != inflightMessage.getExpectMessageType() || message.getVariableHeader().getPacketId() != inflightMessage.getAssignedPacketId()) {
+                    System.out.println("maybe dup pubRec,ignore");
+                    break;
+                }
                 inflightMessage.setResponseMessage(message);
                 inflightMessage.setLatestTime(System.currentTimeMillis());
                 inflightMessage.setExpectMessageType(MqttMessageType.PUBCOMP);
@@ -179,13 +184,14 @@ public class InflightQueue {
                 }
                 MqttPubQosVariableHeader variableHeader = new MqttPubQosVariableHeader(message.getVariableHeader().getPacketId(), properties);
                 MqttPubRelMessage pubRelMessage = new MqttPubRelMessage(variableHeader);
-                if (dup) {
-                    pubRelMessage.getFixedHeader().setDup(true);
-                }
                 session.write(pubRelMessage, false);
+                if ((inflightMessage.getAssignedPacketId() - 1) % queue.length == takeIndex) {
+                    Attachment attachment = session.session.getAttachment();
+                    attachment.put(RETRY_TASK_ATTACH_KEY, () -> session.getInflightQueue().retry(inflightMessage));
+                }
                 break;
             default:
-                throw new RuntimeException();
+                throw new RuntimeException(message.toString());
         }
     }
 

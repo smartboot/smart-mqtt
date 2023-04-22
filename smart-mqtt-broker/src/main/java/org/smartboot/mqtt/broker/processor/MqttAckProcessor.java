@@ -21,6 +21,6 @@ import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 public class MqttAckProcessor<T extends MqttPacketIdentifierMessage> extends AuthorizedMqttProcessor<T> {
     @Override
     public void process0(BrokerContext context, MqttSession session, T t) {
-        session.notifyResponse(t);
+        session.getInflightQueue().notify(t);
     }
 }
