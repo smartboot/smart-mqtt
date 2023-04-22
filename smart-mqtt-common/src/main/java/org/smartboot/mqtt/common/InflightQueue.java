@@ -97,7 +97,7 @@ public class InflightQueue {
     /**
      * 超时重发
      */
-    void retry(InflightMessage inflightMessage) {
+    private void retry(InflightMessage inflightMessage) {
         if (inflightMessage.isCommit() || session.isDisconnect()) {
             return;
         }
@@ -126,7 +126,6 @@ public class InflightQueue {
                         MqttMessage mqttMessage = inflightMessage.getOriginalMessage();
                         mqttMessage.getFixedHeader().setDup(true);
                         session.write(mqttMessage);
-                        System.out.println("relPublish..");
                         break;
                     case PUBCOMP:
                         ReasonProperties properties = null;
@@ -160,7 +159,7 @@ public class InflightQueue {
             case PUBACK:
             case PUBCOMP: {
                 if (message.getFixedHeader().getMessageType() != inflightMessage.getExpectMessageType() || message.getVariableHeader().getPacketId() != inflightMessage.getAssignedPacketId()) {
-                    System.out.println("maybe dup ack,ignore:" + message.getFixedHeader().getMessageType());
+//                    System.out.println("maybe dup ack,ignore:" + message.getFixedHeader().getMessageType());
                     break;
                 }
                 inflightMessage.setResponseMessage(message);
@@ -171,7 +170,7 @@ public class InflightQueue {
             case PUBREC:
                 //说明此前出现过重复publish，切已经收到过REC,并发送过REL消息
                 if (message.getFixedHeader().getMessageType() != inflightMessage.getExpectMessageType() || message.getVariableHeader().getPacketId() != inflightMessage.getAssignedPacketId()) {
-                    System.out.println("maybe dup pubRec,ignore");
+//                    System.out.println("maybe dup pubRec,ignore");
                     break;
                 }
                 inflightMessage.setResponseMessage(message);
@@ -185,10 +184,6 @@ public class InflightQueue {
                 MqttPubQosVariableHeader variableHeader = new MqttPubQosVariableHeader(message.getVariableHeader().getPacketId(), properties);
                 MqttPubRelMessage pubRelMessage = new MqttPubRelMessage(variableHeader);
                 session.write(pubRelMessage, false);
-                if ((inflightMessage.getAssignedPacketId() - 1) % queue.length == takeIndex) {
-                    Attachment attachment = session.session.getAttachment();
-                    attachment.put(RETRY_TASK_ATTACH_KEY, () -> session.getInflightQueue().retry(inflightMessage));
-                }
                 break;
             default:
                 throw new RuntimeException(message.toString());
