@@ -49,13 +49,11 @@ public class InflightQueue {
 
     private final AbstractSession session;
     private final ConcurrentLinkedQueue<Runnable> runnables = new ConcurrentLinkedQueue<>();
-    private final boolean client;
 
-    public InflightQueue(AbstractSession session, int size, boolean client) {
+    public InflightQueue(AbstractSession session, int size) {
         ValidateUtils.isTrue(size > 0, "inflight must >0");
         this.queue = new InflightMessage[size];
         this.session = session;
-        this.client = client;
     }
 
     public InflightMessage offer(MqttMessageBuilders.MessageBuilder publishBuilder, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
@@ -203,14 +201,10 @@ public class InflightQueue {
         if (takeIndex == queue.length) {
             takeIndex = 0;
         }
-        if (client) {
-            inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
-        }
+        inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
         while (count > 0 && queue[takeIndex].isCommit()) {
             inflightMessage = queue[takeIndex];
-            if (client) {
-                inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
-            }
+            inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
             queue[takeIndex++] = null;
             if (takeIndex == queue.length) {
                 takeIndex = 0;
@@ -224,9 +218,7 @@ public class InflightQueue {
             InflightMessage monitorMessage = queue[takeIndex];
             attachment.put(RETRY_TASK_ATTACH_KEY, () -> session.getInflightQueue().retry(monitorMessage));
         }
-        if (!client) {
-            inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
-        }
+
         while (count < queue.length) {
             Runnable runnable = runnables.poll();
             if (runnable != null) {
