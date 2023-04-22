@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttVersion;
+import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPubRelMessage;
 import org.smartboot.mqtt.common.message.MqttVariableMessage;
@@ -48,7 +49,6 @@ public class InflightQueue {
 
     private final AbstractSession session;
     private final ConcurrentLinkedQueue<Runnable> runnables = new ConcurrentLinkedQueue<>();
-
 
     public InflightQueue(AbstractSession session, int size) {
         ValidateUtils.isTrue(size > 0, "inflight must >0");
@@ -95,7 +95,7 @@ public class InflightQueue {
     /**
      * 超时重发
      */
-    void retry(InflightMessage inflightMessage) {
+    private void retry(InflightMessage inflightMessage) {
         if (inflightMessage.isCommit() || session.isDisconnect()) {
             return;
         }
@@ -117,11 +117,13 @@ public class InflightQueue {
                     return;
                 }
                 inflightMessage.setLatestTime(System.currentTimeMillis());
-                LOGGER.info("message:{} time out,retry...", inflightMessage.getOriginalMessage().getFixedHeader());
+                LOGGER.info("message:{} time out,retry...", inflightMessage.getExpectMessageType());
                 switch (inflightMessage.getExpectMessageType()) {
                     case PUBACK:
                     case PUBREC:
-                        session.write(inflightMessage.getOriginalMessage());
+                        MqttMessage mqttMessage = inflightMessage.getOriginalMessage();
+                        mqttMessage.getFixedHeader().setDup(true);
+                        session.write(mqttMessage);
                         break;
                     case PUBCOMP:
                         ReasonProperties properties = null;
@@ -131,6 +133,7 @@ public class InflightQueue {
                         MqttVariableMessage<? extends MqttPacketIdVariableHeader> message = inflightMessage.getOriginalMessage();
                         MqttPubQosVariableHeader variableHeader = new MqttPubQosVariableHeader(message.getVariableHeader().getPacketId(), properties);
                         MqttPubRelMessage pubRelMessage = new MqttPubRelMessage(variableHeader);
+                        pubRelMessage.getFixedHeader().setDup(true);
                         session.write(pubRelMessage);
                         break;
                     default:
@@ -148,19 +151,28 @@ public class InflightQueue {
      */
     public void notify(MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> message) {
         InflightMessage inflightMessage = queue[(message.getVariableHeader().getPacketId() - 1) % queue.length];
-        ValidateUtils.isTrue(message.getFixedHeader().getMessageType() == inflightMessage.getExpectMessageType(), "invalid message type");
-        ValidateUtils.isTrue(message.getVariableHeader().getPacketId() == inflightMessage.getAssignedPacketId(), "invalid message packetId " + message.getVariableHeader().getPacketId() + " " + inflightMessage.getAssignedPacketId());
-        inflightMessage.setResponseMessage(message);
-        inflightMessage.setLatestTime(System.currentTimeMillis());
         switch (message.getFixedHeader().getMessageType()) {
             case SUBACK:
             case UNSUBACK:
             case PUBACK:
             case PUBCOMP: {
+                if (message.getFixedHeader().getMessageType() != inflightMessage.getExpectMessageType() || message.getVariableHeader().getPacketId() != inflightMessage.getAssignedPacketId()) {
+//                    System.out.println("maybe dup ack,ignore:" + message.getFixedHeader().getMessageType());
+                    break;
+                }
+                inflightMessage.setResponseMessage(message);
+                inflightMessage.setLatestTime(System.currentTimeMillis());
                 commit(inflightMessage);
                 break;
             }
             case PUBREC:
+                //说明此前出现过重复publish，切已经收到过REC,并发送过REL消息
+                if (message.getFixedHeader().getMessageType() != inflightMessage.getExpectMessageType() || message.getVariableHeader().getPacketId() != inflightMessage.getAssignedPacketId()) {
+//                    System.out.println("maybe dup pubRec,ignore");
+                    break;
+                }
+                inflightMessage.setResponseMessage(message);
+                inflightMessage.setLatestTime(System.currentTimeMillis());
                 inflightMessage.setExpectMessageType(MqttMessageType.PUBCOMP);
                 //todo
                 ReasonProperties properties = null;
@@ -172,7 +184,7 @@ public class InflightQueue {
                 session.write(pubRelMessage, false);
                 break;
             default:
-                throw new RuntimeException();
+                throw new RuntimeException(message.toString());
         }
     }
 
@@ -206,6 +218,7 @@ public class InflightQueue {
             InflightMessage monitorMessage = queue[takeIndex];
             attachment.put(RETRY_TASK_ATTACH_KEY, () -> session.getInflightQueue().retry(monitorMessage));
         }
+
         while (count < queue.length) {
             Runnable runnable = runnables.poll();
             if (runnable != null) {

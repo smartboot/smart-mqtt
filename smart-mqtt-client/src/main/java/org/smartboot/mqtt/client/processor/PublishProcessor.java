@@ -18,15 +18,12 @@ import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
-import org.smartboot.mqtt.common.message.MqttPubCompMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
-import org.smartboot.mqtt.common.message.MqttPubRelMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttPublishVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 import org.smartboot.mqtt.common.util.MqttUtil;
-import org.smartboot.mqtt.common.util.ValidateUtils;
 
 /**
  * 发布Topic
@@ -104,19 +101,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
         MqttPubQosVariableHeader variableHeader = new MqttPubQosVariableHeader(messageId, properties);
 
         MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(variableHeader);
-        session.write(pubRecMessage, message -> {
-            ValidateUtils.isTrue(message instanceof MqttPubRelMessage, "invalid message");
-            //todo
-            ReasonProperties reasonProperties = null;
-            if (mqttPublishMessage.getVersion() == MqttVersion.MQTT_5) {
-                reasonProperties = new ReasonProperties();
-            }
-            MqttPubQosVariableHeader qosVariableHeader = new MqttPubQosVariableHeader(message.getVariableHeader().getPacketId(), reasonProperties);
-            MqttPubCompMessage pubRelMessage = new MqttPubCompMessage(qosVariableHeader);
-            session.write(pubRelMessage, false);
-
-            processPublishMessage(mqttPublishMessage, session);
-        });
+        session.write(pubRecMessage, () -> processPublishMessage(mqttPublishMessage, session));
     }
 
 }
