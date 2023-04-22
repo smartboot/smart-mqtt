@@ -110,9 +110,6 @@ public final class MqttMessageBuilders {
 
         public MqttPublishMessage build() {
             MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false, qos, retained);
-            if (qos != MqttQoS.AT_LEAST_ONCE && qos != MqttQoS.EXACTLY_ONCE) {
-                packetId = -packetId;
-            }
             MqttPublishVariableHeader mqttVariableHeader = new MqttPublishVariableHeader(packetId, topic, publishProperties);
             return new MqttPublishMessage(mqttFixedHeader, mqttVariableHeader, payload);
         }
