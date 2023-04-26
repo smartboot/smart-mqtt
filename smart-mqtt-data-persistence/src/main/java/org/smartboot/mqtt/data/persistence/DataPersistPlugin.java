@@ -4,6 +4,7 @@ package org.smartboot.mqtt.data.persistence;
 import org.smartboot.mqtt.broker.plugin.Plugin;
 import org.smartboot.mqtt.data.persistence.config.DataSourcePluginConfig;
 
+
 public class DataPersistPlugin extends Plugin {
     private DataSourcePluginConfig config;
     
