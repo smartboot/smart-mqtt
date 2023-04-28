@@ -10,5 +10,8 @@ plugins:
       port: 1884
   - kafka-bridge:
   - mqtt-bridge:
-
   - redis-bridge:
+      port: 6379
+      host: 8.130.53.106
+      password: 990194923
+      base64: true
