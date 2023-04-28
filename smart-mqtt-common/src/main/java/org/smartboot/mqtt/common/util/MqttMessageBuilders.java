@@ -109,7 +109,20 @@ public final class MqttMessageBuilders {
         }
 
         public MqttPublishMessage build() {
-            MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH, false, qos, retained);
+            MqttFixedHeader mqttFixedHeader;
+            switch (qos) {
+                case AT_MOST_ONCE:
+                    mqttFixedHeader = retained ? MqttFixedHeader.PUB_RETAIN_QOS0_HEADER : MqttFixedHeader.PUB_QOS0_HEADER;
+                    break;
+                case AT_LEAST_ONCE:
+                    mqttFixedHeader = retained ? MqttFixedHeader.PUB_RETAIN_QOS1_HEADER : MqttFixedHeader.PUB_QOS1_HEADER;
+                    break;
+                case EXACTLY_ONCE:
+                    mqttFixedHeader = retained ? MqttFixedHeader.PUB_RETAIN_QOS2_HEADER : MqttFixedHeader.PUB_QOS2_HEADER;
+                    break;
+                default:
+                    throw new IllegalStateException("qos value not supported");
+            }
             MqttPublishVariableHeader mqttVariableHeader = new MqttPublishVariableHeader(packetId, topic, publishProperties);
             return new MqttPublishMessage(mqttFixedHeader, mqttVariableHeader, payload);
         }

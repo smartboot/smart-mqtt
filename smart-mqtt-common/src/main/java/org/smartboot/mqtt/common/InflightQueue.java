@@ -14,9 +14,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttVersion;
-import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPubRelMessage;
+import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttVariableMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
@@ -121,9 +122,10 @@ public class InflightQueue {
                 switch (inflightMessage.getExpectMessageType()) {
                     case PUBACK:
                     case PUBREC:
-                        MqttMessage mqttMessage = inflightMessage.getOriginalMessage();
-                        mqttMessage.getFixedHeader().setDup(true);
-                        session.write(mqttMessage);
+                        MqttPublishMessage mqttMessage = (MqttPublishMessage) inflightMessage.getOriginalMessage();
+                        MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(mqttMessage.getFixedHeader().getMessageType(), true, mqttMessage.getFixedHeader().getQosLevel(), mqttMessage.getFixedHeader().isRetain());
+                        MqttPublishMessage dupMessage = new MqttPublishMessage(mqttFixedHeader, mqttMessage.getVariableHeader(), mqttMessage.getPayload().getPayload());
+                        session.write(dupMessage);
                         break;
                     case PUBCOMP:
                         ReasonProperties properties = null;
@@ -132,8 +134,7 @@ public class InflightQueue {
                         }
                         MqttVariableMessage<? extends MqttPacketIdVariableHeader> message = inflightMessage.getOriginalMessage();
                         MqttPubQosVariableHeader variableHeader = new MqttPubQosVariableHeader(message.getVariableHeader().getPacketId(), properties);
-                        MqttPubRelMessage pubRelMessage = new MqttPubRelMessage(variableHeader);
-                        pubRelMessage.getFixedHeader().setDup(true);
+                        MqttPubRelMessage pubRelMessage = new MqttPubRelMessage(MqttFixedHeader.PUB_REL_HEADER_DUP, variableHeader);
                         session.write(pubRelMessage);
                         break;
                     default:
@@ -180,7 +181,7 @@ public class InflightQueue {
                     properties = new ReasonProperties();
                 }
                 MqttPubQosVariableHeader variableHeader = new MqttPubQosVariableHeader(message.getVariableHeader().getPacketId(), properties);
-                MqttPubRelMessage pubRelMessage = new MqttPubRelMessage(variableHeader);
+                MqttPubRelMessage pubRelMessage = new MqttPubRelMessage(MqttFixedHeader.PUB_REL_HEADER, variableHeader);
                 session.write(pubRelMessage, false);
                 break;
             default:

@@ -49,8 +49,11 @@ public class MqttFixedHeader extends ToString {
     public static final MqttFixedHeader DISCONNECT_HEADER = new MqttFixedHeader(MqttMessageType.DISCONNECT, MqttQoS.AT_MOST_ONCE);
 
     public static final MqttFixedHeader PUB_QOS0_HEADER = new MqttFixedHeader(MqttMessageType.PUBLISH, false, MqttQoS.AT_MOST_ONCE, false);
+    public static final MqttFixedHeader PUB_RETAIN_QOS0_HEADER = new MqttFixedHeader(MqttMessageType.PUBLISH, false, MqttQoS.AT_MOST_ONCE, true);
     public static final MqttFixedHeader PUB_QOS1_HEADER = new MqttFixedHeader(MqttMessageType.PUBLISH, false, MqttQoS.AT_LEAST_ONCE, false);
+    public static final MqttFixedHeader PUB_RETAIN_QOS1_HEADER = new MqttFixedHeader(MqttMessageType.PUBLISH, false, MqttQoS.AT_LEAST_ONCE, true);
     public static final MqttFixedHeader PUB_QOS2_HEADER = new MqttFixedHeader(MqttMessageType.PUBLISH, false, MqttQoS.EXACTLY_ONCE, false);
+    public static final MqttFixedHeader PUB_RETAIN_QOS2_HEADER = new MqttFixedHeader(MqttMessageType.PUBLISH, false, MqttQoS.EXACTLY_ONCE, true);
 
     public static final MqttFixedHeader PUB_FAILURE_HEADER = new MqttFixedHeader(MqttMessageType.PUBLISH, false, MqttQoS.FAILURE, false);
 
@@ -58,7 +61,7 @@ public class MqttFixedHeader extends ToString {
     /**
      * 重发标志
      */
-    private boolean dup;
+    private final boolean dup;
     private final MqttQoS qosLevel;
     /**
      * 保留标志，是否存储消息
@@ -82,10 +85,6 @@ public class MqttFixedHeader extends ToString {
 
     public boolean isDup() {
         return dup;
-    }
-
-    public void setDup(boolean dup) {
-        this.dup = dup;
     }
 
     public MqttQoS getQosLevel() {
