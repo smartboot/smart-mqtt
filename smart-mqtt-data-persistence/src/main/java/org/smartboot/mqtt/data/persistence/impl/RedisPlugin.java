@@ -52,7 +52,10 @@ public class RedisPlugin extends DataPersistPlugin {
                     jedisPool = new JedisPool(poolConfig, config.getHost(), config.getPort(),config.getTimeout(), config.getPassword());
                     LOGGER.info("redisPoll create success");
                 }
-            }finally {
+            }catch (Exception e){
+                LOGGER.error("redisPoll create fail");
+            }
+            finally {
                 lock.unlock();
             }
         }

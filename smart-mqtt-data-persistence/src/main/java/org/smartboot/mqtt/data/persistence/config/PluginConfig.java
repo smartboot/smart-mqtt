@@ -1,4 +1,4 @@
-package org.smartboot.mqtt.broker.config;
+package org.smartboot.mqtt.data.persistence.config;
 
 
 public class PluginConfig {

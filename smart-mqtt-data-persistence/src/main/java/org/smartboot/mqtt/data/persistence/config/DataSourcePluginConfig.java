@@ -1,7 +1,7 @@
 package org.smartboot.mqtt.data.persistence.config;
 
 
-import org.smartboot.mqtt.broker.config.PluginConfig;
+
 
 public class DataSourcePluginConfig extends PluginConfig {
     private String password;
