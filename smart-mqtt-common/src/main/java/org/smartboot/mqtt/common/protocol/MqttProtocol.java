@@ -132,20 +132,16 @@ public class MqttProtocol implements Protocol<MqttMessage> {
                 if (payloadBuffer.remaining() < remainingLength) {
                     break;
                 }
+                int p = payloadBuffer.position();
                 unit.mqttMessage.decodeVariableHeader(payloadBuffer);
 
 
-                unit.state = READ_PAYLOAD;
-
-                // fall through
-            }
-
-            case READ_PAYLOAD: {
                 if (unit.disposableBuffer == null) {
-                    unit.mqttMessage.decodePlayLoad(buffer);
+                    unit.mqttMessage.decodePlayLoad(payloadBuffer);
+                    ValidateUtils.isTrue((payloadBuffer.position() - p) == remainingLength, "Payload size is wrong");
                 } else {
-                    unit.mqttMessage.decodePlayLoad(unit.disposableBuffer);
-                    ValidateUtils.isTrue(unit.disposableBuffer.remaining() == 0, "decode error");
+                    unit.mqttMessage.decodePlayLoad(payloadBuffer);
+                    ValidateUtils.isTrue(payloadBuffer.remaining() == 0, "decode error");
                     unit.disposableBuffer = null;
                 }
                 unit.state = FINISH;

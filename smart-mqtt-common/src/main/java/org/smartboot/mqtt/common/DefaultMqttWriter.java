@@ -10,6 +10,7 @@
 
 package org.smartboot.mqtt.common;
 
+import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.transport.WriteBuffer;
 
 import java.io.IOException;
@@ -20,33 +21,54 @@ import java.io.IOException;
  */
 public class DefaultMqttWriter implements MqttWriter {
     private final WriteBuffer writeBuffer;
+    private int size;
 
     public DefaultMqttWriter(WriteBuffer writeBuffer) {
         this.writeBuffer = writeBuffer;
     }
 
     @Override
+    public void reset() {
+        size = 0;
+    }
+
+    @Override
     public void writeByte(byte b) {
+        size++;
         writeBuffer.writeByte(b);
     }
 
     @Override
     public void writeShort(short data) throws IOException {
+        ValidateUtils.isTrue(size != 0, "erro: writeShort can't write data, because writer is empty");
+        size += 2;
         writeBuffer.writeShort(data);
     }
 
     @Override
     public void writeInt(int data) throws IOException {
+        ValidateUtils.isTrue(size != 0, "erro: writeShort can't write data, because writer is empty");
+        size += 4;
         writeBuffer.writeInt(data);
     }
 
     @Override
-    public void write(byte[] data) throws IOException {
+    public synchronized void write(byte[] data) throws IOException {
+        ValidateUtils.isTrue(size != 0, "erro: writeShort can't write data, because writer is empty");
+        size += data.length;
         writeBuffer.write(data);
+        if (data.length > 1024) {
+            System.out.println("aaaaaaa");
+        }
     }
 
     @Override
     public void flush() {
         writeBuffer.flush();
+    }
+
+    @Override
+    public int writeSize() {
+        return size;
     }
 }
