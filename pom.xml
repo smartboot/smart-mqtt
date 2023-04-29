@@ -10,7 +10,7 @@
 
     <properties>
         <smart.mqtt.version>0.19</smart.mqtt.version>
-        <smart-socket.version>1.5.26</smart-socket.version>
+        <smart-socket.version>1.5.27</smart-socket.version>
         <smart-http.version>1.1.22</smart-http.version>
         <commons.lang.version>2.6</commons.lang.version>
         <commons.clollections.version>4.3</commons.clollections.version>
