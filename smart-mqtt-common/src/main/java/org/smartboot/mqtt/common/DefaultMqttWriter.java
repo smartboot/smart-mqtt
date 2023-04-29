@@ -57,9 +57,6 @@ public class DefaultMqttWriter implements MqttWriter {
         ValidateUtils.isTrue(size != 0, "erro: writeShort can't write data, because writer is empty");
         size += data.length;
         writeBuffer.write(data);
-        if (data.length > 1024) {
-            System.out.println("aaaaaaa");
-        }
     }
 
     @Override
