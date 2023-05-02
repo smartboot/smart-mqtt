@@ -20,6 +20,7 @@ import org.smartboot.mqtt.broker.openapi.controller.BrokerController;
 import org.smartboot.mqtt.broker.openapi.controller.ConnectionsController;
 import org.smartboot.mqtt.broker.openapi.controller.DashBoardController;
 import org.smartboot.mqtt.broker.openapi.controller.SubscriptionController;
+import org.smartboot.mqtt.broker.openapi.controller.SystemController;
 import org.smartboot.mqtt.broker.plugin.Plugin;
 import org.smartboot.mqtt.broker.plugin.PluginException;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
@@ -63,6 +64,7 @@ public class OpenApiPlugin extends Plugin {
             restfulBootstrap.controller(new ConnectionsController());
             restfulBootstrap.controller(new SubscriptionController());
             restfulBootstrap.controller(new BrokerController());
+            restfulBootstrap.controller(new SystemController());
 
             HttpBootstrap bootstrap = restfulBootstrap.bootstrap();
             bootstrap.setPort(config.getPort());

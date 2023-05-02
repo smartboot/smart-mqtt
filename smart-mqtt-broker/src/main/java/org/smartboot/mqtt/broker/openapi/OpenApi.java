@@ -36,5 +36,15 @@ public class OpenApi {
     public static final String SUBSCRIPTIONS_SUBSCRIPTION = SUBSCRIPTIONS + "/subscription";
     public static final String SUBSCRIPTIONS_TOPICS = SUBSCRIPTIONS + "/topics";
 
+
+    /**
+     * 系统设置
+     */
+    public static final String SYSTEM = BASE_API + "/system";
+
+    public static final String SYSTEM_LICENSE = SYSTEM + "/license";
+
+    public static final String SYSTEM_USER_LIST = SYSTEM + "/user/list";
+
     public static final String MESSAGE_UPGRADE = "升级企业版解锁此功能!";
 }

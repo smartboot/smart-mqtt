@@ -357,8 +357,12 @@ public class BrokerContextImpl implements BrokerContext {
                             BrokerTopic topic = subscriber.getTopic();
                             topic.getQueue().offer(subscriber);
                             notifyPush(topic);
-
-                            //完成retain消息的消费，正式开始监听Topic
+//
+//                            int preVersion = subscriber.getTopic().getVersion().get();
+//                            subscriber.batchPublish(BrokerContextImpl.this);
+//                            if (preVersion != subscriber.getTopic().getVersion().get()) {
+//                                notifyPush(subscriber.getTopic());
+//                            }
                             return;
                         }
                         //retain采用严格顺序publish模式
