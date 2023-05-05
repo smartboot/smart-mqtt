@@ -1,1 +1,1 @@
-org.smartboot.mqtt.bridge.redis.impl.RedisPlugin
+org.smartboot.mqtt.bridge.redis.RedisPlugin

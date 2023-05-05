@@ -8,10 +8,10 @@
  *  without special permission from the smartboot organization.
  */
 
-package org.smartboot.mqtt.bridge.redis.config;
+package org.smartboot.mqtt.bridge.redis;
 
 
-public class DataSourcePluginConfig {
+class Config {
     private String host;
     private int port;
     private String password;
