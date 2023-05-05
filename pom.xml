@@ -44,6 +44,11 @@
                 <version>${smart.mqtt.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.smartboot.mqtt</groupId>
+                <artifactId>plugins</artifactId>
+                <version>${smart.mqtt.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>commons-lang</groupId>
                 <artifactId>commons-lang</artifactId>
                 <version>${commons.lang.version}</version>
@@ -276,5 +281,6 @@
         <module>smart-mqtt-broker</module>
         <module>smart-mqtt-common</module>
         <module>smart-mqtt-client</module>
+        <module>plugins</module>
     </modules>
 </project>
