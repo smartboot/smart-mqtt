@@ -185,7 +185,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
             return;
         }
         WillMessage willMessage = msg.getPayload().getWillMessage();
-        MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().topicName(willMessage.getWillTopic()).qos(MqttQoS.valueOf(msg.getVariableHeader().willQos())).payload(willMessage.getWillMessage()).retained(msg.getFixedHeader().isRetain());
+        MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().topicName(willMessage.getTopic()).qos(MqttQoS.valueOf(msg.getVariableHeader().willQos())).payload(willMessage.getPayload()).retained(msg.getFixedHeader().isRetain());
         //todo
         if (session.getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());
