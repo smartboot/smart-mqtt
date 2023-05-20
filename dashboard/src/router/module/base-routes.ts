@@ -74,6 +74,24 @@ export default [
             },
         ]
     },
+    {
+        path: '/system',
+        // redirect: "/dashboard/overview",
+        component: BaseLayout,
+        children: [
+            {
+                path: '/system/user',
+                component: () => import('../../views/System/user.vue'),
+                meta: {title: '用户', requireAuth: true},
+            },
+            {
+                path: '/system/setting',
+                component: () => import('../../views/System/setting.vue'),
+                meta: {title: '设置', requireAuth: true},
+            },
+        ]
+
+    },
     // {
     //     path: '/chatGPT',
     //     component: BaseLayout,

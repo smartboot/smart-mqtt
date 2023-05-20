@@ -96,6 +96,9 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
     @Override
     public void stateEvent0(AioSession session, StateMachineEnum stateMachineEnum, Throwable throwable) {
         switch (stateMachineEnum) {
+            case DECODE_EXCEPTION:
+                LOGGER.error("decode exception", throwable);
+                break;
             case NEW_SESSION:
                 mqttContext.metric(MqttMetricEnum.CLIENT_ONLINE).getMetric().increment();
                 session.setAttachment(new Attachment());

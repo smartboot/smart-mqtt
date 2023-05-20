@@ -1,10 +1,20 @@
-package org.smartboot.mqtt.data.persistence.handler;
+/*
+ * Copyright (C) [2022] smartboot [zhengjunweimail@163.com]
+ *
+ *  企业用户未经smartboot组织特别许可，需遵循AGPL-3.0开源协议合理合法使用本项目。
+ *
+ *  Enterprise users are required to use this project reasonably
+ *  and legally in accordance with the AGPL-3.0 open source agreement
+ *  without special permission from the smartboot organization.
+ */
+
+package org.smartboot.mqtt.bridge.redis.handler;
 
 import com.sun.management.OperatingSystemMXBean;
+import org.smartboot.mqtt.bridge.redis.nodeinfo.BrokerNodeInfo;
 import org.smartboot.mqtt.broker.BrokerConfigure;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.BrokerRuntime;
-import org.smartboot.mqtt.data.persistence.nodeinfo.BrokerNodeInfo;
 
 import java.lang.management.ManagementFactory;
 import java.text.SimpleDateFormat;

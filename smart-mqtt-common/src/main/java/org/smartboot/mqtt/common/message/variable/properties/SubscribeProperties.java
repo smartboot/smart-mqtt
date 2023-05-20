@@ -20,6 +20,7 @@ import java.util.List;
  */
 public class SubscribeProperties extends AbstractProperties {
     private static final int PROPERTIES_BITS = MqttPropertyConstant.SUBSCRIPTION_IDENTIFIER_BIT | MqttPropertyConstant.USER_PROPERTY_BIT;
+
     /**
      * 订阅标识符
      */

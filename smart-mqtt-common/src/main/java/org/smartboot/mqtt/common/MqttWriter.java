@@ -17,6 +17,8 @@ import java.io.IOException;
  * @version V1.0 , 2022/12/2
  */
 public interface MqttWriter {
+    void reset();
+
     void writeByte(byte b);
 
     void writeShort(short data) throws IOException;
@@ -26,4 +28,6 @@ public interface MqttWriter {
     void write(byte[] data) throws IOException;
 
     void flush();
+
+    int writeSize();
 }

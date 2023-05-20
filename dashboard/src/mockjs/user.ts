@@ -52,6 +52,23 @@ const menus = [
     icon: "layui-icon-senior",
     title: "ChatMQTT"
   },
+  {
+    id: "/system",
+    icon: "layui-icon-set",
+    title: "系统设置",
+    children:[
+      {
+        id: "/system/user",
+        title: "用户",
+        icon:"layui-icon-group"
+      },
+      {
+        id: "/system/setting",
+        title: "设置",
+        icon: "layui-icon-set-sm"
+      }
+    ]
+  },
   // {
   //
   //   id: "/chatGPT",

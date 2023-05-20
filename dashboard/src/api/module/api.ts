@@ -30,3 +30,8 @@ export const subscriptions_subscription = function (query: {}) {
 export const subscriptions_topics = function (query: {}) {
     return Http.post('/subscriptions/topics', query)
 }
+
+export const system_user_list = function (query: {}) {
+    return Http.post('/system/user/list', query)
+}
+

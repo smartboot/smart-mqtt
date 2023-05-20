@@ -29,6 +29,7 @@ import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.QosRetryPlugin;
 import org.smartboot.mqtt.common.enums.MqttMetricEnum;
+import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventBus;
 import org.smartboot.mqtt.common.eventbus.EventBusImpl;
@@ -356,8 +357,12 @@ public class BrokerContextImpl implements BrokerContext {
                             BrokerTopic topic = subscriber.getTopic();
                             topic.getQueue().offer(subscriber);
                             notifyPush(topic);
-
-                            //完成retain消息的消费，正式开始监听Topic
+//
+//                            int preVersion = subscriber.getTopic().getVersion().get();
+//                            subscriber.batchPublish(BrokerContextImpl.this);
+//                            if (preVersion != subscriber.getTopic().getVersion().get()) {
+//                                notifyPush(subscriber.getTopic());
+//                            }
                             return;
                         }
                         //retain采用严格顺序publish模式
@@ -367,8 +372,15 @@ public class BrokerContextImpl implements BrokerContext {
                         if (session.getMqttVersion() == MqttVersion.MQTT_5) {
                             publishBuilder.publishProperties(new PublishProperties());
                         }
-                        InflightQueue inflightQueue = session.getInflightQueue();
                         long offset = storedMessage.getOffset();
+                        // Qos0不走飞行窗口
+                        if (subscriber.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
+                            subscriber.setRetainConsumerOffset(offset + 1);
+                            session.write(publishBuilder.build());
+                            retainPushThreadPool.execute(task);
+                            return;
+                        }
+                        InflightQueue inflightQueue = session.getInflightQueue();
                         // retain消息逐个推送
                         inflightQueue.offer(publishBuilder, (mqtt) -> {
                             LOGGER.info("publish retain to client:{} success  ", session.getClientId());

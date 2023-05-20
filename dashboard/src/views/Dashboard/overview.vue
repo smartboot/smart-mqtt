@@ -1,9 +1,4 @@
 <template>
-    <lay-container :fluid="true" style="padding: 10px">
-        <lay-row :space="10">
-
-        </lay-row>
-    </lay-container>
     <lay-row space="10">
         <lay-col md="24" sm="24" xs="24">
             <lay-field title="资源指标">
@@ -132,6 +127,13 @@ export default {
         const topicCountChart = ref();
         const period_message_received_chart = ref();
         const period_message_sent_chart = ref();
+        const license=ref({
+            username:"",
+            password:"",
+            desc:"",
+            datetime:[]
+
+        });
         const options = ref({
             responsive: true,
             maintainAspectRatio: false
@@ -211,7 +213,8 @@ export default {
             period_message_sent_chart,
             message,
             metric,
-            options
+            options,
+            license
         }
     }
 }

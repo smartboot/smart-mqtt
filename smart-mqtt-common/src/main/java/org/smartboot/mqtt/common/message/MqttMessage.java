@@ -14,6 +14,7 @@ import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.payload.MqttPayload;
+import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.util.DecoderException;
 
 import java.io.IOException;
@@ -67,6 +68,7 @@ public abstract class MqttMessage extends ToString {
     }
 
     public final void write(MqttWriter mqttWriter) throws IOException {
+        ValidateUtils.isTrue(mqttWriter.writeSize() == 0, "invlid write size");
         MqttCodecUtil.writeFixedHeader(mqttWriter, getFixedHeader());
         MqttVariableHeader variableHeader = getVariableHeader();
         MqttPayload mqttPayload = getPayload();
@@ -75,12 +77,14 @@ public abstract class MqttMessage extends ToString {
 
         //第一部分：固定报头
         MqttCodecUtil.writeVariableLengthInt(mqttWriter, remainingLength);
-
+        int size = mqttWriter.writeSize();
         //第二部分：可变报头
         variableHeader.writeTo(mqttWriter);
 
         //第三部分：有效载荷
         mqttPayload.writeTo(mqttWriter);
+        ValidateUtils.isTrue((mqttWriter.writeSize() - size) == remainingLength, "encode error");
+        mqttWriter.reset();
     }
 
     public abstract MqttVariableHeader getVariableHeader();

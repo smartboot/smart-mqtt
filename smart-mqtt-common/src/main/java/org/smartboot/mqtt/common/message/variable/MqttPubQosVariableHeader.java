@@ -54,6 +54,8 @@ public class MqttPubQosVariableHeader extends MqttReasonVariableHeader {
         MqttCodecUtil.writeMsbLsb(mqttWriter, getPacketId());
         if (reasonCode != 0) {
             mqttWriter.writeByte(reasonCode);
+        }
+        if (properties != null) {
             properties.writeTo(mqttWriter);
         }
     }

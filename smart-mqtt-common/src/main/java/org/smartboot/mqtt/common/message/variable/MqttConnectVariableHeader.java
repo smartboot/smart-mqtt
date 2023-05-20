@@ -69,7 +69,7 @@ public final class MqttConnectVariableHeader extends MqttVariableHeader<ConnectP
         this.hasUserName = hasUserName;
         this.hasPassword = hasPassword;
         this.isWillFlag = willMessage != null;
-        this.isWillRetain = isWillFlag && willMessage.isWillRetain();
+        this.isWillRetain = isWillFlag && willMessage.isRetained();
         this.willQos = isWillFlag ? willMessage.getWillQos().value() : 0;
         this.isCleanSession = isCleanSession;
         //服务端必须验证 CONNECT 控制报文的保留标志位（第 0 位）是否为 0，如果不为 0 必须断开客户端连接
