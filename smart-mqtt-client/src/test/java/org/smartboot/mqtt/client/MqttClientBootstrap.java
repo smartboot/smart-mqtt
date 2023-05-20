@@ -34,18 +34,18 @@ public class MqttClientBootstrap {
             System.out.println("subscribe message:" + new String(publishMessage.getPayload().getPayload()));
         }, (mqttClient, mqttQoS) -> {
             //最多分发一次
-            client.publish("test", MqttQoS.AT_MOST_ONCE, "aa".getBytes(StandardCharsets.UTF_8), false, packetId -> System.out.println("发送结果：" + packetId));
+            client.publish("test", MqttQoS.AT_MOST_ONCE, "aa".getBytes(StandardCharsets.UTF_8), packetId -> System.out.println("发送结果：" + packetId));
             //至少分发一次
-            client.publish("test", MqttQoS.AT_LEAST_ONCE, "bb".getBytes(StandardCharsets.UTF_8), false, packetId -> System.out.println("发送结果：" + packetId));
+            client.publish("test", MqttQoS.AT_LEAST_ONCE, "bb".getBytes(StandardCharsets.UTF_8), packetId -> System.out.println("发送结果：" + packetId));
             //只分发一次
-            client.publish("test", MqttQoS.EXACTLY_ONCE, "cc".getBytes(StandardCharsets.UTF_8), false, packetId -> System.out.println("发送结果：" + packetId));
+            client.publish("test", MqttQoS.EXACTLY_ONCE, "cc".getBytes(StandardCharsets.UTF_8), packetId -> System.out.println("发送结果：" + packetId));
         });
 
         client.subscribe("test/#", MqttQoS.AT_MOST_ONCE, (mqttClient, publishMessage) -> {
             System.out.println("subscribe test/# message:" + new String(publishMessage.getPayload().getPayload()));
         }, (mqttClient, mqttQoS) -> {
             //只分发一次
-            client.publish("test/dd", MqttQoS.EXACTLY_ONCE, "dd".getBytes(StandardCharsets.UTF_8), false, packetId -> System.out.println("发送结果：" + packetId));
+            client.publish("test/dd", MqttQoS.EXACTLY_ONCE, "dd".getBytes(StandardCharsets.UTF_8), packetId -> System.out.println("发送结果：" + packetId));
         });
 
 

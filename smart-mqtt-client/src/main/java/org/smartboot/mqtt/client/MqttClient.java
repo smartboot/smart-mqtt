@@ -69,6 +69,8 @@ import java.util.function.Consumer;
 
 public class MqttClient extends AbstractSession {
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttClient.class);
+    private static final Consumer<Integer> IGNORE = integer -> {
+    };
     /**
      * 客户端配置项
      */
@@ -384,28 +386,42 @@ public class MqttClient extends AbstractSession {
         return this;
     }
 
-    public void publish(String topic, MqttQoS qos, byte[] payload, boolean retain) {
-        publish(topic, qos, payload, retain, integer -> {
+    public void publish(String topic, MqttQoS qos, byte[] payload) {
+        publish(topic, qos, payload, false, true);
+    }
 
-        });
+    public void publish(String topic, MqttQoS qos, byte[] payload, boolean retain) {
+        publish(topic, qos, payload, retain, true);
+    }
+
+    public void publish(String topic, MqttQoS qos, byte[] payload, boolean retain, boolean autoFlush) {
+        publish(topic, qos, payload, retain, IGNORE, autoFlush);
+    }
+
+    public void publish(String topic, MqttQoS qos, byte[] payload, Consumer<Integer> consumer) {
+        publish(topic, qos, payload, false, consumer, true);
     }
 
     public void publish(String topic, MqttQoS qos, byte[] payload, boolean retain, Consumer<Integer> consumer) {
+        publish(topic, qos, payload, retain, consumer, true);
+    }
+
+    public void publish(String topic, MqttQoS qos, byte[] payload, boolean retain, Consumer<Integer> consumer, boolean autoFlush) {
         MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().topicName(topic).qos(qos).payload(payload).retained(retain);
         //todo
         if (getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());
         }
         if (connected) {
-            publish(publishBuilder, consumer);
+            publish(publishBuilder, consumer, autoFlush);
         } else {
-            registeredTasks.offer(() -> publish(publishBuilder, consumer));
+            registeredTasks.offer(() -> publish(publishBuilder, consumer, autoFlush));
         }
     }
 
-    private void publish(MqttMessageBuilders.PublishBuilder publishBuilder, Consumer<Integer> consumer) {
+    private void publish(MqttMessageBuilders.PublishBuilder publishBuilder, Consumer<Integer> consumer, boolean autoFlush) {
         if (publishBuilder.qos() == MqttQoS.AT_MOST_ONCE) {
-            write(publishBuilder.build());
+            write(publishBuilder.build(), autoFlush);
             consumer.accept(0);
             return;
         }
@@ -417,13 +433,7 @@ public class MqttClient extends AbstractSession {
                 MqttClient.this.notifyAll();
             }
         });
-        if (inflightMessage != null) {
-            flush();
-            if (publishBuilder.qos() == MqttQoS.AT_MOST_ONCE) {
-                inflightMessage.setResponseMessage(inflightMessage.getOriginalMessage());
-                inflightQueue.commit(inflightMessage);
-            }
-        } else {
+        if (inflightMessage == null) {
             try {
                 synchronized (this) {
                     wait();
@@ -431,9 +441,12 @@ public class MqttClient extends AbstractSession {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            publish(publishBuilder, consumer);
+            publish(publishBuilder, consumer, autoFlush);
+            return;
         }
-
+        if (autoFlush) {
+            flush();
+        }
     }
 
     public MqttClientConfigure getClientConfigure() {
