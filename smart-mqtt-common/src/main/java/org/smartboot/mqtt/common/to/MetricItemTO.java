@@ -37,6 +37,11 @@ public class MetricItemTO {
     private final LongAdder metric = new LongAdder();
 
     /**
+     * 上一次数据
+     */
+    private int latestValue;
+
+    /**
      * 采集周期，单位：秒，非正整数表示禁用周期统计
      */
     private final int period;
@@ -100,5 +105,13 @@ public class MetricItemTO {
 
     public void setTime(Date time) {
         this.time = time;
+    }
+
+    public int getLatestValue() {
+        return latestValue;
+    }
+
+    public void setLatestValue(int latestValue) {
+        this.latestValue = latestValue;
     }
 }
