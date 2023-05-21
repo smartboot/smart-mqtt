@@ -23,7 +23,6 @@ import org.smartboot.mqtt.broker.BrokerRuntime;
 import org.smartboot.mqtt.broker.openapi.OpenApi;
 import org.smartboot.mqtt.broker.openapi.enums.BrokerStatueEnum;
 import org.smartboot.mqtt.broker.openapi.to.BrokerNodeTO;
-import org.smartboot.mqtt.common.to.MetricTO;
 
 import java.lang.management.ManagementFactory;
 import java.util.Arrays;
@@ -46,7 +45,7 @@ public class DashBoardController {
     }
 
     @RequestMapping(OpenApi.DASHBOARD_OVERVIEW)
-    public RestResult<MetricTO> overview() {
+    public RestResult<?> overview() {
         return RestResult.fail(OpenApi.MESSAGE_UPGRADE);
     }
 
@@ -89,7 +88,7 @@ public class DashBoardController {
      * @return
      */
     @RequestMapping(OpenApi.DASHBOARD_METRICS)
-    public RestResult<MetricTO> metrics() {
+    public RestResult<?> metrics() {
         return RestResult.fail(OpenApi.MESSAGE_UPGRADE);
     }
 
