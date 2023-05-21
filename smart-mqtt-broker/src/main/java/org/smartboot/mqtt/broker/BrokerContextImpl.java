@@ -28,28 +28,20 @@ import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.QosRetryPlugin;
-import org.smartboot.mqtt.common.enums.MqttMetricEnum;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventBus;
 import org.smartboot.mqtt.common.eventbus.EventBusImpl;
 import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
 import org.smartboot.mqtt.common.eventbus.EventType;
-import org.smartboot.mqtt.common.message.MqttConnAckMessage;
-import org.smartboot.mqtt.common.message.MqttConnectMessage;
-import org.smartboot.mqtt.common.message.MqttMessage;
-import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
-import org.smartboot.mqtt.common.to.MetricItemTO;
 import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
-import org.smartboot.socket.extension.plugins.AbstractPlugin;
 import org.smartboot.socket.transport.AioQuickServer;
-import org.smartboot.socket.transport.AioSession;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
@@ -62,9 +54,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -118,10 +108,6 @@ public class BrokerContextImpl implements BrokerContext {
     private String configJson;
     private final static BrokerTopic SHUTDOWN_TOPIC = new BrokerTopic("");
 
-    /**
-     * 统计指标
-     */
-    private final Map<MqttMetricEnum, MetricItemTO> metricMap = new HashMap<>();
     private AsynchronousChannelGroup asynchronousChannelGroup;
 
     @Override
@@ -134,8 +120,6 @@ public class BrokerContextImpl implements BrokerContext {
         subscribeMessageBus();
 
         initPushThread();
-
-        initMetric();
 
         loadAndInstallPlugins();
 
@@ -182,69 +166,6 @@ public class BrokerContextImpl implements BrokerContext {
         configJson = null;
     }
 
-    private void initMetric() {
-        for (MqttMetricEnum metricEnum : MqttMetricEnum.values()) {
-            metricMap.put(metricEnum, new MetricItemTO(metricEnum));
-        }
-
-        processor.addPlugin(new AbstractPlugin<MqttMessage>() {
-            @Override
-            public void afterRead(AioSession session, int readSize) {
-                if (readSize > 0) {
-                    metricMap.get(MqttMetricEnum.BYTES_RECEIVED).getMetric().add(readSize);
-                }
-            }
-
-            @Override
-            public void afterWrite(AioSession session, int writeSize) {
-                if (writeSize > 0) {
-                    metricMap.get(MqttMetricEnum.BYTES_SENT).getMetric().add(writeSize);
-                }
-            }
-        });
-        eventBus.subscribe(ServerEventType.CONNECT, (eventType, object) -> metricMap.get(MqttMetricEnum.CLIENT_CONNECT).getMetric().increment());
-        eventBus.subscribe(ServerEventType.DISCONNECT, (eventType, object) -> metricMap.get(MqttMetricEnum.CLIENT_DISCONNECT).getMetric().increment());
-        eventBus.subscribe(ServerEventType.SUBSCRIBE_ACCEPT, (eventType, object) -> metricMap.get(MqttMetricEnum.CLIENT_SUBSCRIBE).getMetric().increment());
-        eventBus.subscribe(ServerEventType.UNSUBSCRIBE_ACCEPT, (eventType, object) -> metricMap.get(MqttMetricEnum.CLIENT_UNSUBSCRIBE).getMetric().increment());
-        eventBus.subscribe(EventType.RECEIVE_MESSAGE, (eventType, object) -> {
-            metricMap.get(MqttMetricEnum.PACKETS_RECEIVED).getMetric().increment();
-            if (object.getObject() instanceof MqttConnectMessage) {
-                metricMap.get(MqttMetricEnum.PACKETS_CONNECT_RECEIVED).getMetric().increment();
-            }
-        });
-        eventBus.subscribe(EventType.WRITE_MESSAGE, (eventType, object) -> {
-            metricMap.get(MqttMetricEnum.PACKETS_SENT).getMetric().increment();
-            if (object.getObject() instanceof MqttConnAckMessage) {
-                metricMap.get(MqttMetricEnum.PACKETS_CONNACK_SENT).getMetric().increment();
-            } else if (object.getObject() instanceof MqttPublishMessage) {
-                switch (object.getObject().getFixedHeader().getQosLevel()) {
-                    case AT_MOST_ONCE:
-                        metricMap.get(MqttMetricEnum.MESSAGE_QOS0_SENT).getMetric().increment();
-                        break;
-                    case AT_LEAST_ONCE:
-                        metricMap.get(MqttMetricEnum.MESSAGE_QOS1_SENT).getMetric().increment();
-                        break;
-                    case EXACTLY_ONCE:
-                        metricMap.get(MqttMetricEnum.MESSAGE_QOS2_SENT).getMetric().increment();
-                        break;
-                }
-            }
-        });
-        messageBusSubscriber.consumer((brokerContext1, publishMessage) -> {
-            switch (publishMessage.getFixedHeader().getQosLevel()) {
-                case AT_MOST_ONCE:
-                    metricMap.get(MqttMetricEnum.MESSAGE_QOS0_RECEIVED).getMetric().increment();
-                    break;
-                case AT_LEAST_ONCE:
-                    metricMap.get(MqttMetricEnum.MESSAGE_QOS1_RECEIVED).getMetric().increment();
-                    break;
-                case EXACTLY_ONCE:
-                    metricMap.get(MqttMetricEnum.MESSAGE_QOS2_RECEIVED).getMetric().increment();
-                    break;
-            }
-
-        });
-    }
 
     private final TopicSubscriber BREAK = new TopicSubscriber(null, null, null, 0, 0);
 
@@ -480,7 +401,6 @@ public class BrokerContextImpl implements BrokerContext {
             ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topicName), "invalid topicName: " + topicName);
             BrokerTopic newTopic = new BrokerTopic(topicName);
             eventBus.publish(ServerEventType.TOPIC_CREATE, newTopic);
-            metric(MqttMetricEnum.TOPIC_COUNT).getMetric().increment();
             return newTopic;
         });
     }
@@ -570,11 +490,6 @@ public class BrokerContextImpl implements BrokerContext {
     @Override
     public MqttBrokerMessageProcessor getMessageProcessor() {
         return processor;
-    }
-
-    @Override
-    public MetricItemTO metric(MqttMetricEnum metricEnum) {
-        return metricMap.get(metricEnum);
     }
 
     @Override

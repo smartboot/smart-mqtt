@@ -12,9 +12,7 @@ package org.smartboot.mqtt.broker;
 
 import org.smartboot.mqtt.broker.eventbus.messagebus.MessageBus;
 import org.smartboot.mqtt.broker.provider.Providers;
-import org.smartboot.mqtt.common.enums.MqttMetricEnum;
 import org.smartboot.mqtt.common.eventbus.EventBus;
-import org.smartboot.mqtt.common.to.MetricItemTO;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -85,10 +83,5 @@ public interface BrokerContext {
     <T> T parseConfig(String path, Class<T> clazz);
 
     MqttBrokerMessageProcessor getMessageProcessor();
-
-    /**
-     * 运行指标
-     */
-    MetricItemTO metric(MqttMetricEnum metricEnum);
 
 }

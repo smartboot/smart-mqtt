@@ -4,12 +4,12 @@
     <groupId>org.smartboot.mqtt</groupId>
     <artifactId>smart-mqtt</artifactId>
     <name>smart-mqtt</name>
-    <version>0.20</version>
+    <version>0.21</version>
     <modelVersion>4.0.0</modelVersion>
     <description>mqtt broker</description>
 
     <properties>
-        <smart.mqtt.version>0.20</smart.mqtt.version>
+        <smart.mqtt.version>0.21</smart.mqtt.version>
         <smart-socket.version>1.5.27</smart-socket.version>
         <smart-http.version>1.1.22</smart-http.version>
         <commons.lang.version>2.6</commons.lang.version>
@@ -66,7 +66,7 @@
             <dependency>
                 <groupId>com.alibaba.fastjson2</groupId>
                 <artifactId>fastjson2</artifactId>
-                <version>2.0.20.graal</version>
+                <version>2.0.21.graal</version>
             </dependency>
             <dependency>
                 <groupId>junit</groupId>

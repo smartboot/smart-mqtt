@@ -20,19 +20,13 @@ import org.smartboot.http.restful.annotation.RequestMapping;
 import org.smartboot.mqtt.broker.BrokerConfigure;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.BrokerRuntime;
-import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.openapi.OpenApi;
 import org.smartboot.mqtt.broker.openapi.enums.BrokerStatueEnum;
 import org.smartboot.mqtt.broker.openapi.to.BrokerNodeTO;
-import org.smartboot.mqtt.common.enums.MqttMetricEnum;
-import org.smartboot.mqtt.common.to.MetricItemTO;
 import org.smartboot.mqtt.common.to.MetricTO;
 
 import java.lang.management.ManagementFactory;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -53,29 +47,7 @@ public class DashBoardController {
 
     @RequestMapping(OpenApi.DASHBOARD_OVERVIEW)
     public RestResult<MetricTO> overview() {
-        MetricTO metricTO = new MetricTO();
-        Collection<MqttSession> sessions = brokerContext.getSessions();
-        Date date = new Date();
-        //在线客户端数量
-        MetricItemTO online = brokerContext.metric(MqttMetricEnum.CLIENT_ONLINE);
-        online.setTime(date);
-        metricTO.getMetric().put(MqttMetricEnum.CLIENT_ONLINE.getCode(), online);
-
-        //主题数
-        MetricItemTO topicCount = brokerContext.metric(MqttMetricEnum.TOPIC_COUNT);
-        topicCount.setTime(date);
-        metricTO.getMetric().put(MqttMetricEnum.TOPIC_COUNT.getCode(), topicCount);
-
-        int subCount = 0;
-        for (MqttSession session : sessions) {
-            subCount += session.getSubscribers().size();
-        }
-        MetricItemTO subscribeTopicCount = new MetricItemTO();
-        subscribeTopicCount.setCode("subscribe_topic_count");
-        subscribeTopicCount.setValue(subCount);
-        metricTO.getMetric().put(subscribeTopicCount.getCode(), subscribeTopicCount);
-
-        return RestResult.ok(metricTO);
+        return RestResult.fail(OpenApi.MESSAGE_UPGRADE);
     }
 
     @RequestMapping(OpenApi.DASHBOARD_NODES)
@@ -118,51 +90,7 @@ public class DashBoardController {
      */
     @RequestMapping(OpenApi.DASHBOARD_METRICS)
     public RestResult<MetricTO> metrics() {
-        MetricTO metricTO = new MetricTO();
-        //连接
-        List<MetricItemTO> connectionGroup = new ArrayList<>();
-        metricTO.getGroup().put("connection", connectionGroup);
-        connectionGroup.add(brokerContext.metric(MqttMetricEnum.CLIENT_CONNECT));
-        connectionGroup.add(brokerContext.metric(MqttMetricEnum.CLIENT_DISCONNECT));
-        connectionGroup.add(brokerContext.metric(MqttMetricEnum.CLIENT_SUBSCRIBE));
-        connectionGroup.add(brokerContext.metric(MqttMetricEnum.CLIENT_UNSUBSCRIBE));
-
-        //会话
-        List<MetricItemTO> sessionGroup = new ArrayList<>();
-        metricTO.getGroup().put("session", sessionGroup);
-        //认证与权限
-        List<MetricItemTO> accessGroup = new ArrayList<>();
-        metricTO.getGroup().put("access", accessGroup);
-
-        //流量收发
-        List<MetricItemTO> bytesGroup = new ArrayList<>();
-        metricTO.getGroup().put("bytes", bytesGroup);
-
-        //报文
-        List<MetricItemTO> packetGroup = new ArrayList<>();
-        metricTO.getGroup().put("packet", packetGroup);
-        packetGroup.add(brokerContext.metric(MqttMetricEnum.BYTES_RECEIVED));
-        packetGroup.add(brokerContext.metric(MqttMetricEnum.BYTES_SENT));
-        packetGroup.add(brokerContext.metric(MqttMetricEnum.PACKETS_RECEIVED));
-        packetGroup.add(brokerContext.metric(MqttMetricEnum.PACKETS_SENT));
-        packetGroup.add(brokerContext.metric(MqttMetricEnum.PACKETS_CONNECT_RECEIVED));
-        packetGroup.add(brokerContext.metric(MqttMetricEnum.PACKETS_CONNACK_SENT));
-
-
-        //消息数量
-        List<MetricItemTO> messageGroup = new ArrayList<>();
-        metricTO.getGroup().put("message", messageGroup);
-        messageGroup.add(brokerContext.metric(MqttMetricEnum.MESSAGE_QOS0_RECEIVED));
-        messageGroup.add(brokerContext.metric(MqttMetricEnum.MESSAGE_QOS1_RECEIVED));
-        messageGroup.add(brokerContext.metric(MqttMetricEnum.MESSAGE_QOS2_RECEIVED));
-        messageGroup.add(brokerContext.metric(MqttMetricEnum.MESSAGE_QOS0_SENT));
-        messageGroup.add(brokerContext.metric(MqttMetricEnum.MESSAGE_QOS1_SENT));
-        messageGroup.add(brokerContext.metric(MqttMetricEnum.MESSAGE_QOS2_SENT));
-
-        //消息分发
-        List<MetricItemTO> deliveryGroup = new ArrayList<>();
-        metricTO.getGroup().put("delivery", deliveryGroup);
-        return RestResult.ok(metricTO);
+        return RestResult.fail(OpenApi.MESSAGE_UPGRADE);
     }
 
 }
