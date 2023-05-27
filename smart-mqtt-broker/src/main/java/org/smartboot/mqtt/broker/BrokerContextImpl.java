@@ -13,6 +13,7 @@ package org.smartboot.mqtt.broker;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.JSONPath;
 import com.alibaba.fastjson2.JSONReader;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,15 @@ import org.smartboot.mqtt.broker.eventbus.messagebus.MessageBus;
 import org.smartboot.mqtt.broker.eventbus.messagebus.MessageBusSubscriber;
 import org.smartboot.mqtt.broker.eventbus.messagebus.consumer.RetainPersistenceConsumer;
 import org.smartboot.mqtt.broker.plugin.Plugin;
+import org.smartboot.mqtt.broker.processor.ConnectProcessor;
+import org.smartboot.mqtt.broker.processor.DisConnectProcessor;
+import org.smartboot.mqtt.broker.processor.MqttAckProcessor;
+import org.smartboot.mqtt.broker.processor.MqttProcessor;
+import org.smartboot.mqtt.broker.processor.PingReqProcessor;
+import org.smartboot.mqtt.broker.processor.PubRelProcessor;
+import org.smartboot.mqtt.broker.processor.PublishProcessor;
+import org.smartboot.mqtt.broker.processor.SubscribeProcessor;
+import org.smartboot.mqtt.broker.processor.UnSubscribeProcessor;
 import org.smartboot.mqtt.broker.provider.Providers;
 import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
 import org.smartboot.mqtt.common.AsyncTask;
@@ -34,6 +44,17 @@ import org.smartboot.mqtt.common.eventbus.EventBus;
 import org.smartboot.mqtt.common.eventbus.EventBusImpl;
 import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
 import org.smartboot.mqtt.common.eventbus.EventType;
+import org.smartboot.mqtt.common.message.MqttConnectMessage;
+import org.smartboot.mqtt.common.message.MqttDisconnectMessage;
+import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.mqtt.common.message.MqttPingReqMessage;
+import org.smartboot.mqtt.common.message.MqttPubAckMessage;
+import org.smartboot.mqtt.common.message.MqttPubCompMessage;
+import org.smartboot.mqtt.common.message.MqttPubRecMessage;
+import org.smartboot.mqtt.common.message.MqttPubRelMessage;
+import org.smartboot.mqtt.common.message.MqttPublishMessage;
+import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
+import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.MqttMessageBuilders;
@@ -54,7 +75,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -110,6 +133,23 @@ public class BrokerContextImpl implements BrokerContext {
 
     private AsynchronousChannelGroup asynchronousChannelGroup;
 
+    private final Map<Class<? extends MqttMessage>, MqttProcessor<?>> processors;
+
+    {
+        Map<Class<? extends MqttMessage>, MqttProcessor<?>> mqttProcessors = new HashMap<>();
+        mqttProcessors.put(MqttPingReqMessage.class, new PingReqProcessor());
+        mqttProcessors.put(MqttConnectMessage.class, new ConnectProcessor());
+        mqttProcessors.put(MqttPublishMessage.class, new PublishProcessor());
+        mqttProcessors.put(MqttSubscribeMessage.class, new SubscribeProcessor());
+        mqttProcessors.put(MqttUnsubscribeMessage.class, new UnSubscribeProcessor());
+        mqttProcessors.put(MqttPubAckMessage.class, new MqttAckProcessor<>());
+        mqttProcessors.put(MqttPubRelMessage.class, new PubRelProcessor());
+        mqttProcessors.put(MqttPubRecMessage.class, new MqttAckProcessor<>());
+        mqttProcessors.put(MqttPubCompMessage.class, new MqttAckProcessor<>());
+        mqttProcessors.put(MqttDisconnectMessage.class, new DisConnectProcessor());
+        processors = MapUtils.unmodifiableMap(mqttProcessors);
+    }
+
     @Override
     public void init() throws IOException {
 
@@ -134,7 +174,8 @@ public class BrokerContextImpl implements BrokerContext {
                 }
             });
             pagePool = new BufferPagePool(10 * 1024 * 1024, brokerConfigure.getThreadNum(), true);
-            processor.addPlugin(new QosRetryPlugin());
+            brokerConfigure.addPlugin(new QosRetryPlugin());
+            brokerConfigure.getPlugins().forEach(processor::addPlugin);
             server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(brokerConfigure.getMaxPacketSize()), processor);
             server.setBannerEnabled(false).setReadBufferSize(brokerConfigure.getBufferSize()).setWriteBuffer(brokerConfigure.getBufferSize(), Math.min(brokerConfigure.getMaxInflight(), 16)).setBufferPagePool(pagePool).setThreadNum(Math.max(2, brokerConfigure.getThreadNum()));
             server.start(asynchronousChannelGroup);
@@ -487,10 +528,12 @@ public class BrokerContextImpl implements BrokerContext {
         }
     }
 
+
     @Override
-    public MqttBrokerMessageProcessor getMessageProcessor() {
-        return processor;
+    public Map<Class<? extends MqttMessage>, MqttProcessor<?>> getMessageProcessors() {
+        return processors;
     }
+
 
     @Override
     public void destroy() {

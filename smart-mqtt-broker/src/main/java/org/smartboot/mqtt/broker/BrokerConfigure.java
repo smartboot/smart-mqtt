@@ -11,8 +11,12 @@
 package org.smartboot.mqtt.broker;
 
 import org.smartboot.mqtt.common.ToString;
+import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.socket.extension.plugins.Plugin;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -100,6 +104,8 @@ public class BrokerConfigure extends ToString {
      */
     private int maxInflight = 8;
 
+    private final List<Plugin<MqttMessage>> plugins = new LinkedList<>();
+
     public int getPort() {
         return port;
     }
@@ -186,6 +192,15 @@ public class BrokerConfigure extends ToString {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public BrokerConfigure addPlugin(Plugin<MqttMessage> plugin) {
+        plugins.add(plugin);
+        return this;
+    }
+
+    public List<Plugin<MqttMessage>> getPlugins() {
+        return plugins;
     }
 
     @Override

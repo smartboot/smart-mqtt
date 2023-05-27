@@ -12,36 +12,17 @@ package org.smartboot.mqtt.broker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.processor.ConnectProcessor;
-import org.smartboot.mqtt.broker.processor.DisConnectProcessor;
-import org.smartboot.mqtt.broker.processor.MqttAckProcessor;
 import org.smartboot.mqtt.broker.processor.MqttProcessor;
-import org.smartboot.mqtt.broker.processor.PingReqProcessor;
-import org.smartboot.mqtt.broker.processor.PubRelProcessor;
-import org.smartboot.mqtt.broker.processor.PublishProcessor;
-import org.smartboot.mqtt.broker.processor.SubscribeProcessor;
-import org.smartboot.mqtt.broker.processor.UnSubscribeProcessor;
 import org.smartboot.mqtt.common.DefaultMqttWriter;
 import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.exception.MqttException;
-import org.smartboot.mqtt.common.message.MqttConnectMessage;
-import org.smartboot.mqtt.common.message.MqttDisconnectMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
-import org.smartboot.mqtt.common.message.MqttPingReqMessage;
-import org.smartboot.mqtt.common.message.MqttPubAckMessage;
-import org.smartboot.mqtt.common.message.MqttPubCompMessage;
-import org.smartboot.mqtt.common.message.MqttPubRecMessage;
-import org.smartboot.mqtt.common.message.MqttPubRelMessage;
-import org.smartboot.mqtt.common.message.MqttPublishMessage;
-import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
-import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioSession;
 import org.smartboot.socket.util.Attachment;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -59,21 +40,7 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
      * 处于在线状态的会话
      */
     private final Map<String, MqttSession> onlineSessions = new ConcurrentHashMap<>();
-    private final Map<Class<? extends MqttMessage>, MqttProcessor> processorMap = new HashMap<>();
 
-    {
-        processorMap.put(MqttPingReqMessage.class, new PingReqProcessor());
-        processorMap.put(MqttConnectMessage.class, new ConnectProcessor());
-        processorMap.put(MqttPublishMessage.class, new PublishProcessor());
-        processorMap.put(MqttSubscribeMessage.class, new SubscribeProcessor());
-        processorMap.put(MqttUnsubscribeMessage.class, new UnSubscribeProcessor());
-        processorMap.put(MqttPubAckMessage.class, new MqttAckProcessor<>());
-        processorMap.put(MqttPubRelMessage.class, new PubRelProcessor());
-        processorMap.put(MqttPubRecMessage.class, new MqttAckProcessor<>());
-        processorMap.put(MqttPubCompMessage.class, new MqttAckProcessor<>());
-        processorMap.put(MqttDisconnectMessage.class, new DisConnectProcessor());
-//        addPlugin(new RateLimiterPlugin<>(1024 * 512, 1024 * 512));
-    }
 
     public MqttBrokerMessageProcessor(BrokerContext mqttContext) {
         this.mqttContext = mqttContext;
@@ -81,7 +48,7 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
 
     @Override
     public void process0(AioSession session, MqttMessage msg) {
-        MqttProcessor processor = processorMap.get(msg.getClass());
+        MqttProcessor processor = mqttContext.getMessageProcessors().get(msg.getClass());
         if (processor != null) {
             MqttSession mqttSession = onlineSessions.get(session.getSessionID());
             mqttContext.getEventBus().publish(EventType.RECEIVE_MESSAGE, EventObject.newEventObject(mqttSession, msg));
@@ -118,10 +85,6 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
 //        if (throwable != null) {
 //            throwable.printStackTrace();
 //        }
-    }
-
-    public Map<String, MqttSession> getOnlineSessions() {
-        return onlineSessions;
     }
 
 }
