@@ -18,6 +18,7 @@ import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.exception.MqttException;
 import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.mqtt.common.util.MqttAttachKey;
 import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioSession;
@@ -35,7 +36,7 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
      */
     private final BrokerContext mqttContext;
 
-    private final static AttachKey<MqttSession> SESSION_KEY = AttachKey.valueOf("mqttSession");
+    private final static AttachKey<MqttSession> SESSION_KEY = AttachKey.valueOf(MqttAttachKey.MQTT_SESSION);
 
 
     public MqttBrokerMessageProcessor(BrokerContext mqttContext) {

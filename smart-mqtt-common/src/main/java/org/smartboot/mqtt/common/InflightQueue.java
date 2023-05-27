@@ -22,6 +22,7 @@ import org.smartboot.mqtt.common.message.MqttVariableMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
+import org.smartboot.mqtt.common.util.MqttAttachKey;
 import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.util.AttachKey;
@@ -39,7 +40,7 @@ import java.util.function.Consumer;
  */
 public class InflightQueue {
     private static final Logger LOGGER = LoggerFactory.getLogger(InflightQueue.class);
-    static final AttachKey<Runnable> RETRY_TASK_ATTACH_KEY = AttachKey.valueOf("retryTask");
+    static final AttachKey<Runnable> RETRY_TASK_ATTACH_KEY = AttachKey.valueOf(MqttAttachKey.RETRY_TASK);
     private static final int TIMEOUT = 3;
     private final InflightMessage[] queue;
     private int takeIndex;

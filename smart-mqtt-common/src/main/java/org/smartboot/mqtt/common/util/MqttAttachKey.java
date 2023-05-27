@@ -1,0 +1,34 @@
+/*
+ * Copyright (C) [2022] smartboot [zhengjunweimail@163.com]
+ *
+ *  企业用户未经smartboot组织特别许可，需遵循AGPL-3.0开源协议合理合法使用本项目。
+ *
+ *  Enterprise users are required to use this project reasonably
+ *  and legally in accordance with the AGPL-3.0 open source agreement
+ *  without special permission from the smartboot organization.
+ */
+
+package org.smartboot.mqtt.common.util;
+
+import org.smartboot.socket.util.AttachKey;
+
+/**
+ * @author 三刀（zhengjunweimail@163.com）
+ * @version V1.0 , 5/27/23
+ */
+public class MqttAttachKey {
+    public static final String MQTT_VERSION = "mqtt_version";
+
+    public static final String DECODE_UNIT = "decode_unit";
+    public static final String RETRY_TASK = "retry_task";
+    public static final String MQTT_SESSION = "mqtt_session";
+
+    static {
+        AttachKey.reset();
+        AttachKey.valueOf(MQTT_SESSION);
+        AttachKey.valueOf(MQTT_VERSION);
+        AttachKey.valueOf(DECODE_UNIT);
+        AttachKey.valueOf(RETRY_TASK);
+        AttachKey.reset();
+    }
+}

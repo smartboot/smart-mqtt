@@ -16,6 +16,7 @@ import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.mqtt.common.util.MqttAttachKey;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.Protocol;
 import org.smartboot.socket.transport.AioSession;
@@ -36,8 +37,8 @@ public class MqttProtocol implements Protocol<MqttMessage> {
     private static final Logger logger = LoggerFactory.getLogger(MqttProtocol.class);
     private final int maxBytesInMessage;
 
-    public static final AttachKey<MqttVersion> MQTT_VERSION_ATTACH_KEY = AttachKey.valueOf("mqtt_version");
-    private static final AttachKey<DecodeUnit> DECODE_UNIT_ATTACH_KEY = AttachKey.valueOf("decodeUnit");
+    public static final AttachKey<MqttVersion> MQTT_VERSION_ATTACH_KEY = AttachKey.valueOf(MqttAttachKey.MQTT_VERSION);
+    private static final AttachKey<DecodeUnit> DECODE_UNIT_ATTACH_KEY = AttachKey.valueOf(MqttAttachKey.DECODE_UNIT);
 
 
     public MqttProtocol(int maxBytesInMessage) {
