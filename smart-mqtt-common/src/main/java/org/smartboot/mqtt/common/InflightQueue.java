@@ -18,6 +18,7 @@ import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPubRelMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
+import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttVariableMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
@@ -101,9 +102,9 @@ public class InflightQueue {
         if (inflightMessage.isCommit() || session.isDisconnect()) {
             return;
         }
-        QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(new Runnable() {
+        QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(new AsyncTask() {
             @Override
-            public void run() {
+            public void execute() {
                 if (inflightMessage.isCommit()) {
 //                    System.out.println("message has commit,ignore retry monitor");
                     return;
@@ -138,6 +139,11 @@ public class InflightQueue {
                         MqttPubRelMessage pubRelMessage = new MqttPubRelMessage(MqttFixedHeader.PUB_REL_HEADER_DUP, variableHeader);
                         session.write(pubRelMessage);
                         break;
+                    case SUBACK:
+                        MqttSubscribeMessage subscribeMessage = (MqttSubscribeMessage) inflightMessage.getOriginalMessage();
+                        MqttSubscribeMessage dupSubscribeMessage = new MqttSubscribeMessage(MqttFixedHeader.SUBSCRIBE_HEADER_DUP, subscribeMessage.getVariableHeader(), subscribeMessage.getPayload());
+                        session.write(dupSubscribeMessage);
+                        break;
                     default:
                         throw new UnsupportedOperationException("invalid message type: " + inflightMessage.getExpectMessageType());
                 }
@@ -153,6 +159,10 @@ public class InflightQueue {
      */
     public void notify(MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> message) {
         InflightMessage inflightMessage = queue[(message.getVariableHeader().getPacketId() - 1) % queue.length];
+        if (inflightMessage == null && message.getFixedHeader().isDup()) {
+            LOGGER.info("ignore duplicate message");
+            return;
+        }
         switch (message.getFixedHeader().getMessageType()) {
             case SUBACK:
             case UNSUBACK:
