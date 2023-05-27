@@ -343,7 +343,7 @@ public class MqttClient extends AbstractSession {
             subscribeBuilder.subscribeProperties(new SubscribeProperties());
         }
         MqttSubscribeMessage subscribeMessage = subscribeBuilder.build();
-        getInflightQueue().offer(subscribeBuilder, (message) -> {
+        InflightMessage inflightMessage = getInflightQueue().offer(subscribeBuilder, (message) -> {
             List<Integer> qosValues = ((MqttSubAckMessage) message).getPayload().grantedQoSLevels();
             ValidateUtils.isTrue(qosValues.size() == qos.length, "invalid response");
             int i = 0;
@@ -364,7 +364,11 @@ public class MqttClient extends AbstractSession {
             }
             consumeTask();
         });
-        flush();
+        if (inflightMessage == null) {
+            registeredTasks.offer(() -> subscribe0(topic, qos, consumer, subAckConsumer));
+        } else {
+            flush();
+        }
     }
 
     public void notifyResponse(MqttConnAckMessage connAckMessage) {
