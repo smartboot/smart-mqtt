@@ -169,11 +169,11 @@ public class MqttClient extends AbstractSession {
             if (mqttConnAckMessage.getVariableHeader().connectReturnCode() == MqttConnectReturnCode.CONNECTION_ACCEPTED) {
                 setInflightQueue(new InflightQueue(this, 16));
                 connected = true;
-                consumeTask();
                 //重连情况下重新触发订阅逻辑
                 subscribes.forEach((k, v) -> {
                     subscribe(k, v.getQoS(), v.getConsumer());
                 });
+                consumeTask();
             }
             //客户端设置清理会话（CleanSession）标志为 0 重连时，客户端和服务端必须使用原始的报文标识符重发
             //任何未确认的 PUBLISH 报文（如果 QoS>0）和 PUBREL 报文 [MQTT-4.4.0-1]。这是唯一要求客户端或

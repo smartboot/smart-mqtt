@@ -66,6 +66,29 @@ public class MqttSession extends AbstractSession {
         this.session = session;
         this.mqttWriter = mqttWriter;
         mqttContext.getEventBus().publish(ServerEventType.SESSION_CREATE, this);
+        mqttContext.getEventBus().subscribe(ServerEventType.TOPIC_CREATE, new EventBusSubscriber<BrokerTopic>() {
+            @Override
+            public boolean enable() {
+                return !disconnect;
+            }
+
+            @Override
+            public void subscribe(EventType<BrokerTopic> eventType, BrokerTopic object) {
+                if (!mqttContext.getProviders().getSubscribeProvider().subscribeTopic(object.getTopic(), MqttSession.this)) {
+                    return;
+                }
+                for (TopicFilterSubscriber topicFilterSubscriber : subscribers.values()) {
+                    if (subscribers.containsKey(object.getTopic())) {
+                        break;
+                    }
+                    if (topicFilterSubscriber.getTopicFilterToken().isWildcards() && MqttUtil.match(object.getTopicToken(), topicFilterSubscriber.getTopicFilterToken())) {
+                        TopicSubscriber subscription = subscribeSuccess(topicFilterSubscriber.getMqttQoS(), topicFilterSubscriber.getTopicFilterToken(), object);
+                        mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, subscription);
+                    }
+                }
+
+            }
+        });
     }
 
     public ConnectProperties getProperties() {
@@ -166,31 +189,6 @@ public class MqttSession extends AbstractSession {
                 }
             }
         }
-
-        //通配符匹配增量Topic
-        if (!subscribers.containsKey(topicFilter)) {
-            subscribers.put(topicFilter, new TopicFilterSubscriber(topicToken, mqttQoS));
-        }
-        if (newSubscribe) {
-            mqttContext.getEventBus().subscribe(ServerEventType.TOPIC_CREATE, new EventBusSubscriber<BrokerTopic>() {
-                @Override
-                public boolean enable() {
-                    boolean enable = !disconnect && subscribers.containsKey(topicFilter);
-                    if (!enable) {
-                        LOGGER.info("current event is disable,quit topic:{} monitor", topicFilter);
-                    }
-                    return enable;
-                }
-
-                @Override
-                public void subscribe(EventType<BrokerTopic> eventType, BrokerTopic object) {
-                    if (MqttUtil.match(object.getTopicToken(), topicToken) && mqttContext.getProviders().getSubscribeProvider().subscribeTopic(object.getTopic(), MqttSession.this)) {
-                        TopicSubscriber subscription = MqttSession.this.subscribeSuccess(mqttQoS, topicToken, object);
-                        mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, subscription);
-                    }
-                }
-            });
-        }
     }
 
     /**
@@ -224,13 +222,9 @@ public class MqttSession extends AbstractSession {
             }
         });
 
-        TopicFilterSubscriber topicFilterSubscriber = subscribers.get(subscription.getTopicFilterToken().getTopicFilter());
-        if (topicFilterSubscriber == null) {
-            topicFilterSubscriber = new TopicFilterSubscriber(subscription.getTopicFilterToken(), subscription.getMqttQoS(), subscription);
-            subscribers.put(subscription.getTopicFilterToken().getTopicFilter(), topicFilterSubscriber);
-        } else {
-            topicFilterSubscriber.getTopicSubscribers().put(subscription.getTopic().getTopic(), subscription);
-        }
+        TopicFilterSubscriber topicFilterSubscriber = subscribers.computeIfAbsent(subscription.getTopicFilterToken().getTopicFilter(), s -> new TopicFilterSubscriber(subscription.getTopicFilterToken(), subscription.getMqttQoS()));
+
+        topicFilterSubscriber.getTopicSubscribers().put(subscription.getTopic().getTopic(), subscription);
         TopicSubscriber preTopicSubscriber = subscription.getTopic().getConsumeOffsets().put(this, subscription);
         if (preTopicSubscriber != null) {
             LOGGER.error("invalid state...");
