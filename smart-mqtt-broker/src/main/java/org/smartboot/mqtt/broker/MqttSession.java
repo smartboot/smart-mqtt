@@ -142,8 +142,17 @@ public class MqttSession extends AbstractSession {
     }
 
     private void subscribe0(String topicFilter, MqttQoS mqttQoS) {
+        TopicFilterSubscriber subscriber = subscribers.get(topicFilter);
+        if (subscriber != null) {
+            subscriber.setMqttQoS(mqttQoS);
+            subscriber.getTopicSubscribers().values().forEach(sub -> sub.setMqttQoS(mqttQoS));
+            return;
+        }
         TopicToken topicToken = new TopicToken(topicFilter);
-        TopicFilterSubscriber subscriber = new TopicFilterSubscriber(topicToken, mqttQoS);
+        if (!topicToken.isWildcards()) {
+            mqttContext.getOrCreateTopic(topicFilter);
+        }
+        subscriber = new TopicFilterSubscriber(topicToken, mqttQoS);
         TopicFilterSubscriber preSubscriber = subscribers.put(topicFilter, subscriber);
         ValidateUtils.isTrue(preSubscriber == null, "duplicate topic filter");
         mqttContext.getTopicSubscribeTree().subscribeTopic(this, subscriber);
@@ -153,18 +162,15 @@ public class MqttSession extends AbstractSession {
     public void subscribeSuccess(MqttQoS mqttQoS, TopicToken topicToken, BrokerTopic topic) {
         TopicToken subToken = pub2sub.get(topic);
         if (subToken != null) {
-            if (!subToken.isWildcards()) {
-                return;
-            } else if (topicToken.isWildcards()) {
-                if (topicToken.getTopicFilter().length() > subToken.getTopicFilter().length()) {
-                    TopicSubscriber preSubscription = subscribers.get(subToken.getTopicFilter()).getTopicSubscribers().remove(topic.getTopic());
-                    TopicSubscriber subscription = new TopicSubscriber(topic, MqttSession.this, mqttQoS, preSubscription.getNextConsumerOffset(), preSubscription.getRetainConsumerOffset());
-                    subscription.setTopicFilterToken(topicToken);
-                    topic.getConsumeOffsets().put(MqttSession.this, subscription);
-
+            if (subToken.isWildcards()) {
+                if (!topicToken.isWildcards() || topicToken.getTopicFilter().length() > subToken.getTopicFilter().length()) {
+                    TopicSubscriber preSubscription = subscribers.get(subToken.getTopicFilter()).getTopicSubscribers().get(topic.getTopic());
+                    preSubscription.setMqttQoS(mqttQoS);
+                    preSubscription.setTopicFilterToken(topicToken);
+                    pub2sub.put(topic, topicToken);
                 }
-                return;
             }
+            return;
         }
         pub2sub.put(topic, topicToken);
         long latestOffset = mqttContext.getProviders().getPersistenceProvider().getLatestOffset(topic.getTopic());
@@ -202,6 +208,7 @@ public class MqttSession extends AbstractSession {
         }
         filterSubscriber.getTopicSubscribers().values().forEach(subscriber -> {
             TopicSubscriber removeSubscriber = subscriber.getTopic().getConsumeOffsets().remove(this);
+            pub2sub.remove(removeSubscriber.getTopic());
             retainOffsetCache.put(subscriber.getTopic(), subscriber.getRetainConsumerOffset());
             if (subscriber == removeSubscriber) {
                 removeSubscriber.disable();

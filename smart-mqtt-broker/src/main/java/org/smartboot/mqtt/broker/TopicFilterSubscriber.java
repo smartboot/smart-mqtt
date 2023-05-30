@@ -25,7 +25,7 @@ import java.util.Map;
 public class TopicFilterSubscriber {
     private final TopicToken topicFilterToken;
 
-    private final MqttQoS mqttQoS;
+    private MqttQoS mqttQoS;
 
     /**
      * 客户端订阅所匹配的Topic。通配符订阅时可能有多个
@@ -43,6 +43,10 @@ public class TopicFilterSubscriber {
 
     public MqttQoS getMqttQoS() {
         return mqttQoS;
+    }
+
+    public void setMqttQoS(MqttQoS mqttQoS) {
+        this.mqttQoS = mqttQoS;
     }
 
     public Map<String, TopicSubscriber> getTopicSubscribers() {

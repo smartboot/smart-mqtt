@@ -41,7 +41,7 @@ public class TopicSubscriber {
     /**
      * 服务端向客户端发送应用消息所允许的最大 QoS 等级
      */
-    private final MqttQoS mqttQoS;
+    private MqttQoS mqttQoS;
 
     /**
      * 期望消费的点位
@@ -190,5 +190,9 @@ public class TopicSubscriber {
 
     public void disable() {
         this.enable = false;
+    }
+
+    public void setMqttQoS(MqttQoS mqttQoS) {
+        this.mqttQoS = mqttQoS;
     }
 }
