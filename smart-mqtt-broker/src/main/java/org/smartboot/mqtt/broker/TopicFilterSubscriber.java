@@ -22,7 +22,7 @@ import java.util.Map;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/7/13
  */
-class TopicFilterSubscriber {
+public class TopicFilterSubscriber {
     private final TopicToken topicFilterToken;
 
     private final MqttQoS mqttQoS;
@@ -32,7 +32,7 @@ class TopicFilterSubscriber {
      */
     private final Map<String, TopicSubscriber> topicSubscribers = new HashMap<>();
 
-    public TopicFilterSubscriber(TopicToken topicFilterToken, MqttQoS mqttQoS) {
+    TopicFilterSubscriber(TopicToken topicFilterToken, MqttQoS mqttQoS) {
         this.topicFilterToken = topicFilterToken;
         this.mqttQoS = mqttQoS;
     }

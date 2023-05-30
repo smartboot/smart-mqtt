@@ -18,11 +18,9 @@ import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
-import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
-import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.transport.AioSession;
 
@@ -45,6 +43,8 @@ public class MqttSession extends AbstractSession {
      */
     private final Map<String, TopicFilterSubscriber> subscribers = new ConcurrentHashMap<>();
 
+    private final Map<BrokerTopic, TopicToken> pub2sub = new ConcurrentHashMap<>();
+
     private final BrokerContext mqttContext;
 
     private String username;
@@ -66,29 +66,6 @@ public class MqttSession extends AbstractSession {
         this.session = session;
         this.mqttWriter = mqttWriter;
         mqttContext.getEventBus().publish(ServerEventType.SESSION_CREATE, this);
-        mqttContext.getEventBus().subscribe(ServerEventType.TOPIC_CREATE, new EventBusSubscriber<BrokerTopic>() {
-            @Override
-            public boolean enable() {
-                return !disconnect;
-            }
-
-            @Override
-            public void subscribe(EventType<BrokerTopic> eventType, BrokerTopic object) {
-                if (!mqttContext.getProviders().getSubscribeProvider().subscribeTopic(object.getTopic(), MqttSession.this)) {
-                    return;
-                }
-                for (TopicFilterSubscriber topicFilterSubscriber : subscribers.values()) {
-                    if (subscribers.containsKey(object.getTopic())) {
-                        break;
-                    }
-                    if (topicFilterSubscriber.getTopicFilterToken().isWildcards() && MqttUtil.match(object.getTopicToken(), topicFilterSubscriber.getTopicFilterToken())) {
-                        TopicSubscriber subscription = subscribeSuccess(topicFilterSubscriber.getMqttQoS(), topicFilterSubscriber.getTopicFilterToken(), object);
-                        mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, subscription);
-                    }
-                }
-
-            }
-        });
     }
 
     public ConnectProperties getProperties() {
@@ -157,46 +134,39 @@ public class MqttSession extends AbstractSession {
 
     public MqttQoS subscribe(String topicFilter, MqttQoS mqttQoS) {
         if (mqttContext.getProviders().getSubscribeProvider().subscribeTopic(topicFilter, this)) {
-            subscribe0(topicFilter, mqttQoS, true);
+            subscribe0(topicFilter, mqttQoS);
             return mqttQoS;
         } else {
             return MqttQoS.FAILURE;
         }
     }
 
-    private void subscribe0(String topicFilter, MqttQoS mqttQoS, boolean newSubscribe) {
+    private void subscribe0(String topicFilter, MqttQoS mqttQoS) {
         TopicToken topicToken = new TopicToken(topicFilter);
-        //精准匹配
-        if (!topicToken.isWildcards()) {
-            BrokerTopic topic = mqttContext.getOrCreateTopic(topicToken.getTopicFilter());//可能会先触发TopicFilterSubscriber.subscribe
-            TopicSubscriber subscription = subscribeSuccess(mqttQoS, topicToken, topic);
-            if (newSubscribe) {
-                mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, subscription);
-            } else {
-                mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_REFRESH_TOPIC, subscription);
-            }
-            return;
-        }
-
-        //通配符匹配存量Topic
-        for (BrokerTopic topic : mqttContext.getTopics()) {
-            if (MqttUtil.match(topic.getTopicToken(), topicToken) && mqttContext.getProviders().getSubscribeProvider().subscribeTopic(topic.getTopic(), this)) {
-                TopicSubscriber subscription = subscribeSuccess(mqttQoS, topicToken, topic);
-                if (newSubscribe) {
-                    mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, subscription);
-                } else {
-                    mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_REFRESH_TOPIC, subscription);
-                }
-            }
-        }
+        TopicFilterSubscriber subscriber = new TopicFilterSubscriber(topicToken, mqttQoS);
+        TopicFilterSubscriber preSubscriber = subscribers.put(topicFilter, subscriber);
+        ValidateUtils.isTrue(preSubscriber == null, "duplicate topic filter");
+        mqttContext.getTopicSubscribeTree().subscribeTopic(this, subscriber);
+        mqttContext.getPublishTopicTree().match(topicToken, topic -> subscribeSuccess(mqttQoS, topicToken, topic));
     }
 
-    /**
-     * retain消息消费点位记录
-     */
-    private final Map<BrokerTopic, Long> retainOffsetCache = new HashMap<>();
+    public void subscribeSuccess(MqttQoS mqttQoS, TopicToken topicToken, BrokerTopic topic) {
+        TopicToken subToken = pub2sub.get(topic);
+        if (subToken != null) {
+            if (!subToken.isWildcards()) {
+                return;
+            } else if (topicToken.isWildcards()) {
+                if (topicToken.getTopicFilter().length() > subToken.getTopicFilter().length()) {
+                    TopicSubscriber preSubscription = subscribers.get(subToken.getTopicFilter()).getTopicSubscribers().remove(topic.getTopic());
+                    TopicSubscriber subscription = new TopicSubscriber(topic, MqttSession.this, mqttQoS, preSubscription.getNextConsumerOffset(), preSubscription.getRetainConsumerOffset());
+                    subscription.setTopicFilterToken(topicToken);
+                    topic.getConsumeOffsets().put(MqttSession.this, subscription);
 
-    private TopicSubscriber subscribeSuccess(MqttQoS mqttQoS, TopicToken topicToken, BrokerTopic topic) {
+                }
+                return;
+            }
+        }
+        pub2sub.put(topic, topicToken);
         long latestOffset = mqttContext.getProviders().getPersistenceProvider().getLatestOffset(topic.getTopic());
         // retain消费点位优先以缓存为准
         Long retainOffset = retainOffsetCache.get(topic);
@@ -205,39 +175,24 @@ public class MqttSession extends AbstractSession {
             retainOffset = oldestRetainOffset;
         }
         //以当前消息队列的最新点位为起始点位
-        TopicSubscriber subscription = new TopicSubscriber(topic, this, mqttQoS, latestOffset + 1, retainOffset);
+        TopicSubscriber subscription = new TopicSubscriber(topic, MqttSession.this, mqttQoS, latestOffset + 1, retainOffset);
         subscription.setTopicFilterToken(topicToken);
-        // 如果服务端收到一个 SUBSCRIBE 报文，
-        //报文的主题过滤器与一个现存订阅的主题过滤器相同，
-        // 那么必须使用新的订阅彻底替换现存的订阅。
-        // 新订阅的主题过滤器和之前订阅的相同，但是它的最大 QoS 值可以不同。
-        ValidateUtils.isTrue(!disconnect, "session has closed,can not subscribe topic");
+        topic.getConsumeOffsets().put(MqttSession.this, subscription);
+        mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, subscription);
 
-        subscribers.values().forEach(topicFilterSubscriber -> {
-            TopicSubscriber oldOffset = topicFilterSubscriber.getTopicSubscribers().remove(topic.getTopic());
-            if (oldOffset != null) {
-                TopicSubscriber consumerOffset = oldOffset.getTopic().getConsumeOffsets().remove(this);
-                consumerOffset.disable();
-                LOGGER.info("remove topic:{} {},", topic, oldOffset == consumerOffset ? "success" : "fail");
-            }
-        });
-
-        TopicFilterSubscriber topicFilterSubscriber = subscribers.computeIfAbsent(subscription.getTopicFilterToken().getTopicFilter(), s -> new TopicFilterSubscriber(subscription.getTopicFilterToken(), subscription.getMqttQoS()));
-
-        topicFilterSubscriber.getTopicSubscribers().put(subscription.getTopic().getTopic(), subscription);
-        TopicSubscriber preTopicSubscriber = subscription.getTopic().getConsumeOffsets().put(this, subscription);
-        if (preTopicSubscriber != null) {
-            LOGGER.error("invalid state...");
-        } else {
-            LOGGER.debug("new subscribe topic:{} success by topicFilter:{}", subscription.getTopic().getTopic(), subscription.getTopicFilterToken().getTopicFilter());
-        }
-
-        return subscription;
+        subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic.getTopic(), subscription);
     }
+
+    /**
+     * retain消息消费点位记录
+     */
+    private final Map<BrokerTopic, Long> retainOffsetCache = new HashMap<>();
 
 
     public void resubscribe() {
-        subscribers.values().forEach(subscriber -> subscribe0(subscriber.getTopicFilterToken().getTopicFilter(), subscriber.getMqttQoS(), false));
+        subscribers.values().stream().filter(subscriber -> subscriber.getTopicFilterToken().isWildcards()).forEach(subscriber -> {
+            mqttContext.getPublishTopicTree().match(subscriber.getTopicFilterToken(), topic -> subscribeSuccess(subscriber.getMqttQoS(), subscriber.getTopicFilterToken(), topic));
+        });
     }
 
     public void unsubscribe(String topicFilter) {
@@ -255,6 +210,7 @@ public class MqttSession extends AbstractSession {
                 LOGGER.error("remove subscriber:{} error!", removeSubscriber);
             }
         });
+        mqttContext.getTopicSubscribeTree().unsubscribe(this, filterSubscriber);
     }
 
 

@@ -35,6 +35,8 @@ import org.smartboot.mqtt.broker.processor.SubscribeProcessor;
 import org.smartboot.mqtt.broker.processor.UnSubscribeProcessor;
 import org.smartboot.mqtt.broker.provider.Providers;
 import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
+import org.smartboot.mqtt.broker.topic.TopicPublishTree;
+import org.smartboot.mqtt.broker.topic.TopicSubscribeTree;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.QosRetryPlugin;
@@ -106,6 +108,9 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private final ConcurrentMap<String, BrokerTopic> topicMap = new ConcurrentHashMap<>();
     private BrokerConfigure brokerConfigure = new BrokerConfigure();
+    private final TopicPublishTree topicPublishTree = new TopicPublishTree();
+
+    private final TopicSubscribeTree subscribeTopicTree = new TopicSubscribeTree();
     /**
      * Keep-Alive监听线程
      */
@@ -358,6 +363,13 @@ public class BrokerContextImpl implements BrokerContext {
             LOGGER.info("刷新订阅关系, {} 订阅了topic: {}", subscriber.getTopicFilterToken().getTopicFilter(), subscriber.getTopic().getTopic());
             subscriber.getTopic().getQueue().offer(subscriber);
         });
+
+        eventBus.subscribe(ServerEventType.TOPIC_CREATE, (eventType, object) -> subscribeTopicTree.match(object.getTopicToken(), (session, topicFilterSubscriber) -> {
+            if (!providers.getSubscribeProvider().subscribeTopic(object.getTopic(), session)) {
+                return;
+            }
+            session.subscribeSuccess(topicFilterSubscriber.getMqttQoS(), topicFilterSubscriber.getTopicFilterToken(), object);
+        }));
     }
 
     private void notifyPush(BrokerTopic topic) {
@@ -440,7 +452,7 @@ public class BrokerContextImpl implements BrokerContext {
     public BrokerTopic getOrCreateTopic(String topic) {
         return topicMap.computeIfAbsent(topic, topicName -> {
             ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topicName), "invalid topicName: " + topicName);
-            BrokerTopic newTopic = new BrokerTopic(topicName);
+            BrokerTopic newTopic = topicPublishTree.addTopic(topic);
             eventBus.publish(ServerEventType.TOPIC_CREATE, newTopic);
             return newTopic;
         });
@@ -507,6 +519,16 @@ public class BrokerContextImpl implements BrokerContext {
         } else {
             return null;
         }
+    }
+
+    @Override
+    public TopicPublishTree getPublishTopicTree() {
+        return topicPublishTree;
+    }
+
+    @Override
+    public TopicSubscribeTree getTopicSubscribeTree() {
+        return subscribeTopicTree;
     }
 
     public void loadYamlConfig() throws IOException {
