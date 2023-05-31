@@ -30,7 +30,7 @@ public class TopicFilterSubscriber {
     /**
      * 客户端订阅所匹配的Topic。通配符订阅时可能有多个
      */
-    private final Map<String, TopicSubscriber> topicSubscribers = new HashMap<>();
+    private final Map<BrokerTopic, TopicSubscriber> topicSubscribers = new HashMap<>();
 
     TopicFilterSubscriber(TopicToken topicFilterToken, MqttQoS mqttQoS) {
         this.topicFilterToken = topicFilterToken;
@@ -49,7 +49,7 @@ public class TopicFilterSubscriber {
         this.mqttQoS = mqttQoS;
     }
 
-    public Map<String, TopicSubscriber> getTopicSubscribers() {
+    public Map<BrokerTopic, TopicSubscriber> getTopicSubscribers() {
         return topicSubscribers;
     }
 }

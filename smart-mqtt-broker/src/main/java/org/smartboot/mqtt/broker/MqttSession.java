@@ -43,8 +43,6 @@ public class MqttSession extends AbstractSession {
      */
     private final Map<String, TopicFilterSubscriber> subscribers = new ConcurrentHashMap<>();
 
-    private final Map<BrokerTopic, TopicToken> pub2sub = new ConcurrentHashMap<>();
-
     private final BrokerContext mqttContext;
 
     private String username;
@@ -160,19 +158,23 @@ public class MqttSession extends AbstractSession {
     }
 
     public void subscribeSuccess(MqttQoS mqttQoS, TopicToken topicToken, BrokerTopic topic) {
-        TopicToken subToken = pub2sub.get(topic);
-        if (subToken != null) {
-            if (subToken.isWildcards()) {
-                if (!topicToken.isWildcards() || topicToken.getTopicFilter().length() > subToken.getTopicFilter().length()) {
-                    TopicSubscriber preSubscription = subscribers.get(subToken.getTopicFilter()).getTopicSubscribers().get(topic.getTopic());
+        TopicSubscriber topicSubscriber = topic.getConsumeOffsets().get(this);
+        if (topicSubscriber != null) {
+            //此前的订阅关系
+            TopicToken preToken = topicSubscriber.getTopicFilterToken();
+            if (preToken.isWildcards()) {
+                if (!topicToken.isWildcards() || topicToken.getTopicFilter().length() > preToken.getTopicFilter().length()) {
+                    //解除旧的订阅关系
+                    TopicSubscriber preSubscription = subscribers.get(preToken.getTopicFilter()).getTopicSubscribers().remove(topic);
                     preSubscription.setMqttQoS(mqttQoS);
                     preSubscription.setTopicFilterToken(topicToken);
-                    pub2sub.put(topic, topicToken);
+                    //绑定新的订阅关系
+                    subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, preSubscription);
+                    mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_REFRESH_TOPIC, preSubscription);
                 }
             }
             return;
         }
-        pub2sub.put(topic, topicToken);
         long latestOffset = mqttContext.getProviders().getPersistenceProvider().getLatestOffset(topic.getTopic());
         // retain消费点位优先以缓存为准
         Long retainOffset = retainOffsetCache.get(topic);
@@ -186,7 +188,7 @@ public class MqttSession extends AbstractSession {
         topic.getConsumeOffsets().put(MqttSession.this, subscription);
         mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, subscription);
 
-        subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic.getTopic(), subscription);
+        subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, subscription);
     }
 
     /**
@@ -208,7 +210,6 @@ public class MqttSession extends AbstractSession {
         }
         filterSubscriber.getTopicSubscribers().values().forEach(subscriber -> {
             TopicSubscriber removeSubscriber = subscriber.getTopic().getConsumeOffsets().remove(this);
-            pub2sub.remove(removeSubscriber.getTopic());
             retainOffsetCache.put(subscriber.getTopic(), subscriber.getRetainConsumerOffset());
             if (subscriber == removeSubscriber) {
                 removeSubscriber.disable();

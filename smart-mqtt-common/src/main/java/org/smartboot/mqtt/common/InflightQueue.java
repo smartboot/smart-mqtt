@@ -159,7 +159,7 @@ public class InflightQueue {
      */
     public void notify(MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> message) {
         InflightMessage inflightMessage = queue[(message.getVariableHeader().getPacketId() - 1) % queue.length];
-        if (inflightMessage == null && message.getFixedHeader().isDup()) {
+        if (inflightMessage == null) {
             LOGGER.info("ignore duplicate message");
             return;
         }
@@ -200,7 +200,7 @@ public class InflightQueue {
         }
     }
 
-    public synchronized void commit(InflightMessage inflightMessage) {
+    private synchronized void commit(InflightMessage inflightMessage) {
         MqttVariableMessage<? extends MqttPacketIdVariableHeader> originalMessage = inflightMessage.getOriginalMessage();
         ValidateUtils.isTrue(originalMessage.getFixedHeader().getQosLevel().value() == 0 || originalMessage.getVariableHeader().getPacketId() == inflightMessage.getAssignedPacketId(), "invalid message");
         inflightMessage.setCommit(true);
