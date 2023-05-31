@@ -432,14 +432,25 @@ public class MqttClient extends AbstractSession {
         InflightQueue inflightQueue = getInflightQueue();
         InflightMessage inflightMessage = inflightQueue.offer(publishBuilder, (message) -> {
             consumer.accept(message.getVariableHeader().getPacketId());
-            consumeTask();
+            //最早发送的消息若收到响应，则更新点位
+            synchronized (MqttClient.this) {
+                MqttClient.this.notifyAll();
+            }
         });
         if (inflightMessage == null) {
-            registeredTasks.offer(() -> publish(publishBuilder, consumer, autoFlush));
-        } else if (autoFlush) {
+            try {
+                synchronized (this) {
+                    wait();
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            publish(publishBuilder, consumer, autoFlush);
+            return;
+        }
+        if (autoFlush) {
             flush();
         }
-
     }
 
     public MqttClientConfigure getClientConfigure() {
