@@ -109,7 +109,7 @@ public class InflightQueue {
 //                    System.out.println("message has commit,ignore retry monitor");
                     return;
                 }
-                if (session.isDisconnect()) {
+                if (session.session.isInvalid()) {
                     LOGGER.debug("session is disconnect , pause qos monitor.");
                     return;
                 }
