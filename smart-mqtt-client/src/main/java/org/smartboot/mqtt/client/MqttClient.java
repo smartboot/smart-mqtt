@@ -75,7 +75,12 @@ public class MqttClient extends AbstractSession {
      * 客户端配置项
      */
     private final MqttClientConfigure clientConfigure = new MqttClientConfigure();
-    private final AbstractMessageProcessor<MqttMessage> messageProcessor = new MqttClientProcessor(this);
+    private static final AbstractMessageProcessor<MqttMessage> messageProcessor = new MqttClientProcessor();
+
+    static {
+        messageProcessor.addPlugin(new QosRetryPlugin());
+    }
+
     /**
      * 完成connect之前注册的事件
      */
@@ -84,6 +89,8 @@ public class MqttClient extends AbstractSession {
      * 已订阅的消息主题
      */
     private final Map<String, Subscribe> subscribes = new ConcurrentHashMap<>();
+
+    private final Map<String, Subscribe> mapping = new ConcurrentHashMap<>();
 
     private final List<TopicToken> wildcardsToken = new LinkedList<>();
 
@@ -215,7 +222,7 @@ public class MqttClient extends AbstractSession {
             }, clientConfigure.getKeepAliveInterval(), TimeUnit.SECONDS);
         }
 //        messageProcessor.addPlugin(new StreamMonitorPlugin<>());
-        messageProcessor.addPlugin(new QosRetryPlugin());
+
         client = new AioQuickClient(clientConfigure.getHost(), clientConfigure.getPort(), new MqttProtocol(clientConfigure.getMaxPacketSize()), messageProcessor);
         try {
             if (bufferPagePool != null) {
@@ -223,7 +230,9 @@ public class MqttClient extends AbstractSession {
             }
             client.setReadBufferSize(clientConfigure.getBufferSize()).setWriteBuffer(clientConfigure.getBufferSize(), 8).connectTimeout(clientConfigure.getConnectionTimeout());
             session = client.start(asynchronousChannelGroup);
-            session.setAttachment(new Attachment());
+            Attachment attachment = new Attachment();
+            session.setAttachment(attachment);
+            attachment.put(MqttClientProcessor.SESSION_KEY, this);
             setMqttVersion(clientConfigure.getMqttVersion());
             mqttWriter = new DefaultMqttWriter(session.writeBuffer());
 
@@ -305,6 +314,7 @@ public class MqttClient extends AbstractSession {
                 subscribes.remove(unsubscribedTopic);
                 wildcardsToken.removeIf(topicToken -> StringUtils.equals(unsubscribedTopic, topicToken.getTopicFilter()));
             }
+            mapping.clear();
             consumeTask();
         });
         flush();
@@ -360,6 +370,7 @@ public class MqttClient extends AbstractSession {
                 } else {
                     LOGGER.error("subscribe topic:{} fail", subscription.getTopicFilter());
                 }
+                mapping.clear();
                 subAckConsumer.accept(MqttClient.this, minQos);
             }
             consumeTask();
@@ -459,6 +470,10 @@ public class MqttClient extends AbstractSession {
 
     public Map<String, Subscribe> getSubscribes() {
         return subscribes;
+    }
+
+    public Map<String, Subscribe> getMapping() {
+        return mapping;
     }
 
     public List<TopicToken> getWildcardsToken() {
