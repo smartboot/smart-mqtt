@@ -27,7 +27,7 @@ public class TopicSubscribeTree {
     private final Map<MqttSession, TopicFilterSubscriber> subscribers = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, TopicSubscribeTree> subNode = new ConcurrentHashMap<>();
 
-    public synchronized void subscribeTopic(MqttSession session, TopicFilterSubscriber subscriber) {
+    public void subscribeTopic(MqttSession session, TopicFilterSubscriber subscriber) {
         TopicSubscribeTree treeNode = this;
         TopicToken token = subscriber.getTopicFilterToken();
         do {

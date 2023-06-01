@@ -24,7 +24,7 @@ public class TopicPublishTree {
     private BrokerTopic brokerTopic;
     private final ConcurrentHashMap<String, TopicPublishTree> subNode = new ConcurrentHashMap<>();
 
-    public synchronized BrokerTopic addTopic(String topic) {
+    public BrokerTopic addTopic(String topic) {
         BrokerTopic brokerTopic = new BrokerTopic(topic);
         TopicToken topicToken = brokerTopic.getTopicToken();
         TopicPublishTree treeNode = this;
