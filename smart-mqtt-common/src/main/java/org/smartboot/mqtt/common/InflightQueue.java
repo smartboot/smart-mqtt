@@ -56,9 +56,6 @@ public class InflightQueue {
 
     private final ReentrantLock lock = new ReentrantLock(false);
 
-    private final Condition notEmpty = lock.newCondition();
-
-
     private final Condition notFull = lock.newCondition();
 
     public InflightQueue(AbstractSession session, int size) {
@@ -72,7 +69,6 @@ public class InflightQueue {
         try {
             lock.lockInterruptibly();
             while (count == queue.length) {
-                session.flush();
                 notFull.await();
             }
             return enqueue(publishBuilder);
@@ -248,7 +244,7 @@ public class InflightQueue {
         }
         queue[takeIndex++] = null;
         count--;
-        notFull.signal();
+
         if (takeIndex == queue.length) {
             takeIndex = 0;
         }
@@ -262,7 +258,9 @@ public class InflightQueue {
             }
             count--;
         }
-
+        if (count < queue.length) {
+            notFull.signal();
+        }
         if (count > 0) {
             //注册超时监听任务
             Attachment attachment = session.session.getAttachment();
