@@ -82,9 +82,9 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
             default:
                 break;
         }
-        if (throwable != null) {
-            throwable.printStackTrace();
-        }
+//        if (throwable != null) {
+//            throwable.printStackTrace();
+//        }
     }
 
 }

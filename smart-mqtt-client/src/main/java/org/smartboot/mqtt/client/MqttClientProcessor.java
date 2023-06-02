@@ -94,8 +94,8 @@ public class MqttClientProcessor extends AbstractMessageProcessor<MqttMessage> {
             default:
                 break;
         }
-        if (throwable != null) {
-            throwable.printStackTrace();
-        }
+//        if (throwable != null) {
+//            throwable.printStackTrace();
+//        }
     }
 }
