@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.DefaultMqttWriter;
-import org.smartboot.mqtt.common.InflightMessage;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.QosRetryPlugin;
 import org.smartboot.mqtt.common.TopicToken;
@@ -28,6 +27,7 @@ import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttDisconnectMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPingReqMessage;
 import org.smartboot.mqtt.common.message.MqttPingRespMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
@@ -38,6 +38,7 @@ import org.smartboot.mqtt.common.message.MqttUnsubAckMessage;
 import org.smartboot.mqtt.common.message.payload.MqttConnectPayload;
 import org.smartboot.mqtt.common.message.payload.WillMessage;
 import org.smartboot.mqtt.common.message.variable.MqttConnectVariableHeader;
+import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
@@ -60,6 +61,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ThreadFactory;
@@ -308,7 +310,8 @@ public class MqttClient extends AbstractSession {
             unsubscribeBuilder.properties(properties);
         }
         // wait ack message.
-        getInflightQueue().offer(unsubscribeBuilder, (message) -> {
+        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = getInflightQueue().put(unsubscribeBuilder);
+        future.whenComplete((message, throwable) -> {
             ValidateUtils.isTrue(message instanceof MqttUnsubAckMessage, "uncorrected message type.");
             for (String unsubscribedTopic : unsubscribedTopics) {
                 subscribes.remove(unsubscribedTopic);
@@ -353,7 +356,18 @@ public class MqttClient extends AbstractSession {
             subscribeBuilder.subscribeProperties(new SubscribeProperties());
         }
         MqttSubscribeMessage subscribeMessage = subscribeBuilder.build();
-        InflightMessage inflightMessage = getInflightQueue().offer(subscribeBuilder, (message) -> {
+
+        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = getInflightQueue().offer(subscribeBuilder, new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        });
+        if (future == null) {
+            registeredTasks.offer(() -> subscribe0(topic, qos, consumer, subAckConsumer));
+            return;
+        }
+        future.whenComplete((message, throwable) -> {
             List<Integer> qosValues = ((MqttSubAckMessage) message).getPayload().grantedQoSLevels();
             ValidateUtils.isTrue(qosValues.size() == qos.length, "invalid response");
             int i = 0;
@@ -375,11 +389,8 @@ public class MqttClient extends AbstractSession {
             }
             consumeTask();
         });
-        if (inflightMessage == null) {
-            registeredTasks.offer(() -> subscribe0(topic, qos, consumer, subAckConsumer));
-        } else {
-            flush();
-        }
+        flush();
+
     }
 
     public void notifyResponse(MqttConnAckMessage connAckMessage) {
@@ -440,25 +451,8 @@ public class MqttClient extends AbstractSession {
             consumer.accept(0);
             return;
         }
-        InflightQueue inflightQueue = getInflightQueue();
-        InflightMessage inflightMessage = inflightQueue.offer(publishBuilder, (message) -> {
-            consumer.accept(message.getVariableHeader().getPacketId());
-            //最早发送的消息若收到响应，则更新点位
-            synchronized (MqttClient.this) {
-                MqttClient.this.notifyAll();
-            }
-        });
-        if (inflightMessage == null) {
-            try {
-                synchronized (this) {
-                    wait();
-                }
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            publish(publishBuilder, consumer, autoFlush);
-            return;
-        }
+        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = inflightQueue.put(publishBuilder);
+        future.whenComplete((message, throwable) -> consumer.accept(message.getVariableHeader().getPacketId()));
         if (autoFlush) {
             flush();
         }
@@ -487,6 +481,9 @@ public class MqttClient extends AbstractSession {
      */
     @Override
     public void disconnect() {
+        if (disconnect) {
+            return;
+        }
         //DISCONNECT 报文是客户端发给服务端的最后一个控制报文。表示客户端正常断开连接。
         write(new MqttDisconnectMessage());
         //关闭自动重连

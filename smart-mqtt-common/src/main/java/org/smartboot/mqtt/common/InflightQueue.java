@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttVersion;
+import org.smartboot.mqtt.common.exception.MqttException;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPubRelMessage;
@@ -30,10 +31,11 @@ import org.smartboot.socket.util.AttachKey;
 import org.smartboot.socket.util.Attachment;
 import org.smartboot.socket.util.QuickTimerTask;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -51,7 +53,13 @@ public class InflightQueue {
     private final AtomicInteger packetId = new AtomicInteger(0);
 
     private final AbstractSession session;
-    private final ConcurrentLinkedQueue<Runnable> runnables = new ConcurrentLinkedQueue<>();
+
+    private final ReentrantLock lock = new ReentrantLock(false);
+
+    private final Condition notEmpty = lock.newCondition();
+
+
+    private final Condition notFull = lock.newCondition();
 
     public InflightQueue(AbstractSession session, int size) {
         ValidateUtils.isTrue(size > 0, "inflight must >0");
@@ -59,40 +67,64 @@ public class InflightQueue {
         this.session = session;
     }
 
-    public InflightMessage offer(MqttMessageBuilders.MessageBuilder publishBuilder, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
-        return offer(publishBuilder, consumer, null);
+    public CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> put(MqttMessageBuilders.MessageBuilder publishBuilder) {
+        final ReentrantLock lock = this.lock;
+        try {
+            lock.lockInterruptibly();
+            while (count == queue.length) {
+                session.flush();
+                notFull.await();
+            }
+            return enqueue(publishBuilder);
+        } catch (Exception e) {
+            throw new MqttException("put message into inflight queue exception", e);
+        } finally {
+            lock.unlock();
+        }
     }
 
-    public InflightMessage offer(MqttMessageBuilders.MessageBuilder publishBuilder, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer, Runnable runnable) {
-        InflightMessage inflightMessage;
-        synchronized (this) {
+    public CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> offer(MqttMessageBuilders.MessageBuilder publishBuilder, Runnable runnable) {
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try {
             if (count == queue.length) {
-                if (runnable != null) {
-                    runnables.offer(runnable);
+                int i = putIndex - 1;
+                if (i < 0) {
+                    i = queue.length - 1;
                 }
+                queue[i].getFuture().thenAccept(mqttPacketIdentifierMessage -> runnable.run());
                 return null;
+            } else {
+                return enqueue(publishBuilder);
             }
-            int id = packetId.incrementAndGet();
-            // 16位无符号最大值65535
-            if (id > 65535) {
-                id = id % queue.length + queue.length;
-                packetId.set(id);
-            }
-            MqttPacketIdentifierMessage mqttMessage = publishBuilder.packetId(id).build();
-            inflightMessage = new InflightMessage(id, mqttMessage, consumer);
-            queue[putIndex++] = inflightMessage;
-            if (putIndex == queue.length) {
-                putIndex = 0;
-            }
-            count++;
+        } finally {
+            lock.unlock();
+        }
+    }
 
-            //启动消息质量监测
-            if (count == 1) {
-                retry(inflightMessage);
-            }
+
+    public CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> enqueue(MqttMessageBuilders.MessageBuilder publishBuilder) {
+
+        int id = packetId.incrementAndGet();
+        // 16位无符号最大值65535
+        if (id > 65535) {
+            id = id % queue.length + queue.length;
+            packetId.set(id);
+        }
+        MqttPacketIdentifierMessage mqttMessage = publishBuilder.packetId(id).build();
+        InflightMessage inflightMessage = new InflightMessage(id, mqttMessage);
+        queue[putIndex++] = inflightMessage;
+        if (putIndex == queue.length) {
+            putIndex = 0;
+        }
+        count++;
+
+        //启动消息质量监测
+        if (count == 1) {
+            retry(inflightMessage);
         }
         session.write(inflightMessage.getOriginalMessage(), count == queue.length);
-        return inflightMessage;
+        return inflightMessage.getFuture();
     }
 
     /**
@@ -174,7 +206,13 @@ public class InflightQueue {
                 }
                 inflightMessage.setResponseMessage(message);
                 inflightMessage.setLatestTime(System.currentTimeMillis());
-                commit(inflightMessage);
+                final ReentrantLock lock = this.lock;
+                lock.lock();
+                try {
+                    commit(inflightMessage);
+                } finally {
+                    lock.unlock();
+                }
                 break;
             }
             case PUBREC:
@@ -200,7 +238,7 @@ public class InflightQueue {
         }
     }
 
-    private synchronized void commit(InflightMessage inflightMessage) {
+    private void commit(InflightMessage inflightMessage) {
         MqttVariableMessage<? extends MqttPacketIdVariableHeader> originalMessage = inflightMessage.getOriginalMessage();
         ValidateUtils.isTrue(originalMessage.getFixedHeader().getQosLevel().value() == 0 || originalMessage.getVariableHeader().getPacketId() == inflightMessage.getAssignedPacketId(), "invalid message");
         inflightMessage.setCommit(true);
@@ -210,13 +248,14 @@ public class InflightQueue {
         }
         queue[takeIndex++] = null;
         count--;
+        notFull.signal();
         if (takeIndex == queue.length) {
             takeIndex = 0;
         }
-        inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
+        inflightMessage.getFuture().complete(inflightMessage.getResponseMessage());
         while (count > 0 && queue[takeIndex].isCommit()) {
             inflightMessage = queue[takeIndex];
-            inflightMessage.getConsumer().accept(inflightMessage.getResponseMessage());
+            inflightMessage.getFuture().complete(inflightMessage.getResponseMessage());
             queue[takeIndex++] = null;
             if (takeIndex == queue.length) {
                 takeIndex = 0;
@@ -229,15 +268,6 @@ public class InflightQueue {
             Attachment attachment = session.session.getAttachment();
             InflightMessage monitorMessage = queue[takeIndex];
             attachment.put(RETRY_TASK_ATTACH_KEY, () -> session.getInflightQueue().retry(monitorMessage));
-        }
-
-        while (count < queue.length) {
-            Runnable runnable = runnables.poll();
-            if (runnable != null) {
-                runnable.run();
-            } else {
-                break;
-            }
         }
     }
 }

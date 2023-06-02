@@ -86,6 +86,8 @@ public class ServerEventType<T> extends EventType<T> {
      */
     public static final ServerEventType<EventObject<MqttConnectMessage>> CONNACK = new ServerEventType<>("connect");
 
+    public static final ServerEventType<BrokerTopic> NOTIFY_TOPIC_PUSH = new ServerEventType<>("notify_topic_push");
+
     protected ServerEventType(String name) {
         super(name);
     }

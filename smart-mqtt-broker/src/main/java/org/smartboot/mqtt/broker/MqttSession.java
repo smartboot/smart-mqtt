@@ -186,9 +186,8 @@ public class MqttSession extends AbstractSession {
         TopicSubscriber subscription = new TopicSubscriber(topic, MqttSession.this, mqttQoS, latestOffset + 1, retainOffset);
         subscription.setTopicFilterToken(topicToken);
         topic.getConsumeOffsets().put(MqttSession.this, subscription);
-        mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, subscription);
-
         subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, subscription);
+        mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, subscription);
     }
 
     /**

@@ -12,17 +12,20 @@ package org.smartboot.mqtt.broker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.broker.provider.PersistenceProvider;
 import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
-import org.smartboot.mqtt.common.InflightMessage;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventType;
+import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
+import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -76,25 +79,27 @@ public class TopicSubscriber {
             return;
         }
         semaphore.release();
-        publish0(brokerContext, 0);
+        int i = 16;
+        while (publishAvailable(brokerContext)) {
+            if (i-- == 0) {
+                if (semaphore.tryAcquire()) {
+                    topic.getQueue().offer(this);
+                    topic.getVersion().incrementAndGet();
+                }
+                break;
+            }
+        }
         mqttSession.flush();
     }
 
-    private void publish0(BrokerContext brokerContext, final int depth) {
+    private boolean publishAvailable(BrokerContext brokerContext) {
         PersistenceProvider persistenceProvider = brokerContext.getProviders().getPersistenceProvider();
         PersistenceMessage persistenceMessage = persistenceProvider.get(topic.getTopic(), nextConsumerOffset);
         if (persistenceMessage == null) {
             if (semaphore.tryAcquire()) {
                 topic.getQueue().offer(this);
             }
-            return;
-        }
-        if (depth > 16) {
-            if (semaphore.tryAcquire()) {
-                topic.getQueue().offer(this);
-                topic.getVersion().incrementAndGet();
-            }
-            return;
+            return false;
         }
 
         MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(persistenceMessage.getPayload()).qos(mqttQoS).topicName(persistenceMessage.getTopic());
@@ -109,38 +114,30 @@ public class TopicSubscriber {
         //Qos0直接发送
         if (mqttQoS == MqttQoS.AT_MOST_ONCE) {
             mqttSession.write(publishBuilder.build(), false);
-            publish0(brokerContext, depth + 1);
-            return;
-        }
-        InflightMessage suc;
-        if (depth == 0) {
-            suc = inflightQueue.offer(publishBuilder, (mqtt) -> {
-                //最早发送的消息若收到响应，则更新点位
-                commitNextConsumerOffset(offset + 1);
-                if (persistenceMessage.isRetained()) {
-                    setRetainConsumerOffset(getRetainConsumerOffset() + 1);
-                }
-                commitRetainConsumerTimestamp(persistenceMessage.getCreateTime());
-                publish0(brokerContext, 1);
-            }, () -> publish0(brokerContext, 0));
-        } else {
-            suc = inflightQueue.offer(publishBuilder, (mqtt) -> {
-                //最早发送的消息若收到响应，则更新点位
-                commitNextConsumerOffset(offset + 1);
-                if (persistenceMessage.isRetained()) {
-                    setRetainConsumerOffset(getRetainConsumerOffset() + 1);
-                }
-                commitRetainConsumerTimestamp(persistenceMessage.getCreateTime());
-                publish0(brokerContext, 1);
-            });
+            return true;
         }
 
-        // 飞行队列已满
-        if (suc != null) {
-            //递归处理下一个消息
-            publish0(brokerContext, depth + 1);
+        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = inflightQueue.offer(publishBuilder, () -> {
+            if (semaphore.tryAcquire()) {
+                topic.getQueue().offer(this);
+                topic.getVersion().incrementAndGet();
+            }
+            brokerContext.getEventBus().publish(ServerEventType.NOTIFY_TOPIC_PUSH, topic);
+        });
+        if (future == null) {
+            return false;
         }
+        future.whenComplete((mqttPacketIdentifierMessage, throwable) -> {
+            //最早发送的消息若收到响应，则更新点位
+            commitNextConsumerOffset(offset + 1);
+            if (persistenceMessage.isRetained()) {
+                setRetainConsumerOffset(getRetainConsumerOffset() + 1);
+            }
+            commitRetainConsumerTimestamp(persistenceMessage.getCreateTime());
+            publishAvailable(brokerContext);
+        });
 
+        return true;
     }
 
     public BrokerTopic getTopic() {

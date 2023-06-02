@@ -49,6 +49,7 @@ import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttDisconnectMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPingReqMessage;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
 import org.smartboot.mqtt.common.message.MqttPubCompMessage;
@@ -57,6 +58,7 @@ import org.smartboot.mqtt.common.message.MqttPubRelMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
+import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.MqttMessageBuilders;
@@ -84,6 +86,7 @@ import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -311,6 +314,8 @@ public class BrokerContextImpl implements BrokerContext {
             notifyPush(brokerTopic);
         });
 
+        eventBus.subscribe(ServerEventType.NOTIFY_TOPIC_PUSH, (eventType, object) -> notifyPush(object));
+
         //一个新的订阅建立时，对每个匹配的主题名，如果存在最近保留的消息，它必须被发送给这个订阅者
         eventBus.subscribe(ServerEventType.SUBSCRIBE_TOPIC, new EventBusSubscriber<TopicSubscriber>() {
             @Override
@@ -324,12 +329,6 @@ public class BrokerContextImpl implements BrokerContext {
                             BrokerTopic topic = subscriber.getTopic();
                             topic.getQueue().offer(subscriber);
                             notifyPush(topic);
-//
-//                            int preVersion = subscriber.getTopic().getVersion().get();
-//                            subscriber.batchPublish(BrokerContextImpl.this);
-//                            if (preVersion != subscriber.getTopic().getVersion().get()) {
-//                                notifyPush(subscriber.getTopic());
-//                            }
                             return;
                         }
                         //retain采用严格顺序publish模式
@@ -349,7 +348,8 @@ public class BrokerContextImpl implements BrokerContext {
                         }
                         InflightQueue inflightQueue = session.getInflightQueue();
                         // retain消息逐个推送
-                        inflightQueue.offer(publishBuilder, (mqtt) -> {
+                        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = inflightQueue.put(publishBuilder);
+                        future.whenComplete((mqttPacketIdentifierMessage, throwable) -> {
                             LOGGER.info("publish retain to client:{} success  ", session.getClientId());
                             subscriber.setRetainConsumerOffset(offset + 1);
                             retainPushThreadPool.execute(task);
@@ -358,10 +358,6 @@ public class BrokerContextImpl implements BrokerContext {
                     }
                 });
             }
-        });
-        eventBus.subscribe(ServerEventType.SUBSCRIBE_REFRESH_TOPIC, (eventType, subscriber) -> {
-            LOGGER.info("刷新订阅关系, {} 订阅了topic: {}", subscriber.getTopicFilterToken().getTopicFilter(), subscriber.getTopic().getTopic());
-            subscriber.getTopic().getQueue().offer(subscriber);
         });
 
         eventBus.subscribe(ServerEventType.TOPIC_CREATE, (eventType, object) -> subscribeTopicTree.match(object.getTopicToken(), (session, topicFilterSubscriber) -> {

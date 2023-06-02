@@ -25,8 +25,7 @@ import org.smartboot.socket.util.Attachment;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Hashtable;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -54,8 +53,8 @@ public abstract class AbstractSession {
 
     private MqttVersion mqttVersion;
 
-    private InflightQueue inflightQueue;
-    private final Map<Integer, Runnable> ackMessageCacheMap = new ConcurrentHashMap<>();
+    protected InflightQueue inflightQueue;
+    private final Hashtable<Integer, Runnable> ackMessageCacheMap = new Hashtable<>();
 
     public AbstractSession(EventBus eventBus) {
         this.eventBus = eventBus;
@@ -77,7 +76,7 @@ public abstract class AbstractSession {
     public final synchronized void write(MqttMessage mqttMessage, boolean autoFlush) {
         try {
             if (disconnect) {
-                this.disconnect();
+//                this.disconnect();
                 ValidateUtils.isTrue(false, "已断开连接,无法发送消息");
             }
             mqttMessage.setVersion(mqttVersion);
