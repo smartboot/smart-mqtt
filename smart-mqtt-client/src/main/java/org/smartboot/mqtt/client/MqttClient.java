@@ -310,7 +310,10 @@ public class MqttClient extends AbstractSession {
             unsubscribeBuilder.properties(properties);
         }
         // wait ack message.
-        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = getInflightQueue().put(unsubscribeBuilder);
+        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = getInflightQueue().offer(unsubscribeBuilder, () -> registeredTasks.offer(() -> unsubscribe0(topics)));
+        if (future == null) {
+            return;
+        }
         future.whenComplete((message, throwable) -> {
             ValidateUtils.isTrue(message instanceof MqttUnsubAckMessage, "uncorrected message type.");
             for (String unsubscribedTopic : unsubscribedTopics) {

@@ -348,7 +348,7 @@ public class BrokerContextImpl implements BrokerContext {
                         }
                         InflightQueue inflightQueue = session.getInflightQueue();
                         // retain消息逐个推送
-                        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = inflightQueue.put(publishBuilder);
+                        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = inflightQueue.offer(publishBuilder);
                         future.whenComplete((mqttPacketIdentifierMessage, throwable) -> {
                             LOGGER.info("publish retain to client:{} success  ", session.getClientId());
                             subscriber.setRetainConsumerOffset(offset + 1);
