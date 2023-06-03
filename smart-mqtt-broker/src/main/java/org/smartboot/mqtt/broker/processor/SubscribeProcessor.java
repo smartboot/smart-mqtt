@@ -60,6 +60,6 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
         // 每个返回码对应等待确认的 SUBSCRIBE 报文中的一个主题过滤器。
         // 返回码的顺序必须和 SUBSCRIBE 报文中主题过滤器的顺序相同
         mqttSubAckMessage.setPayload(new MqttSubAckPayload(qosArray));
-        session.write(mqttSubAckMessage);
+        session.write(mqttSubAckMessage, false);
     }
 }

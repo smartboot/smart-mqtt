@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.DefaultMqttWriter;
-import org.smartboot.mqtt.common.InflightMessage;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.QosRetryPlugin;
 import org.smartboot.mqtt.common.TopicToken;
@@ -28,6 +27,7 @@ import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttDisconnectMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPingReqMessage;
 import org.smartboot.mqtt.common.message.MqttPingRespMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
@@ -38,6 +38,7 @@ import org.smartboot.mqtt.common.message.MqttUnsubAckMessage;
 import org.smartboot.mqtt.common.message.payload.MqttConnectPayload;
 import org.smartboot.mqtt.common.message.payload.WillMessage;
 import org.smartboot.mqtt.common.message.variable.MqttConnectVariableHeader;
+import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
@@ -60,6 +61,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ThreadFactory;
@@ -75,7 +77,12 @@ public class MqttClient extends AbstractSession {
      * 客户端配置项
      */
     private final MqttClientConfigure clientConfigure = new MqttClientConfigure();
-    private final AbstractMessageProcessor<MqttMessage> messageProcessor = new MqttClientProcessor(this);
+    private static final AbstractMessageProcessor<MqttMessage> messageProcessor = new MqttClientProcessor();
+
+    static {
+        messageProcessor.addPlugin(new QosRetryPlugin());
+    }
+
     /**
      * 完成connect之前注册的事件
      */
@@ -84,6 +91,8 @@ public class MqttClient extends AbstractSession {
      * 已订阅的消息主题
      */
     private final Map<String, Subscribe> subscribes = new ConcurrentHashMap<>();
+
+    private final Map<String, Subscribe> mapping = new ConcurrentHashMap<>();
 
     private final List<TopicToken> wildcardsToken = new LinkedList<>();
 
@@ -169,11 +178,11 @@ public class MqttClient extends AbstractSession {
             if (mqttConnAckMessage.getVariableHeader().connectReturnCode() == MqttConnectReturnCode.CONNECTION_ACCEPTED) {
                 setInflightQueue(new InflightQueue(this, 16));
                 connected = true;
-                consumeTask();
                 //重连情况下重新触发订阅逻辑
                 subscribes.forEach((k, v) -> {
                     subscribe(k, v.getQoS(), v.getConsumer());
                 });
+                consumeTask();
             }
             //客户端设置清理会话（CleanSession）标志为 0 重连时，客户端和服务端必须使用原始的报文标识符重发
             //任何未确认的 PUBLISH 报文（如果 QoS>0）和 PUBREL 报文 [MQTT-4.4.0-1]。这是唯一要求客户端或
@@ -215,7 +224,7 @@ public class MqttClient extends AbstractSession {
             }, clientConfigure.getKeepAliveInterval(), TimeUnit.SECONDS);
         }
 //        messageProcessor.addPlugin(new StreamMonitorPlugin<>());
-        messageProcessor.addPlugin(new QosRetryPlugin());
+
         client = new AioQuickClient(clientConfigure.getHost(), clientConfigure.getPort(), new MqttProtocol(clientConfigure.getMaxPacketSize()), messageProcessor);
         try {
             if (bufferPagePool != null) {
@@ -223,7 +232,9 @@ public class MqttClient extends AbstractSession {
             }
             client.setReadBufferSize(clientConfigure.getBufferSize()).setWriteBuffer(clientConfigure.getBufferSize(), 8).connectTimeout(clientConfigure.getConnectionTimeout());
             session = client.start(asynchronousChannelGroup);
-            session.setAttachment(new Attachment());
+            Attachment attachment = new Attachment();
+            session.setAttachment(attachment);
+            attachment.put(MqttClientProcessor.SESSION_KEY, this);
             setMqttVersion(clientConfigure.getMqttVersion());
             mqttWriter = new DefaultMqttWriter(session.writeBuffer());
 
@@ -299,12 +310,17 @@ public class MqttClient extends AbstractSession {
             unsubscribeBuilder.properties(properties);
         }
         // wait ack message.
-        getInflightQueue().offer(unsubscribeBuilder, (message) -> {
+        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = getInflightQueue().offer(unsubscribeBuilder, () -> registeredTasks.offer(() -> unsubscribe0(topics)));
+        if (future == null) {
+            return;
+        }
+        future.whenComplete((message, throwable) -> {
             ValidateUtils.isTrue(message instanceof MqttUnsubAckMessage, "uncorrected message type.");
             for (String unsubscribedTopic : unsubscribedTopics) {
                 subscribes.remove(unsubscribedTopic);
                 wildcardsToken.removeIf(topicToken -> StringUtils.equals(unsubscribedTopic, topicToken.getTopicFilter()));
             }
+            mapping.clear();
             consumeTask();
         });
         flush();
@@ -343,7 +359,18 @@ public class MqttClient extends AbstractSession {
             subscribeBuilder.subscribeProperties(new SubscribeProperties());
         }
         MqttSubscribeMessage subscribeMessage = subscribeBuilder.build();
-        getInflightQueue().offer(subscribeBuilder, (message) -> {
+
+        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = getInflightQueue().offer(subscribeBuilder, new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        });
+        if (future == null) {
+            registeredTasks.offer(() -> subscribe0(topic, qos, consumer, subAckConsumer));
+            return;
+        }
+        future.whenComplete((message, throwable) -> {
             List<Integer> qosValues = ((MqttSubAckMessage) message).getPayload().grantedQoSLevels();
             ValidateUtils.isTrue(qosValues.size() == qos.length, "invalid response");
             int i = 0;
@@ -360,11 +387,13 @@ public class MqttClient extends AbstractSession {
                 } else {
                     LOGGER.error("subscribe topic:{} fail", subscription.getTopicFilter());
                 }
+                mapping.clear();
                 subAckConsumer.accept(MqttClient.this, minQos);
             }
             consumeTask();
         });
         flush();
+
     }
 
     public void notifyResponse(MqttConnAckMessage connAckMessage) {
@@ -425,25 +454,8 @@ public class MqttClient extends AbstractSession {
             consumer.accept(0);
             return;
         }
-        InflightQueue inflightQueue = getInflightQueue();
-        InflightMessage inflightMessage = inflightQueue.offer(publishBuilder, (message) -> {
-            consumer.accept(message.getVariableHeader().getPacketId());
-            //最早发送的消息若收到响应，则更新点位
-            synchronized (MqttClient.this) {
-                MqttClient.this.notifyAll();
-            }
-        });
-        if (inflightMessage == null) {
-            try {
-                synchronized (this) {
-                    wait();
-                }
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            publish(publishBuilder, consumer, autoFlush);
-            return;
-        }
+        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = inflightQueue.put(publishBuilder);
+        future.whenComplete((message, throwable) -> consumer.accept(message.getVariableHeader().getPacketId()));
         if (autoFlush) {
             flush();
         }
@@ -457,6 +469,10 @@ public class MqttClient extends AbstractSession {
         return subscribes;
     }
 
+    public Map<String, Subscribe> getMapping() {
+        return mapping;
+    }
+
     public List<TopicToken> getWildcardsToken() {
         return wildcardsToken;
     }
@@ -468,6 +484,9 @@ public class MqttClient extends AbstractSession {
      */
     @Override
     public void disconnect() {
+        if (disconnect) {
+            return;
+        }
         //DISCONNECT 报文是客户端发给服务端的最后一个控制报文。表示客户端正常断开连接。
         write(new MqttDisconnectMessage());
         //关闭自动重连

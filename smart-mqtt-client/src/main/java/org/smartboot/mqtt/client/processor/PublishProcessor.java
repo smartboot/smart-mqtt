@@ -61,12 +61,18 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
 
     private void processPublishMessage(MqttPublishMessage mqttPublishMessage, MqttClient mqttClient) {
         MqttPublishVariableHeader header = mqttPublishMessage.getVariableHeader();
-        Subscribe subscribe = mqttClient.getSubscribes().get(header.getTopicName());
-
-        //尝试通配符匹配
+        Subscribe subscribe = mqttClient.getMapping().get(header.getTopicName());
         if (subscribe == null) {
-            subscribe = matchWildcardsSubscribe(mqttClient, header.getTopicName());
+            subscribe = mqttClient.getSubscribes().get(header.getTopicName());
+            //尝试通配符匹配
+            if (subscribe == null) {
+                subscribe = matchWildcardsSubscribe(mqttClient, header.getTopicName());
+            }
+            if (subscribe != null) {
+                mqttClient.getMapping().put(header.getTopicName(), subscribe);
+            }
         }
+
         // If unsubscribed, maybe null.
         if (subscribe != null && !subscribe.getUnsubscribed()) {
             subscribe.getConsumer().accept(mqttClient, mqttPublishMessage);

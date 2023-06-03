@@ -22,25 +22,19 @@ import java.util.Map;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/7/13
  */
-class TopicFilterSubscriber {
+public class TopicFilterSubscriber {
     private final TopicToken topicFilterToken;
 
-    private final MqttQoS mqttQoS;
+    private MqttQoS mqttQoS;
 
     /**
      * 客户端订阅所匹配的Topic。通配符订阅时可能有多个
      */
-    private final Map<String, TopicSubscriber> topicSubscribers;
+    private final Map<BrokerTopic, TopicSubscriber> topicSubscribers = new HashMap<>();
 
-    public TopicFilterSubscriber(TopicToken topicFilterToken, MqttQoS mqttQoS) {
+    TopicFilterSubscriber(TopicToken topicFilterToken, MqttQoS mqttQoS) {
         this.topicFilterToken = topicFilterToken;
         this.mqttQoS = mqttQoS;
-        this.topicSubscribers = new HashMap<>();
-    }
-
-    public TopicFilterSubscriber(TopicToken topicFilterToken, MqttQoS mqttQoS, TopicSubscriber topicSubscriber) {
-        this(topicFilterToken, mqttQoS);
-        topicSubscribers.put(topicSubscriber.getTopic().getTopic(), topicSubscriber);
     }
 
     public TopicToken getTopicFilterToken() {
@@ -51,7 +45,11 @@ class TopicFilterSubscriber {
         return mqttQoS;
     }
 
-    public Map<String, TopicSubscriber> getTopicSubscribers() {
+    public void setMqttQoS(MqttQoS mqttQoS) {
+        this.mqttQoS = mqttQoS;
+    }
+
+    public Map<BrokerTopic, TopicSubscriber> getTopicSubscribers() {
         return topicSubscribers;
     }
 }

@@ -20,6 +20,7 @@ import org.smartboot.mqtt.client.processor.PubRelProcessor;
 import org.smartboot.mqtt.client.processor.PublishProcessor;
 import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
+import org.smartboot.mqtt.common.exception.MqttException;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPingRespMessage;
@@ -29,9 +30,12 @@ import org.smartboot.mqtt.common.message.MqttPubRecMessage;
 import org.smartboot.mqtt.common.message.MqttPubRelMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttSubAckMessage;
+import org.smartboot.mqtt.common.util.MqttAttachKey;
 import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioSession;
+import org.smartboot.socket.util.AttachKey;
+import org.smartboot.socket.util.Attachment;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,7 +46,7 @@ import java.util.Map;
  */
 public class MqttClientProcessor extends AbstractMessageProcessor<MqttMessage> {
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttClientProcessor.class);
-    private final MqttClient mqttClient;
+    final static AttachKey<MqttClient> SESSION_KEY = AttachKey.valueOf(MqttAttachKey.MQTT_SESSION);
     private static final Map<Class<? extends MqttMessage>, MqttProcessor<? extends MqttMessage>> processors = new HashMap<>();
 
     static {
@@ -52,21 +56,20 @@ public class MqttClientProcessor extends AbstractMessageProcessor<MqttMessage> {
         processors.put(MqttPubRecMessage.class, new MqttAckProcessor<MqttPubRecMessage>());
         processors.put(MqttPubCompMessage.class, new MqttAckProcessor<MqttPubCompMessage>());
         processors.put(MqttPubRelMessage.class, new PubRelProcessor());
-        processors.put(MqttSubAckMessage.class, new MqttAckProcessor<MqttPubRelMessage>());
+        processors.put(MqttSubAckMessage.class, new MqttAckProcessor<MqttSubAckMessage>());
         processors.put(MqttPingRespMessage.class, new MqttPingRespProcessor());
     }
 
-    public MqttClientProcessor(MqttClient mqttClient) {
-        this.mqttClient = mqttClient;
-    }
 
     @Override
     public void process0(AioSession session, MqttMessage msg) {
-        mqttClient.getEventBus().publish(EventType.RECEIVE_MESSAGE, EventObject.newEventObject(mqttClient, msg));
+        Attachment attachment = session.getAttachment();
+        MqttClient client = attachment.get(SESSION_KEY);
+        client.getEventBus().publish(EventType.RECEIVE_MESSAGE, EventObject.newEventObject(client, msg));
         MqttProcessor processor = processors.get(msg.getClass());
 //        LOGGER.info("receive msg:{}", msg);
         if (processor != null) {
-            processor.process(mqttClient, msg);
+            processor.process(client, msg);
         } else {
             LOGGER.error("unknown msg:{}", msg);
         }
@@ -74,9 +77,25 @@ public class MqttClientProcessor extends AbstractMessageProcessor<MqttMessage> {
 
     @Override
     public void stateEvent0(AioSession session, StateMachineEnum stateMachineEnum, Throwable throwable) {
-//        System.out.println(stateMachineEnum);
-        if (throwable != null) {
-            throwable.printStackTrace();
+        switch (stateMachineEnum) {
+            case DECODE_EXCEPTION:
+                LOGGER.error("decode exception", throwable);
+                break;
+            case SESSION_CLOSED:
+                Attachment attachment = session.getAttachment();
+                attachment.get(SESSION_KEY).disconnect();
+                break;
+            case PROCESS_EXCEPTION:
+                if (throwable instanceof MqttException) {
+                    LOGGER.warn("process exception", throwable);
+                    ((MqttException) throwable).getCallback().run();
+                }
+                break;
+            default:
+                break;
         }
+//        if (throwable != null) {
+//            throwable.printStackTrace();
+//        }
     }
 }
