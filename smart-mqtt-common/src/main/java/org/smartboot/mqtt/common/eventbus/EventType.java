@@ -32,11 +32,6 @@ public class EventType<T> {
     public static final EventType<AbstractSession> DISCONNECT = new EventType<>("disconnect");
 
     /**
-     * Broker推送消息至客户端
-     */
-    public static final EventType<AbstractSession> PUSH_PUBLISH_MESSAGE = new EventType<>("pushPublishMessage");
-
-    /**
      * 接收到客户端发送的任何消息
      */
     public static final EventType<EventObject<MqttMessage>> RECEIVE_MESSAGE = new EventType<>("receiveMessage");

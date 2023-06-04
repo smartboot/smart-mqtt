@@ -19,7 +19,6 @@ import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
-import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
@@ -105,7 +104,6 @@ public class TopicSubscriber {
         InflightQueue inflightQueue = mqttSession.getInflightQueue();
         long offset = persistenceMessage.getOffset();
         nextConsumerOffset = offset + 1;
-        brokerContext.getEventBus().publish(EventType.PUSH_PUBLISH_MESSAGE, mqttSession);
         //Qos0直接发送
         if (mqttQoS == MqttQoS.AT_MOST_ONCE) {
             mqttSession.write(publishBuilder.build(), false);

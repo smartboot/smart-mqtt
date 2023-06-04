@@ -84,10 +84,6 @@ public class InflightQueue {
         lock.lock();
         try {
             if (count == queue.length) {
-                int i = putIndex - 1;
-                if (i < 0) {
-                    i = queue.length - 1;
-                }
                 return null;
             } else {
                 return enqueue(publishBuilder);
