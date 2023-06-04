@@ -79,27 +79,22 @@ public class TopicSubscriber {
             return;
         }
         semaphore.release();
-        int i = 16;
-        while (publishAvailable(brokerContext)) {
-            if (i-- == 0) {
-                if (semaphore.tryAcquire()) {
-                    topic.getQueue().offer(this);
-                    topic.getVersion().incrementAndGet();
-                }
-                break;
-            }
-        }
+        publishAvailable(brokerContext);
         mqttSession.flush();
     }
 
-    private boolean publishAvailable(BrokerContext brokerContext) {
+    private void publishAvailable(BrokerContext brokerContext) {
         PersistenceProvider persistenceProvider = brokerContext.getProviders().getPersistenceProvider();
         PersistenceMessage persistenceMessage = persistenceProvider.get(topic.getTopic(), nextConsumerOffset);
         if (persistenceMessage == null) {
             if (semaphore.tryAcquire()) {
                 topic.getQueue().offer(this);
+                if (persistenceProvider.get(topic.getTopic(), nextConsumerOffset) != null) {
+                    topic.getVersion().incrementAndGet();
+                    brokerContext.getEventBus().publish(ServerEventType.NOTIFY_TOPIC_PUSH, topic);
+                }
             }
-            return false;
+            return;
         }
 
         MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(persistenceMessage.getPayload()).qos(mqttQoS).topicName(persistenceMessage.getTopic());
@@ -114,18 +109,13 @@ public class TopicSubscriber {
         //Qos0直接发送
         if (mqttQoS == MqttQoS.AT_MOST_ONCE) {
             mqttSession.write(publishBuilder.build(), false);
-            return true;
+            publishAvailable(brokerContext);
+            return;
         }
 
-        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = inflightQueue.offer(publishBuilder, () -> {
-            if (semaphore.tryAcquire()) {
-                topic.getQueue().offer(this);
-                topic.getVersion().incrementAndGet();
-            }
-            brokerContext.getEventBus().publish(ServerEventType.NOTIFY_TOPIC_PUSH, topic);
-        });
+        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = inflightQueue.offer(publishBuilder);
         if (future == null) {
-            return false;
+            return;
         }
         future.whenComplete((mqttPacketIdentifierMessage, throwable) -> {
             //最早发送的消息若收到响应，则更新点位
@@ -137,7 +127,7 @@ public class TopicSubscriber {
             publishAvailable(brokerContext);
         });
 
-        return true;
+        publishAvailable(brokerContext);
     }
 
     public BrokerTopic getTopic() {

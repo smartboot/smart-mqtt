@@ -310,8 +310,9 @@ public class MqttClient extends AbstractSession {
             unsubscribeBuilder.properties(properties);
         }
         // wait ack message.
-        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = getInflightQueue().offer(unsubscribeBuilder, () -> registeredTasks.offer(() -> unsubscribe0(topics)));
+        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = getInflightQueue().offer(unsubscribeBuilder);
         if (future == null) {
+            registeredTasks.offer(() -> unsubscribe0(topics));
             return;
         }
         future.whenComplete((message, throwable) -> {
@@ -360,12 +361,7 @@ public class MqttClient extends AbstractSession {
         }
         MqttSubscribeMessage subscribeMessage = subscribeBuilder.build();
 
-        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = getInflightQueue().offer(subscribeBuilder, new Runnable() {
-            @Override
-            public void run() {
-
-            }
-        });
+        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = getInflightQueue().offer(subscribeBuilder);
         if (future == null) {
             registeredTasks.offer(() -> subscribe0(topic, qos, consumer, subAckConsumer));
             return;

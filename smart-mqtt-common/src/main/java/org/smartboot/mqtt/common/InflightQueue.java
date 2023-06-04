@@ -80,12 +80,6 @@ public class InflightQueue {
     }
 
     public CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> offer(MqttMessageBuilders.MessageBuilder publishBuilder) {
-        return offer(publishBuilder, () -> {
-
-        });
-    }
-
-    public CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> offer(MqttMessageBuilders.MessageBuilder publishBuilder, Runnable runnable) {
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
@@ -94,7 +88,6 @@ public class InflightQueue {
                 if (i < 0) {
                     i = queue.length - 1;
                 }
-                queue[i].getFuture().thenAccept(mqttPacketIdentifierMessage -> runnable.run());
                 return null;
             } else {
                 return enqueue(publishBuilder);

@@ -10,6 +10,7 @@
 
 package org.smartboot.mqtt.broker.topic;
 
+import org.smartboot.mqtt.broker.BrokerTopic;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.TopicFilterSubscriber;
 import org.smartboot.mqtt.common.TopicToken;
@@ -49,8 +50,11 @@ public class TopicSubscribeTree {
         subscribeTree.subscribers.remove(session);
     }
 
+    public void match(BrokerTopic topicToken, BiConsumer<MqttSession, TopicFilterSubscriber> consumer) {
+        match(topicToken.getTopicToken(), consumer);
+    }
 
-    public void match(TopicToken topicToken, BiConsumer<MqttSession, TopicFilterSubscriber> consumer) {
+    private void match(TopicToken topicToken, BiConsumer<MqttSession, TopicFilterSubscriber> consumer) {
         //精确匹配
         TopicSubscribeTree subscribeTree = subNode.get(topicToken.getNode());
         if (subscribeTree != null) {

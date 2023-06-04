@@ -360,7 +360,7 @@ public class BrokerContextImpl implements BrokerContext {
             }
         });
 
-        eventBus.subscribe(ServerEventType.TOPIC_CREATE, (eventType, object) -> subscribeTopicTree.match(object.getTopicToken(), (session, topicFilterSubscriber) -> {
+        eventBus.subscribe(ServerEventType.TOPIC_CREATE, (eventType, object) -> subscribeTopicTree.match(object, (session, topicFilterSubscriber) -> {
             if (!providers.getSubscribeProvider().subscribeTopic(object.getTopic(), session)) {
                 return;
             }
