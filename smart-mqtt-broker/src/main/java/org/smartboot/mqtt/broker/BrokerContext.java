@@ -92,4 +92,8 @@ public interface BrokerContext {
     TopicPublishTree getPublishTopicTree();
 
     TopicSubscribeTree getTopicSubscribeTree();
+
+    <T> void bundle(String key, T resource);
+
+    <T> T getBundle(String key);
 }

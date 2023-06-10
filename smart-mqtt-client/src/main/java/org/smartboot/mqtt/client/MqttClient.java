@@ -11,6 +11,7 @@
 package org.smartboot.mqtt.client;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.AbstractSession;
@@ -46,6 +47,7 @@ import org.smartboot.mqtt.common.message.variable.properties.SubscribeProperties
 import org.smartboot.mqtt.common.message.variable.properties.WillProperties;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.MqttMessageBuilders;
+import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
@@ -112,14 +114,34 @@ public class MqttClient extends AbstractSession {
     private Consumer<MqttConnAckMessage> reconnectConsumer;
     private boolean pingTimeout = false;
 
+    public MqttClient(String uri) {
+        this(uri, MqttUtil.createClientId());
+    }
+
+    public MqttClient(String uri, String clientId) {
+        this(uri, clientId, MqttVersion.MQTT_3_1_1);
+    }
+
     public MqttClient(String host, int port, String clientId) {
         this(host, port, clientId, MqttVersion.MQTT_3_1_1);
     }
 
     public MqttClient(String host, int port, String clientId, MqttVersion mqttVersion) {
+        this("mqtt://" + host + ":" + port, clientId, mqttVersion);
+    }
+
+    public MqttClient(String uri, String clientId, MqttVersion mqttVersion) {
         super(new EventBusImpl(EventType.types()));
-        clientConfigure.setHost(host);
-        clientConfigure.setPort(port);
+
+        String[] array = uri.split(":");
+        if (array[0].startsWith("mqtts://")) {
+            clientConfigure.setHost(array[0].substring(8));
+        } else if (array[0].startsWith("mqtt://")) {
+            clientConfigure.setHost(array[0].substring(7));
+        } else {
+            throw new IllegalStateException("invalid URI Scheme, uri: " + uri);
+        }
+        clientConfigure.setPort(NumberUtils.toInt(array[1]));
         clientConfigure.setMqttVersion(mqttVersion);
         this.clientId = clientId;
         //ping-pong消息超时监听
@@ -134,6 +156,7 @@ public class MqttClient extends AbstractSession {
             }
         });
     }
+
 
     public void connect() {
         try {

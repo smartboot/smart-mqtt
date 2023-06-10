@@ -80,6 +80,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -141,6 +142,7 @@ public class BrokerContextImpl implements BrokerContext {
 
     private AsynchronousChannelGroup asynchronousChannelGroup;
 
+    private final Map<String, Object> resources = new Hashtable<>();
     private final Map<Class<? extends MqttMessage>, MqttProcessor<?>> processors;
 
     {
@@ -525,6 +527,16 @@ public class BrokerContextImpl implements BrokerContext {
     @Override
     public TopicSubscribeTree getTopicSubscribeTree() {
         return subscribeTopicTree;
+    }
+
+    @Override
+    public <T> void bundle(String key, T resource) {
+        resources.put(key, resource);
+    }
+
+    @Override
+    public <T> T getBundle(String key) {
+        return (T) resources.get(key);
     }
 
     public void loadYamlConfig() throws IOException {
