@@ -15,6 +15,7 @@ import org.apache.commons.lang.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.AbstractSession;
+import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.DefaultMqttWriter;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.QosRetryPlugin;
@@ -134,14 +135,15 @@ public class MqttClient extends AbstractSession {
         super(new EventBusImpl(EventType.types()));
 
         String[] array = uri.split(":");
-        if (array[0].startsWith("mqtts://")) {
-            clientConfigure.setHost(array[0].substring(8));
-        } else if (array[0].startsWith("mqtt://")) {
-            clientConfigure.setHost(array[0].substring(7));
+        if (array[0].equals("mqtts")) {
+            clientConfigure.setHost(array[1].substring(2));
+            //加密通信
+        } else if (array[0].equals("mqtt")) {
+            clientConfigure.setHost(array[1].substring(2));
         } else {
             throw new IllegalStateException("invalid URI Scheme, uri: " + uri);
         }
-        clientConfigure.setPort(NumberUtils.toInt(array[1]));
+        clientConfigure.setPort(NumberUtils.toInt(array[2]));
         clientConfigure.setMqttVersion(mqttVersion);
         this.clientId = clientId;
         //ping-pong消息超时监听
@@ -192,42 +194,23 @@ public class MqttClient extends AbstractSession {
 
     public void connect(AsynchronousChannelGroup asynchronousChannelGroup, BufferPagePool bufferPagePool, Consumer<MqttConnAckMessage> consumer) {
         //设置 connect ack 回调事件
-        this.connectConsumer = mqttConnAckMessage -> {
-            if (!clientConfigure.isAutomaticReconnect()) {
-                gcConfigure();
-            }
-
-            //连接成功,注册订阅消息
-            if (mqttConnAckMessage.getVariableHeader().connectReturnCode() == MqttConnectReturnCode.CONNECTION_ACCEPTED) {
-                setInflightQueue(new InflightQueue(this, 16));
-                connected = true;
-                //重连情况下重新触发订阅逻辑
-                subscribes.forEach((k, v) -> {
-                    subscribe(k, v.getQoS(), v.getConsumer());
-                });
-                consumeTask();
-            }
-            //客户端设置清理会话（CleanSession）标志为 0 重连时，客户端和服务端必须使用原始的报文标识符重发
-            //任何未确认的 PUBLISH 报文（如果 QoS>0）和 PUBREL 报文 [MQTT-4.4.0-1]。这是唯一要求客户端或
-            //服务端重发消息的情况。
-            if (!clientConfigure.isCleanSession()) {
-                //todo
-            }
-            consumer.accept(mqttConnAckMessage);
-            connected = true;
-        };
+        this.connectConsumer = consumer;
         //启动心跳插件
         if (clientConfigure.getKeepAliveInterval() > 0) {
-            QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(new Runnable() {
+            QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(new AsyncTask() {
                 @Override
-                public void run() {
+                public void execute() {
                     //客户端发送了 PINGREQ 报文之后，如果在合理的时间内仍没有收到 PINGRESP 报文，
                     // 它应该关闭到服务端的网络连接。
                     if (pingTimeout) {
                         pingTimeout = false;
                         client.shutdown();
                     }
-                    if (session.isInvalid()) {
+                    if (session == null || session.isInvalid()) {
+                        if (client != null) {
+                            client.shutdown();
+                            client = null;
+                        }
                         if (clientConfigure.isAutomaticReconnect()) {
                             LOGGER.warn("mqtt client is disconnect, try to reconnect...");
                             connect(asynchronousChannelGroup, reconnectConsumer == null ? consumer : reconnectConsumer);
@@ -237,9 +220,9 @@ public class MqttClient extends AbstractSession {
                     long delay = System.currentTimeMillis() - getLatestSendMessageTime() - clientConfigure.getKeepAliveInterval() * 1000L;
                     //gap 10ms
                     if (delay > -10) {
+                        QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(this, clientConfigure.getKeepAliveInterval(), TimeUnit.SECONDS);
                         MqttPingReqMessage pingReqMessage = new MqttPingReqMessage();
                         write(pingReqMessage);
-                        QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(this, clientConfigure.getKeepAliveInterval(), TimeUnit.SECONDS);
                     } else {
                         QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(this, -delay, TimeUnit.MILLISECONDS);
                     }
@@ -416,7 +399,28 @@ public class MqttClient extends AbstractSession {
     }
 
     public void notifyResponse(MqttConnAckMessage connAckMessage) {
+        if (!clientConfigure.isAutomaticReconnect()) {
+            gcConfigure();
+        }
+
+        //连接成功,注册订阅消息
+        if (connAckMessage.getVariableHeader().connectReturnCode() == MqttConnectReturnCode.CONNECTION_ACCEPTED) {
+            setInflightQueue(new InflightQueue(this, 16));
+            connected = true;
+            //重连情况下重新触发订阅逻辑
+            subscribes.forEach((k, v) -> {
+                subscribe(k, v.getQoS(), v.getConsumer());
+            });
+            consumeTask();
+        }
+        //客户端设置清理会话（CleanSession）标志为 0 重连时，客户端和服务端必须使用原始的报文标识符重发
+        //任何未确认的 PUBLISH 报文（如果 QoS>0）和 PUBREL 报文 [MQTT-4.4.0-1]。这是唯一要求客户端或
+        //服务端重发消息的情况。
+        if (!clientConfigure.isCleanSession()) {
+            //todo
+        }
         connectConsumer.accept(connAckMessage);
+        connected = true;
     }
 
 
@@ -512,6 +516,7 @@ public class MqttClient extends AbstractSession {
         clientConfigure.setAutomaticReconnect(false);
         disconnect = true;
         client.shutdown();
+        client = null;
     }
 
     public void setReconnectConsumer(Consumer<MqttConnAckMessage> reconnectConsumer) {
