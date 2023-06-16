@@ -24,7 +24,8 @@ public class Providers {
     private PersistenceProvider retainMessageProvider = new MemoryPersistenceProvider();
     private PersistenceProvider persistenceProvider = new MemoryPersistenceProvider();
 
-    private SubscribeProvider subscribeProvider = (topicFilter, session) -> true;
+    private SubscribeProvider subscribeProvider = new SubscribeProvider() {
+    };
 
     /**
      * OpenAPI 处理器

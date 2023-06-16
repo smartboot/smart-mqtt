@@ -10,6 +10,7 @@
 
 package org.smartboot.mqtt.broker.provider;
 
+import org.smartboot.mqtt.broker.BrokerTopic;
 import org.smartboot.mqtt.broker.MqttSession;
 
 /**
@@ -19,5 +20,13 @@ import org.smartboot.mqtt.broker.MqttSession;
  * @version V1.0 , 2022/12/28
  */
 public interface SubscribeProvider {
-    boolean subscribeTopic(String topicFilter, MqttSession session);
+    default boolean subscribeTopic(String topicFilter, MqttSession session) {
+        //4.7.2 应用不能使用 $ 字符开头的主题
+        return !topicFilter.startsWith("$");
+    }
+
+    default boolean matchTopic(BrokerTopic brokerTopic, MqttSession session) {
+        return !brokerTopic.getTopic().startsWith("$SYS/");
+    }
+
 }

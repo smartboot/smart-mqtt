@@ -72,7 +72,6 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.management.ManagementFactory;
-import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -133,14 +132,11 @@ public class BrokerContextImpl implements BrokerContext {
      * Broker Server
      */
     private AioQuickServer server;
-    private BufferPagePool pagePool;
     private final MqttBrokerMessageProcessor processor = new MqttBrokerMessageProcessor(this);
 
     //配置文件内容
     private String configJson;
     private final static BrokerTopic SHUTDOWN_TOPIC = new BrokerTopic("");
-
-    private AsynchronousChannelGroup asynchronousChannelGroup;
 
     private final Map<String, Object> resources = new Hashtable<>();
     private final Map<Class<? extends MqttMessage>, MqttProcessor<?>> processors;
@@ -175,20 +171,11 @@ public class BrokerContextImpl implements BrokerContext {
 
 
         try {
-            asynchronousChannelGroup = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
-                int i;
-
-                @Override
-                public Thread newThread(Runnable r) {
-                    return new Thread(r, "smart-mqtt-broker-" + (++i));
-                }
-            });
-            pagePool = new BufferPagePool(10 * 1024 * 1024, brokerConfigure.getThreadNum(), true);
             brokerConfigure.addPlugin(new QosRetryPlugin());
             brokerConfigure.getPlugins().forEach(processor::addPlugin);
             server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(brokerConfigure.getMaxPacketSize()), processor);
-            server.setBannerEnabled(false).setReadBufferSize(brokerConfigure.getBufferSize()).setWriteBuffer(brokerConfigure.getBufferSize(), Math.min(brokerConfigure.getMaxInflight(), 16)).setBufferPagePool(pagePool).setThreadNum(Math.max(2, brokerConfigure.getThreadNum()));
-            server.start(asynchronousChannelGroup);
+            server.setBannerEnabled(false).setReadBufferSize(brokerConfigure.getBufferSize()).setWriteBuffer(brokerConfigure.getBufferSize(), Math.min(brokerConfigure.getMaxInflight(), 16)).setBufferPagePool(brokerConfigure.getBufferPagePool()).setThreadNum(Math.max(2, brokerConfigure.getThreadNum()));
+            server.start(brokerConfigure.getChannelGroup());
             System.out.println(BrokerConfigure.BANNER + "\r\n :: smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
             System.out.println("❤️Gitee: https://gitee.com/smartboot/smart-mqtt");
             System.out.println("Github: https://github.com/smartboot/smart-mqtt");
@@ -418,6 +405,15 @@ public class BrokerContextImpl implements BrokerContext {
             brokerConfigure.setHost("0.0.0.0");
         }
 
+        brokerConfigure.setChannelGroup(new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
+            int i;
+
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "smart-mqtt-broker-" + (++i));
+            }
+        }));
+        brokerConfigure.setBufferPagePool(new BufferPagePool(10 * 1024 * 1024, brokerConfigure.getThreadNum(), true));
 //        System.out.println("brokerConfigure: " + brokerConfigure);
     }
 
@@ -573,8 +569,8 @@ public class BrokerContextImpl implements BrokerContext {
         pushTopicQueue.offer(SHUTDOWN_TOPIC);
         pushThreadPool.shutdown();
         server.shutdown();
-        asynchronousChannelGroup.shutdown();
-        pagePool.release();
+        brokerConfigure.getChannelGroup().shutdown();
+        brokerConfigure.getBufferPagePool().release();
         //卸载插件
         plugins.forEach(Plugin::uninstall);
         plugins.clear();
