@@ -19,7 +19,6 @@ import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
-import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
@@ -79,27 +78,22 @@ public class TopicSubscriber {
             return;
         }
         semaphore.release();
-        int i = 16;
-        while (publishAvailable(brokerContext)) {
-            if (i-- == 0) {
-                if (semaphore.tryAcquire()) {
-                    topic.getQueue().offer(this);
-                    topic.getVersion().incrementAndGet();
-                }
-                break;
-            }
-        }
+        publishAvailable(brokerContext);
         mqttSession.flush();
     }
 
-    private boolean publishAvailable(BrokerContext brokerContext) {
+    private void publishAvailable(BrokerContext brokerContext) {
         PersistenceProvider persistenceProvider = brokerContext.getProviders().getPersistenceProvider();
         PersistenceMessage persistenceMessage = persistenceProvider.get(topic.getTopic(), nextConsumerOffset);
         if (persistenceMessage == null) {
             if (semaphore.tryAcquire()) {
                 topic.getQueue().offer(this);
+                if (persistenceProvider.get(topic.getTopic(), nextConsumerOffset) != null) {
+                    topic.getVersion().incrementAndGet();
+                    brokerContext.getEventBus().publish(ServerEventType.NOTIFY_TOPIC_PUSH, topic);
+                }
             }
-            return false;
+            return;
         }
 
         MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(persistenceMessage.getPayload()).qos(mqttQoS).topicName(persistenceMessage.getTopic());
@@ -110,22 +104,22 @@ public class TopicSubscriber {
         InflightQueue inflightQueue = mqttSession.getInflightQueue();
         long offset = persistenceMessage.getOffset();
         nextConsumerOffset = offset + 1;
-        brokerContext.getEventBus().publish(EventType.PUSH_PUBLISH_MESSAGE, mqttSession);
         //Qos0直接发送
         if (mqttQoS == MqttQoS.AT_MOST_ONCE) {
             mqttSession.write(publishBuilder.build(), false);
-            return true;
+            publishAvailable(brokerContext);
+            return;
         }
 
-        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = inflightQueue.offer(publishBuilder, () -> {
+        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = inflightQueue.offer(publishBuilder, mqttPacketIdentifierMessage -> {
             if (semaphore.tryAcquire()) {
-                topic.getQueue().offer(this);
+                topic.getQueue().offer(TopicSubscriber.this);
                 topic.getVersion().incrementAndGet();
             }
             brokerContext.getEventBus().publish(ServerEventType.NOTIFY_TOPIC_PUSH, topic);
         });
         if (future == null) {
-            return false;
+            return;
         }
         future.whenComplete((mqttPacketIdentifierMessage, throwable) -> {
             //最早发送的消息若收到响应，则更新点位
@@ -137,7 +131,7 @@ public class TopicSubscriber {
             publishAvailable(brokerContext);
         });
 
-        return true;
+        publishAvailable(brokerContext);
     }
 
     public BrokerTopic getTopic() {

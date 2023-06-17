@@ -8,7 +8,7 @@
     "serve": "vite preview"
   },
   "dependencies": {
-    "@layui/layui-vue": "1.11.4",
+    "@layui/layui-vue": "2.3.0",
     "axios": "^1.2.1",
     "chart.js": "^4.2.1",
     "echarts": "^5.4.1",

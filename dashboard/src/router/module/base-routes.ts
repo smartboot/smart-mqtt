@@ -85,6 +85,11 @@ export default [
                 meta: {title: '用户', requireAuth: true},
             },
             {
+                path: '/system/cluster',
+                component: () => import('../../views/System/cluster.vue'),
+                meta: {title: '集群管理', requireAuth: true},
+            },
+            {
                 path: '/system/setting',
                 component: () => import('../../views/System/setting.vue'),
                 meta: {title: '设置', requireAuth: true},

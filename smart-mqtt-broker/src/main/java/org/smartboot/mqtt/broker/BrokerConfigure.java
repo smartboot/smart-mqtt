@@ -12,8 +12,10 @@ package org.smartboot.mqtt.broker;
 
 import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.extension.plugins.Plugin;
 
+import java.nio.channels.AsynchronousChannelGroup;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,7 +44,7 @@ public class BrokerConfigure extends ToString {
     /**
      * 当前smart-mqtt
      */
-    public static final String VERSION = "v0.21";
+    public static final String VERSION = "v0.22";
 
     static final Map<String, String> SystemEnvironments = new HashMap<>();
 
@@ -105,6 +107,10 @@ public class BrokerConfigure extends ToString {
     private int maxInflight = 8;
 
     private final List<Plugin<MqttMessage>> plugins = new LinkedList<>();
+
+    private AsynchronousChannelGroup channelGroup;
+
+    private BufferPagePool bufferPagePool;
 
     public int getPort() {
         return port;
@@ -201,6 +207,22 @@ public class BrokerConfigure extends ToString {
 
     public List<Plugin<MqttMessage>> getPlugins() {
         return plugins;
+    }
+
+    public AsynchronousChannelGroup getChannelGroup() {
+        return channelGroup;
+    }
+
+    public void setChannelGroup(AsynchronousChannelGroup channelGroup) {
+        this.channelGroup = channelGroup;
+    }
+
+    public BufferPagePool getBufferPagePool() {
+        return bufferPagePool;
+    }
+
+    public void setBufferPagePool(BufferPagePool bufferPagePool) {
+        this.bufferPagePool = bufferPagePool;
     }
 
     @Override

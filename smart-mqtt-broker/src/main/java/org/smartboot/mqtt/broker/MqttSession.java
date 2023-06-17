@@ -158,6 +158,9 @@ public class MqttSession extends AbstractSession {
     }
 
     public void subscribeSuccess(MqttQoS mqttQoS, TopicToken topicToken, BrokerTopic topic) {
+        if (!mqttContext.getProviders().getSubscribeProvider().matchTopic(topic, this)) {
+            return;
+        }
         TopicSubscriber topicSubscriber = topic.getConsumeOffsets().get(this);
         if (topicSubscriber != null) {
             //此前的订阅关系

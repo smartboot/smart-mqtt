@@ -63,6 +63,11 @@ const menus = [
         icon:"layui-icon-group"
       },
       {
+        id: "/system/cluster",
+        title: "集群管理",
+        icon: "layui-icon-slider"
+      },
+      {
         id: "/system/setting",
         title: "设置",
         icon: "layui-icon-set-sm"
