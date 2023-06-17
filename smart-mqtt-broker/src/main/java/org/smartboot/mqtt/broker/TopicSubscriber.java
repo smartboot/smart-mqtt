@@ -111,7 +111,13 @@ public class TopicSubscriber {
             return;
         }
 
-        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = inflightQueue.offer(publishBuilder);
+        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = inflightQueue.offer(publishBuilder, () -> {
+            if (semaphore.tryAcquire()) {
+                topic.getQueue().offer(this);
+                topic.getVersion().incrementAndGet();
+            }
+            brokerContext.getEventBus().publish(ServerEventType.NOTIFY_TOPIC_PUSH, topic);
+        });
         if (future == null) {
             return;
         }
