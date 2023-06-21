@@ -163,7 +163,7 @@ export default {
 
   },
   setup() {
-    const items = ['client_online', 'topic_count', 'period_message_received', 'period_message_sent'];
+    const items = ['client_online', 'topic_count', 'packets_publish_received', 'packets_publish_sent','packets_received','packets_sent'];
     const metrics: MetricModel[] = items.map(key => {
       return {key: key, chartRef: 'chart_' + key}
     })
