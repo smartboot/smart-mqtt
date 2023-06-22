@@ -214,63 +214,6 @@ export default {
       tooltip: {
         trigger: 'item'
       },
-      series: [
-        {
-          name: '客户端',
-          type: 'scatter',
-          coordinateSystem: 'geo',
-          data: convertData([]),
-          symbolSize: function (val) {
-            return val[2] / 10;
-          },
-          encode: {
-            value: 2
-          },
-          label: {
-            formatter: '{b}',
-            position: 'right',
-            show: false
-          },
-          emphasis: {
-            label: {
-              show: true
-            }
-          }
-        },
-        {
-          name: '服务节点',
-          type: 'effectScatter',
-          coordinateSystem: 'geo',
-          data: convertData(
-              broker
-                  .sort(function (a, b) {
-                    return b.value - a.value;
-                  })
-                  .slice(0, 6)
-          ),
-          symbolSize: 20,
-          encode: {
-            value: 2
-          },
-          showEffectOn: 'render',
-          rippleEffect: {
-            brushType: 'stroke'
-          },
-          label: {
-            formatter: '{b}',
-            position: 'right',
-            show: true
-          },
-          itemStyle: {
-            shadowBlur: 10,
-            shadowColor: '#333'
-          },
-          emphasis: {
-            scale: true
-          },
-          zlevel: 1
-        }
-      ]
     })
   },
   setup() {
@@ -305,15 +248,16 @@ export default {
 
       //更新地图
       // console.log("r",data.group.clientRegions)
-      const d=data.group.clientRegions.map(m=>{return {name:m.code,value:m.value};});
-      console.log("d",d)
+      const clients=data.group.clientRegions.map(m=>{return {name:m.code,value:m.value};});
+      const brokers=data.group.brokerNodes.map(m=>{return {name:m.code,value:m.value};});
+      console.log("d",clients)
       chinaChart.setOption({
         series: [
           {
             name: '客户端',
             type: 'scatter',
             coordinateSystem: 'geo',
-            data: convertData(d),
+            data: convertData(clients),
             symbolSize: function (val) {
               return Math.min(Math.max(val[2],1),30) ;
             },
@@ -331,6 +275,39 @@ export default {
               }
             }
           },
+          {
+            name: '服务节点',
+            type: 'effectScatter',
+            coordinateSystem: 'geo',
+            data: convertData(
+                brokers
+                    .sort(function (a, b) {
+                      return b.value - a.value;
+                    })
+                    .slice(0, 6)
+            ),
+            symbolSize: 20,
+            encode: {
+              value: 2
+            },
+            showEffectOn: 'render',
+            rippleEffect: {
+              brushType: 'stroke'
+            },
+            label: {
+              formatter: '{b}',
+              position: 'right',
+              show: true
+            },
+            itemStyle: {
+              shadowBlur: 10,
+              shadowColor: '#333'
+            },
+            emphasis: {
+              scale: true
+            },
+            zlevel: 1
+          }
         ]
       })
 
