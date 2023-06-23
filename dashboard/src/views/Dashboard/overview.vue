@@ -140,6 +140,8 @@ const updateChart = (model: MetricModel, metric: Metric) => {
   })
 
 }
+
+
 const convertData = function (data) {
   var res = [];
   for (var i = 0; i < data.length; i++) {
@@ -149,6 +151,49 @@ const convertData = function (data) {
       res.push({
         name: data[i].name,
         value: geoCoord.concat(data[i].value)
+      });
+    }
+  }
+  console.log(res.length)
+  return res;
+};
+
+var COLOR_ALL = [
+  '#37A2DA',
+  '#e06343',
+  '#37a354',
+  '#b55dba',
+  '#b5bd48',
+  '#8378EA',
+  '#96BFFF'
+];
+const convertClientData = function (data) {
+  var res = [];
+  for (var i = 0; i < data.length; i++) {
+    var geoCoord = city[data[i].name];
+    if (geoCoord) {
+      // console.log(geoCoord.concat(data[i].value))
+      let v=data[i].value
+      let color
+      if(v<10){
+        color='#ff85c0';
+      }else if(v<100){
+        color='#1677ff';
+      }else if(v<1000){
+        color='#1d39c4';
+      }else if(v<10000){
+        color='#fa8c16';
+      }else{
+        color='#f5222d';
+      }
+      res.push({
+        name: data[i].name,
+        value: geoCoord.concat(data[i].value),
+        itemStyle: {
+          color: color,
+          borderType: 'dashed',
+          // opacity: 0.5
+        }
       });
     }
   }
@@ -197,8 +242,8 @@ export default {
         center: [104.114129, 37.550339],
       },
       title: {
-        text: 'smart-mqtt',
-        subtext: '终端在线实时监控大屏',
+        text: 'smart-mqtt监控大屏',
+        subtext: '24小时在线视图',
         sublink: 'http://smartboot.tech',
         left: 'center'
       },
@@ -248,9 +293,9 @@ export default {
             name: '客户端',
             type: 'scatter',
             coordinateSystem: 'geo',
-            data: convertData(clients),
+            data: convertClientData(clients),
             symbolSize: function (val) {
-              return Math.min(Math.max(val[2],1),30) ;
+              return Math.min(Math.max(val[2],10),40) ;
             },
             encode: {
               value: 2
@@ -258,7 +303,7 @@ export default {
             label: {
               formatter: '{b}',
               position: 'right',
-              show: false
+              // show: true
             },
             emphasis: {
               label: {
