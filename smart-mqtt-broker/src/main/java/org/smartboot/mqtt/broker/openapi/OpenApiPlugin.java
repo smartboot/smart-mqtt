@@ -16,11 +16,6 @@ import org.smartboot.http.restful.RestfulBootstrap;
 import org.smartboot.http.restful.StaticResourceHandler;
 import org.smartboot.http.server.HttpBootstrap;
 import org.smartboot.mqtt.broker.BrokerContext;
-import org.smartboot.mqtt.broker.openapi.controller.BrokerController;
-import org.smartboot.mqtt.broker.openapi.controller.ConnectionsController;
-import org.smartboot.mqtt.broker.openapi.controller.DashBoardController;
-import org.smartboot.mqtt.broker.openapi.controller.SubscriptionController;
-import org.smartboot.mqtt.broker.openapi.controller.SystemController;
 import org.smartboot.mqtt.broker.plugin.Plugin;
 import org.smartboot.mqtt.broker.plugin.PluginException;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
@@ -60,11 +55,8 @@ public class OpenApiPlugin extends Plugin {
                 response.setHeader("Access-Control-Allow-Origin", "*");
                 response.setHeader("Access-Control-Allow-Headers", "*");
             });
-            restfulBootstrap.controller(new DashBoardController(brokerContext));
-            restfulBootstrap.controller(new ConnectionsController());
-            restfulBootstrap.controller(new SubscriptionController());
-            restfulBootstrap.controller(new BrokerController());
-            restfulBootstrap.controller(new SystemController());
+            restfulBootstrap.addBean("brokerContext", brokerContext)
+                    .scan("org.smartboot.mqtt.broker.openapi");
 
             HttpBootstrap bootstrap = restfulBootstrap.bootstrap();
             bootstrap.setPort(config.getPort());
