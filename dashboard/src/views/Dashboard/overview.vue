@@ -188,20 +188,11 @@ export default {
     chinaChart=echarts.init(this.chinaRef);
     echarts.use([MapChart]);
     echarts.registerMap("chinaMap",china);
-    const broker = [
-      { name: '海门', value: 90 },
-      { name: '鄂尔多斯', value: 112 },
-      { name: '招远', value: 112 },
-      { name: '舟山', value: 112 },
-      { name: '齐齐哈尔', value: 114 },
-      { name: '盐城', value: 115 },
-    ];
-
     chinaChart.setOption({
       geo:{
         type:'map',
          map:'chinaMap',
-        // roam:true,
+        roam:true,
         zoom:2,
         center: [104.114129, 37.550339],
       },
