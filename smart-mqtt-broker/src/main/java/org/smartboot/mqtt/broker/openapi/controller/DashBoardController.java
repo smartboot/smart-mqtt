@@ -15,6 +15,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.http.restful.RestResult;
+import org.smartboot.http.restful.annotation.Autowired;
 import org.smartboot.http.restful.annotation.Controller;
 import org.smartboot.http.restful.annotation.RequestMapping;
 import org.smartboot.mqtt.broker.BrokerConfigure;
@@ -38,11 +39,9 @@ public class DashBoardController {
     private static final int MINUTE = 60;
     private static final int HOUR = 60 * 60;
     private static final int DAY = 24 * 60 * 60;
-    private final BrokerContext brokerContext;
+    @Autowired
+    private BrokerContext brokerContext;
 
-    public DashBoardController(BrokerContext brokerContext) {
-        this.brokerContext = brokerContext;
-    }
 
     @RequestMapping(OpenApi.DASHBOARD_OVERVIEW)
     public RestResult<?> overview() {

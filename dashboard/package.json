@@ -8,10 +8,10 @@
     "serve": "vite preview"
   },
   "dependencies": {
-    "@layui/layui-vue": "2.3.0",
+    "@layui/layui-vue": "2.3.1",
     "axios": "^1.2.1",
-    "chart.js": "^4.2.1",
     "echarts": "^5.4.1",
+    "echarts-extension-amap": "^1.11.0",
     "js-base64": "^3.7.2",
     "mockjs": "^1.1.0",
     "mqtt": "v4.3.7",
@@ -19,7 +19,6 @@
     "pinia": "^2.0.20",
     "pinia-plugin-persistedstate": "^3.0.1",
     "vue": "^3.2.45",
-    "vue-chartjs": "^5.2.0",
     "vue-router": "^4.1.3"
   },
   "devDependencies": {
