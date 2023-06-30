@@ -179,6 +179,7 @@ public class BrokerContextImpl implements BrokerContext {
             System.out.println(BrokerConfigure.BANNER + "\r\n :: smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
             System.out.println("❤️Gitee: https://gitee.com/smartboot/smart-mqtt");
             System.out.println("Github: https://github.com/smartboot/smart-mqtt");
+            System.out.println("Support: zhengjunweimail@163.com");
             if (StringUtils.isBlank(brokerConfigure.getHost())) {
                 System.out.println("\uD83C\uDF89start smart-mqtt success! [port:" + brokerConfigure.getPort() + "]");
             } else {
