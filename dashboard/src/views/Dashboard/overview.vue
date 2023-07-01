@@ -53,7 +53,7 @@
                     {{node.osArch}}
                   </lay-card>
                   <lay-card title="内存规格">
-                    {{ node.memoryLimit/1024.0/1024/1024 }} GB
+                    {{ node.memoryLimit }} GB
                   </lay-card>
                 </lay-col>
               </lay-row>
@@ -79,9 +79,9 @@
                   <tr>
                     <td>授权有效期：</td>
                     <td>
-                      <lay-progress v-if="node.cpuUsage<60" :percent="node.cpuUsage" :show-text="true"
+                      <lay-progress size="big" v-if="node.cpuUsage<60" :percent="node.cpuUsage" :show-text="true"
                                     style="width:100px"></lay-progress>
-                      <lay-progress v-if="node.cpuUsage>=60" theme="orange" :percent="node.cpuUsage" :show-text="true"
+                      <lay-progress size="big" v-if="node.cpuUsage>=60" theme="orange" :percent="node.cpuUsage" :show-text="true"
                                     style="width:100px"></lay-progress>
                     </td>
                   </tr>
@@ -115,6 +115,7 @@ import 'echarts-extension-amap';
 import {china} from "../../assets/map/china"
 import {city} from "../../assets/map/city"
 import {MapChart} from "echarts/charts";
+import moment from "moment";
 
 interface Metric {
   code?: string
@@ -297,8 +298,9 @@ export default {
       nodes.map(node => {
         const preNode = this.clusterNodes?.filter(n => n.ip == node.ip)
         node.ref = node.localAddress + "_ref"
+        node.startTime=moment(node.startTime).format('YYYY-MM-DD HH:mm:ss');
+        node.memoryLimit=(node.memoryLimit/1024.0/1024/1024).toFixed(2)
         if (preNode && preNode?.[0]?.chart) {
-          console.log("aaa",node)
           node.chart = preNode[0].chart;
           node.chart.setOption({series: [
               {
