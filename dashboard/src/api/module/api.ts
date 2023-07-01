@@ -8,6 +8,10 @@ export const dashboard_nodes = function () {
     return Http.post('/dashboard/nodes')
 }
 
+export const dashboard_cluster = function () {
+    return Http.post('/dashboard/cluster')
+}
+
 export const dashboard_metrics = function () {
     return Http.post('/dashboard/metrics')
 }

@@ -91,4 +91,15 @@ public class DashBoardController {
         return RestResult.fail(OpenApi.MESSAGE_UPGRADE);
     }
 
+
+    /**
+     * 指标信息
+     *
+     * @return
+     */
+    @RequestMapping(OpenApi.DASHBOARD_CLUSTER)
+    public RestResult<?> cluster() {
+        return RestResult.fail(OpenApi.MESSAGE_UPGRADE);
+    }
+
 }

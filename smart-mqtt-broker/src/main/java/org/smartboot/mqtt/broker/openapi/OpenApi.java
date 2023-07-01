@@ -24,6 +24,11 @@ public class OpenApi {
 
     public static final String DASHBOARD_METRICS = DASHBOARD + "/metrics";
 
+    /**
+     * 集群信息
+     */
+    public static final String DASHBOARD_CLUSTER = DASHBOARD + "/cluster";
+
     public static final String CONNECTIONS = BASE_API + "/connections";
 
     public static final String SUBSCRIPTIONS = BASE_API + "/subscriptions";
