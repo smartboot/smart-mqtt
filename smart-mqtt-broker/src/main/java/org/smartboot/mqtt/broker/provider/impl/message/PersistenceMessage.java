@@ -10,10 +10,16 @@
 
 package org.smartboot.mqtt.broker.provider.impl.message;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson2.annotation.JSONField;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.common.enums.PayloadEncodeEnum;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
+
+import java.util.Base64;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -24,6 +30,7 @@ public class PersistenceMessage extends ToString {
      * 负载数据
      */
     private final byte[] payload;
+
     /**
      * 主题
      */
@@ -81,5 +88,39 @@ public class PersistenceMessage extends ToString {
 
     public String getClientId() {
         return clientId;
+    }
+
+    @JSONField(serialize = false)
+    private String defaultJson;
+    @JSONField(serialize = false)
+    private String stringJson;
+    @JSONField(serialize = false)
+    private String base64Json;
+
+    public String getJsonObject(PayloadEncodeEnum payloadEncodeEnum) {
+        if (payloadEncodeEnum == null) {
+            payloadEncodeEnum = PayloadEncodeEnum.NONE;
+        }
+        switch (payloadEncodeEnum) {
+            case STRING:
+                if (stringJson == null) {
+                    JSONObject json = (JSONObject) JSON.toJSON(this);
+                    json.put("payload", new String(payload));
+                    stringJson = json.toString();
+                }
+                return stringJson;
+            case BASE64:
+                if (base64Json == null) {
+                    JSONObject json = (JSONObject) JSON.toJSON(this);
+                    json.put("payload", new String(Base64.getEncoder().encode(payload)));
+                    base64Json = json.toString();
+                }
+                return base64Json;
+            default:
+                if (defaultJson == null) {
+                    defaultJson = JSONObject.toJSONString(this);
+                }
+                return defaultJson;
+        }
     }
 }
