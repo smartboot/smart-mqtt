@@ -10,7 +10,9 @@
 
 package org.smartboot.mqtt.broker.provider.impl.message;
 
+import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.common.ToString;
+import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 /**
@@ -31,18 +33,22 @@ public class PersistenceMessage extends ToString {
     /**
      * 存储的消息偏移量
      */
-    private final long offset;
+    private long offset;
 
+    private final MqttQoS qos;
     /**
      * 消息存储时间
      */
     private final long createTime = System.currentTimeMillis();
 
-    public PersistenceMessage(MqttPublishMessage message, long offset) {
+    private final String clientId;
+
+    public PersistenceMessage(MqttSession session, MqttPublishMessage message) {
+        this.clientId = session.getClientId();
         this.payload = message.getPayload().getPayload();
         this.retained = message.getFixedHeader().isRetain();
         this.topic = message.getVariableHeader().getTopicName();
-        this.offset = offset;
+        this.qos = message.getFixedHeader().getQosLevel();
     }
 
     public byte[] getPayload() {
@@ -63,5 +69,17 @@ public class PersistenceMessage extends ToString {
 
     public long getOffset() {
         return offset;
+    }
+
+    public MqttQoS getQos() {
+        return qos;
+    }
+
+    public void setOffset(long offset) {
+        this.offset = offset;
+    }
+
+    public String getClientId() {
+        return clientId;
     }
 }

@@ -100,7 +100,7 @@ public class MqttSession extends AbstractSession {
 
         if (willMessage != null) {
             //非正常中断，推送遗嘱消息
-            mqttContext.getMessageBus().consume(mqttContext, willMessage);
+            mqttContext.getMessageBus().consume(this, willMessage);
 //            mqttContext.publish( willMessage.getVariableHeader().getTopicName());
         }
         subscribers.keySet().forEach(this::unsubscribe);
@@ -234,6 +234,10 @@ public class MqttSession extends AbstractSession {
 
     public void setWillMessage(MqttPublishMessage willMessage) {
         this.willMessage = willMessage;
+    }
+
+    public BrokerContext getMqttContext() {
+        return mqttContext;
     }
 
     public Map<String, TopicFilterSubscriber> getSubscribers() {

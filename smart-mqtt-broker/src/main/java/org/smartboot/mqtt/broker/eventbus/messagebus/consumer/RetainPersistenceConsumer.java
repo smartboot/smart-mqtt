@@ -12,9 +12,9 @@ package org.smartboot.mqtt.broker.eventbus.messagebus.consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.BrokerContext;
+import org.smartboot.mqtt.broker.MqttSession;
+import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
 import org.smartboot.mqtt.common.enums.MqttQoS;
-import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 /**
  * Retain消息持久化
@@ -26,15 +26,15 @@ public class RetainPersistenceConsumer implements Consumer {
     private static final Logger LOGGER = LoggerFactory.getLogger(RetainPersistenceConsumer.class);
 
     @Override
-    public void consume(BrokerContext brokerContext, MqttPublishMessage message) {
-        if (!message.getFixedHeader().isRetain()) {
+    public void consume(MqttSession mqttSession, PersistenceMessage message) {
+        if (!message.isRetained()) {
             return;
         }
         //保留标志为 1 且有效载荷为零字节的 PUBLISH 报文会被服务端当作正常消息处理，它会被发送给订阅主题匹配的客户端。
         // 此外，同一个主题下任何现存的保留消息必须被移除，因此这个主题之后的任何订阅者都不会收到一个保留消息。
-        if (message.getPayload().getPayload().length == 0) {
-            LOGGER.info("clear topic:{} retained messages, because of current retained message's payload length is 0", message.getVariableHeader().getTopicName());
-            brokerContext.getProviders().getRetainMessageProvider().delete(message.getVariableHeader().getTopicName());
+        if (message.getPayload().length == 0) {
+            LOGGER.info("clear topic:{} retained messages, because of current retained message's payload length is 0", message.getTopic());
+            mqttSession.getMqttContext().getProviders().getRetainMessageProvider().delete(message.getTopic());
             return;
         }
         /*
@@ -42,11 +42,11 @@ public class RetainPersistenceConsumer implements Consumer {
          * 的任何消息。它应该将这个新的 QoS 0 消息当作那个主题的新保留消息，但是任何时候都可以选择丢弃它
          * 如果这种情况发生了，那个主题将没有保留消息
          */
-        if (message.getFixedHeader().getQosLevel() == MqttQoS.AT_MOST_ONCE) {
-            LOGGER.info("receive Qos0 retain message,clear topic:{} retained messages", message.getVariableHeader().getTopicName());
-            brokerContext.getProviders().getRetainMessageProvider().delete(message.getVariableHeader().getTopicName());
+        if (message.getQos() == MqttQoS.AT_MOST_ONCE) {
+            LOGGER.info("receive Qos0 retain message,clear topic:{} retained messages", message.getTopic());
+            mqttSession.getMqttContext().getProviders().getRetainMessageProvider().delete(message.getTopic());
         }
-        brokerContext.getProviders().getRetainMessageProvider().doSave(message);
+        mqttSession.getMqttContext().getProviders().getRetainMessageProvider().doSave(message);
     }
 
 

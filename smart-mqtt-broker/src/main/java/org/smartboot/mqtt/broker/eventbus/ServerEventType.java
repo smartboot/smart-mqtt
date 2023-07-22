@@ -14,6 +14,7 @@ import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.BrokerTopic;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.TopicSubscriber;
+import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
@@ -32,6 +33,10 @@ public class ServerEventType<T> extends EventType<T> {
      * Broker服务启动成功
      */
     public static final ServerEventType<BrokerContext> BROKER_STARTED = new ServerEventType<>("brokerStarted");
+
+    public static final ServerEventType<BrokerContext> OPEN_API_STARTED = new ServerEventType<>("open_api_started");
+
+    public static final ServerEventType<PersistenceMessage> PUBLISH_MESSAGE_BRIDGE = new ServerEventType<>("publish_message_bridge");
 
     /**
      * 停止Broker服务

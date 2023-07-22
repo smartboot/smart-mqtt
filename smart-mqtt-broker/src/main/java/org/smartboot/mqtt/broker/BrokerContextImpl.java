@@ -275,7 +275,7 @@ public class BrokerContextImpl implements BrokerContext {
         //持久化消息
         messageBusSubscriber.consumer((brokerContext, publishMessage) -> providers.getPersistenceProvider().doSave(publishMessage));
         //消费retain消息
-        messageBusSubscriber.consumer(new RetainPersistenceConsumer(), mqttPublishMessage -> mqttPublishMessage.getFixedHeader().isRetain());
+        messageBusSubscriber.consumer(new RetainPersistenceConsumer(), PersistenceMessage::isRetained);
     }
 
     /**
@@ -287,7 +287,8 @@ public class BrokerContextImpl implements BrokerContext {
             BrokerTopic topic = getOrCreateTopic(eventObject.getObject().getVariableHeader().getTopicName());
             try {
                 //触发消息总线
-                messageBusSubscriber.consume(this, eventObject.getObject());
+
+                messageBusSubscriber.consume(eventObject.getSession(), eventObject.getObject());
             } finally {
                 eventBus.publish(ServerEventType.MESSAGE_BUS_CONSUMED, topic);
             }

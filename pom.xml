@@ -11,7 +11,7 @@
     <properties>
         <smart.mqtt.version>0.24</smart.mqtt.version>
         <smart-socket.version>1.5.31</smart-socket.version>
-        <smart-http.version>1.2.6</smart-http.version>
+        <smart-http.version>1.2.8</smart-http.version>
         <commons.lang.version>2.6</commons.lang.version>
         <commons.clollections.version>4.3</commons.clollections.version>
         <junit.version>4.13.2</junit.version>
@@ -248,11 +248,11 @@
         </pluginManagement>
     </build>
     <repositories>
-        <repository>
-            <id>alimaven</id>
-            <name>aliyun maven</name>
-            <url>https://maven.aliyun.com/repository/public</url>
-        </repository>
+<!--        <repository>-->
+<!--            <id>alimaven</id>-->
+<!--            <name>aliyun maven</name>-->
+<!--            <url>https://maven.aliyun.com/repository/public</url>-->
+<!--        </repository>-->
         <repository>
             <id>sonatype-nexus-snapshots</id>
             <name>Sonatype Nexus Snapshots</name>

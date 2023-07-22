@@ -10,13 +10,13 @@
 
 package org.smartboot.mqtt.broker.eventbus.messagebus.consumer;
 
-import org.smartboot.mqtt.broker.BrokerContext;
-import org.smartboot.mqtt.common.message.MqttPublishMessage;
+import org.smartboot.mqtt.broker.MqttSession;
+import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/6/25
  */
 public interface Consumer {
-    void consume(BrokerContext brokerContext, MqttPublishMessage publishMessage);
+    void consume(MqttSession mqttSession, PersistenceMessage publishMessage);
 }

@@ -66,6 +66,7 @@ public class OpenApiPlugin extends Plugin {
                 bootstrap.setPort(config.getPort());
                 bootstrap.configuration().bannerEnabled(false).host(config.getHost()).readBufferSize(1024 * 8).group(asynchronousChannelGroup);
                 bootstrap.start();
+                brokerContext.getEventBus().publish(ServerEventType.OPEN_API_STARTED, brokerContext);
             });
             LOGGER.info("openapi server start success!");
         } catch (Exception e) {

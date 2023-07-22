@@ -10,8 +10,11 @@
 
 package org.smartboot.mqtt.broker.eventbus.messagebus;
 
-import org.smartboot.mqtt.broker.BrokerContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.eventbus.messagebus.consumer.Consumer;
+import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 import java.util.ArrayList;
@@ -25,7 +28,7 @@ import java.util.function.Predicate;
  * @version V1.0 , 2022/6/29
  */
 public class MessageBusSubscriber implements MessageBus {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageBusSubscriber.class);
     /**
      * 消息总线消费者
      */
@@ -37,7 +40,7 @@ public class MessageBusSubscriber implements MessageBus {
     }
 
     @Override
-    public void consumer(Consumer consumer, Predicate<MqttPublishMessage> filter) {
+    public void consumer(Consumer consumer, Predicate<PersistenceMessage> filter) {
         consumer((brokerContext, publishMessage) -> {
             if (filter.test(publishMessage)) {
                 consumer.consume(brokerContext, publishMessage);
@@ -46,7 +49,14 @@ public class MessageBusSubscriber implements MessageBus {
     }
 
     @Override
-    public void consume(BrokerContext brokerContext, MqttPublishMessage message) {
-        messageBuses.forEach(messageConsumer -> messageConsumer.consume(brokerContext, message));
+    public void consume(MqttSession mqttSession, MqttPublishMessage message) {
+        PersistenceMessage persistenceMessage = new PersistenceMessage(mqttSession, message);
+        messageBuses.forEach(messageConsumer -> {
+            try {
+                messageConsumer.consume(mqttSession, persistenceMessage);
+            } catch (Throwable throwable) {
+                LOGGER.info("messageBus conumse exception", throwable);
+            }
+        });
     }
 }
