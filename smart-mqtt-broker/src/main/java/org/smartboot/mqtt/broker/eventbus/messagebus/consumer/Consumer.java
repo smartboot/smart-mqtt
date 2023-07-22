@@ -19,4 +19,8 @@ import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
  */
 public interface Consumer {
     void consume(MqttSession mqttSession, PersistenceMessage publishMessage);
+
+    default boolean enable() {
+        return true;
+    }
 }

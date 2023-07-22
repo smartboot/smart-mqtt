@@ -51,12 +51,20 @@ public class MessageBusSubscriber implements MessageBus {
     @Override
     public void consume(MqttSession mqttSession, MqttPublishMessage message) {
         PersistenceMessage persistenceMessage = new PersistenceMessage(mqttSession, message);
-        messageBuses.forEach(messageConsumer -> {
+        boolean remove = false;
+        for (Consumer messageConsumer : messageBuses) {
             try {
-                messageConsumer.consume(mqttSession, persistenceMessage);
+                if (messageConsumer.enable()) {
+                    messageConsumer.consume(mqttSession, persistenceMessage);
+                } else {
+                    remove = true;
+                }
             } catch (Throwable throwable) {
                 LOGGER.info("messageBus conumse exception", throwable);
             }
-        });
+        }
+        if (remove) {
+            messageBuses.removeIf(consumer -> !consumer.enable());
+        }
     }
 }
