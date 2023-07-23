@@ -11,7 +11,7 @@
 package org.smartboot.mqtt.common.enums;
 
 public enum PayloadEncodeEnum {
-    NONE("none"), STRING("string"), BASE64("base64");
+    BYTES("bytes"), STRING("string"), BASE64("base64");
     private final String code;
 
     PayloadEncodeEnum(String code) {

@@ -99,7 +99,7 @@ public class Message extends ToString {
 
     public String getJsonObject(PayloadEncodeEnum payloadEncodeEnum) {
         if (payloadEncodeEnum == null) {
-            payloadEncodeEnum = PayloadEncodeEnum.NONE;
+            payloadEncodeEnum = PayloadEncodeEnum.BYTES;
         }
         switch (payloadEncodeEnum) {
             case STRING:
