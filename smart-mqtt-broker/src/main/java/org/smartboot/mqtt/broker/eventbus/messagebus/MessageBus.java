@@ -12,7 +12,6 @@ package org.smartboot.mqtt.broker.eventbus.messagebus;
 
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.eventbus.messagebus.consumer.Consumer;
-import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 import java.util.function.Predicate;
@@ -36,7 +35,7 @@ public interface MessageBus {
      * @param consumer  消费者
      * @param predicate 消费条件
      */
-    void consumer(Consumer consumer, Predicate<PersistenceMessage> predicate);
+    void consumer(Consumer consumer, Predicate<Message> predicate);
 
     /**
      * 发布消息至总线触发消费

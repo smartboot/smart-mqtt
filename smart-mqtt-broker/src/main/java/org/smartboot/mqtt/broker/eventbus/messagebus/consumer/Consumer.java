@@ -10,15 +10,14 @@
 
 package org.smartboot.mqtt.broker.eventbus.messagebus.consumer;
 
-import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
+import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/6/25
  */
 public interface Consumer {
-    void consume(MqttSession mqttSession, PersistenceMessage publishMessage);
+    void consume(Message publishMessage);
 
     default boolean enable() {
         return true;

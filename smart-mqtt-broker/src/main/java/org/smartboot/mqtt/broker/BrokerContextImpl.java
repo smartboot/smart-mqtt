@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.eventbus.ConnectIdleTimeMonitorSubscriber;
 import org.smartboot.mqtt.broker.eventbus.KeepAliveMonitorSubscriber;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
+import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.broker.eventbus.messagebus.MessageBus;
 import org.smartboot.mqtt.broker.eventbus.messagebus.MessageBusSubscriber;
 import org.smartboot.mqtt.broker.eventbus.messagebus.consumer.RetainPersistenceConsumer;
@@ -34,7 +35,6 @@ import org.smartboot.mqtt.broker.processor.PublishProcessor;
 import org.smartboot.mqtt.broker.processor.SubscribeProcessor;
 import org.smartboot.mqtt.broker.processor.UnSubscribeProcessor;
 import org.smartboot.mqtt.broker.provider.Providers;
-import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
 import org.smartboot.mqtt.broker.topic.TopicPublishTree;
 import org.smartboot.mqtt.broker.topic.TopicSubscribeTree;
 import org.smartboot.mqtt.common.AsyncTask;
@@ -273,9 +273,9 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private void subscribeMessageBus() {
         //持久化消息
-        messageBusSubscriber.consumer((brokerContext, publishMessage) -> providers.getPersistenceProvider().doSave(publishMessage));
+        messageBusSubscriber.consumer(publishMessage -> providers.getPersistenceProvider().doSave(publishMessage));
         //消费retain消息
-        messageBusSubscriber.consumer(new RetainPersistenceConsumer(), PersistenceMessage::isRetained);
+        messageBusSubscriber.consumer(new RetainPersistenceConsumer(this), Message::isRetained);
     }
 
     /**
@@ -315,7 +315,7 @@ public class BrokerContextImpl implements BrokerContext {
                     @Override
                     public void execute() {
                         AsyncTask task = this;
-                        PersistenceMessage storedMessage = providers.getRetainMessageProvider().get(subscriber.getTopic().getTopic(), subscriber.getRetainConsumerOffset());
+                        Message storedMessage = providers.getRetainMessageProvider().get(subscriber.getTopic().getTopic(), subscriber.getRetainConsumerOffset());
                         if (storedMessage == null || storedMessage.getCreateTime() > subscriber.getLatestSubscribeTime()) {
                             BrokerTopic topic = subscriber.getTopic();
                             topic.getQueue().offer(subscriber);

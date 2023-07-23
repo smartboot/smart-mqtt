@@ -13,8 +13,8 @@ package org.smartboot.mqtt.broker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
+import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.broker.provider.PersistenceProvider;
-import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
@@ -84,8 +84,8 @@ public class TopicSubscriber {
 
     private void publishAvailable(BrokerContext brokerContext) {
         PersistenceProvider persistenceProvider = brokerContext.getProviders().getPersistenceProvider();
-        PersistenceMessage persistenceMessage = persistenceProvider.get(topic.getTopic(), nextConsumerOffset);
-        if (persistenceMessage == null) {
+        Message message = persistenceProvider.get(topic.getTopic(), nextConsumerOffset);
+        if (message == null) {
             if (semaphore.tryAcquire()) {
                 topic.getQueue().offer(this);
                 if (persistenceProvider.get(topic.getTopic(), nextConsumerOffset) != null) {
@@ -96,13 +96,13 @@ public class TopicSubscriber {
             return;
         }
 
-        MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(persistenceMessage.getPayload()).qos(mqttQoS).topicName(persistenceMessage.getTopic());
+        MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(message.getPayload()).qos(mqttQoS).topicName(message.getTopic());
         if (mqttSession.getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());
         }
 
         InflightQueue inflightQueue = mqttSession.getInflightQueue();
-        long offset = persistenceMessage.getOffset();
+        long offset = message.getOffset();
         nextConsumerOffset = offset + 1;
         //Qos0直接发送
         if (mqttQoS == MqttQoS.AT_MOST_ONCE) {
@@ -124,10 +124,10 @@ public class TopicSubscriber {
         future.whenComplete((mqttPacketIdentifierMessage, throwable) -> {
             //最早发送的消息若收到响应，则更新点位
             commitNextConsumerOffset(offset + 1);
-            if (persistenceMessage.isRetained()) {
+            if (message.isRetained()) {
                 setRetainConsumerOffset(getRetainConsumerOffset() + 1);
             }
-            commitRetainConsumerTimestamp(persistenceMessage.getCreateTime());
+            commitRetainConsumerTimestamp(message.getCreateTime());
             publishAvailable(brokerContext);
         });
 

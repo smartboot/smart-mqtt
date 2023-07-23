@@ -10,6 +10,7 @@
 
 package org.smartboot.mqtt.broker.provider.impl.message;
 
+import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.broker.provider.PersistenceProvider;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,7 +24,7 @@ public class MemoryPersistenceProvider implements PersistenceProvider {
     private final ConcurrentHashMap<String, MemoryMessageStoreQueue> topicQueues = new ConcurrentHashMap<>();
 
     @Override
-    public void doSave(PersistenceMessage message) {
+    public void doSave(Message message) {
         MemoryMessageStoreQueue queue = topicQueues.computeIfAbsent(message.getTopic(), s -> new MemoryMessageStoreQueue());
         queue.put(message);
     }
@@ -35,7 +36,7 @@ public class MemoryPersistenceProvider implements PersistenceProvider {
 
 
     @Override
-    public PersistenceMessage get(String topic, long startOffset) {
+    public Message get(String topic, long startOffset) {
         return getStoreQueue(topic).get(startOffset);
     }
 

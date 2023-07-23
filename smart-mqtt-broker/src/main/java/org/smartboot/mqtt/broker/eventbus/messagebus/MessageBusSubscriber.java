@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.eventbus.messagebus.consumer.Consumer;
-import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 import java.util.ArrayList;
@@ -40,22 +39,22 @@ public class MessageBusSubscriber implements MessageBus {
     }
 
     @Override
-    public void consumer(Consumer consumer, Predicate<PersistenceMessage> filter) {
-        consumer((brokerContext, publishMessage) -> {
+    public void consumer(Consumer consumer, Predicate<Message> filter) {
+        consumer((publishMessage) -> {
             if (filter.test(publishMessage)) {
-                consumer.consume(brokerContext, publishMessage);
+                consumer.consume(publishMessage);
             }
         });
     }
 
     @Override
     public void consume(MqttSession mqttSession, MqttPublishMessage message) {
-        PersistenceMessage persistenceMessage = new PersistenceMessage(mqttSession, message);
+        Message persistenceMessage = new Message(mqttSession, message);
         boolean remove = false;
         for (Consumer messageConsumer : messageBuses) {
             try {
                 if (messageConsumer.enable()) {
-                    messageConsumer.consume(mqttSession, persistenceMessage);
+                    messageConsumer.consume(persistenceMessage);
                 } else {
                     remove = true;
                 }

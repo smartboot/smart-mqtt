@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package org.smartboot.mqtt.broker.provider.impl.message;
+package org.smartboot.mqtt.broker.eventbus.messagebus;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
@@ -25,7 +25,7 @@ import java.util.Base64;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/6/24
  */
-public class PersistenceMessage extends ToString {
+public class Message extends ToString {
     /**
      * 负载数据
      */
@@ -50,7 +50,7 @@ public class PersistenceMessage extends ToString {
 
     private final String clientId;
 
-    public PersistenceMessage(MqttSession session, MqttPublishMessage message) {
+    Message(MqttSession session, MqttPublishMessage message) {
         this.clientId = session.getClientId();
         this.payload = message.getPayload().getPayload();
         this.retained = message.getFixedHeader().isRetain();
