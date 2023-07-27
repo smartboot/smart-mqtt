@@ -2,15 +2,3 @@ broker:
   name: smart-mqtt # 集群模式需确保唯一性
   port: 1883
   maxInflight: 256
-  openapi:
-    port: 18083
-    host: 0.0.0.0
-plugins:
-  - websocket:
-      port: 1884
-  - kafka-bridge:
-  - mqtt-bridge:
-
-  - redis-bridge:
-      host: 127.0.0.1
-      port: 6379
