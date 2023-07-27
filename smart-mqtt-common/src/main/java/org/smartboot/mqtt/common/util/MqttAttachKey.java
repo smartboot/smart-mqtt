@@ -10,8 +10,6 @@
 
 package org.smartboot.mqtt.common.util;
 
-import org.smartboot.socket.util.AttachKey;
-
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 5/27/23
@@ -23,12 +21,4 @@ public class MqttAttachKey {
     public static final String RETRY_TASK = "retry_task";
     public static final String MQTT_SESSION = "mqtt_session";
 
-    static {
-        AttachKey.reset();
-        AttachKey.valueOf(MQTT_SESSION);
-        AttachKey.valueOf(MQTT_VERSION);
-        AttachKey.valueOf(DECODE_UNIT);
-        AttachKey.valueOf(RETRY_TASK);
-        AttachKey.reset();
-    }
 }
