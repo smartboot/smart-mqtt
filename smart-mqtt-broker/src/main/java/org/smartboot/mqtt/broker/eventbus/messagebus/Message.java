@@ -106,6 +106,7 @@ public class Message extends ToString {
                 if (stringJson == null) {
                     JSONObject json = (JSONObject) JSON.toJSON(this);
                     json.put("payload", new String(payload));
+                    json.put("encoding", payloadEncodeEnum.getCode());
                     stringJson = json.toString();
                 }
                 return stringJson;
@@ -113,12 +114,15 @@ public class Message extends ToString {
                 if (base64Json == null) {
                     JSONObject json = (JSONObject) JSON.toJSON(this);
                     json.put("payload", new String(Base64.getEncoder().encode(payload)));
+                    json.put("encoding", payloadEncodeEnum.getCode());
                     base64Json = json.toString();
                 }
                 return base64Json;
             default:
                 if (defaultJson == null) {
-                    defaultJson = JSONObject.toJSONString(this);
+                    JSONObject json = (JSONObject) JSON.toJSON(this);
+                    json.put("encoding", payloadEncodeEnum.getCode());
+                    defaultJson = json.toString();
                 }
                 return defaultJson;
         }
