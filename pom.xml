@@ -10,8 +10,7 @@
 
     <properties>
         <smart.mqtt.version>0.24</smart.mqtt.version>
-        <smart-socket.version>1.5.31</smart-socket.version>
-        <smart-http.version>1.2.8</smart-http.version>
+        <smart-socket.version>1.5.32</smart-socket.version>
         <commons.lang.version>2.6</commons.lang.version>
         <commons.clollections.version>4.3</commons.clollections.version>
         <junit.version>4.13.2</junit.version>
@@ -22,11 +21,6 @@
                 <groupId>org.smartboot.socket</groupId>
                 <artifactId>aio-pro</artifactId>
                 <version>${smart-socket.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.smartboot.http</groupId>
-                <artifactId>smart-http-restful</artifactId>
-                <version>${smart-http.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.smartboot.mqtt</groupId>
