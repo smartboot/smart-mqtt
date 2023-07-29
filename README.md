@@ -4,10 +4,13 @@ smart-mqtt 是用 java 语言开发的 MQTT Broker 服务，也是 smartboot 组
 
 smart-mqtt 底层通信采用了异步非阻塞通信框架 smart-socket，现已实现了完整的 mqtt v3.1.1/v5.0 协议。
 
+> smart-mqtt 代码仅供个人学习使用，**任何个体、组织未经授权不得将此产品用于商业目的**。
+
 ## 项目发展
 - 2018年，创建 smart-mqtt 项目，完成基本的协议编解码结构搭建。
 - 2019~2021年，项目基本处于停更状态，期间重心在于提升底层通信框架 smart-socket 的性能。
 - 2022年，重启 smart-mqtt。基本完成 mqtt  broker 和 client 的功能开发。
+- 2023年，smart-mqtt企业版立项。
 
 ## 产品特色
 

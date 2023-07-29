@@ -4,12 +4,12 @@
     <groupId>org.smartboot.mqtt</groupId>
     <artifactId>smart-mqtt</artifactId>
     <name>smart-mqtt</name>
-    <version>0.24</version>
+    <version>0.25</version>
     <modelVersion>4.0.0</modelVersion>
     <description>mqtt broker</description>
 
     <properties>
-        <smart.mqtt.version>0.24</smart.mqtt.version>
+        <smart.mqtt.version>0.25</smart.mqtt.version>
         <smart-socket.version>1.5.32</smart-socket.version>
         <commons.lang.version>2.6</commons.lang.version>
         <commons.clollections.version>4.3</commons.clollections.version>
@@ -67,6 +67,12 @@
                 <artifactId>junit</artifactId>
                 <version>${junit.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-simple</artifactId>
+                <version>1.7.36</version>
+                <scope>runtime</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
