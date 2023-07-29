@@ -8,7 +8,6 @@ services:
     image: smartboot/smart-mqtt:latest
     networks:
       mqtt-network: null
-#    read_only: true
     restart: always
     security_opt:
       - no-new-privileges:true
@@ -20,6 +19,22 @@ services:
       options:
         max-size: "100m"
         max-file: "1"
+
+#  mqtt-broker:
+#    container_name: bifromq
+#    hostname: mqtt-broker
+#    image: bifromq/bifromq:latest
+#    networks:
+#      mqtt-network: null
+#    restart: always
+#    security_opt:
+#      - no-new-privileges:true
+#    user: root:root
+#    logging:
+#      driver: "json-file"
+#      options:
+#        max-size: "100m"
+#        max-file: "1"
 
 #  mqtt-broker:
 #    container_name: emqx

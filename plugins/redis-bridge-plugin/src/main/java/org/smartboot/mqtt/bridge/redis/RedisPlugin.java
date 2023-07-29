@@ -13,7 +13,6 @@ package org.smartboot.mqtt.bridge.redis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.bridge.redis.handler.BrokerHandler;
-import org.smartboot.mqtt.bridge.redis.nodeinfo.MessageNodeInfo;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.broker.eventbus.messagebus.MessageBus;
@@ -81,12 +80,12 @@ public class RedisPlugin extends Plugin {
 
         // 消息总线监听
         MessageBus messageBus = brokerContext.getMessageBus();
-        messageBus.consumer((brokerContext1, publishMessage) -> {
-            Jedis resource = jedisPool.getResource();
-            String message = new MessageNodeInfo(publishMessage).toString(config.isBase64());
-            resource.lpush(brokerContext1.getBrokerConfigure().getName() + ":" + publishMessage.getVariableHeader().getTopicName(), message);
-            jedisPool.returnResource(resource);
-        });
+//        messageBus.consumer((brokerContext1, publishMessage) -> {
+//            Jedis resource = jedisPool.getResource();
+//            String message = new MessageNodeInfo(publishMessage).toString(config.isBase64());
+//            resource.lpush(brokerContext1.getBrokerConfigure().getName() + ":" + publishMessage.getVariableHeader().getTopicName(), message);
+//            jedisPool.returnResource(resource);
+//        });
     }
 
 
