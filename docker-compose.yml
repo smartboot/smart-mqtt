@@ -69,5 +69,9 @@ services:
         max-size: "100m"
         max-file: "1"
     command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=2000 -Dqos=0 -Dpublisher=1 -Dcount=10 -Dpayload=128 org.smartboot.bench.mqtt.Subscribe
+#    command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=2000 -Dqos=1 -Dpublisher=1 -Dcount=10 -Dpayload=128 org.smartboot.bench.mqtt.Subscribe
+#    command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=2000 -Dqos=2 -Dpublisher=1 -Dcount=10 -Dpayload=128 org.smartboot.bench.mqtt.Subscribe
 #    command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=2000 -Dqos=0 -Dcount=10 -Dpayload=128 org.smartboot.bench.mqtt.Publish
+#    command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=2000 -Dqos=1 -Dcount=10 -Dpayload=128 org.smartboot.bench.mqtt.Publish
+#    command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=2000 -Dqos=2 -Dcount=10 -Dpayload=128 org.smartboot.bench.mqtt.Publish
 version: '3.7'

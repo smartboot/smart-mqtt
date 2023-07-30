@@ -13,7 +13,6 @@ package org.smartboot.mqtt.broker;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.JSONPath;
 import com.alibaba.fastjson2.JSONReader;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -153,7 +152,7 @@ public class BrokerContextImpl implements BrokerContext {
         mqttProcessors.put(MqttPubRecMessage.class, new MqttAckProcessor<>());
         mqttProcessors.put(MqttPubCompMessage.class, new MqttAckProcessor<>());
         mqttProcessors.put(MqttDisconnectMessage.class, new DisConnectProcessor());
-        processors = MapUtils.unmodifiableMap(mqttProcessors);
+        processors = Collections.unmodifiableMap(mqttProcessors);
     }
 
     @Override

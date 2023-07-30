@@ -10,7 +10,6 @@
 
 package org.smartboot.mqtt.broker.processor;
 
-import org.apache.commons.collections4.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
@@ -72,7 +71,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
         byte reasonCode = 0;
         if (session.getMqttVersion() == MqttVersion.MQTT_5) {
             //消息被接收，但没有订阅者。只有服务端会发送此原因码。如果服务端得知没有匹配的订阅者，服务端可以使用此原因码代替0x00（成功）。
-            if (MapUtils.isEmpty(context.getOrCreateTopic(mqttPublishMessage.getVariableHeader().getTopicName()).getConsumeOffsets())) {
+            if (context.getOrCreateTopic(mqttPublishMessage.getVariableHeader().getTopicName()).getConsumeOffsets().isEmpty()) {
                 reasonCode = MqttReasonCode.NO_MATCHING_SUBSCRIBERS.getCode();
             }
         }
@@ -95,7 +94,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
         byte reasonCode = 0;
         if (session.getMqttVersion() == MqttVersion.MQTT_5) {
             //消息被接收，但没有订阅者。只有服务端会发送此原因码。如果服务端得知没有匹配的订阅者，服务端可以使用此原因码代替0x00（成功）。
-            if (MapUtils.isEmpty(context.getOrCreateTopic(mqttPublishMessage.getVariableHeader().getTopicName()).getConsumeOffsets())) {
+            if (context.getOrCreateTopic(mqttPublishMessage.getVariableHeader().getTopicName()).getConsumeOffsets().isEmpty()) {
                 reasonCode = MqttReasonCode.NO_MATCHING_SUBSCRIBERS.getCode();
             }
         }
