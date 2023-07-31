@@ -19,6 +19,7 @@ import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.exception.MqttException;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.util.MqttAttachKey;
+import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioSession;
@@ -46,15 +47,12 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
     @Override
     public void process0(AioSession session, MqttMessage msg) {
         MqttProcessor processor = mqttContext.getMessageProcessors().get(msg.getClass());
-        if (processor != null) {
-            Attachment attachment = session.getAttachment();
-            MqttSession mqttSession = attachment.get(SESSION_KEY);
-            mqttContext.getEventBus().publish(EventType.RECEIVE_MESSAGE, EventObject.newEventObject(mqttSession, msg));
-            mqttSession.setLatestReceiveMessageTime(System.currentTimeMillis());
-            processor.process(mqttContext, mqttSession, msg);
-        } else {
-            System.err.println("unSupport message: " + msg);
-        }
+        ValidateUtils.notNull(processor, "unSupport message");
+        Attachment attachment = session.getAttachment();
+        MqttSession mqttSession = attachment.get(SESSION_KEY);
+        mqttContext.getEventBus().publish(EventType.RECEIVE_MESSAGE, EventObject.newEventObject(mqttSession, msg));
+        mqttSession.setLatestReceiveMessageTime(System.currentTimeMillis());
+        processor.process(mqttContext, mqttSession, msg);
     }
 
     @Override
