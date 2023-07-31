@@ -77,7 +77,7 @@ public class BrokerConfigure extends ToString {
     private int topicLimit = 1024;
 
     /**
-     * MQTT最大报文限制字节数
+     * MQTT最大报文限制字节数: 1MB
      */
     private int maxPacketSize = 1048576;
 
