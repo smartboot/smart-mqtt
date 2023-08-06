@@ -10,6 +10,7 @@
 
 package org.smartboot.mqtt.broker.eventbus;
 
+import org.smartboot.mqtt.broker.BrokerConfigure;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.BrokerTopic;
 import org.smartboot.mqtt.broker.MqttSession;
@@ -32,6 +33,8 @@ public class ServerEventType<T> extends EventType<T> {
      * Broker服务启动成功
      */
     public static final ServerEventType<BrokerContext> BROKER_STARTED = new ServerEventType<>("brokerStarted");
+
+    public static final ServerEventType<BrokerConfigure> BROKER_CONFIGURE_LOADED_EVENT_TYPE = new ServerEventType<>("brokerConfigureLoaded");
 
     public static final ServerEventType<BrokerContext> OPEN_API_STARTED = new ServerEventType<>("open_api_started");
 

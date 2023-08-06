@@ -10,6 +10,9 @@
 
 package org.smartboot.mqtt.broker;
 
+import org.smartboot.mqtt.broker.eventbus.ServerEventType;
+import org.smartboot.socket.extension.plugins.MonitorPlugin;
+
 import java.io.IOException;
 
 /**
@@ -24,6 +27,7 @@ public class Bootstrap {
         System.setProperty("org.slf4j.simpleLogger.showShortLogName", "true");
 
         BrokerContext context = new BrokerContextImpl();
+        context.getEventBus().subscribe(ServerEventType.BROKER_CONFIGURE_LOADED_EVENT_TYPE, (eventType, configure) -> configure.addPlugin(new MonitorPlugin<>(5)));
         context.init();
 
         Runtime.getRuntime().addShutdownHook(new Thread(context::destroy));
