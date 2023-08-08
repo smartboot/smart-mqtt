@@ -205,13 +205,10 @@ public class MqttClient extends AbstractSession {
                     // 它应该关闭到服务端的网络连接。
                     if (pingTimeout) {
                         pingTimeout = false;
-                        client.shutdown();
+                        release();
                     }
                     if (session == null || session.isInvalid()) {
-                        if (client != null) {
-                            client.shutdown();
-                            client = null;
-                        }
+                        release();
                         if (clientConfigure.isAutomaticReconnect()) {
                             LOGGER.warn("mqtt client is disconnect, try to reconnect...");
                             connect(asynchronousChannelGroup, reconnectConsumer == null ? consumer : reconnectConsumer);

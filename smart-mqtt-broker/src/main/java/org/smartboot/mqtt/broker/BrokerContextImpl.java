@@ -537,7 +537,7 @@ public class BrokerContextImpl implements BrokerContext {
         return (T) resources.get(key);
     }
 
-    public void loadYamlConfig() throws IOException {
+    private void loadYamlConfig() throws IOException {
         String brokerConfig = System.getProperty(BrokerConfigure.SystemProperty.BrokerConfig);
         InputStream inputStream = null;
 
