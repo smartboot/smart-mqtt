@@ -318,7 +318,7 @@ public class BrokerContextImpl implements BrokerContext {
                         if (storedMessage == null || storedMessage.getCreateTime() > subscriber.getLatestSubscribeTime()) {
                             BrokerTopic topic = subscriber.getTopic();
                             topic.getQueue().offer(subscriber);
-                            notifyPush(topic);
+//                            notifyPush(topic);
                             return;
                         }
                         //retain采用严格顺序publish模式
