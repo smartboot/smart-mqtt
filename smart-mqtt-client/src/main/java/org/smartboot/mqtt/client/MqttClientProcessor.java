@@ -83,7 +83,7 @@ public class MqttClientProcessor extends AbstractMessageProcessor<MqttMessage> {
                 break;
             case SESSION_CLOSED:
                 Attachment attachment = session.getAttachment();
-                attachment.get(SESSION_KEY).disconnect();
+                attachment.get(SESSION_KEY).release();
                 break;
             case PROCESS_EXCEPTION:
                 if (throwable instanceof MqttException) {

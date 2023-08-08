@@ -11,6 +11,7 @@
 package org.smartboot.mqtt.common.eventbus;
 
 import org.smartboot.mqtt.common.AbstractSession;
+import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
 
 import java.util.ArrayList;
@@ -35,6 +36,11 @@ public class EventType<T> {
      * 接收到客户端发送的任何消息
      */
     public static final EventType<EventObject<MqttMessage>> RECEIVE_MESSAGE = new EventType<>("receiveMessage");
+
+    /**
+     * 接收到客户端发送的任何消息
+     */
+    public static final EventType<MqttConnAckMessage> RECEIVE_CONN_ACK_MESSAGE = new EventType<>("connAckMessage");
 
     /**
      * 往客户端发送的任何消息

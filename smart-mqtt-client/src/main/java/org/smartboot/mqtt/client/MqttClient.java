@@ -157,6 +157,7 @@ public class MqttClient extends AbstractSession {
                 pingTimeout = true;
             }
         });
+        getEventBus().subscribe(EventType.RECEIVE_CONN_ACK_MESSAGE, (eventType, object) -> receiveConnAckMessage(object));
     }
 
 
@@ -398,7 +399,11 @@ public class MqttClient extends AbstractSession {
 
     }
 
-    public void notifyResponse(MqttConnAckMessage connAckMessage) {
+    private void receiveConnAckMessage(MqttConnAckMessage connAckMessage) {
+//        long delay = System.currentTimeMillis() - connectTime;
+//        if (delay > 1000) {
+//            LOGGER.error("connAck cost long time: {}ms", delay);
+//        }
         if (!clientConfigure.isAutomaticReconnect()) {
             gcConfigure();
         }
@@ -511,13 +516,23 @@ public class MqttClient extends AbstractSession {
             return;
         }
         //DISCONNECT 报文是客户端发给服务端的最后一个控制报文。表示客户端正常断开连接。
-        write(new MqttDisconnectMessage());
-        //关闭自动重连
-        clientConfigure.setAutomaticReconnect(false);
-        disconnect = true;
-        client.shutdown();
-        client = null;
+        try {
+            write(new MqttDisconnectMessage());
+        } finally {
+            //关闭自动重连
+            clientConfigure.setAutomaticReconnect(false);
+            disconnect = true;
+            release();
+        }
     }
+
+    void release() {
+        if (client != null) {
+            client.shutdown();
+            client = null;
+        }
+    }
+
 
     public void setReconnectConsumer(Consumer<MqttConnAckMessage> reconnectConsumer) {
         this.reconnectConsumer = reconnectConsumer;
