@@ -173,7 +173,7 @@ public class BrokerContextImpl implements BrokerContext {
             brokerConfigure.addPlugin(new QosRetryPlugin());
             brokerConfigure.getPlugins().forEach(processor::addPlugin);
             server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(brokerConfigure.getMaxPacketSize()), processor);
-            server.setBannerEnabled(false).setReadBufferSize(brokerConfigure.getBufferSize()).setWriteBuffer(brokerConfigure.getBufferSize(), Math.min(brokerConfigure.getMaxInflight(), 16)).setBufferPagePool(brokerConfigure.getBufferPagePool()).setThreadNum(Math.max(2, brokerConfigure.getThreadNum()));
+            server.setBannerEnabled(false).setLowMemory(brokerConfigure.isLowMemory()).setReadBufferSize(brokerConfigure.getBufferSize()).setWriteBuffer(brokerConfigure.getBufferSize(), Math.min(brokerConfigure.getMaxInflight(), 16)).setBufferPagePool(brokerConfigure.getBufferPagePool()).setThreadNum(Math.max(2, brokerConfigure.getThreadNum()));
             server.start(brokerConfigure.getChannelGroup());
             System.out.println(BrokerConfigure.BANNER + "\r\n :: smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
             System.out.println("❤️Gitee: https://gitee.com/smartboot/smart-mqtt");
@@ -400,6 +400,10 @@ public class BrokerContextImpl implements BrokerContext {
         }
         if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.THREAD_NUM)) {
             brokerConfigure.setThreadNum(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.THREAD_NUM)));
+        }
+
+        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.LOW_MEMORY)) {
+            brokerConfigure.setLowMemory(Boolean.parseBoolean(brokerProperties.getProperty(BrokerConfigure.SystemProperty.LOW_MEMORY)));
         }
 
         if (StringUtils.isBlank(brokerConfigure.getHost())) {

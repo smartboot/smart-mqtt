@@ -51,6 +51,7 @@ public class BrokerConfigure extends ToString {
     {
         SystemEnvironments.put(convertToEnvironment(SystemProperty.PORT), SystemProperty.PORT);
         SystemEnvironments.put(convertToEnvironment(SystemProperty.THREAD_NUM), SystemProperty.THREAD_NUM);
+        SystemEnvironments.put(convertToEnvironment(SystemProperty.LOW_MEMORY), SystemProperty.LOW_MEMORY);
     }
 
     /**
@@ -111,6 +112,11 @@ public class BrokerConfigure extends ToString {
     private AsynchronousChannelGroup channelGroup;
 
     private BufferPagePool bufferPagePool;
+
+    /**
+     * 低内存模式
+     */
+    private boolean lowMemory = false;
 
     public int getPort() {
         return port;
@@ -225,6 +231,14 @@ public class BrokerConfigure extends ToString {
         this.bufferPagePool = bufferPagePool;
     }
 
+    public boolean isLowMemory() {
+        return lowMemory;
+    }
+
+    public void setLowMemory(boolean lowMemory) {
+        this.lowMemory = lowMemory;
+    }
+
     @Override
     public String toString() {
         return "BrokerConfigure{" +
@@ -269,6 +283,11 @@ public class BrokerConfigure extends ToString {
          * 最大飞行窗口
          */
         String MAX_INFLIGHT = "broker.maxInflight";
+
+        /**
+         * 低内存模式
+         */
+        String LOW_MEMORY = "broker.lowMemory";
 
     }
 }
