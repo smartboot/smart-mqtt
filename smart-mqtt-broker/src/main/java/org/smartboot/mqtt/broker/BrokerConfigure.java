@@ -100,7 +100,7 @@ public class BrokerConfigure extends ToString {
      * 网络连接建立后，如果服务端在合理的时间内没有收到 CONNECT 报文，服务端应该关闭这个连接。
      * 单位：毫秒
      */
-    private int noConnectIdleTimeout = 5000;
+    private int noConnectIdleTimeout = 15000;
 
     /**
      *
