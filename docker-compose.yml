@@ -9,7 +9,7 @@ services:
     networks:
       mqtt-network: null
     environment:
-      LOW_MEMORY: true
+      BROKER_LOWMEMORY: true
     restart: always
     privileged: true
     security_opt:
@@ -65,6 +65,8 @@ services:
     security_opt:
       - no-new-privileges:true
     user: root:root
+    environment:
+      BROKER_LOWMEMORY: true
     networks:
       mqtt-network: null
     logging:
@@ -81,5 +83,5 @@ services:
     #    command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=10000 -Dqos=0 -Dpublisher=1 -Dcount=1 -Dtopic=10 -Dpayload=4096 -Dperiod=10000 org.smartboot.bench.mqtt.Subscribe
 
     ## 百万连接
-    command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=10000 -Dqos=0 -Dpublisher=0 -Dtopic=1 org.smartboot.bench.mqtt.Subscribe
+    command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=10000 -Dqos=0 -Dpublisher=0 -Dtopic=0 -Dperiod=10000 org.smartboot.bench.mqtt.Subscribe
 version: '3.7'
