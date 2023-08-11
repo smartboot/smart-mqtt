@@ -76,6 +76,7 @@ public class MqttClient extends AbstractSession {
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttClient.class);
     private static final Consumer<Integer> IGNORE = integer -> {
     };
+    private static final HashedWheelTimer TIMER = new HashedWheelTimer(r -> new Thread(r, "client-timer"));
     /**
      * 客户端配置项
      */
@@ -132,7 +133,7 @@ public class MqttClient extends AbstractSession {
     }
 
     public MqttClient(String uri, String clientId, MqttVersion mqttVersion) {
-        super(new EventBusImpl(EventType.types()), HashedWheelTimer.TIMER);
+        super(new EventBusImpl(EventType.types()), TIMER);
 
         String[] array = uri.split(":");
         if (array[0].equals("mqtts")) {
