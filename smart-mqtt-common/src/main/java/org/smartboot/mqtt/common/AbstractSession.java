@@ -20,6 +20,7 @@ import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.ValidateUtils;
+import org.smartboot.socket.timer.Timer;
 import org.smartboot.socket.transport.AioSession;
 import org.smartboot.socket.util.Attachment;
 
@@ -56,8 +57,15 @@ public abstract class AbstractSession {
     protected InflightQueue inflightQueue;
     private final Hashtable<Integer, Runnable> ackMessageCacheMap = new Hashtable<>();
 
-    public AbstractSession(EventBus eventBus) {
+    protected final Timer timer;
+
+    public AbstractSession(EventBus eventBus, Timer timer) {
         this.eventBus = eventBus;
+        this.timer = timer;
+    }
+
+    Timer getTimer() {
+        return timer;
     }
 
     public final void write(MqttPubRecMessage mqttMessage, Runnable callback) {

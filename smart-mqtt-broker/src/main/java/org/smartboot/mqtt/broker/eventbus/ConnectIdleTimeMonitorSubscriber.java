@@ -17,7 +17,6 @@ import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
 import org.smartboot.mqtt.common.eventbus.EventType;
-import org.smartboot.socket.util.QuickTimerTask;
 
 import java.util.concurrent.TimeUnit;
 
@@ -37,7 +36,7 @@ public class ConnectIdleTimeMonitorSubscriber implements EventBusSubscriber<Mqtt
 
     @Override
     public void subscribe(EventType<MqttSession> eventType, MqttSession session) {
-        QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(new AsyncTask() {
+        context.getTimer().newTimeout(new AsyncTask() {
             @Override
             public void execute() {
                 if (!session.isAuthorized()) {

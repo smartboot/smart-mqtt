@@ -29,7 +29,6 @@ import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.util.AttachKey;
 import org.smartboot.socket.util.Attachment;
-import org.smartboot.socket.util.QuickTimerTask;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -137,7 +136,7 @@ public class InflightQueue {
         if (inflightMessage.isCommit() || session.isDisconnect()) {
             return;
         }
-        QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(new AsyncTask() {
+        session.getTimer().newTimeout(new AsyncTask() {
             @Override
             public void execute() {
                 if (inflightMessage.isCommit()) {
@@ -151,7 +150,7 @@ public class InflightQueue {
                 long delay = TimeUnit.SECONDS.toMillis(TIMEOUT) - System.currentTimeMillis() + inflightMessage.getLatestTime();
                 if (delay > 0) {
                     LOGGER.info("the time is not up, try again in {} milliseconds ", delay);
-                    QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(this, delay, TimeUnit.MILLISECONDS);
+                    session.getTimer().newTimeout(this, delay, TimeUnit.MILLISECONDS);
                     return;
                 }
                 inflightMessage.setLatestTime(System.currentTimeMillis());
@@ -184,7 +183,7 @@ public class InflightQueue {
                 }
                 inflightMessage.setRetryCount(inflightMessage.getRetryCount() + 1);
                 //不断重试直至完成
-                QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(this, TIMEOUT, TimeUnit.SECONDS);
+                session.getTimer().newTimeout(this, TIMEOUT, TimeUnit.SECONDS);
             }
         }, TimeUnit.SECONDS.toMillis(TIMEOUT) - (System.currentTimeMillis() - inflightMessage.getLatestTime()), TimeUnit.MILLISECONDS);
     }

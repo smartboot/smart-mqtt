@@ -65,6 +65,8 @@ import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
+import org.smartboot.socket.timer.HashedWheelTimer;
+import org.smartboot.socket.timer.Timer;
 import org.smartboot.socket.transport.AioQuickServer;
 import org.yaml.snakeyaml.Yaml;
 
@@ -92,7 +94,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 
 /**
@@ -116,8 +117,7 @@ public class BrokerContextImpl implements BrokerContext {
     /**
      * Keep-Alive监听线程
      */
-    private final ScheduledExecutorService KEEP_ALIVE_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
-    private final ExecutorService messageBusExecutorService = Executors.newCachedThreadPool();
+    private final Timer timer = new HashedWheelTimer(r -> new Thread(r, "broker-timer"));
     private final MessageBus messageBusSubscriber = new MessageBusSubscriber();
     private final EventBus eventBus = new EventBusImpl(ServerEventType.types());
     private final List<Plugin> plugins = new ArrayList<>();
@@ -494,8 +494,8 @@ public class BrokerContextImpl implements BrokerContext {
 
 
     @Override
-    public ScheduledExecutorService getKeepAliveThreadPool() {
-        return KEEP_ALIVE_EXECUTOR;
+    public Timer getTimer() {
+        return timer;
     }
 
     @Override
@@ -571,7 +571,6 @@ public class BrokerContextImpl implements BrokerContext {
     public void destroy() {
         LOGGER.info("destroy broker...");
         eventBus.publish(ServerEventType.BROKER_DESTROY, this);
-        messageBusExecutorService.shutdown();
         pushTopicQueue.offer(SHUTDOWN_TOPIC);
         pushThreadPool.shutdown();
         server.shutdown();

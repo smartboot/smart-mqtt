@@ -17,11 +17,11 @@ import org.smartboot.mqtt.broker.topic.TopicPublishTree;
 import org.smartboot.mqtt.broker.topic.TopicSubscribeTree;
 import org.smartboot.mqtt.common.eventbus.EventBus;
 import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.socket.timer.Timer;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
-import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * @author 三刀
@@ -71,7 +71,7 @@ public interface BrokerContext {
      */
     EventBus getEventBus();
 
-    ScheduledExecutorService getKeepAliveThreadPool();
+    Timer getTimer();
 
     void destroy();
 

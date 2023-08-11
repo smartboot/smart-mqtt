@@ -53,9 +53,9 @@ import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
+import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.transport.AioQuickClient;
 import org.smartboot.socket.util.Attachment;
-import org.smartboot.socket.util.QuickTimerTask;
 
 import java.io.IOException;
 import java.nio.channels.AsynchronousChannelGroup;
@@ -132,7 +132,7 @@ public class MqttClient extends AbstractSession {
     }
 
     public MqttClient(String uri, String clientId, MqttVersion mqttVersion) {
-        super(new EventBusImpl(EventType.types()));
+        super(new EventBusImpl(EventType.types()), HashedWheelTimer.TIMER);
 
         String[] array = uri.split(":");
         if (array[0].equals("mqtts")) {
@@ -198,7 +198,7 @@ public class MqttClient extends AbstractSession {
         this.connectConsumer = consumer;
         //启动心跳插件
         if (clientConfigure.getKeepAliveInterval() > 0) {
-            QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(new AsyncTask() {
+            timer.newTimeout(new AsyncTask() {
                 @Override
                 public void execute() {
                     //客户端发送了 PINGREQ 报文之后，如果在合理的时间内仍没有收到 PINGRESP 报文，
@@ -218,11 +218,11 @@ public class MqttClient extends AbstractSession {
                     long delay = System.currentTimeMillis() - getLatestSendMessageTime() - clientConfigure.getKeepAliveInterval() * 1000L;
                     //gap 10ms
                     if (delay > -10) {
-                        QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(this, clientConfigure.getKeepAliveInterval(), TimeUnit.SECONDS);
+                        timer.newTimeout(this, clientConfigure.getKeepAliveInterval(), TimeUnit.SECONDS);
                         MqttPingReqMessage pingReqMessage = new MqttPingReqMessage();
                         write(pingReqMessage);
                     } else {
-                        QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(this, -delay, TimeUnit.MILLISECONDS);
+                        timer.newTimeout(this, -delay, TimeUnit.MILLISECONDS);
                     }
                 }
             }, clientConfigure.getKeepAliveInterval(), TimeUnit.SECONDS);
@@ -254,9 +254,12 @@ public class MqttClient extends AbstractSession {
 
             //如果客户端在合理的时间内没有收到服务端的 CONNACK 报文，客户端应该关闭网络连接。
             // 合理的时间取决于应用的类型和通信基础设施。
-            QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(() -> {
-                if (!connected) {
-                    disconnect();
+            timer.newTimeout(new AsyncTask() {
+                @Override
+                public void execute() {
+                    if (!connected) {
+                        disconnect();
+                    }
                 }
             }, clientConfigure.getConnectAckTimeout(), TimeUnit.SECONDS);
             write(connectMessage);

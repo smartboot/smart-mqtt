@@ -59,7 +59,7 @@ public class MqttSession extends AbstractSession {
     private ConnectProperties properties;
 
     public MqttSession(BrokerContext mqttContext, AioSession session, MqttWriter mqttWriter) {
-        super(mqttContext.getEventBus());
+        super(mqttContext.getEventBus(), mqttContext.getTimer());
         this.mqttContext = mqttContext;
         this.session = session;
         this.mqttWriter = mqttWriter;
