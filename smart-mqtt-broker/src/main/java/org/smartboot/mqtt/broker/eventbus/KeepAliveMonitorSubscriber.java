@@ -43,7 +43,7 @@ public class KeepAliveMonitorSubscriber implements EventBusSubscriber<EventObjec
         }
         MqttSession session = object.getSession();
         final long finalTimeout = (timeout == 0 || timeout > context.getBrokerConfigure().getMaxKeepAliveTime()) ? context.getBrokerConfigure().getMaxKeepAliveTime() : timeout;
-        context.getTimer().newTimeout(new AsyncTask() {
+        context.getTimer().schedule(new AsyncTask() {
             @Override
             public void execute() {
                 if (session.isDisconnect()) {
@@ -53,7 +53,7 @@ public class KeepAliveMonitorSubscriber implements EventBusSubscriber<EventObjec
                 long remainingTime = finalTimeout + session.getLatestReceiveMessageTime() - System.currentTimeMillis();
                 if (remainingTime > 0) {
 //                    LOGGER.info("continue monitor, wait:{},current:{} latestReceiveTime:{} timeout:{}", remainingTime, System.currentTimeMillis(), session.getLatestReceiveMessageTime(), finalTimeout);
-                    context.getTimer().newTimeout(this, remainingTime, TimeUnit.MILLISECONDS);
+                    context.getTimer().schedule(this, remainingTime, TimeUnit.MILLISECONDS);
                 } else {
                     LOGGER.debug("session:{} keepalive timeout,current:{} latestReceiveTime:{} timeout:{}", session.getClientId(), System.currentTimeMillis(), session.getLatestReceiveMessageTime(), finalTimeout);
                     session.disconnect();

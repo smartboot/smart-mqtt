@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.broker.provider.impl.session.SessionState;
 import org.smartboot.mqtt.common.AbstractSession;
+import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
@@ -22,11 +23,13 @@ import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
 import org.smartboot.mqtt.common.util.ValidateUtils;
+import org.smartboot.socket.timer.TimerTask;
 import org.smartboot.socket.transport.AioSession;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 会话，客户端和服务端之间的状态交互。
@@ -58,11 +61,22 @@ public class MqttSession extends AbstractSession {
 
     private ConnectProperties properties;
 
+    TimerTask idleConnectTimer;
+
     public MqttSession(BrokerContext mqttContext, AioSession session, MqttWriter mqttWriter) {
         super(mqttContext.getEventBus(), mqttContext.getTimer());
         this.mqttContext = mqttContext;
         this.session = session;
         this.mqttWriter = mqttWriter;
+        idleConnectTimer = mqttContext.getTimer().schedule(new AsyncTask() {
+            @Override
+            public void execute() {
+                if (!isAuthorized()) {
+                    LOGGER.info("长时间未收到客户端：{} 的Connect消息，连接断开！", getClientId());
+                    disconnect();
+                }
+            }
+        }, mqttContext.getBrokerConfigure().getNoConnectIdleTimeout(), TimeUnit.MILLISECONDS);
         mqttContext.getEventBus().publish(ServerEventType.SESSION_CREATE, this);
     }
 

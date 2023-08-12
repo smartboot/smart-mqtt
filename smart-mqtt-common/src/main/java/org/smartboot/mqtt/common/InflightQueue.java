@@ -136,7 +136,7 @@ public class InflightQueue {
         if (inflightMessage.isCommit() || session.isDisconnect()) {
             return;
         }
-        session.getTimer().newTimeout(new AsyncTask() {
+        session.getTimer().schedule(new AsyncTask() {
             @Override
             public void execute() {
                 if (inflightMessage.isCommit()) {
@@ -150,7 +150,7 @@ public class InflightQueue {
                 long delay = TimeUnit.SECONDS.toMillis(TIMEOUT) - System.currentTimeMillis() + inflightMessage.getLatestTime();
                 if (delay > 0) {
                     LOGGER.info("the time is not up, try again in {} milliseconds ", delay);
-                    session.getTimer().newTimeout(this, delay, TimeUnit.MILLISECONDS);
+                    session.getTimer().schedule(this, delay, TimeUnit.MILLISECONDS);
                     return;
                 }
                 inflightMessage.setLatestTime(System.currentTimeMillis());
@@ -183,7 +183,7 @@ public class InflightQueue {
                 }
                 inflightMessage.setRetryCount(inflightMessage.getRetryCount() + 1);
                 //不断重试直至完成
-                session.getTimer().newTimeout(this, TIMEOUT, TimeUnit.SECONDS);
+                session.getTimer().schedule(this, TIMEOUT, TimeUnit.SECONDS);
             }
         }, TimeUnit.SECONDS.toMillis(TIMEOUT) - (System.currentTimeMillis() - inflightMessage.getLatestTime()), TimeUnit.MILLISECONDS);
     }

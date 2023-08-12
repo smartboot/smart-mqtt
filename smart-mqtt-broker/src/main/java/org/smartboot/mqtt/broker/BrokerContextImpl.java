@@ -16,7 +16,6 @@ import com.alibaba.fastjson2.JSONReader;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.eventbus.ConnectIdleTimeMonitorSubscriber;
 import org.smartboot.mqtt.broker.eventbus.KeepAliveMonitorSubscriber;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
@@ -292,11 +291,14 @@ public class BrokerContextImpl implements BrokerContext {
                 eventBus.publish(ServerEventType.MESSAGE_BUS_CONSUMED, topic);
             }
         });
-        //连接鉴权超时监控
-        eventBus.subscribe(ServerEventType.SESSION_CREATE, new ConnectIdleTimeMonitorSubscriber(this));
 
         //保持连接状态监听,长时间没有消息通信将断开连接
         eventBus.subscribe(ServerEventType.CONNECT, new KeepAliveMonitorSubscriber(this));
+        //完成连接认证，移除监听器
+        eventBus.subscribe(ServerEventType.CONNECT, (eventType, object) -> {
+            object.getSession().idleConnectTimer.cancel();
+            object.getSession().idleConnectTimer = null;
+        });
 
         //消息总线消费完成，触发消息推送
         eventBus.subscribe(ServerEventType.MESSAGE_BUS_CONSUMED, (eventType, brokerTopic) -> {

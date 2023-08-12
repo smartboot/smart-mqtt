@@ -199,7 +199,7 @@ public class MqttClient extends AbstractSession {
         this.connectConsumer = consumer;
         //启动心跳插件
         if (clientConfigure.getKeepAliveInterval() > 0) {
-            timer.newTimeout(new AsyncTask() {
+            timer.schedule(new AsyncTask() {
                 @Override
                 public void execute() {
                     //客户端发送了 PINGREQ 报文之后，如果在合理的时间内仍没有收到 PINGRESP 报文，
@@ -219,11 +219,11 @@ public class MqttClient extends AbstractSession {
                     long delay = System.currentTimeMillis() - getLatestSendMessageTime() - clientConfigure.getKeepAliveInterval() * 1000L;
                     //gap 10ms
                     if (delay > -10) {
-                        timer.newTimeout(this, clientConfigure.getKeepAliveInterval(), TimeUnit.SECONDS);
+                        timer.schedule(this, clientConfigure.getKeepAliveInterval(), TimeUnit.SECONDS);
                         MqttPingReqMessage pingReqMessage = new MqttPingReqMessage();
                         write(pingReqMessage);
                     } else {
-                        timer.newTimeout(this, -delay, TimeUnit.MILLISECONDS);
+                        timer.schedule(this, -delay, TimeUnit.MILLISECONDS);
                     }
                 }
             }, clientConfigure.getKeepAliveInterval(), TimeUnit.SECONDS);
@@ -255,7 +255,7 @@ public class MqttClient extends AbstractSession {
 
             //如果客户端在合理的时间内没有收到服务端的 CONNACK 报文，客户端应该关闭网络连接。
             // 合理的时间取决于应用的类型和通信基础设施。
-            timer.newTimeout(new AsyncTask() {
+            timer.schedule(new AsyncTask() {
                 @Override
                 public void execute() {
                     if (!connected) {
