@@ -26,10 +26,11 @@ public enum MqttProtocolEnum {
     }
 
     public static MqttProtocolEnum getByName(String name) {
-        for (MqttProtocolEnum protocolEnum : values()) {
-            if (protocolEnum.name.equals(name)) {
-                return protocolEnum;
-            }
+        if (MQTT.name.equals(name)) {
+            return MQTT;
+        }
+        if (MQIsdp.name.equals(name)) {
+            return MQIsdp;
         }
         return null;
     }
