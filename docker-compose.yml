@@ -24,7 +24,7 @@ services:
       options:
         max-size: "100m"
         max-file: "1"
-    entrypoint: java -Xmx10G -Xms10G -XX:NewRatio=9 -DbrokerConfig=smart-mqtt.yaml -jar smart-mqtt.jar
+    entrypoint: java -Xmx10G -Xmn8G -XX:PretenureSizeThreshold=0 -DbrokerConfig=smart-mqtt.yaml -jar smart-mqtt.jar
 
   #  mqtt-broker:
   #    container_name: bifromq
@@ -85,5 +85,5 @@ services:
     #    command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=10000 -Dqos=0 -Dpublisher=1 -Dcount=1 -Dtopic=10 -Dpayload=4096 -Dperiod=10000 org.smartboot.bench.mqtt.Subscribe
 
     ## 百万连接
-    command: java -XX:NewRatio=9 -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=25000 -Dqos=0 -Dpublisher=0 -Dtopic=2 -Dperiod=10000 org.smartboot.bench.mqtt.Subscribe
+    command: java -Xmx300M -Xmn250M -XX:PretenureSizeThreshold=0 -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=25000 -Dqos=0 -Dpublisher=0 -Dtopic=2 -Dperiod=10000 org.smartboot.bench.mqtt.Subscribe
 version: '3.7'
