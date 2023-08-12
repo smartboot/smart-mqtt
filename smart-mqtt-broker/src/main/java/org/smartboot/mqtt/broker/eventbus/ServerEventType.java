@@ -34,7 +34,7 @@ public class ServerEventType<T> extends EventType<T> {
      */
     public static final ServerEventType<BrokerContext> BROKER_STARTED = new ServerEventType<>("brokerStarted");
 
-    public static final ServerEventType<BrokerConfigure> BROKER_CONFIGURE_LOADED_EVENT_TYPE = new ServerEventType<>("brokerConfigureLoaded");
+    public static final ServerEventType<BrokerConfigure> BROKER_CONFIGURE_LOADED = new ServerEventType<>("brokerConfigureLoaded");
 
     public static final ServerEventType<BrokerContext> OPEN_API_STARTED = new ServerEventType<>("open_api_started");
 

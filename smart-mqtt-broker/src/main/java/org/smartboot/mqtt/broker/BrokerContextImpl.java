@@ -421,7 +421,7 @@ public class BrokerContextImpl implements BrokerContext {
             }
         }));
         brokerConfigure.setBufferPagePool(new BufferPagePool(10 * 1024 * 1024, brokerConfigure.getThreadNum(), true));
-        eventBus.publish(ServerEventType.BROKER_CONFIGURE_LOADED_EVENT_TYPE, brokerConfigure);
+        eventBus.publish(ServerEventType.BROKER_CONFIGURE_LOADED, brokerConfigure);
 //        System.out.println("brokerConfigure: " + brokerConfigure);
     }
 
