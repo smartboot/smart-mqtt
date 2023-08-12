@@ -52,6 +52,7 @@ public class BrokerConfigure extends ToString {
         SystemEnvironments.put(convertToEnvironment(SystemProperty.PORT), SystemProperty.PORT);
         SystemEnvironments.put(convertToEnvironment(SystemProperty.THREAD_NUM), SystemProperty.THREAD_NUM);
         SystemEnvironments.put(convertToEnvironment(SystemProperty.LOW_MEMORY), SystemProperty.LOW_MEMORY);
+        SystemEnvironments.put(convertToEnvironment(SystemProperty.MAX_INFLIGHT), SystemProperty.MAX_INFLIGHT);
     }
 
     /**
