@@ -22,23 +22,26 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 class MemoryMessageStoreQueue {
     private static final Logger LOGGER = LoggerFactory.getLogger(MemoryMessageStoreQueue.class);
-    private final Message[] store = new Message[64];
+    private final static int length = 1 << 6;
+    private final Message[] store = new Message[length];
+    private final static int mask = length - 1;
+
     private final AtomicLong putOffset = new AtomicLong(-1);
 
     public void put(Message message) {
         message.setOffset(putOffset.incrementAndGet());
 //        LOGGER.info("store message, offset:{}", message.getOffset());
-        store[(int) (message.getOffset() % store.length)] = message;
+        store[(int) (message.getOffset() & mask)] = message;
     }
 
     public Message get(long offset) {
-        Message storedMessage = store[(int) (offset % store.length)];
+        Message storedMessage = store[(int) (offset & mask)];
         if (storedMessage != null && storedMessage.getOffset() == offset) {
             return storedMessage;
         }
         if (offset < putOffset.get()) {
 //            System.out.println("skip...");
-            return store[(int) (putOffset.get() % store.length)];
+            return store[(int) (putOffset.get() & mask)];
         } else {
             return null;
         }
