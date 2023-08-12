@@ -54,6 +54,7 @@ import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.timer.HashedWheelTimer;
+import org.smartboot.socket.timer.TimerTask;
 import org.smartboot.socket.transport.AioQuickClient;
 import org.smartboot.socket.util.Attachment;
 
@@ -115,6 +116,8 @@ public class MqttClient extends AbstractSession {
      */
     private Consumer<MqttConnAckMessage> reconnectConsumer;
     private boolean pingTimeout = false;
+
+    private TimerTask connectTimer;
 
     public MqttClient(String uri) {
         this(uri, MqttUtil.createClientId());
@@ -255,7 +258,7 @@ public class MqttClient extends AbstractSession {
 
             //如果客户端在合理的时间内没有收到服务端的 CONNACK 报文，客户端应该关闭网络连接。
             // 合理的时间取决于应用的类型和通信基础设施。
-            timer.schedule(new AsyncTask() {
+            connectTimer = timer.schedule(new AsyncTask() {
                 @Override
                 public void execute() {
                     if (!connected) {
@@ -401,6 +404,8 @@ public class MqttClient extends AbstractSession {
     }
 
     private void receiveConnAckMessage(MqttConnAckMessage connAckMessage) {
+        connectTimer.cancel();
+        connectTimer = null;
 //        long delay = System.currentTimeMillis() - connectTime;
 //        if (delay > 1000) {
 //            LOGGER.error("connAck cost long time: {}ms", delay);
