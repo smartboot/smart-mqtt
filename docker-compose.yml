@@ -10,6 +10,7 @@ services:
       mqtt-network: null
     environment:
       BROKER_LOWMEMORY: true
+      BROKER_MAXINFLIGHT: 4
     restart: always
     privileged: true
     security_opt:
