@@ -116,7 +116,7 @@ public class BrokerContextImpl implements BrokerContext {
     /**
      * Keep-Alive监听线程
      */
-    private final Timer timer = new HashedWheelTimer(r -> new Thread(r, "broker-timer"));
+    private final Timer timer = new HashedWheelTimer(r -> new Thread(r, "broker-timer"), 50, 1024);
     private final MessageBus messageBusSubscriber = new MessageBusSubscriber();
     private final EventBus eventBus = new EventBusImpl(ServerEventType.types());
     private final List<Plugin> plugins = new ArrayList<>();

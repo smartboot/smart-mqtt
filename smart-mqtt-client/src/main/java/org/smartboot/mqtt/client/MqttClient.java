@@ -77,7 +77,7 @@ public class MqttClient extends AbstractSession {
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttClient.class);
     private static final Consumer<Integer> IGNORE = integer -> {
     };
-    private static final HashedWheelTimer TIMER = new HashedWheelTimer(r -> new Thread(r, "client-timer"));
+    private static final HashedWheelTimer TIMER = new HashedWheelTimer(r -> new Thread(r, "client-timer"), 50, 1024);
     /**
      * 客户端配置项
      */
