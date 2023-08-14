@@ -489,12 +489,6 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     @Override
-    public Collection<MqttSession> getSessions() {
-        return Collections.unmodifiableCollection(grantSessions.values());
-    }
-
-
-    @Override
     public Timer getTimer() {
         return timer;
     }

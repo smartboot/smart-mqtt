@@ -38,7 +38,10 @@ import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 
-import static org.smartboot.mqtt.common.enums.MqttConnectReturnCode.*;
+import static org.smartboot.mqtt.common.enums.MqttConnectReturnCode.CONNECTION_ACCEPTED;
+import static org.smartboot.mqtt.common.enums.MqttConnectReturnCode.CONNECTION_REFUSED_IDENTIFIER_REJECTED;
+import static org.smartboot.mqtt.common.enums.MqttConnectReturnCode.CONNECTION_REFUSED_UNACCEPTABLE_PROTOCOL_VERSION;
+import static org.smartboot.mqtt.common.enums.MqttConnectReturnCode.UNSUPPORTED_PROTOCOL_VERSION;
 
 /**
  * 连接处理器
@@ -55,7 +58,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         String clientId = mqttConnectMessage.getPayload().clientIdentifier();
         //服务端可以允许客户端提供一个零字节的客户端标识符 (ClientId) ，如果这样做了，服务端必须将这看作特
         //殊情况并分配唯一的客户端标识符给那个客户端。然后它必须假设客户端提供了那个唯一的客户端标识符，正常处理这个 CONNECT 报文
-        if (clientId.length() == 0) {
+        if (clientId.isEmpty()) {
             clientId = MqttUtil.createClientId();
         }
         session.setClientId(clientId);
