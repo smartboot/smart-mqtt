@@ -36,8 +36,8 @@ public class TopicPublishTree {
                 topicToken = topicToken.getNextNode();
             }
         }
-        treeNode.brokerTopic = new BrokerTopic(topic);
-        return treeNode.brokerTopic;
+        treeNode.brokerTopic = brokerTopic;
+        return brokerTopic;
     }
 
     public void match(TopicToken topicToken, Consumer<BrokerTopic> consumer) {
