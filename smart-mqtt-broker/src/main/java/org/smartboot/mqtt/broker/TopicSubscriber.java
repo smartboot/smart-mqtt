@@ -71,6 +71,7 @@ public class TopicSubscriber {
         this.mqttQoS = mqttQoS;
         this.nextConsumerOffset = nextConsumerOffset;
         this.retainConsumerOffset = retainConsumerOffset;
+        session.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, this);
     }
 
     public void batchPublish(BrokerContext brokerContext) {
@@ -181,6 +182,7 @@ public class TopicSubscriber {
 
     public void disable() {
         this.enable = false;
+        mqttSession.getEventBus().publish(ServerEventType.UNSUBSCRIBE_TOPIC, this);
     }
 
     public void setMqttQoS(MqttQoS mqttQoS) {

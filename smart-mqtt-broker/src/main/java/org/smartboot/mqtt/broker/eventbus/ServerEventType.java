@@ -72,6 +72,11 @@ public class ServerEventType<T> extends EventType<T> {
     public static final ServerEventType<TopicSubscriber> SUBSCRIBE_TOPIC = new ServerEventType<>("subscribeTopic");
 
     /**
+     * 客户端取消订阅Topic
+     */
+    public static final ServerEventType<TopicSubscriber> UNSUBSCRIBE_TOPIC = new ServerEventType<>("unsubscribe_topic");
+
+    /**
      * 客户端订阅Topic
      */
     public static final ServerEventType<TopicSubscriber> SUBSCRIBE_REFRESH_TOPIC = new ServerEventType<>("subscribe_refresh_topic");
