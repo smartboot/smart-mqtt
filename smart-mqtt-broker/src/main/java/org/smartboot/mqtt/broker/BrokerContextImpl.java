@@ -204,7 +204,7 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
 
-    private final TopicSubscriber BREAK = new TopicSubscriber(null, null, null, 0, 0);
+    private final TopicSubscriber BREAK = new TopicSubscriber();
 
     private void initPushThread() {
         if (brokerConfigure.getTopicLimit() <= 0) {

@@ -65,6 +65,11 @@ public class TopicSubscriber {
 
     private boolean enable = true;
 
+    TopicSubscriber() {
+        topic = null;
+        mqttSession = null;
+    }
+
     public TopicSubscriber(BrokerTopic topic, MqttSession session, MqttQoS mqttQoS, long nextConsumerOffset, long retainConsumerOffset) {
         this.topic = topic;
         this.mqttSession = session;
