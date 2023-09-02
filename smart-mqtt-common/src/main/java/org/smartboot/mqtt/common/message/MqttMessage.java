@@ -69,22 +69,25 @@ public abstract class MqttMessage extends ToString {
 
     public final void write(MqttWriter mqttWriter) throws IOException {
         ValidateUtils.isTrue(mqttWriter.writeSize() == 0, "invlid write size");
-        MqttCodecUtil.writeFixedHeader(mqttWriter, getFixedHeader());
-        MqttVariableHeader variableHeader = getVariableHeader();
-        MqttPayload mqttPayload = getPayload();
-        //剩余长度等于可变报头的长度（10 字节）加上有效载荷的长度。
-        int remainingLength = variableHeader.preEncode() + mqttPayload.preEncode();
+        try {
+            MqttCodecUtil.writeFixedHeader(mqttWriter, getFixedHeader());
+            MqttVariableHeader variableHeader = getVariableHeader();
+            MqttPayload mqttPayload = getPayload();
+            //剩余长度等于可变报头的长度（10 字节）加上有效载荷的长度。
+            int remainingLength = variableHeader.preEncode() + mqttPayload.preEncode();
 
-        //第一部分：固定报头
-        MqttCodecUtil.writeVariableLengthInt(mqttWriter, remainingLength);
-        int size = mqttWriter.writeSize();
-        //第二部分：可变报头
-        variableHeader.writeTo(mqttWriter);
+            //第一部分：固定报头
+            MqttCodecUtil.writeVariableLengthInt(mqttWriter, remainingLength);
+            int size = mqttWriter.writeSize();
+            //第二部分：可变报头
+            variableHeader.writeTo(mqttWriter);
 
-        //第三部分：有效载荷
-        mqttPayload.writeTo(mqttWriter);
-        ValidateUtils.isTrue((mqttWriter.writeSize() - size) == remainingLength, "encode error");
-        mqttWriter.reset();
+            //第三部分：有效载荷
+            mqttPayload.writeTo(mqttWriter);
+            ValidateUtils.isTrue((mqttWriter.writeSize() - size) == remainingLength, "encode error");
+        } finally {
+            mqttWriter.reset();
+        }
     }
 
     public abstract MqttVariableHeader getVariableHeader();
