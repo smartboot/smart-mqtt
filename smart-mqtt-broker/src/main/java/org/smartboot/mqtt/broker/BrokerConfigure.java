@@ -56,9 +56,9 @@ public class BrokerConfigure extends ToString {
     }
 
     /**
-     * 节点名称
+     * 节点ID，集群内唯一
      */
-    private String name;
+    private String nodeId;
     /**
      * 地址
      */
@@ -199,12 +199,12 @@ public class BrokerConfigure extends ToString {
         this.topicLimit = topicLimit;
     }
 
-    public String getName() {
-        return name;
+    public String getNodeId() {
+        return nodeId;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setNodeId(String nodeId) {
+        this.nodeId = nodeId;
     }
 
     public BrokerConfigure addPlugin(Plugin<MqttMessage> plugin) {

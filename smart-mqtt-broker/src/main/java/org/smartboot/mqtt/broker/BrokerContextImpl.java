@@ -71,7 +71,6 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -121,8 +120,6 @@ public class BrokerContextImpl implements BrokerContext {
     private final EventBus eventBus = new EventBusImpl(ServerEventType.types());
     private final List<Plugin> plugins = new ArrayList<>();
     private final Providers providers = new Providers();
-
-    private final BrokerRuntime runtime = new BrokerRuntime();
     private ExecutorService pushThreadPool;
     private ExecutorService retainPushThreadPool;
     private BlockingQueue<BrokerTopic> pushTopicQueue;
@@ -183,15 +180,6 @@ public class BrokerContextImpl implements BrokerContext {
             } else {
                 System.out.println("\uD83C\uDF89start smart-mqtt success! [host:" + brokerConfigure.getHost() + " port:" + brokerConfigure.getPort() + "]");
             }
-            if (StringUtils.isBlank(brokerConfigure.getName())) {
-                runtime.setName("smart-mqtt@" + (StringUtils.isBlank(brokerConfigure.getHost()) ? "0.0.0.0" : brokerConfigure.getHost()));
-            } else {
-                runtime.setName(brokerConfigure.getName());
-            }
-
-            runtime.setStartTime(System.currentTimeMillis());
-            runtime.setPid(ManagementFactory.getRuntimeMXBean().getName().split("@")[0]);
-            runtime.setIpAddress(brokerConfigure.getHost() + ":" + brokerConfigure.getPort());
         } catch (Exception e) {
             destroy();
             throw e;
@@ -497,12 +485,6 @@ public class BrokerContextImpl implements BrokerContext {
     public Providers getProviders() {
         return providers;
     }
-
-    @Override
-    public BrokerRuntime getRuntime() {
-        return runtime;
-    }
-
 
     @Override
     public <T> T parseConfig(String path, Class<T> clazz) {
