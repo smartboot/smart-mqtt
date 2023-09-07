@@ -81,7 +81,6 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -363,41 +362,42 @@ public class BrokerContextImpl implements BrokerContext {
         //加载自定义配置文件
         loadYamlConfig();
         brokerConfigure = parseConfig("$.broker", BrokerConfigure.class);
+        MqttUtil.updateConfig(brokerConfigure,"broker");
 
-        Properties brokerProperties = new Properties();
-        //系统环境变量
-        BrokerConfigure.SystemEnvironments.forEach((env, pro) -> {
-            String value = System.getenv(env);
-            if (value != null) {
-                brokerProperties.setProperty(pro, value);
-            }
-        });
-        //系统属性优先级最高
-        System.getProperties().stringPropertyNames().forEach(name -> brokerProperties.setProperty(name, System.getProperty(name)));
-
-        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.HOST)) {
-            brokerConfigure.setHost(brokerProperties.getProperty(BrokerConfigure.SystemProperty.HOST));
-        }
-        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.PORT)) {
-            brokerConfigure.setPort(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.PORT)));
-        }
-        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.CONNECT_IDLE_TIMEOUT)) {
-            brokerConfigure.setNoConnectIdleTimeout(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.CONNECT_IDLE_TIMEOUT)));
-        }
-        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.MAX_INFLIGHT)) {
-            brokerConfigure.setMaxInflight(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.MAX_INFLIGHT)));
-        }
-        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.THREAD_NUM)) {
-            brokerConfigure.setThreadNum(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.THREAD_NUM)));
-        }
-
-        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.LOW_MEMORY)) {
-            brokerConfigure.setLowMemory(Boolean.parseBoolean(brokerProperties.getProperty(BrokerConfigure.SystemProperty.LOW_MEMORY)));
-        }
-
-        if (StringUtils.isBlank(brokerConfigure.getHost())) {
-            brokerConfigure.setHost("0.0.0.0");
-        }
+//        Properties brokerProperties = new Properties();
+//        //系统环境变量
+//        BrokerConfigure.SystemEnvironments.forEach((env, pro) -> {
+//            String value = System.getenv(env);
+//            if (value != null) {
+//                brokerProperties.setProperty(pro, value);
+//            }
+//        });
+//        //系统属性优先级最高
+//        System.getProperties().stringPropertyNames().forEach(name -> brokerProperties.setProperty(name, System.getProperty(name)));
+//
+//        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.HOST)) {
+//            brokerConfigure.setHost(brokerProperties.getProperty(BrokerConfigure.SystemProperty.HOST));
+//        }
+//        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.PORT)) {
+//            brokerConfigure.setPort(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.PORT)));
+//        }
+//        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.CONNECT_IDLE_TIMEOUT)) {
+//            brokerConfigure.setNoConnectIdleTimeout(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.CONNECT_IDLE_TIMEOUT)));
+//        }
+//        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.MAX_INFLIGHT)) {
+//            brokerConfigure.setMaxInflight(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.MAX_INFLIGHT)));
+//        }
+//        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.THREAD_NUM)) {
+//            brokerConfigure.setThreadNum(Integer.parseInt(brokerProperties.getProperty(BrokerConfigure.SystemProperty.THREAD_NUM)));
+//        }
+//
+//        if (brokerProperties.containsKey(BrokerConfigure.SystemProperty.LOW_MEMORY)) {
+//            brokerConfigure.setLowMemory(Boolean.parseBoolean(brokerProperties.getProperty(BrokerConfigure.SystemProperty.LOW_MEMORY)));
+//        }
+//
+//        if (StringUtils.isBlank(brokerConfigure.getHost())) {
+//            brokerConfigure.setHost("0.0.0.0");
+//        }
 
         brokerConfigure.setChannelGroup(new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
             int i;

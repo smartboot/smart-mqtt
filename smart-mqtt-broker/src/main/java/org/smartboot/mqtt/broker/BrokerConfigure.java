@@ -290,5 +290,10 @@ public class BrokerConfigure extends ToString {
          */
         String LOW_MEMORY = "broker.lowMemory";
 
+        /**
+         * 节点ID
+         */
+        String NODE_ID = "broker.nodeId";
+
     }
 }
