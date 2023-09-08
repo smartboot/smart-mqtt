@@ -88,7 +88,6 @@ public class MqttUtil {
                 //环境属性次之
                 if (v == null) {
                     v = System.getenv((prefix + "." + field.getName()).replace(".", "_").toUpperCase());
-                    System.out.println("LOAD:" + (prefix + "." + field.getName()).replace(".", "_").toUpperCase() + " value:" + v);
                 }
                 if (v == null) {
                     continue;
