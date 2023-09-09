@@ -10,8 +10,8 @@
 
 package org.smartboot.mqtt.broker.eventbus.messagebus;
 
-import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.eventbus.messagebus.consumer.Consumer;
+import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 import java.util.function.Predicate;
@@ -40,6 +40,6 @@ public interface MessageBus {
     /**
      * 发布消息至总线触发消费
      */
-    void consume(MqttSession mqttSession, MqttPublishMessage storedMessage);
+    void consume(AbstractSession mqttSession, MqttPublishMessage storedMessage);
 
 }

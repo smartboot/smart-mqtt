@@ -12,8 +12,8 @@ package org.smartboot.mqtt.broker.eventbus.messagebus;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.eventbus.messagebus.consumer.Consumer;
+import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 import java.util.ArrayList;
@@ -48,7 +48,7 @@ public class MessageBusSubscriber implements MessageBus {
     }
 
     @Override
-    public void consume(MqttSession mqttSession, MqttPublishMessage message) {
+    public void consume(AbstractSession mqttSession, MqttPublishMessage message) {
         Message persistenceMessage = new Message(mqttSession, message);
         boolean remove = false;
         for (Consumer messageConsumer : messageBuses) {

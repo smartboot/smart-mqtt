@@ -13,7 +13,7 @@ package org.smartboot.mqtt.broker.eventbus.messagebus;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.annotation.JSONField;
-import org.smartboot.mqtt.broker.MqttSession;
+import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.PayloadEncodeEnum;
@@ -50,7 +50,7 @@ public class Message extends ToString {
 
     private final String clientId;
 
-    Message(MqttSession session, MqttPublishMessage message) {
+    Message(AbstractSession session, MqttPublishMessage message) {
         this.clientId = session.getClientId();
         this.payload = message.getPayload().getPayload();
         this.retained = message.getFixedHeader().isRetain();

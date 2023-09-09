@@ -188,6 +188,7 @@ public class BrokerContextImpl implements BrokerContext {
         eventBus.publish(ServerEventType.BROKER_STARTED, this);
         //释放内存
         configJson = null;
+        LOGGER.info("smart-mqtt start success!");
     }
 
 
@@ -362,7 +363,7 @@ public class BrokerContextImpl implements BrokerContext {
         //加载自定义配置文件
         loadYamlConfig();
         brokerConfigure = parseConfig("$.broker", BrokerConfigure.class);
-        MqttUtil.updateConfig(brokerConfigure,"broker");
+        MqttUtil.updateConfig(brokerConfigure, "broker");
 
 //        Properties brokerProperties = new Properties();
 //        //系统环境变量
