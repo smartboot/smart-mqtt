@@ -15,6 +15,7 @@ import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.BrokerTopic;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.TopicSubscriber;
+import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;

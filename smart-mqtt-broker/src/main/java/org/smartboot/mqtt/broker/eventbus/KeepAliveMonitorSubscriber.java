@@ -13,9 +13,10 @@ package org.smartboot.mqtt.broker.eventbus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
-import org.smartboot.mqtt.broker.MqttSession;
+import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
+import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 
@@ -41,7 +42,7 @@ public class KeepAliveMonitorSubscriber implements EventBusSubscriber<EventObjec
         if (timeout > 0) {
             timeout += timeout >> 1;
         }
-        MqttSession session = object.getSession();
+        AbstractSession session = object.getSession();
         final long finalTimeout = (timeout == 0 || timeout > context.getBrokerConfigure().getMaxKeepAliveTime()) ? context.getBrokerConfigure().getMaxKeepAliveTime() : timeout;
         context.getTimer().schedule(new AsyncTask() {
             @Override

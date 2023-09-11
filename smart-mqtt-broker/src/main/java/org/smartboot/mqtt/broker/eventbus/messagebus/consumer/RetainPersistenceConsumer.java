@@ -13,6 +13,7 @@ package org.smartboot.mqtt.broker.eventbus.messagebus.consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
+import org.smartboot.mqtt.broker.BrokerTopic;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 
@@ -24,7 +25,7 @@ import org.smartboot.mqtt.common.enums.MqttQoS;
  */
 public class RetainPersistenceConsumer implements Consumer {
     private static final Logger LOGGER = LoggerFactory.getLogger(RetainPersistenceConsumer.class);
-    private BrokerContext brokerContext;
+    private final BrokerContext brokerContext;
 
     public RetainPersistenceConsumer(BrokerContext brokerContext) {
         this.brokerContext = brokerContext;
@@ -35,11 +36,12 @@ public class RetainPersistenceConsumer implements Consumer {
         if (!message.isRetained()) {
             return;
         }
+        BrokerTopic topic = brokerContext.getOrCreateTopic(message.getTopic());
         //保留标志为 1 且有效载荷为零字节的 PUBLISH 报文会被服务端当作正常消息处理，它会被发送给订阅主题匹配的客户端。
         // 此外，同一个主题下任何现存的保留消息必须被移除，因此这个主题之后的任何订阅者都不会收到一个保留消息。
         if (message.getPayload().length == 0) {
             LOGGER.info("clear topic:{} retained messages, because of current retained message's payload length is 0", message.getTopic());
-            brokerContext.getProviders().getRetainMessageProvider().delete(message.getTopic());
+            topic.setRetainMessage(null);
             return;
         }
         /*
@@ -49,10 +51,8 @@ public class RetainPersistenceConsumer implements Consumer {
          */
         if (message.getQos() == MqttQoS.AT_MOST_ONCE) {
             LOGGER.info("receive Qos0 retain message,clear topic:{} retained messages", message.getTopic());
-            brokerContext.getProviders().getRetainMessageProvider().delete(message.getTopic());
+            topic.setRetainMessage(null);
         }
-        brokerContext.getProviders().getRetainMessageProvider().doSave(message);
+        topic.setRetainMessage(message);
     }
-
-
 }

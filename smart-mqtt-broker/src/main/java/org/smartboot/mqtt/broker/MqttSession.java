@@ -26,7 +26,6 @@ import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.timer.TimerTask;
 import org.smartboot.socket.transport.AioSession;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -193,24 +192,12 @@ public class MqttSession extends AbstractSession {
             return;
         }
         long latestOffset = mqttContext.getProviders().getPersistenceProvider().getLatestOffset(topic.getTopic());
-        // retain消费点位优先以缓存为准
-        Long retainOffset = retainOffsetCache.get(topic);
-        long oldestRetainOffset = mqttContext.getProviders().getRetainMessageProvider().getOldestOffset(topic.getTopic());
-        if (retainOffset == null || retainOffset < oldestRetainOffset) {
-            retainOffset = oldestRetainOffset;
-        }
         //以当前消息队列的最新点位为起始点位
-        TopicSubscriber subscription = new TopicSubscriber(topic, MqttSession.this, mqttQoS, latestOffset + 1, retainOffset);
+        TopicSubscriber subscription = new TopicSubscriber(topic, MqttSession.this, mqttQoS, latestOffset + 1);
         subscription.setTopicFilterToken(topicToken);
         topic.getConsumeOffsets().put(MqttSession.this, subscription);
         subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, subscription);
     }
-
-    /**
-     * retain消息消费点位记录
-     */
-    private final Map<BrokerTopic, Long> retainOffsetCache = new HashMap<>();
-
 
     public void resubscribe() {
         subscribers.values().stream().filter(subscriber -> subscriber.getTopicFilterToken().isWildcards()).forEach(subscriber -> {
@@ -225,7 +212,6 @@ public class MqttSession extends AbstractSession {
         }
         filterSubscriber.getTopicSubscribers().values().forEach(subscriber -> {
             TopicSubscriber removeSubscriber = subscriber.getTopic().getConsumeOffsets().remove(this);
-            retainOffsetCache.put(subscriber.getTopic(), subscriber.getRetainConsumerOffset());
             if (subscriber == removeSubscriber) {
                 removeSubscriber.disable();
                 LOGGER.debug("remove subscriber:{} success!", subscriber.getTopic().getTopic());

@@ -50,11 +50,6 @@ public class TopicSubscriber {
     private long nextConsumerOffset;
 
     /**
-     * retain的消费点位，防止重连后的retain消息被重复消费
-     */
-    private long retainConsumerOffset;
-
-    /**
      * 最近一次订阅时间
      */
     private final long latestSubscribeTime = System.currentTimeMillis();
@@ -70,12 +65,11 @@ public class TopicSubscriber {
         mqttSession = null;
     }
 
-    public TopicSubscriber(BrokerTopic topic, MqttSession session, MqttQoS mqttQoS, long nextConsumerOffset, long retainConsumerOffset) {
+    public TopicSubscriber(BrokerTopic topic, MqttSession session, MqttQoS mqttQoS, long nextConsumerOffset) {
         this.topic = topic;
         this.mqttSession = session;
         this.mqttQoS = mqttQoS;
         this.nextConsumerOffset = nextConsumerOffset;
-        this.retainConsumerOffset = retainConsumerOffset;
         session.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, this);
     }
 
@@ -130,9 +124,6 @@ public class TopicSubscriber {
         future.whenComplete((mqttPacketIdentifierMessage, throwable) -> {
             //最早发送的消息若收到响应，则更新点位
             commitNextConsumerOffset(offset + 1);
-            if (message.isRetained()) {
-                setRetainConsumerOffset(getRetainConsumerOffset() + 1);
-            }
             commitRetainConsumerTimestamp(message.getCreateTime());
             publishAvailable(brokerContext);
         });
@@ -163,14 +154,6 @@ public class TopicSubscriber {
 
     public void commitNextConsumerOffset(long nextConsumerOffset) {
         //todo
-    }
-
-    public long getRetainConsumerOffset() {
-        return retainConsumerOffset;
-    }
-
-    public void setRetainConsumerOffset(long retainConsumerOffset) {
-        this.retainConsumerOffset = retainConsumerOffset;
     }
 
     public long getLatestSubscribeTime() {
