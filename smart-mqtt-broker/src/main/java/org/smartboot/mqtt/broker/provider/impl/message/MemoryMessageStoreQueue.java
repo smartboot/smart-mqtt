@@ -35,6 +35,7 @@ class MemoryMessageStoreQueue {
     }
 
     public Message get(long offset) {
+//        System.out.println("offset:" + offset);
         Message storedMessage = store[(int) (offset & mask)];
         if (storedMessage != null && storedMessage.getOffset() == offset) {
             return storedMessage;
