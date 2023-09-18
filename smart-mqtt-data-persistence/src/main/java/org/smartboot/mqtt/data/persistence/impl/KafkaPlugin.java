@@ -34,6 +34,7 @@ public class KafkaPlugin extends DataPersistPlugin<KafkaPluginConfig> {
             throw new PluginException("start DataPersistRedisPlugin exception");
         }
         this.setConfig(config);
+        // 相关配置
         KAFKAPROPS.put("bootstrap.servers", config.getHost());
         KAFKAPROPS.put("acks", config.getAcks());
         KAFKAPROPS.put("retries", config.getRetries());
@@ -46,7 +47,7 @@ public class KafkaPlugin extends DataPersistPlugin<KafkaPluginConfig> {
                 "org.apache.kafka.common.serialization.StringSerializer");
         producer = new KafkaProducer<String, String>(KAFKAPROPS);
     
-        // 消费者线程
+        // 消费者线程，进行消费
         Thread consumerThread = new Thread(() -> {
             while (true) {
                 try {
@@ -80,6 +81,7 @@ public class KafkaPlugin extends DataPersistPlugin<KafkaPluginConfig> {
         messageBus.consumer((brokerContext1, publishMessage) -> {
             MessageNodeInfo messageNodeInfo = new MessageNodeInfo(publishMessage);
             try {
+                // 将消息放置到阻塞队列中
                 queue.put(messageNodeInfo);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);

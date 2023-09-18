@@ -2,6 +2,11 @@ package org.smartboot.mqtt.data.persistence;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.plugin.Plugin;
 
+/**
+* @Description:
+ * @Author: learnhope
+ * @Date: 2023/9/18
+ */
 public abstract class DataPersistPlugin<T> extends Plugin {
     private T config;
     

@@ -5,6 +5,11 @@ import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 import java.io.Serializable;
 
+/**
+* @Description: 持久化Vo对象
+ * @Author: learnhope
+ * @Date: 2023/9/18
+ */
 public class MessageNodeInfo implements Serializable {
     /**
      * 负载数据

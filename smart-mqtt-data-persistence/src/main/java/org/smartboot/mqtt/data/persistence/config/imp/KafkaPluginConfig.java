@@ -2,15 +2,26 @@ package org.smartboot.mqtt.data.persistence.config.imp;
 
 import org.smartboot.mqtt.data.persistence.config.PluginConfig;
 
+/**
+* @Description: kakfa特有配置
+ * @Author: learnhope
+ * @Date: 2023/9/18
+ */
 public class KafkaPluginConfig extends PluginConfig {
+    
+    // 确认机制
     private String acks = "all";
     
+    // 重试次数
     private int retries = 0;
     
+    // 批次大小
     private int batchSize = 16384;
     
+    // 延迟时间
     private int lingerMs = 1;
     
+    // 缓冲区大小
     private int buffer = 1024;
     
     public String getAcks() {

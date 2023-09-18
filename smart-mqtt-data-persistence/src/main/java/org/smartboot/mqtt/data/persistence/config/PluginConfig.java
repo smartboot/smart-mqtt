@@ -1,8 +1,14 @@
 package org.smartboot.mqtt.data.persistence.config;
 
-
+/**
+* @Description: 通用持久化插件配置信息
+ * @Author: learnhope
+ * @Date: 2023/9/18
+ */
 public class PluginConfig {
+    // host地址
     private String host;
+    // base64编码
     private boolean base64 = false;
     
     public String getHost() {
