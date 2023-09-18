@@ -1,11 +1,9 @@
 package org.smartboot.mqtt.data.persistence.nodeinfo;
 
-import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 import java.io.Serializable;
-import java.util.Base64;
 
 public class MessageNodeInfo implements Serializable {
     /**
@@ -46,17 +44,7 @@ public class MessageNodeInfo implements Serializable {
         return createTime;
     }
     
-    public String toString(boolean base64){
-        if (!base64) return toString();
-        // 将对象转换为JSON字符串
-        String jsonString = JSON.toJSONString(this);
-        JSONObject json = JSONObject.parseObject(jsonString);
-        // 对payload进行base64编码
-        String payload = json.getString("payload");
-        String encodedPayload = Base64.getEncoder().encodeToString(payload.getBytes());
-        json.put("payload", encodedPayload);
-        return json.toJSONString();
-    }
+
     
     @Override
     public String toString() {

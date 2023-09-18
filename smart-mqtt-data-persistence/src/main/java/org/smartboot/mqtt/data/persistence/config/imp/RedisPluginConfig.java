@@ -1,15 +1,12 @@
-package org.smartboot.mqtt.data.persistence.config;
+package org.smartboot.mqtt.data.persistence.config.imp;
 
 
+import org.smartboot.mqtt.data.persistence.config.PluginConfig;
 
-
-public class DataSourcePluginConfig extends PluginConfig {
+public class RedisPluginConfig extends PluginConfig {
     private String password;
-    
     private int timeout = 1000;
-
-    private boolean base64 = false;
-    
+    private boolean simple = true;
     
     public String getPassword() {
         return password;
@@ -27,11 +24,11 @@ public class DataSourcePluginConfig extends PluginConfig {
         this.timeout = timeout;
     }
     
-    public boolean isBase64() {
-        return base64;
+    public boolean isSimple() {
+        return simple;
     }
     
-    public void setBase64(boolean base64) {
-        this.base64 = base64;
+    public void setSimple(boolean simple) {
+        this.simple = simple;
     }
 }

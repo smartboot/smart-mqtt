@@ -12,15 +12,11 @@ import java.util.Date;
 import java.util.Map;
 
 public class BrokerHandler {
-    
-    private static final String MQTT_PREFIX = "smart-mqtt@";
-
-    
     public static Map<String,String> handler(BrokerContext brokerContext){
         BrokerRuntime brokerRuntime = brokerContext.getRuntime();
         BrokerNodeInfo brokerNodeInfo = new BrokerNodeInfo();
         // 名字设置
-        brokerNodeInfo.setName(MQTT_PREFIX + brokerContext.getBrokerConfigure().getName());
+        brokerNodeInfo.setName(brokerContext.getBrokerConfigure().getName());
         // 设置Broker版本号
         brokerNodeInfo.setVersion(BrokerConfigure.VERSION);
         // 设置ip地址

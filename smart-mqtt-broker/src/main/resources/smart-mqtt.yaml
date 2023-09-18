@@ -1,5 +1,5 @@
 broker:
-  name: smart-mqtt # 集群模式需确保唯一性
+  name: rl_smart-mqtt # 集群模式需确保唯一性
   port: 1883
   maxInflight: 256
   openapi:
@@ -9,9 +9,15 @@ plugins:
   - websocket:
       port: 1884
   - kafka-bridge:
-  - mqtt-bridge:
+      host: 121.194.93.24:9092,121.194.93.24:9093,121.194.93.24:9094
+      acks: 0
+      retries: 0
+      batchSize: 300
+      lingerMs: 1
+      buffer: 300
+      base64: false
   - redis-bridge:
-      port: 6379
-      host: 8.130.53.106
+      host: 121.194.93.24:6379
       password: 990194923
-      base64: true
+      base64: false
+      simple: false

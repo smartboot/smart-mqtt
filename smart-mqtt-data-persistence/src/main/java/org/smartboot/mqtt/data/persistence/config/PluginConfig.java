@@ -2,24 +2,8 @@ package org.smartboot.mqtt.data.persistence.config;
 
 
 public class PluginConfig {
-    /**
-     * 端口号
-     */
-    private int port;
-    
-    /**
-     * 主机地址
-     */
     private String host;
-    
-    
-    public int getPort() {
-        return port;
-    }
-    
-    public void setPort(int port) {
-        this.port = port;
-    }
+    private boolean base64 = false;
     
     public String getHost() {
         return host;
@@ -29,5 +13,11 @@ public class PluginConfig {
         this.host = host;
     }
     
-
+    public boolean isBase64() {
+        return base64;
+    }
+    
+    public void setBase64(boolean base64) {
+        this.base64 = base64;
+    }
 }
