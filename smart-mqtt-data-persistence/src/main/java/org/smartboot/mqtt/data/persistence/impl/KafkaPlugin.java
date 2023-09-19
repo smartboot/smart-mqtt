@@ -15,23 +15,25 @@ import org.smartboot.mqtt.data.persistence.nodeinfo.MessageNodeInfo;
 import org.smartboot.mqtt.data.persistence.utils.StrUtils;
 
 import java.util.Properties;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
 
+/**
+* @Description: KafkaPlugin插件
+ * @Author: learnhope
+ * @Date: 2023/9/19
+ */
 public class KafkaPlugin extends DataPersistPlugin<KafkaPluginConfig> {
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaPlugin.class);
     private static final String CONFIG_JSON_PATH = "$['plugins']['kafka-bridge'][0]";
     private static StrUtils<MessageNodeInfo> StrUtil = new StrUtils<>();
     private static final Properties KAFKAPROPS = new Properties();
-    private BlockingQueue<MessageNodeInfo> queue = new LinkedBlockingQueue<>();
     private KafkaProducer<String, String> producer;
     @Override
     protected KafkaPluginConfig connect(BrokerContext brokerContext) {
         KafkaPluginConfig config = brokerContext.parseConfig(CONFIG_JSON_PATH, KafkaPluginConfig.class);
         if (config == null) {
             LOGGER.error("config maybe error, parse fail!");
-            throw new PluginException("start DataPersistRedisPlugin exception");
+            throw new PluginException("start DataPersistKafkaPlugin exception");
         }
         this.setConfig(config);
         // 相关配置
@@ -46,33 +48,6 @@ public class KafkaPlugin extends DataPersistPlugin<KafkaPluginConfig> {
         KAFKAPROPS.put("value.serializer",
                 "org.apache.kafka.common.serialization.StringSerializer");
         producer = new KafkaProducer<String, String>(KAFKAPROPS);
-    
-        // 消费者线程，进行消费
-        Thread consumerThread = new Thread(() -> {
-            while (true) {
-                try {
-                    MessageNodeInfo messageNodeInfo = queue.take();// 从队列中获取数据，如果队列为空则阻塞
-                    String message = messageNodeInfo.toString();
-                    // 完成playload信息base64编码
-                    if (config.isBase64()){
-                        message = StrUtil.base64(messageNodeInfo);
-                    }
-                    // 异步发送消息
-                    ProducerRecord<String, String> record = new ProducerRecord<>(messageNodeInfo.getTopic(), message);
-                    Future<RecordMetadata> result = producer.send(record, new Callback() {
-                        @Override
-                        public void onCompletion(RecordMetadata metadata, Exception exception) {
-                            if (exception != null) {
-                                exception.printStackTrace();
-                            }
-                        }
-                    });
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        consumerThread.start();
         return config;
     }
     @Override
@@ -80,12 +55,21 @@ public class KafkaPlugin extends DataPersistPlugin<KafkaPluginConfig> {
         MessageBus messageBus = brokerContext.getMessageBus();
         messageBus.consumer((brokerContext1, publishMessage) -> {
             MessageNodeInfo messageNodeInfo = new MessageNodeInfo(publishMessage);
-            try {
-                // 将消息放置到阻塞队列中
-                queue.put(messageNodeInfo);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+            String message = messageNodeInfo.toString();
+            // 完成playload信息base64编码
+            if (config.isBase64()){
+                message = StrUtil.base64(messageNodeInfo);
             }
+            // 异步发送消息
+            ProducerRecord<String, String> record = new ProducerRecord<>(messageNodeInfo.getTopic(), message);
+            Future<RecordMetadata> result = producer.send(record, new Callback() {
+                @Override
+                public void onCompletion(RecordMetadata metadata, Exception exception) {
+                    if (exception != null) {
+                        exception.printStackTrace();
+                    }
+                }
+            });
         });
     }
     @Override

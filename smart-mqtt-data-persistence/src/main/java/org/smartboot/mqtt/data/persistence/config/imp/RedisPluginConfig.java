@@ -3,6 +3,11 @@ package org.smartboot.mqtt.data.persistence.config.imp;
 
 import org.smartboot.mqtt.data.persistence.config.PluginConfig;
 
+/**
+* @Description: Redis特有配置
+ * @Author: learnhope
+ * @Date: 2023/9/19
+ */
 public class RedisPluginConfig extends PluginConfig {
     private String password;
     private int timeout = 1000;

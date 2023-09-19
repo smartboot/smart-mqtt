@@ -3,7 +3,7 @@ import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.plugin.Plugin;
 
 /**
-* @Description:
+* @Description: 数据持久化插件约定
  * @Author: learnhope
  * @Date: 2023/9/18
  */

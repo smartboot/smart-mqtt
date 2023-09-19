@@ -1,0 +1,10 @@
+org\smartboot\mqtt\data\persistence\config\imp\RedisPluginConfig.class
+org\smartboot\mqtt\data\persistence\utils\IdUtils.class
+org\smartboot\mqtt\data\persistence\config\imp\KafkaPluginConfig.class
+org\smartboot\mqtt\data\persistence\impl\KafkaPlugin.class
+org\smartboot\mqtt\data\persistence\config\PluginConfig.class
+org\smartboot\mqtt\data\persistence\nodeinfo\MessageNodeInfo.class
+org\smartboot\mqtt\data\persistence\impl\KafkaPlugin$1.class
+org\smartboot\mqtt\data\persistence\impl\RedisPlugin.class
+org\smartboot\mqtt\data\persistence\DataPersistPlugin.class
+org\smartboot\mqtt\data\persistence\utils\StrUtils.class

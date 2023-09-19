@@ -1,0 +1,6 @@
+org.smartboot.mqtt.data.persistence
+org.smartboot.mqtt.data.persistence.config
+org.smartboot.mqtt.data.persistence.config.imp
+org.smartboot.mqtt.data.persistence.impl
+org.smartboot.mqtt.data.persistence.nodeinfo
+org.smartboot.mqtt.data.persistence.utils

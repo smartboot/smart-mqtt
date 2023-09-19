@@ -24,9 +24,8 @@ public class RedisPlugin extends DataPersistPlugin<RedisPluginConfig> {
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisPlugin.class);
     private static final String CONFIG_JSON_PATH = "$['plugins']['redis-bridge'][0]";
     private static final String MESSAGE_PREFIX = "smart-mqtt-message:";
-    
-    private static final int MAX_KEY_LENGTH = 10000;
     private static StrUtils<MessageNodeInfo> StrUtil = new StrUtils<>();
+    
     private static AtomicInteger atomicInteger = new AtomicInteger(0);
     private static StatefulRedisConnection<String, String> CONNECTION;
     private static RedisClient CLIENT;
@@ -65,10 +64,9 @@ public class RedisPlugin extends DataPersistPlugin<RedisPluginConfig> {
         long start = System.currentTimeMillis();
         messageBus.consumer((brokerContext1, publishMessage) -> {
             // 获得message信息Vo对象
-            int count = atomicInteger.getAndIncrement() / MAX_KEY_LENGTH % 100;
             MessageNodeInfo messageNodeInfo = new MessageNodeInfo(publishMessage);
             String key = MESSAGE_PREFIX + brokerContext1.getBrokerConfigure().getName() + ":"
-                    + publishMessage.getVariableHeader().getTopicName() + ":" + count ;
+                    + publishMessage.getVariableHeader().getTopicName();
             String message = messageNodeInfo.toString();
             // 完成playload信息base64编码
             if (config.isBase64()){

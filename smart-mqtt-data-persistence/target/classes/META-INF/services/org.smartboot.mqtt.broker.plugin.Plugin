@@ -1,0 +1,2 @@
+org.smartboot.mqtt.data.persistence.impl.RedisPlugin
+org.smartboot.mqtt.data.persistence.impl.KafkaPlugin
