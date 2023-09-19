@@ -9,15 +9,16 @@ plugins:
   - websocket:
       port: 1884
   - kafka-bridge:
-      host: 121.194.93.24:9092,121.194.93.24:9093,121.194.93.24:9094
+      host: 121.xxx.xxx.21:9092,121.xxx.xxx.21:9093,121.xxx.xxx.21:9094
       acks: 0
       retries: 0
-      batchSize: 300
-      lingerMs: 1
-      buffer: 300
+      batchSize: 16384
+      lingerMs: 100
+      buffer: 33554432
       base64: false
   - redis-bridge:
-      host: 121.194.93.24:6379
+      host: 121.194.93.21:6379
       password: 990194923
       base64: false
       simple: false
+
