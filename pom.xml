@@ -10,7 +10,7 @@
 
     <properties>
         <smart.mqtt.version>0.28</smart.mqtt.version>
-        <smart-socket.version>1.5.33</smart-socket.version>
+        <smart-socket.version>1.5.34</smart-socket.version>
         <commons.lang.version>2.6</commons.lang.version>
         <junit.version>4.13.2</junit.version>
     </properties>
@@ -276,5 +276,6 @@
         <module>smart-mqtt-common</module>
         <module>smart-mqtt-client</module>
         <module>plugins</module>
+        <module>smart-mqtt-protocol-gateway</module>
     </modules>
 </project>
