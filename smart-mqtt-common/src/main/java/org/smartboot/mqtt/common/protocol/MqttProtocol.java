@@ -18,16 +18,18 @@ import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.util.MqttAttachKey;
 import org.smartboot.mqtt.common.util.ValidateUtils;
+import org.smartboot.socket.DecoderException;
 import org.smartboot.socket.Protocol;
 import org.smartboot.socket.transport.AioSession;
 import org.smartboot.socket.util.AttachKey;
 import org.smartboot.socket.util.Attachment;
 import org.smartboot.socket.util.BufferUtils;
-import org.smartboot.socket.util.DecoderException;
 
 import java.nio.ByteBuffer;
 
-import static org.smartboot.mqtt.common.protocol.DecoderState.*;
+import static org.smartboot.mqtt.common.protocol.DecoderState.FINISH;
+import static org.smartboot.mqtt.common.protocol.DecoderState.READ_FIXED_HEADER;
+import static org.smartboot.mqtt.common.protocol.DecoderState.READ_VARIABLE_HEADER;
 
 /**
  * @author 三刀

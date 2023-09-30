@@ -15,7 +15,7 @@ import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.payload.MqttPayload;
 import org.smartboot.mqtt.common.util.ValidateUtils;
-import org.smartboot.socket.util.DecoderException;
+import org.smartboot.socket.DecoderException;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
