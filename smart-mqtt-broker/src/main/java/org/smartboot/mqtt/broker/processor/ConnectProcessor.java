@@ -18,6 +18,7 @@ import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.broker.provider.SessionStateProvider;
 import org.smartboot.mqtt.broker.provider.impl.session.SessionState;
+import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttProtocolEnum;
@@ -197,7 +198,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         session.setWillMessage(publishMessage);
     }
 
-    private void connFailAck(MqttConnectReturnCode returnCode, MqttSession session) {
+    public static void connFailAck(MqttConnectReturnCode returnCode, AbstractSession session) {
         //如果服务端发送了一个包含非零返回码的 CONNACK 报文，它必须将当前会话标志设置为 0
         ValidateUtils.isTrue(returnCode != CONNECTION_ACCEPTED, "");
         ConnectAckProperties properties = null;
@@ -206,12 +207,11 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
             properties = new ConnectAckProperties();
         }
         MqttConnAckMessage badProto = connAck(returnCode, false, properties);
-
         session.write(badProto);
         session.disconnect();
     }
 
-    private MqttConnAckMessage connAck(MqttConnectReturnCode returnCode, boolean sessionPresent, ConnectAckProperties properties) {
+    private static MqttConnAckMessage connAck(MqttConnectReturnCode returnCode, boolean sessionPresent, ConnectAckProperties properties) {
         MqttConnAckVariableHeader mqttConnAckVariableHeader = new MqttConnAckVariableHeader(returnCode, sessionPresent, properties);
         return new MqttConnAckMessage(mqttConnAckVariableHeader);
     }
