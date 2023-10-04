@@ -71,6 +71,10 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         checkMessage(session, mqttConnectMessage);
 
         context.getEventBus().publish(ServerEventType.CONNECT, EventObject.newEventObject(session, mqttConnectMessage));
+        if (session.isDisconnect()) {
+            LOGGER.warn("session is disconnected when consume CONNECT event");
+            return;
+        }
         session.setAuthorized(true);
         //清理会话
         refreshSession(context, session, mqttConnectMessage);
