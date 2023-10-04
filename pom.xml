@@ -170,9 +170,7 @@
                 <executions>
                     <execution>
                         <id>attach-sources</id>
-                        <goals>
-                            <goal>jar-no-fork</goal>
-                        </goals>
+                        <phase>none</phase>
                     </execution>
                 </executions>
             </plugin>
