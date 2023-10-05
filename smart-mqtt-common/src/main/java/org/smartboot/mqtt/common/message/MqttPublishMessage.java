@@ -15,7 +15,7 @@ import org.smartboot.mqtt.common.message.payload.MqttPublishPayload;
 import org.smartboot.mqtt.common.message.variable.MqttPublishVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.util.MqttUtil;
-import org.smartboot.socket.util.DecoderException;
+import org.smartboot.socket.DecoderException;
 
 import java.nio.ByteBuffer;
 

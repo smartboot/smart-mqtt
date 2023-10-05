@@ -107,8 +107,9 @@ public class MqttClientConfigure {
         return password;
     }
 
-    public void setPassword(byte[] password) {
+    public MqttClientConfigure setPassword(byte[] password) {
         this.password = password;
+        return this;
     }
 
     /**
@@ -125,8 +126,9 @@ public class MqttClientConfigure {
      *
      * @param userName The Username as a String
      */
-    public void setUserName(String userName) {
+    public MqttClientConfigure setUserName(String userName) {
         this.userName = userName;
+        return this;
     }
 
     /**

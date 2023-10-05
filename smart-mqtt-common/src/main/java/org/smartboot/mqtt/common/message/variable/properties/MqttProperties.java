@@ -10,7 +10,6 @@
 
 package org.smartboot.mqtt.common.message.variable.properties;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.common.util.MqttPropertyConstant;
@@ -447,7 +446,7 @@ public class MqttProperties {
         if (retainAvailable == 0 && (MqttPropertyConstant.RETAIN_AVAILABLE_BIT & validBites) > 0) {
             length += 2;
         }
-        if (CollectionUtils.isNotEmpty(userProperties) && (MqttPropertyConstant.USER_PROPERTY_BIT & validBites) > 0) {
+        if (userProperties.size() > 0 && (MqttPropertyConstant.USER_PROPERTY_BIT & validBites) > 0) {
             length += 1;
             for (UserProperty userProperty : userProperties) {
                 userProperty.decode();
@@ -559,7 +558,7 @@ public class MqttProperties {
             writer.writeByte(MqttPropertyConstant.RETAIN_AVAILABLE);
             writer.writeByte(retainAvailable);
         }
-        if (CollectionUtils.isNotEmpty(userProperties) && (MqttPropertyConstant.USER_PROPERTY_BIT & validBites) > 0) {
+        if (userProperties.size() > 0 && (MqttPropertyConstant.USER_PROPERTY_BIT & validBites) > 0) {
             writer.writeByte(MqttPropertyConstant.USER_PROPERTY);
             for (UserProperty userProperty : userProperties) {
                 writer.write(userProperty.getKeyBytes());

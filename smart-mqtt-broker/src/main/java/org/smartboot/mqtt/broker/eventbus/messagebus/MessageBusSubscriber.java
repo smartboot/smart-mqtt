@@ -10,8 +10,10 @@
 
 package org.smartboot.mqtt.broker.eventbus.messagebus;
 
-import org.smartboot.mqtt.broker.BrokerContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.eventbus.messagebus.consumer.Consumer;
+import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 import java.util.ArrayList;
@@ -25,7 +27,7 @@ import java.util.function.Predicate;
  * @version V1.0 , 2022/6/29
  */
 public class MessageBusSubscriber implements MessageBus {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageBusSubscriber.class);
     /**
      * 消息总线消费者
      */
@@ -37,16 +39,31 @@ public class MessageBusSubscriber implements MessageBus {
     }
 
     @Override
-    public void consumer(Consumer consumer, Predicate<MqttPublishMessage> filter) {
-        consumer((brokerContext, publishMessage) -> {
+    public void consumer(Consumer consumer, Predicate<Message> filter) {
+        consumer((publishMessage) -> {
             if (filter.test(publishMessage)) {
-                consumer.consume(brokerContext, publishMessage);
+                consumer.consume(publishMessage);
             }
         });
     }
 
     @Override
-    public void consume(BrokerContext brokerContext, MqttPublishMessage message) {
-        messageBuses.forEach(messageConsumer -> messageConsumer.consume(brokerContext, message));
+    public void consume(AbstractSession mqttSession, MqttPublishMessage message) {
+        Message persistenceMessage = new Message(mqttSession, message);
+        boolean remove = false;
+        for (Consumer messageConsumer : messageBuses) {
+            try {
+                if (messageConsumer.enable()) {
+                    messageConsumer.consume(persistenceMessage);
+                } else {
+                    remove = true;
+                }
+            } catch (Throwable throwable) {
+                LOGGER.info("messageBus conumse exception", throwable);
+            }
+        }
+        if (remove) {
+            messageBuses.removeIf(consumer -> !consumer.enable());
+        }
     }
 }

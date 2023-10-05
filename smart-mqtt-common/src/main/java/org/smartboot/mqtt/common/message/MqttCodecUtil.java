@@ -13,8 +13,8 @@ package org.smartboot.mqtt.common.message;
 
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.exception.MqttException;
+import org.smartboot.socket.DecoderException;
 import org.smartboot.socket.util.BufferUtils;
-import org.smartboot.socket.util.DecoderException;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

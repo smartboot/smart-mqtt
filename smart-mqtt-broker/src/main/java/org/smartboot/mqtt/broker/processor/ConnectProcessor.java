@@ -15,15 +15,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.broker.eventbus.EventObject;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.broker.provider.SessionStateProvider;
 import org.smartboot.mqtt.broker.provider.impl.session.SessionState;
+import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttProtocolEnum;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
+import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
@@ -38,7 +39,10 @@ import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 
-import static org.smartboot.mqtt.common.enums.MqttConnectReturnCode.*;
+import static org.smartboot.mqtt.common.enums.MqttConnectReturnCode.CONNECTION_ACCEPTED;
+import static org.smartboot.mqtt.common.enums.MqttConnectReturnCode.CONNECTION_REFUSED_IDENTIFIER_REJECTED;
+import static org.smartboot.mqtt.common.enums.MqttConnectReturnCode.CONNECTION_REFUSED_UNACCEPTABLE_PROTOCOL_VERSION;
+import static org.smartboot.mqtt.common.enums.MqttConnectReturnCode.UNSUPPORTED_PROTOCOL_VERSION;
 
 /**
  * 连接处理器
@@ -55,7 +59,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         String clientId = mqttConnectMessage.getPayload().clientIdentifier();
         //服务端可以允许客户端提供一个零字节的客户端标识符 (ClientId) ，如果这样做了，服务端必须将这看作特
         //殊情况并分配唯一的客户端标识符给那个客户端。然后它必须假设客户端提供了那个唯一的客户端标识符，正常处理这个 CONNECT 报文
-        if (clientId.length() == 0) {
+        if (clientId.isEmpty()) {
             clientId = MqttUtil.createClientId();
         }
         session.setClientId(clientId);
@@ -67,6 +71,10 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         checkMessage(session, mqttConnectMessage);
 
         context.getEventBus().publish(ServerEventType.CONNECT, EventObject.newEventObject(session, mqttConnectMessage));
+        if (session.isDisconnect()) {
+            LOGGER.warn("session is disconnected when consume CONNECT event");
+            return;
+        }
         session.setAuthorized(true);
         //清理会话
         refreshSession(context, session, mqttConnectMessage);
@@ -185,7 +193,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
             return;
         }
         WillMessage willMessage = msg.getPayload().getWillMessage();
-        MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().topicName(willMessage.getWillTopic()).qos(MqttQoS.valueOf(msg.getVariableHeader().willQos())).payload(willMessage.getWillMessage()).retained(msg.getFixedHeader().isRetain());
+        MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().topicName(willMessage.getTopic()).qos(MqttQoS.valueOf(msg.getVariableHeader().willQos())).payload(willMessage.getPayload()).retained(msg.getFixedHeader().isRetain());
         //todo
         if (session.getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());
@@ -194,7 +202,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         session.setWillMessage(publishMessage);
     }
 
-    private void connFailAck(MqttConnectReturnCode returnCode, MqttSession session) {
+    public static void connFailAck(MqttConnectReturnCode returnCode, AbstractSession session) {
         //如果服务端发送了一个包含非零返回码的 CONNACK 报文，它必须将当前会话标志设置为 0
         ValidateUtils.isTrue(returnCode != CONNECTION_ACCEPTED, "");
         ConnectAckProperties properties = null;
@@ -203,12 +211,11 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
             properties = new ConnectAckProperties();
         }
         MqttConnAckMessage badProto = connAck(returnCode, false, properties);
-
         session.write(badProto);
         session.disconnect();
     }
 
-    private MqttConnAckMessage connAck(MqttConnectReturnCode returnCode, boolean sessionPresent, ConnectAckProperties properties) {
+    private static MqttConnAckMessage connAck(MqttConnectReturnCode returnCode, boolean sessionPresent, ConnectAckProperties properties) {
         MqttConnAckVariableHeader mqttConnAckVariableHeader = new MqttConnAckVariableHeader(returnCode, sessionPresent, properties);
         return new MqttConnAckMessage(mqttConnAckVariableHeader);
     }

@@ -10,7 +10,6 @@
 
 package org.smartboot.mqtt.common.util;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.smartboot.mqtt.common.exception.MqttException;
 
@@ -50,7 +49,7 @@ public class ValidateUtils {
     }
 
     public static <E> void notEmpty(Collection<E> collection, String msg, Runnable callback) {
-        if (CollectionUtils.isEmpty(collection)) {
+        if (collection == null || collection.isEmpty()) {
             throwException(msg, callback);
         }
     }

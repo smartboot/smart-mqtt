@@ -21,7 +21,7 @@ public class MqttPubRelMessage extends MqttPubQosMessage {
         super(mqttFixedHeader);
     }
 
-    public MqttPubRelMessage(MqttPubQosVariableHeader variableHeader) {
-        super(MqttFixedHeader.PUB_REL_HEADER, variableHeader);
+    public MqttPubRelMessage(MqttFixedHeader mqttFixedHeader, MqttPubQosVariableHeader variableHeader) {
+        super(mqttFixedHeader, variableHeader);
     }
 }

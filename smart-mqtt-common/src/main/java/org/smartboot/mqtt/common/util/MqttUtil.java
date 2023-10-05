@@ -15,8 +15,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.TopicToken;
+import org.smartboot.mqtt.common.exception.MqttException;
 import org.smartboot.mqtt.common.message.MqttCodecUtil;
 
+import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -75,5 +77,33 @@ public class MqttUtil {
             return false;
         }
         return match(pubTopicToken.getNextNode(), subTopicToken.getNextNode());
+    }
+
+    public static void updateConfig(Object config, String prefix) {
+        try {
+            for (Field field : config.getClass().getDeclaredFields()) {
+                field.setAccessible(true);
+                //系统属性优先
+                String v = System.getProperty(prefix + "." + field.getName());
+                //环境属性次之
+                if (v == null) {
+                    v = System.getenv((prefix + "." + field.getName()).replace(".", "_").toUpperCase());
+                }
+                if (v == null) {
+                    continue;
+                }
+                Class<?> type = field.getType();
+                if (type == int.class) {
+                    field.set(config, Integer.parseInt(v));
+                } else if (type == String.class) {
+                    field.set(config, v);
+                } else {
+                    throw new UnsupportedOperationException();
+                }
+            }
+        } catch (Throwable throwable) {
+            throw new MqttException("update config exception", throwable);
+        }
+
     }
 }

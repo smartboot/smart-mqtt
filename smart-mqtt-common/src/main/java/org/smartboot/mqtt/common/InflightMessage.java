@@ -18,7 +18,7 @@ import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 
-import java.util.function.Consumer;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -31,6 +31,7 @@ public class InflightMessage {
     private final MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> originalMessage;
     private MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> responseMessage;
 
+    private final CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = new CompletableFuture<>();
     /**
      * 飞行队列为其分配的packetId
      */
@@ -40,16 +41,13 @@ public class InflightMessage {
 
     private boolean commit;
 
-    private final Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer;
-
     private int retryCount;
 
     private long latestTime;
 
-    public InflightMessage(int packetId, MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> originalMessage, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
+    public InflightMessage(int packetId, MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> originalMessage) {
         this.assignedPacketId = packetId;
         this.originalMessage = originalMessage;
-        this.consumer = consumer;
         if (originalMessage instanceof MqttSubscribeMessage) {
             this.expectMessageType = MqttMessageType.SUBACK;
         } else if (originalMessage instanceof MqttUnsubscribeMessage) {
@@ -104,10 +102,6 @@ public class InflightMessage {
         this.latestTime = latestTime;
     }
 
-    public final Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> getConsumer() {
-        return consumer;
-    }
-
     public int getAssignedPacketId() {
         return assignedPacketId;
     }
@@ -120,4 +114,7 @@ public class InflightMessage {
         this.responseMessage = responseMessage;
     }
 
+    public CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> getFuture() {
+        return future;
+    }
 }

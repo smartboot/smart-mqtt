@@ -10,7 +10,6 @@
 
 package org.smartboot.mqtt.broker.provider;
 
-import org.smartboot.http.restful.RestfulBootstrap;
 import org.smartboot.mqtt.broker.provider.impl.message.MemoryPersistenceProvider;
 import org.smartboot.mqtt.broker.provider.impl.session.MemorySessionStateProvider;
 
@@ -24,12 +23,8 @@ public class Providers {
     private PersistenceProvider retainMessageProvider = new MemoryPersistenceProvider();
     private PersistenceProvider persistenceProvider = new MemoryPersistenceProvider();
 
-    private SubscribeProvider subscribeProvider = (topicFilter, session) -> true;
-
-    /**
-     * OpenAPI 处理器
-     */
-    private RestfulBootstrap openApiBootStrap;
+    private SubscribeProvider subscribeProvider = new SubscribeProvider() {
+    };
 
     public SessionStateProvider getSessionStateProvider() {
         return sessionStateProvider;
@@ -63,11 +58,4 @@ public class Providers {
         this.subscribeProvider = subscribeProvider;
     }
 
-    public RestfulBootstrap getOpenApiBootStrap() {
-        return openApiBootStrap;
-    }
-
-    public void setOpenApiBootStrap(RestfulBootstrap openApiBootStrap) {
-        this.openApiBootStrap = openApiBootStrap;
-    }
 }

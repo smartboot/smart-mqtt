@@ -13,6 +13,7 @@ package org.smartboot.mqtt.client.processor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.client.MqttClient;
+import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 
 /**
@@ -27,7 +28,7 @@ public class ConnAckProcessor implements MqttProcessor<MqttConnAckMessage> {
     @Override
     public void process(MqttClient client, MqttConnAckMessage mqttConnAckMessage) {
 //        LOGGER.info("receive connectAck message:{}", mqttConnAckMessage);
-        client.notifyResponse(mqttConnAckMessage);
+        client.getEventBus().publish(EventType.RECEIVE_CONN_ACK_MESSAGE, mqttConnAckMessage);
     }
 
 }

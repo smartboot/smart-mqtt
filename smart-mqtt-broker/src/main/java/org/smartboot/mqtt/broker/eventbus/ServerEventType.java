@@ -10,10 +10,12 @@
 
 package org.smartboot.mqtt.broker.eventbus;
 
+import org.smartboot.mqtt.broker.BrokerConfigure;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.BrokerTopic;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.TopicSubscriber;
+import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
@@ -32,6 +34,10 @@ public class ServerEventType<T> extends EventType<T> {
      * Broker服务启动成功
      */
     public static final ServerEventType<BrokerContext> BROKER_STARTED = new ServerEventType<>("brokerStarted");
+
+    public static final ServerEventType<BrokerConfigure> BROKER_CONFIGURE_LOADED = new ServerEventType<>("brokerConfigureLoaded");
+
+    public static final ServerEventType<BrokerContext> OPEN_API_STARTED = new ServerEventType<>("open_api_started");
 
     /**
      * 停止Broker服务
@@ -67,6 +73,11 @@ public class ServerEventType<T> extends EventType<T> {
     public static final ServerEventType<TopicSubscriber> SUBSCRIBE_TOPIC = new ServerEventType<>("subscribeTopic");
 
     /**
+     * 客户端取消订阅Topic
+     */
+    public static final ServerEventType<TopicSubscriber> UNSUBSCRIBE_TOPIC = new ServerEventType<>("unsubscribe_topic");
+
+    /**
      * 客户端订阅Topic
      */
     public static final ServerEventType<TopicSubscriber> SUBSCRIBE_REFRESH_TOPIC = new ServerEventType<>("subscribe_refresh_topic");
@@ -85,6 +96,8 @@ public class ServerEventType<T> extends EventType<T> {
      * 连接响应
      */
     public static final ServerEventType<EventObject<MqttConnectMessage>> CONNACK = new ServerEventType<>("connect");
+
+    public static final ServerEventType<BrokerTopic> NOTIFY_TOPIC_PUSH = new ServerEventType<>("notify_topic_push");
 
     protected ServerEventType(String name) {
         super(name);

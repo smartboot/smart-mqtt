@@ -5,7 +5,7 @@
     <parent>
         <artifactId>smart-mqtt</artifactId>
         <groupId>org.smartboot.mqtt</groupId>
-        <version>0.19</version>
+        <version>0.29</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -20,10 +20,6 @@
         <dependency>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-collections4</artifactId>
         </dependency>
         <dependency>
             <groupId>com.alibaba.fastjson2</groupId>

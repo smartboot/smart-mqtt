@@ -11,8 +11,14 @@
 package org.smartboot.mqtt.broker;
 
 import org.smartboot.mqtt.common.ToString;
+import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.socket.buffer.BufferPagePool;
+import org.smartboot.socket.extension.plugins.Plugin;
 
+import java.nio.channels.AsynchronousChannelGroup;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -38,19 +44,21 @@ public class BrokerConfigure extends ToString {
     /**
      * 当前smart-mqtt
      */
-    public static final String VERSION = "v0.19";
+    public static final String VERSION = "v0.29";
 
     static final Map<String, String> SystemEnvironments = new HashMap<>();
 
     {
         SystemEnvironments.put(convertToEnvironment(SystemProperty.PORT), SystemProperty.PORT);
         SystemEnvironments.put(convertToEnvironment(SystemProperty.THREAD_NUM), SystemProperty.THREAD_NUM);
+        SystemEnvironments.put(convertToEnvironment(SystemProperty.LOW_MEMORY), SystemProperty.LOW_MEMORY);
+        SystemEnvironments.put(convertToEnvironment(SystemProperty.MAX_INFLIGHT), SystemProperty.MAX_INFLIGHT);
     }
 
     /**
-     * 节点名称
+     * 节点ID，集群内唯一
      */
-    private String name;
+    private String nodeId;
     /**
      * 地址
      */
@@ -71,7 +79,7 @@ public class BrokerConfigure extends ToString {
     private int topicLimit = 1024;
 
     /**
-     * MQTT最大报文限制字节数
+     * MQTT最大报文限制字节数: 1MB
      */
     private int maxPacketSize = 1048576;
 
@@ -93,12 +101,23 @@ public class BrokerConfigure extends ToString {
      * 网络连接建立后，如果服务端在合理的时间内没有收到 CONNECT 报文，服务端应该关闭这个连接。
      * 单位：毫秒
      */
-    private int noConnectIdleTimeout = 5000;
+    private int noConnectIdleTimeout = 15000;
 
     /**
      *
      */
     private int maxInflight = 8;
+
+    private final List<Plugin<MqttMessage>> plugins = new LinkedList<>();
+
+    private AsynchronousChannelGroup channelGroup;
+
+    private BufferPagePool bufferPagePool;
+
+    /**
+     * 低内存模式
+     */
+    private boolean lowMemory = false;
 
     public int getPort() {
         return port;
@@ -180,12 +199,45 @@ public class BrokerConfigure extends ToString {
         this.topicLimit = topicLimit;
     }
 
-    public String getName() {
-        return name;
+    public String getNodeId() {
+        return nodeId;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setNodeId(String nodeId) {
+        this.nodeId = nodeId;
+    }
+
+    public BrokerConfigure addPlugin(Plugin<MqttMessage> plugin) {
+        plugins.add(plugin);
+        return this;
+    }
+
+    public List<Plugin<MqttMessage>> getPlugins() {
+        return plugins;
+    }
+
+    public AsynchronousChannelGroup getChannelGroup() {
+        return channelGroup;
+    }
+
+    public void setChannelGroup(AsynchronousChannelGroup channelGroup) {
+        this.channelGroup = channelGroup;
+    }
+
+    public BufferPagePool getBufferPagePool() {
+        return bufferPagePool;
+    }
+
+    public void setBufferPagePool(BufferPagePool bufferPagePool) {
+        this.bufferPagePool = bufferPagePool;
+    }
+
+    public boolean isLowMemory() {
+        return lowMemory;
+    }
+
+    public void setLowMemory(boolean lowMemory) {
+        this.lowMemory = lowMemory;
     }
 
     @Override
@@ -232,6 +284,16 @@ public class BrokerConfigure extends ToString {
          * 最大飞行窗口
          */
         String MAX_INFLIGHT = "broker.maxInflight";
+
+        /**
+         * 低内存模式
+         */
+        String LOW_MEMORY = "broker.lowMemory";
+
+        /**
+         * 节点ID
+         */
+        String NODE_ID = "broker.nodeId";
 
     }
 }

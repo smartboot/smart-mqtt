@@ -12,18 +12,19 @@ package org.smartboot.mqtt.broker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.broker.eventbus.ServerEventType;
+import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.broker.provider.PersistenceProvider;
-import org.smartboot.mqtt.broker.provider.impl.message.PersistenceMessage;
-import org.smartboot.mqtt.common.InflightMessage;
-import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
-import org.smartboot.mqtt.common.eventbus.EventType;
+import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
+import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Topic订阅者
@@ -41,17 +42,12 @@ public class TopicSubscriber {
     /**
      * 服务端向客户端发送应用消息所允许的最大 QoS 等级
      */
-    private final MqttQoS mqttQoS;
+    private MqttQoS mqttQoS;
 
     /**
      * 期望消费的点位
      */
     private long nextConsumerOffset;
-
-    /**
-     * retain的消费点位，防止重连后的retain消息被重复消费
-     */
-    private long retainConsumerOffset;
 
     /**
      * 最近一次订阅时间
@@ -60,87 +56,79 @@ public class TopicSubscriber {
 
     private TopicToken topicFilterToken;
 
-    private final Semaphore semaphore = new Semaphore(0);
+    private final AtomicBoolean semaphore = new AtomicBoolean(false);
+
     private boolean enable = true;
 
-    public TopicSubscriber(BrokerTopic topic, MqttSession session, MqttQoS mqttQoS, long nextConsumerOffset, long retainConsumerOffset) {
+    TopicSubscriber() {
+        topic = null;
+        mqttSession = null;
+    }
+
+    public TopicSubscriber(BrokerTopic topic, MqttSession session, MqttQoS mqttQoS, long nextConsumerOffset) {
         this.topic = topic;
         this.mqttSession = session;
         this.mqttQoS = mqttQoS;
         this.nextConsumerOffset = nextConsumerOffset;
-        this.retainConsumerOffset = retainConsumerOffset;
+        session.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, this);
     }
 
     public void batchPublish(BrokerContext brokerContext) {
         if (mqttSession.isDisconnect() || !enable) {
             return;
         }
-        semaphore.release();
-        publish0(brokerContext, 0);
-        mqttSession.flush();
+        if (semaphore.compareAndSet(false, true)) {
+            publishAvailable(brokerContext);
+            mqttSession.flush();
+        }
     }
 
-    private void publish0(BrokerContext brokerContext, final int depth) {
+    private void publishAvailable(BrokerContext brokerContext) {
         PersistenceProvider persistenceProvider = brokerContext.getProviders().getPersistenceProvider();
-        PersistenceMessage persistenceMessage = persistenceProvider.get(topic.getTopic(), nextConsumerOffset);
-        if (persistenceMessage == null) {
-            if (semaphore.tryAcquire()) {
+        Message message = persistenceProvider.get(topic.getTopic(), nextConsumerOffset);
+        if (message == null) {
+            if (semaphore.compareAndSet(true, false)) {
                 topic.getQueue().offer(this);
-            }
-            return;
-        }
-        if (depth > 16) {
-            if (semaphore.tryAcquire()) {
-                topic.getQueue().offer(this);
-                topic.getVersion().incrementAndGet();
+                if (persistenceProvider.get(topic.getTopic(), nextConsumerOffset) != null) {
+                    topic.getVersion().incrementAndGet();
+                    brokerContext.getEventBus().publish(ServerEventType.NOTIFY_TOPIC_PUSH, topic);
+                }
             }
             return;
         }
 
-        MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(persistenceMessage.getPayload()).qos(mqttQoS).topicName(persistenceMessage.getTopic());
+        MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(message.getPayload()).qos(mqttQoS).topicName(message.getTopic());
         if (mqttSession.getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());
         }
 
-        InflightQueue inflightQueue = mqttSession.getInflightQueue();
-        long offset = persistenceMessage.getOffset();
+        long offset = message.getOffset();
         nextConsumerOffset = offset + 1;
-        brokerContext.getEventBus().publish(EventType.PUSH_PUBLISH_MESSAGE, mqttSession);
         //Qos0直接发送
         if (mqttQoS == MqttQoS.AT_MOST_ONCE) {
             mqttSession.write(publishBuilder.build(), false);
-            publish0(brokerContext, depth + 1);
+            publishAvailable(brokerContext);
             return;
         }
-        InflightMessage suc;
-        if (depth == 0) {
-            suc = inflightQueue.offer(publishBuilder, (mqtt) -> {
-                //最早发送的消息若收到响应，则更新点位
-                commitNextConsumerOffset(offset + 1);
-                if (persistenceMessage.isRetained()) {
-                    setRetainConsumerOffset(getRetainConsumerOffset() + 1);
-                }
-                commitRetainConsumerTimestamp(persistenceMessage.getCreateTime());
-                publish0(brokerContext, 1);
-            }, () -> publish0(brokerContext, 0));
-        } else {
-            suc = inflightQueue.offer(publishBuilder, (mqtt) -> {
-                //最早发送的消息若收到响应，则更新点位
-                commitNextConsumerOffset(offset + 1);
-                if (persistenceMessage.isRetained()) {
-                    setRetainConsumerOffset(getRetainConsumerOffset() + 1);
-                }
-                commitRetainConsumerTimestamp(persistenceMessage.getCreateTime());
-                publish0(brokerContext, 1);
-            });
-        }
 
-        // 飞行队列已满
-        if (suc != null) {
-            //递归处理下一个消息
-            publish0(brokerContext, depth + 1);
+        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = mqttSession.getInflightQueue().offer(publishBuilder, mqttPacketIdentifierMessage -> {
+            if (semaphore.compareAndSet(true, false)) {
+                topic.getQueue().offer(TopicSubscriber.this);
+                topic.getVersion().incrementAndGet();
+            }
+            brokerContext.getEventBus().publish(ServerEventType.NOTIFY_TOPIC_PUSH, topic);
+        });
+        if (future == null) {
+            return;
         }
+        future.whenComplete((mqttPacketIdentifierMessage, throwable) -> {
+            //最早发送的消息若收到响应，则更新点位
+            commitNextConsumerOffset(offset + 1);
+            commitRetainConsumerTimestamp(message.getCreateTime());
+            publishAvailable(brokerContext);
+        });
 
+        publishAvailable(brokerContext);
     }
 
     public BrokerTopic getTopic() {
@@ -168,14 +156,6 @@ public class TopicSubscriber {
         //todo
     }
 
-    public long getRetainConsumerOffset() {
-        return retainConsumerOffset;
-    }
-
-    public void setRetainConsumerOffset(long retainConsumerOffset) {
-        this.retainConsumerOffset = retainConsumerOffset;
-    }
-
     public long getLatestSubscribeTime() {
         return latestSubscribeTime;
     }
@@ -190,5 +170,10 @@ public class TopicSubscriber {
 
     public void disable() {
         this.enable = false;
+        mqttSession.getEventBus().publish(ServerEventType.UNSUBSCRIBE_TOPIC, this);
+    }
+
+    public void setMqttQoS(MqttQoS mqttQoS) {
+        this.mqttQoS = mqttQoS;
     }
 }

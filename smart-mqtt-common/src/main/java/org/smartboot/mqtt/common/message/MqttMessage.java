@@ -14,7 +14,8 @@ import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.payload.MqttPayload;
-import org.smartboot.socket.util.DecoderException;
+import org.smartboot.mqtt.common.util.ValidateUtils;
+import org.smartboot.socket.DecoderException;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -67,20 +68,26 @@ public abstract class MqttMessage extends ToString {
     }
 
     public final void write(MqttWriter mqttWriter) throws IOException {
-        MqttCodecUtil.writeFixedHeader(mqttWriter, getFixedHeader());
-        MqttVariableHeader variableHeader = getVariableHeader();
-        MqttPayload mqttPayload = getPayload();
-        //剩余长度等于可变报头的长度（10 字节）加上有效载荷的长度。
-        int remainingLength = variableHeader.preEncode() + mqttPayload.preEncode();
+        ValidateUtils.isTrue(mqttWriter.writeSize() == 0, "invlid write size");
+        try {
+            MqttCodecUtil.writeFixedHeader(mqttWriter, getFixedHeader());
+            MqttVariableHeader variableHeader = getVariableHeader();
+            MqttPayload mqttPayload = getPayload();
+            //剩余长度等于可变报头的长度（10 字节）加上有效载荷的长度。
+            int remainingLength = variableHeader.preEncode() + mqttPayload.preEncode();
 
-        //第一部分：固定报头
-        MqttCodecUtil.writeVariableLengthInt(mqttWriter, remainingLength);
+            //第一部分：固定报头
+            MqttCodecUtil.writeVariableLengthInt(mqttWriter, remainingLength);
+            int size = mqttWriter.writeSize();
+            //第二部分：可变报头
+            variableHeader.writeTo(mqttWriter);
 
-        //第二部分：可变报头
-        variableHeader.writeTo(mqttWriter);
-
-        //第三部分：有效载荷
-        mqttPayload.writeTo(mqttWriter);
+            //第三部分：有效载荷
+            mqttPayload.writeTo(mqttWriter);
+            ValidateUtils.isTrue((mqttWriter.writeSize() - size) == remainingLength, "encode error");
+        } finally {
+            mqttWriter.reset();
+        }
     }
 
     public abstract MqttVariableHeader getVariableHeader();

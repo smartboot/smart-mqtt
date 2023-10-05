@@ -11,11 +11,12 @@
 package org.smartboot.mqtt.client;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.AbstractSession;
+import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.DefaultMqttWriter;
-import org.smartboot.mqtt.common.InflightMessage;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.QosRetryPlugin;
 import org.smartboot.mqtt.common.TopicToken;
@@ -28,6 +29,7 @@ import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttDisconnectMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPingReqMessage;
 import org.smartboot.mqtt.common.message.MqttPingRespMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
@@ -38,19 +40,23 @@ import org.smartboot.mqtt.common.message.MqttUnsubAckMessage;
 import org.smartboot.mqtt.common.message.payload.MqttConnectPayload;
 import org.smartboot.mqtt.common.message.payload.WillMessage;
 import org.smartboot.mqtt.common.message.variable.MqttConnectVariableHeader;
+import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 import org.smartboot.mqtt.common.message.variable.properties.SubscribeProperties;
+import org.smartboot.mqtt.common.message.variable.properties.WillProperties;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.MqttMessageBuilders;
+import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
+import org.smartboot.socket.timer.HashedWheelTimer;
+import org.smartboot.socket.timer.TimerTask;
 import org.smartboot.socket.transport.AioQuickClient;
 import org.smartboot.socket.util.Attachment;
-import org.smartboot.socket.util.QuickTimerTask;
 
 import java.io.IOException;
 import java.nio.channels.AsynchronousChannelGroup;
@@ -59,6 +65,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ThreadFactory;
@@ -68,11 +75,19 @@ import java.util.function.Consumer;
 
 public class MqttClient extends AbstractSession {
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttClient.class);
+    private static final Consumer<Integer> IGNORE = integer -> {
+    };
+    private static final HashedWheelTimer TIMER = new HashedWheelTimer(r -> new Thread(r, "client-timer"), 50, 1024);
     /**
      * 客户端配置项
      */
     private final MqttClientConfigure clientConfigure = new MqttClientConfigure();
-    private final AbstractMessageProcessor<MqttMessage> messageProcessor = new MqttClientProcessor(this);
+    private static final AbstractMessageProcessor<MqttMessage> messageProcessor = new MqttClientProcessor();
+
+    static {
+        messageProcessor.addPlugin(new QosRetryPlugin());
+    }
+
     /**
      * 完成connect之前注册的事件
      */
@@ -81,6 +96,8 @@ public class MqttClient extends AbstractSession {
      * 已订阅的消息主题
      */
     private final Map<String, Subscribe> subscribes = new ConcurrentHashMap<>();
+
+    private final Map<String, Subscribe> mapping = new ConcurrentHashMap<>();
 
     private final List<TopicToken> wildcardsToken = new LinkedList<>();
 
@@ -100,14 +117,37 @@ public class MqttClient extends AbstractSession {
     private Consumer<MqttConnAckMessage> reconnectConsumer;
     private boolean pingTimeout = false;
 
+    private TimerTask connectTimer;
+
+    public MqttClient(String uri) {
+        this(uri, MqttUtil.createClientId());
+    }
+
+    public MqttClient(String uri, String clientId) {
+        this(uri, clientId, MqttVersion.MQTT_3_1_1);
+    }
+
     public MqttClient(String host, int port, String clientId) {
         this(host, port, clientId, MqttVersion.MQTT_3_1_1);
     }
 
     public MqttClient(String host, int port, String clientId, MqttVersion mqttVersion) {
-        super(new EventBusImpl(EventType.types()));
-        clientConfigure.setHost(host);
-        clientConfigure.setPort(port);
+        this("mqtt://" + host + ":" + port, clientId, mqttVersion);
+    }
+
+    public MqttClient(String uri, String clientId, MqttVersion mqttVersion) {
+        super(new EventBusImpl(EventType.types()), TIMER);
+
+        String[] array = uri.split(":");
+        if (array[0].equals("mqtts")) {
+            clientConfigure.setHost(array[1].substring(2));
+            //加密通信
+        } else if (array[0].equals("mqtt")) {
+            clientConfigure.setHost(array[1].substring(2));
+        } else {
+            throw new IllegalStateException("invalid URI Scheme, uri: " + uri);
+        }
+        clientConfigure.setPort(NumberUtils.toInt(array[2]));
         clientConfigure.setMqttVersion(mqttVersion);
         this.clientId = clientId;
         //ping-pong消息超时监听
@@ -121,7 +161,9 @@ public class MqttClient extends AbstractSession {
                 pingTimeout = true;
             }
         });
+        getEventBus().subscribe(EventType.RECEIVE_CONN_ACK_MESSAGE, (eventType, object) -> receiveConnAckMessage(object));
     }
+
 
     public void connect() {
         try {
@@ -157,42 +199,20 @@ public class MqttClient extends AbstractSession {
 
     public void connect(AsynchronousChannelGroup asynchronousChannelGroup, BufferPagePool bufferPagePool, Consumer<MqttConnAckMessage> consumer) {
         //设置 connect ack 回调事件
-        this.connectConsumer = mqttConnAckMessage -> {
-            if (!clientConfigure.isAutomaticReconnect()) {
-                gcConfigure();
-            }
-
-            //连接成功,注册订阅消息
-            if (mqttConnAckMessage.getVariableHeader().connectReturnCode() == MqttConnectReturnCode.CONNECTION_ACCEPTED) {
-                setInflightQueue(new InflightQueue(this, 16));
-                connected = true;
-                consumeTask();
-                //重连情况下重新触发订阅逻辑
-                subscribes.forEach((k, v) -> {
-                    subscribe(k, v.getQoS(), v.getConsumer());
-                });
-            }
-            //客户端设置清理会话（CleanSession）标志为 0 重连时，客户端和服务端必须使用原始的报文标识符重发
-            //任何未确认的 PUBLISH 报文（如果 QoS>0）和 PUBREL 报文 [MQTT-4.4.0-1]。这是唯一要求客户端或
-            //服务端重发消息的情况。
-            if (!clientConfigure.isCleanSession()) {
-                //todo
-            }
-            consumer.accept(mqttConnAckMessage);
-            connected = true;
-        };
+        this.connectConsumer = consumer;
         //启动心跳插件
         if (clientConfigure.getKeepAliveInterval() > 0) {
-            QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(new Runnable() {
+            timer.schedule(new AsyncTask() {
                 @Override
-                public void run() {
+                public void execute() {
                     //客户端发送了 PINGREQ 报文之后，如果在合理的时间内仍没有收到 PINGRESP 报文，
                     // 它应该关闭到服务端的网络连接。
                     if (pingTimeout) {
                         pingTimeout = false;
-                        client.shutdown();
+                        release();
                     }
-                    if (session.isInvalid()) {
+                    if (session == null || session.isInvalid()) {
+                        release();
                         if (clientConfigure.isAutomaticReconnect()) {
                             LOGGER.warn("mqtt client is disconnect, try to reconnect...");
                             connect(asynchronousChannelGroup, reconnectConsumer == null ? consumer : reconnectConsumer);
@@ -202,17 +222,17 @@ public class MqttClient extends AbstractSession {
                     long delay = System.currentTimeMillis() - getLatestSendMessageTime() - clientConfigure.getKeepAliveInterval() * 1000L;
                     //gap 10ms
                     if (delay > -10) {
+                        timer.schedule(this, clientConfigure.getKeepAliveInterval(), TimeUnit.SECONDS);
                         MqttPingReqMessage pingReqMessage = new MqttPingReqMessage();
                         write(pingReqMessage);
-                        QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(this, clientConfigure.getKeepAliveInterval(), TimeUnit.SECONDS);
                     } else {
-                        QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(this, -delay, TimeUnit.MILLISECONDS);
+                        timer.schedule(this, -delay, TimeUnit.MILLISECONDS);
                     }
                 }
             }, clientConfigure.getKeepAliveInterval(), TimeUnit.SECONDS);
         }
 //        messageProcessor.addPlugin(new StreamMonitorPlugin<>());
-        messageProcessor.addPlugin(new QosRetryPlugin());
+
         client = new AioQuickClient(clientConfigure.getHost(), clientConfigure.getPort(), new MqttProtocol(clientConfigure.getMaxPacketSize()), messageProcessor);
         try {
             if (bufferPagePool != null) {
@@ -220,7 +240,9 @@ public class MqttClient extends AbstractSession {
             }
             client.setReadBufferSize(clientConfigure.getBufferSize()).setWriteBuffer(clientConfigure.getBufferSize(), 8).connectTimeout(clientConfigure.getConnectionTimeout());
             session = client.start(asynchronousChannelGroup);
-            session.setAttachment(new Attachment());
+            Attachment attachment = new Attachment();
+            session.setAttachment(attachment);
+            attachment.put(MqttClientProcessor.SESSION_KEY, this);
             setMqttVersion(clientConfigure.getMqttVersion());
             mqttWriter = new DefaultMqttWriter(session.writeBuffer());
 
@@ -236,9 +258,12 @@ public class MqttClient extends AbstractSession {
 
             //如果客户端在合理的时间内没有收到服务端的 CONNACK 报文，客户端应该关闭网络连接。
             // 合理的时间取决于应用的类型和通信基础设施。
-            QuickTimerTask.SCHEDULED_EXECUTOR_SERVICE.schedule(() -> {
-                if (!connected) {
-                    disconnect();
+            connectTimer = timer.schedule(new AsyncTask() {
+                @Override
+                public void execute() {
+                    if (!connected) {
+                        disconnect();
+                    }
                 }
             }, clientConfigure.getConnectAckTimeout(), TimeUnit.SECONDS);
             write(connectMessage);
@@ -296,12 +321,18 @@ public class MqttClient extends AbstractSession {
             unsubscribeBuilder.properties(properties);
         }
         // wait ack message.
-        getInflightQueue().offer(unsubscribeBuilder, (message) -> {
+        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = getInflightQueue().offer(unsubscribeBuilder);
+        if (future == null) {
+            registeredTasks.offer(() -> unsubscribe0(topics));
+            return;
+        }
+        future.whenComplete((message, throwable) -> {
             ValidateUtils.isTrue(message instanceof MqttUnsubAckMessage, "uncorrected message type.");
             for (String unsubscribedTopic : unsubscribedTopics) {
                 subscribes.remove(unsubscribedTopic);
                 wildcardsToken.removeIf(topicToken -> StringUtils.equals(unsubscribedTopic, topicToken.getTopicFilter()));
             }
+            mapping.clear();
             consumeTask();
         });
         flush();
@@ -340,7 +371,13 @@ public class MqttClient extends AbstractSession {
             subscribeBuilder.subscribeProperties(new SubscribeProperties());
         }
         MqttSubscribeMessage subscribeMessage = subscribeBuilder.build();
-        getInflightQueue().offer(subscribeBuilder, (message) -> {
+
+        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = getInflightQueue().offer(subscribeBuilder);
+        if (future == null) {
+            registeredTasks.offer(() -> subscribe0(topic, qos, consumer, subAckConsumer));
+            return;
+        }
+        future.whenComplete((message, throwable) -> {
             List<Integer> qosValues = ((MqttSubAckMessage) message).getPayload().grantedQoSLevels();
             ValidateUtils.isTrue(qosValues.size() == qos.length, "invalid response");
             int i = 0;
@@ -357,15 +394,44 @@ public class MqttClient extends AbstractSession {
                 } else {
                     LOGGER.error("subscribe topic:{} fail", subscription.getTopicFilter());
                 }
+                mapping.clear();
                 subAckConsumer.accept(MqttClient.this, minQos);
             }
             consumeTask();
         });
         flush();
+
     }
 
-    public void notifyResponse(MqttConnAckMessage connAckMessage) {
+    private void receiveConnAckMessage(MqttConnAckMessage connAckMessage) {
+        connectTimer.cancel();
+        connectTimer = null;
+//        long delay = System.currentTimeMillis() - connectTime;
+//        if (delay > 1000) {
+//            LOGGER.error("connAck cost long time: {}ms", delay);
+//        }
+        if (!clientConfigure.isAutomaticReconnect()) {
+            gcConfigure();
+        }
+
+        //连接成功,注册订阅消息
+        if (connAckMessage.getVariableHeader().connectReturnCode() == MqttConnectReturnCode.CONNECTION_ACCEPTED) {
+            setInflightQueue(new InflightQueue(this, 16));
+            connected = true;
+            //重连情况下重新触发订阅逻辑
+            subscribes.forEach((k, v) -> {
+                subscribe(k, v.getQoS(), v.getConsumer());
+            });
+            consumeTask();
+        }
+        //客户端设置清理会话（CleanSession）标志为 0 重连时，客户端和服务端必须使用原始的报文标识符重发
+        //任何未确认的 PUBLISH 报文（如果 QoS>0）和 PUBREL 报文 [MQTT-4.4.0-1]。这是唯一要求客户端或
+        //服务端重发消息的情况。
+        if (!clientConfigure.isCleanSession()) {
+            //todo
+        }
         connectConsumer.accept(connAckMessage);
+        connected = true;
     }
 
 
@@ -373,63 +439,60 @@ public class MqttClient extends AbstractSession {
      * 设置遗嘱消息，必须在connect之前调用
      */
     public MqttClient willMessage(WillMessage willMessage) {
-        if (clientConfigure.getMqttVersion() != MqttVersion.MQTT_5 && willMessage != null && willMessage.getProperties() != null) {
+        ValidateUtils.notNull(willMessage, "willMessage can't be null");
+        if (clientConfigure.getMqttVersion() != MqttVersion.MQTT_5 && willMessage.getProperties() != null) {
             ValidateUtils.throwException("will properties only support on mqtt5");
+        } else if (clientConfigure.getMqttVersion() == MqttVersion.MQTT_5 && willMessage.getProperties() == null) {
+            willMessage.setProperties(new WillProperties());
         }
         clientConfigure.setWillMessage(willMessage);
         return this;
     }
 
-    public void publish(String topic, MqttQoS qos, byte[] payload, boolean retain) {
-        publish(topic, qos, payload, retain, integer -> {
+    public void publish(String topic, MqttQoS qos, byte[] payload) {
+        publish(topic, qos, payload, false, true);
+    }
 
-        });
+    public void publish(String topic, MqttQoS qos, byte[] payload, boolean retain) {
+        publish(topic, qos, payload, retain, true);
+    }
+
+    public void publish(String topic, MqttQoS qos, byte[] payload, boolean retain, boolean autoFlush) {
+        publish(topic, qos, payload, retain, IGNORE, autoFlush);
+    }
+
+    public void publish(String topic, MqttQoS qos, byte[] payload, Consumer<Integer> consumer) {
+        publish(topic, qos, payload, false, consumer, true);
     }
 
     public void publish(String topic, MqttQoS qos, byte[] payload, boolean retain, Consumer<Integer> consumer) {
+        publish(topic, qos, payload, retain, consumer, true);
+    }
+
+    public void publish(String topic, MqttQoS qos, byte[] payload, boolean retain, Consumer<Integer> consumer, boolean autoFlush) {
         MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().topicName(topic).qos(qos).payload(payload).retained(retain);
         //todo
         if (getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());
         }
         if (connected) {
-            publish(publishBuilder, consumer);
+            publish(publishBuilder, consumer, autoFlush);
         } else {
-            registeredTasks.offer(() -> publish(publishBuilder, consumer));
+            registeredTasks.offer(() -> publish(publishBuilder, consumer, autoFlush));
         }
     }
 
-    private void publish(MqttMessageBuilders.PublishBuilder publishBuilder, Consumer<Integer> consumer) {
+    private void publish(MqttMessageBuilders.PublishBuilder publishBuilder, Consumer<Integer> consumer, boolean autoFlush) {
         if (publishBuilder.qos() == MqttQoS.AT_MOST_ONCE) {
-            write(publishBuilder.build());
+            write(publishBuilder.build(), autoFlush);
             consumer.accept(0);
             return;
         }
-        InflightQueue inflightQueue = getInflightQueue();
-        InflightMessage inflightMessage = inflightQueue.offer(publishBuilder, (message) -> {
-            consumer.accept(message.getVariableHeader().getPacketId());
-            //最早发送的消息若收到响应，则更新点位
-            synchronized (MqttClient.this) {
-                MqttClient.this.notifyAll();
-            }
-        });
-        if (inflightMessage != null) {
+        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = inflightQueue.put(publishBuilder);
+        future.whenComplete((message, throwable) -> consumer.accept(message.getVariableHeader().getPacketId()));
+        if (autoFlush) {
             flush();
-            if (publishBuilder.qos() == MqttQoS.AT_MOST_ONCE) {
-                inflightMessage.setResponseMessage(inflightMessage.getOriginalMessage());
-                inflightQueue.commit(inflightMessage);
-            }
-        } else {
-            try {
-                synchronized (this) {
-                    wait();
-                }
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            publish(publishBuilder, consumer);
         }
-
     }
 
     public MqttClientConfigure getClientConfigure() {
@@ -438,6 +501,10 @@ public class MqttClient extends AbstractSession {
 
     public Map<String, Subscribe> getSubscribes() {
         return subscribes;
+    }
+
+    public Map<String, Subscribe> getMapping() {
+        return mapping;
     }
 
     public List<TopicToken> getWildcardsToken() {
@@ -451,13 +518,27 @@ public class MqttClient extends AbstractSession {
      */
     @Override
     public void disconnect() {
+        if (disconnect) {
+            return;
+        }
         //DISCONNECT 报文是客户端发给服务端的最后一个控制报文。表示客户端正常断开连接。
-        write(new MqttDisconnectMessage());
-        //关闭自动重连
-        clientConfigure.setAutomaticReconnect(false);
-        disconnect = true;
-        client.shutdown();
+        try {
+            write(new MqttDisconnectMessage());
+        } finally {
+            //关闭自动重连
+            clientConfigure.setAutomaticReconnect(false);
+            disconnect = true;
+            release();
+        }
     }
+
+    void release() {
+        if (client != null) {
+            client.shutdown();
+            client = null;
+        }
+    }
+
 
     public void setReconnectConsumer(Consumer<MqttConnAckMessage> reconnectConsumer) {
         this.reconnectConsumer = reconnectConsumer;

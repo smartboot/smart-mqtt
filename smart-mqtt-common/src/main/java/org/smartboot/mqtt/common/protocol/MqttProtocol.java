@@ -16,17 +16,20 @@ import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.mqtt.common.util.MqttAttachKey;
 import org.smartboot.mqtt.common.util.ValidateUtils;
+import org.smartboot.socket.DecoderException;
 import org.smartboot.socket.Protocol;
 import org.smartboot.socket.transport.AioSession;
 import org.smartboot.socket.util.AttachKey;
 import org.smartboot.socket.util.Attachment;
 import org.smartboot.socket.util.BufferUtils;
-import org.smartboot.socket.util.DecoderException;
 
 import java.nio.ByteBuffer;
 
-import static org.smartboot.mqtt.common.protocol.DecoderState.*;
+import static org.smartboot.mqtt.common.protocol.DecoderState.FINISH;
+import static org.smartboot.mqtt.common.protocol.DecoderState.READ_FIXED_HEADER;
+import static org.smartboot.mqtt.common.protocol.DecoderState.READ_VARIABLE_HEADER;
 
 /**
  * @author 三刀
@@ -36,8 +39,8 @@ public class MqttProtocol implements Protocol<MqttMessage> {
     private static final Logger logger = LoggerFactory.getLogger(MqttProtocol.class);
     private final int maxBytesInMessage;
 
-    public static final AttachKey<MqttVersion> MQTT_VERSION_ATTACH_KEY = AttachKey.valueOf("mqtt_version");
-    private static final AttachKey<DecodeUnit> DECODE_UNIT_ATTACH_KEY = AttachKey.valueOf("decodeUnit");
+    public static final AttachKey<MqttVersion> MQTT_VERSION_ATTACH_KEY = AttachKey.valueOf(MqttAttachKey.MQTT_VERSION);
+    private static final AttachKey<DecodeUnit> DECODE_UNIT_ATTACH_KEY = AttachKey.valueOf(MqttAttachKey.DECODE_UNIT);
 
 
     public MqttProtocol(int maxBytesInMessage) {
@@ -132,20 +135,16 @@ public class MqttProtocol implements Protocol<MqttMessage> {
                 if (payloadBuffer.remaining() < remainingLength) {
                     break;
                 }
+                int p = payloadBuffer.position();
                 unit.mqttMessage.decodeVariableHeader(payloadBuffer);
 
 
-                unit.state = READ_PAYLOAD;
-
-                // fall through
-            }
-
-            case READ_PAYLOAD: {
                 if (unit.disposableBuffer == null) {
-                    unit.mqttMessage.decodePlayLoad(buffer);
+                    unit.mqttMessage.decodePlayLoad(payloadBuffer);
+                    ValidateUtils.isTrue((payloadBuffer.position() - p) == remainingLength, "Payload size is wrong");
                 } else {
-                    unit.mqttMessage.decodePlayLoad(unit.disposableBuffer);
-                    ValidateUtils.isTrue(unit.disposableBuffer.remaining() == 0, "decode error");
+                    unit.mqttMessage.decodePlayLoad(payloadBuffer);
+                    ValidateUtils.isTrue(payloadBuffer.remaining() == 0, "decode error");
                     unit.disposableBuffer = null;
                 }
                 unit.state = FINISH;

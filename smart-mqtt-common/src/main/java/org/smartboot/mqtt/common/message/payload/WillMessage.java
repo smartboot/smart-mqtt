@@ -26,35 +26,35 @@ public class WillMessage extends Codec {
     /**
      * 遗嘱Topic
      */
-    private String willTopic = null;
-    private byte[] willTopicBytes;
+    private String topic = null;
+    private byte[] topicBytes;
     /**
      * 遗嘱消息内容
      */
-    private byte[] willMessage;
+    private byte[] payload;
     /**
      * 遗嘱消息等级
      */
     private MqttQoS willQos;
 
-    private boolean isWillRetain;
+    private boolean retained;
 
     private WillProperties properties;
 
-    public String getWillTopic() {
-        return willTopic;
+    public String getTopic() {
+        return topic;
     }
 
-    public void setWillTopic(String willTopic) {
-        this.willTopic = willTopic;
+    public void setTopic(String topic) {
+        this.topic = topic;
     }
 
-    public byte[] getWillMessage() {
-        return willMessage;
+    public byte[] getPayload() {
+        return payload;
     }
 
-    public void setWillMessage(byte[] willMessage) {
-        this.willMessage = willMessage;
+    public void setPayload(byte[] payload) {
+        this.payload = payload;
     }
 
     public MqttQoS getWillQos() {
@@ -65,12 +65,12 @@ public class WillMessage extends Codec {
         this.willQos = willQos;
     }
 
-    public boolean isWillRetain() {
-        return isWillRetain;
+    public boolean isRetained() {
+        return retained;
     }
 
-    public void setWillRetain(boolean willRetain) {
-        isWillRetain = willRetain;
+    public void setRetained(boolean retained) {
+        this.retained = retained;
     }
 
     public WillProperties getProperties() {
@@ -82,8 +82,8 @@ public class WillMessage extends Codec {
     }
 
     protected int preEncode() {
-        willTopicBytes = MqttCodecUtil.encodeUTF8(willTopic);
-        int length = willTopicBytes.length + 2 + willMessage.length;
+        topicBytes = MqttCodecUtil.encodeUTF8(topic);
+        int length = topicBytes.length + 2 + payload.length;
         if (properties != null) {
             length += properties.preEncode();
         }
@@ -94,8 +94,8 @@ public class WillMessage extends Codec {
         if (properties != null) {
             properties.writeTo(writer);
         }
-        writer.write(willTopicBytes);
-        MqttCodecUtil.writeMsbLsb(writer, willMessage.length);
-        writer.write(willMessage);
+        writer.write(topicBytes);
+        MqttCodecUtil.writeMsbLsb(writer, payload.length);
+        writer.write(payload);
     }
 }

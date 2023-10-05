@@ -5,7 +5,7 @@
     <parent>
         <artifactId>smart-mqtt</artifactId>
         <groupId>org.smartboot.mqtt</groupId>
-        <version>0.19</version>
+        <version>0.29</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -19,12 +19,16 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>2.0.0</version>
-            <scope>test</scope>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.smartboot.mqtt</groupId>
+            <artifactId>smart-mqtt-broker</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

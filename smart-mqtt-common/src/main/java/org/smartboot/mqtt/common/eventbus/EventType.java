@@ -11,6 +11,7 @@
 package org.smartboot.mqtt.common.eventbus;
 
 import org.smartboot.mqtt.common.AbstractSession;
+import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
 
 import java.util.ArrayList;
@@ -32,14 +33,14 @@ public class EventType<T> {
     public static final EventType<AbstractSession> DISCONNECT = new EventType<>("disconnect");
 
     /**
-     * Broker推送消息至客户端
+     * 接收到客户端发送的任何消息
      */
-    public static final EventType<AbstractSession> PUSH_PUBLISH_MESSAGE = new EventType<>("pushPublishMessage");
+    public static final EventType<EventObject<MqttMessage>> RECEIVE_MESSAGE = new EventType<>("receiveMessage");
 
     /**
      * 接收到客户端发送的任何消息
      */
-    public static final EventType<EventObject<MqttMessage>> RECEIVE_MESSAGE = new EventType<>("receiveMessage");
+    public static final EventType<MqttConnAckMessage> RECEIVE_CONN_ACK_MESSAGE = new EventType<>("connAckMessage");
 
     /**
      * 往客户端发送的任何消息

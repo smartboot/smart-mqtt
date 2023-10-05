@@ -10,6 +10,7 @@
 
 package org.smartboot.mqtt.broker;
 
+import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.common.TopicToken;
 
 import java.util.Map;
@@ -35,6 +36,11 @@ public class BrokerTopic {
      */
     private final Semaphore semaphore = new Semaphore(1);
     private final TopicToken topicToken;
+
+    /**
+     * 保留消息
+     */
+    private Message retainMessage;
 
     /**
      * 当前Topic处于监听状态的订阅者
@@ -67,6 +73,14 @@ public class BrokerTopic {
 
     public String getTopic() {
         return topicToken.getTopicFilter();
+    }
+
+    public Message getRetainMessage() {
+        return retainMessage;
+    }
+
+    public void setRetainMessage(Message retainMessage) {
+        this.retainMessage = retainMessage;
     }
 
     @Override
