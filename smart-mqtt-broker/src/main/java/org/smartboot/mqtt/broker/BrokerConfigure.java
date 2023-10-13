@@ -62,7 +62,7 @@ public class BrokerConfigure extends ToString {
     /**
      * 地址
      */
-    private String host;
+    private String host = "0.0.0.0";
     /**
      * 端口号
      */
