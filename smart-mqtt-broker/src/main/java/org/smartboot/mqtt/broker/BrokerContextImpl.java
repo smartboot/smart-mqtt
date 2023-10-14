@@ -406,12 +406,12 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private void loadAndInstallPlugins() {
         for (Plugin plugin : ServiceLoader.load(Plugin.class, Providers.class.getClassLoader())) {
-            LOGGER.info("load plugin: " + plugin.pluginName());
+            LOGGER.debug("load plugin: " + plugin.pluginName());
             plugins.add(plugin);
         }
         //安装插件
         plugins.stream().sorted(Comparator.comparingInt(Plugin::order)).forEach(plugin -> {
-            LOGGER.info("install plugin: " + plugin.pluginName());
+            LOGGER.debug("install plugin: " + plugin.pluginName());
             plugin.install(this);
         });
     }
