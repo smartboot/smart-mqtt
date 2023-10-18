@@ -62,11 +62,10 @@ public class RedisPlugin extends DataPersistPlugin<RedisPluginConfig> {
         MessageBus messageBus = brokerContext.getMessageBus();
         // 客户端发送消息来了，到消息总线调用consumer方法
         long start = System.currentTimeMillis();
-        messageBus.consumer((brokerContext1, publishMessage) -> {
+        messageBus.consumer(busMessage -> {
             // 获得message信息Vo对象
-            MessageNodeInfo messageNodeInfo = new MessageNodeInfo(publishMessage);
-            String key = MESSAGE_PREFIX + brokerContext1.getBrokerConfigure().getName() + ":"
-                    + publishMessage.getVariableHeader().getTopicName();
+            MessageNodeInfo messageNodeInfo = new MessageNodeInfo(busMessage);
+            String key = MESSAGE_PREFIX +  ":" + busMessage.getTopic();
             String message = messageNodeInfo.toString();
             // 完成playload信息base64编码
             if (config.isBase64()){

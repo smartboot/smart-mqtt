@@ -1,6 +1,7 @@
 package org.smartboot.mqtt.data.persistence.nodeinfo;
 
 import com.alibaba.fastjson2.JSONObject;
+import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 import java.io.Serializable;
@@ -27,10 +28,10 @@ public class MessageNodeInfo implements Serializable {
      */
     private final long createTime = System.currentTimeMillis();
     
-    public MessageNodeInfo(MqttPublishMessage message) {
-        this.payload = message.getPayload().getPayload();
-        this.retained = message.getFixedHeader().isRetain();
-        this.topic = message.getVariableHeader().getTopicName();
+    public MessageNodeInfo(Message message) {
+        this.payload = message.getPayload();
+        this.retained = message.isRetained();
+        this.topic = message.getTopic();
     }
     
     public byte[] getPayload() {
@@ -48,8 +49,6 @@ public class MessageNodeInfo implements Serializable {
     public long getCreateTime() {
         return createTime;
     }
-    
-
     
     @Override
     public String toString() {

@@ -53,8 +53,8 @@ public class KafkaPlugin extends DataPersistPlugin<KafkaPluginConfig> {
     @Override
     protected void listenAndPushMessage(BrokerContext brokerContext, KafkaPluginConfig config) {
         MessageBus messageBus = brokerContext.getMessageBus();
-        messageBus.consumer((brokerContext1, publishMessage) -> {
-            MessageNodeInfo messageNodeInfo = new MessageNodeInfo(publishMessage);
+        messageBus.consumer(busMessage -> {
+            MessageNodeInfo messageNodeInfo = new MessageNodeInfo(busMessage);
             String message = messageNodeInfo.toString();
             // 完成playload信息base64编码
             if (config.isBase64()){
