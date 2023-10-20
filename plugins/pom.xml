@@ -32,18 +32,32 @@
         <dependencies>
             <dependency>
                 <groupId>org.smartboot.mqtt</groupId>
-                <artifactId>redis-bridge-plugin</artifactId>
-                <version>${parent.version}</version>
+                <artifactId>smart-mqtt-data-persistence</artifactId>
+                <version>${project.parent.version}</version>
             </dependency>
+            
+            <!--数据持久化所需库-->
             <dependency>
-                <groupId>redis.clients</groupId>
-                <artifactId>jedis</artifactId>
-                <version>4.3.1</version>
+                <groupId>io.lettuce</groupId>
+                <artifactId>lettuce-core</artifactId>
+                <version>5.1.8.RELEASE</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka-clients</artifactId>
+                <version>3.0.0</version>
+            </dependency>
+    
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>5.8.10</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
 
     <modules>
-        <module>redis-bridge-plugin</module>
+        <module>smart-mqtt-data-persistence</module>
     </modules>
 </project>
