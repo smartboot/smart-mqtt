@@ -22,10 +22,14 @@ public enum MqttVersion {
     }
 
     public static MqttVersion getByProtocolWithVersion(MqttProtocolEnum protocolEnum, byte protocolLevel) {
-        for (MqttVersion version : values()) {
-            if (protocolEnum == version.protocol && version.level == protocolLevel) {
-                return version;
+        if (protocolEnum == MqttProtocolEnum.MQTT) {
+            if (MQTT_3_1_1.level == protocolLevel) {
+                return MQTT_3_1_1;
+            } else if (MQTT_5.level == protocolLevel) {
+                return MQTT_5;
             }
+        } else if (protocolEnum == MqttProtocolEnum.MQIsdp && protocolLevel == MQTT_3_1.protocolLevel()) {
+            return MQTT_3_1;
         }
         return null;
     }

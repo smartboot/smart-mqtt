@@ -47,13 +47,15 @@ public enum MqttConnectReturnCode {
     private final byte code;
     private final String desc;
 
+    private static final MqttConnectReturnCode[] values = values();
+
     MqttConnectReturnCode(byte code, String desc) {
         this.code = code;
         this.desc = desc;
     }
 
     public static MqttConnectReturnCode valueOf(byte b) {
-        for (MqttConnectReturnCode v : values()) {
+        for (MqttConnectReturnCode v : values) {
             if (b == v.code) {
                 return v;
             }

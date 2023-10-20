@@ -40,21 +40,21 @@ public class DefaultMqttWriter implements MqttWriter {
 
     @Override
     public void writeShort(short data) throws IOException {
-        ValidateUtils.isTrue(size != 0, "erro: writeShort can't write data, because writer is empty");
+        ValidateUtils.isTrue(size != 0, "error: writeShort can't write data, because writer is empty");
         size += 2;
         writeBuffer.writeShort(data);
     }
 
     @Override
     public void writeInt(int data) throws IOException {
-        ValidateUtils.isTrue(size != 0, "erro: writeShort can't write data, because writer is empty");
+        ValidateUtils.isTrue(size != 0, "error: writeShort can't write data, because writer is empty");
         size += 4;
         writeBuffer.writeInt(data);
     }
 
     @Override
     public synchronized void write(byte[] data) throws IOException {
-        ValidateUtils.isTrue(size != 0, "erro: writeShort can't write data, because writer is empty");
+        ValidateUtils.isTrue(size != 0, "error: writeShort can't write data, because writer is empty");
         size += data.length;
         writeBuffer.write(data);
     }
