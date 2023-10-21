@@ -16,10 +16,8 @@ import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.extension.plugins.Plugin;
 
 import java.nio.channels.AsynchronousChannelGroup;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * broker服务配置
@@ -45,15 +43,6 @@ public class BrokerConfigure extends ToString {
      * 当前smart-mqtt
      */
     public static final String VERSION = "v0.30";
-
-    static final Map<String, String> SystemEnvironments = new HashMap<>();
-
-    {
-        SystemEnvironments.put(convertToEnvironment(SystemProperty.PORT), SystemProperty.PORT);
-        SystemEnvironments.put(convertToEnvironment(SystemProperty.THREAD_NUM), SystemProperty.THREAD_NUM);
-        SystemEnvironments.put(convertToEnvironment(SystemProperty.LOW_MEMORY), SystemProperty.LOW_MEMORY);
-        SystemEnvironments.put(convertToEnvironment(SystemProperty.MAX_INFLIGHT), SystemProperty.MAX_INFLIGHT);
-    }
 
     /**
      * 节点ID，集群内唯一
@@ -252,48 +241,11 @@ public class BrokerConfigure extends ToString {
                 '}';
     }
 
-    private String convertToEnvironment(String property) {
-        return property.replace(".", "_").toUpperCase();
-    }
 
     public interface SystemProperty {
         /**
          * broker自定义配置文件
          */
         String BrokerConfig = "brokerConfig";
-        /**
-         * 服务地址
-         */
-        String HOST = "broker.host";
-        /**
-         * broker服务端口号
-         */
-        String PORT = "broker.port";
-
-        /**
-         * broker线程数
-         */
-        String THREAD_NUM = "broker.threadNum";
-
-        /**
-         * connect默认超时时间
-         */
-        String CONNECT_IDLE_TIMEOUT = "broker.connect.idleTimeout";
-
-        /**
-         * 最大飞行窗口
-         */
-        String MAX_INFLIGHT = "broker.maxInflight";
-
-        /**
-         * 低内存模式
-         */
-        String LOW_MEMORY = "broker.lowMemory";
-
-        /**
-         * 节点ID
-         */
-        String NODE_ID = "broker.nodeId";
-
     }
 }
