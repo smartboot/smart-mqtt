@@ -65,6 +65,7 @@ import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.timer.Timer;
 import org.smartboot.socket.transport.AioQuickServer;
+import org.smartboot.socket.transport.IOUtil;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
@@ -149,7 +150,7 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     @Override
-    public void init() throws IOException {
+    public void init() throws Throwable {
 
         updateBrokerConfigure();
 
@@ -368,16 +369,17 @@ public class BrokerContextImpl implements BrokerContext {
     /**
      * 加载并安装插件
      */
-    private void loadAndInstallPlugins() {
+    private void loadAndInstallPlugins() throws Throwable {
         for (Plugin plugin : ServiceLoader.load(Plugin.class, Providers.class.getClassLoader())) {
             LOGGER.debug("load plugin: " + plugin.pluginName());
             plugins.add(plugin);
         }
         //安装插件
-        plugins.stream().sorted(Comparator.comparingInt(Plugin::order)).forEach(plugin -> {
+        plugins.sort(Comparator.comparingInt(Plugin::order));
+        for (Plugin plugin : plugins) {
             LOGGER.debug("install plugin: " + plugin.pluginName());
             plugin.install(this);
-        });
+        }
     }
 
     @Override
@@ -503,8 +505,12 @@ public class BrokerContextImpl implements BrokerContext {
         eventBus.publish(ServerEventType.BROKER_DESTROY, this);
         pushTopicQueue.offer(SHUTDOWN_TOPIC);
         pushThreadPool.shutdown();
-        server.shutdown();
-        brokerConfigure.getChannelGroup().shutdown();
+        if (server != null) {
+            server.shutdown();
+        }
+        IOUtil.shutdown(brokerConfigure.getChannelGroup());
+        timer.shutdown();
+
         brokerConfigure.getBufferPagePool().release();
         //卸载插件
         plugins.forEach(Plugin::uninstall);

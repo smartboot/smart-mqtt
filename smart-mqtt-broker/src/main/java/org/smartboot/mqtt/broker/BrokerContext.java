@@ -19,7 +19,6 @@ import org.smartboot.mqtt.common.eventbus.EventBus;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.socket.timer.Timer;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 
@@ -32,7 +31,7 @@ public interface BrokerContext {
     /**
      * 初始化Broker上下文
      */
-    void init() throws IOException;
+    void init() throws Throwable;
 
     BrokerConfigure getBrokerConfigure();
 

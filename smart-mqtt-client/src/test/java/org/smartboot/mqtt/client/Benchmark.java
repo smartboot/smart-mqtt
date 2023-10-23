@@ -11,7 +11,6 @@ import org.smartboot.mqtt.broker.BrokerContextImpl;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.util.MqttUtil;
 
-import java.io.IOException;
 import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
@@ -31,7 +30,7 @@ public class Benchmark {
     private BrokerContext context;
 
     @Before
-    public void init() throws IOException {
+    public void init() throws Throwable {
         channelGroup = AsynchronousChannelGroup.withFixedThreadPool(4, r -> new Thread(r));
         context = new BrokerContextImpl();
         context.init();

@@ -45,7 +45,7 @@ public abstract class Plugin {
     /**
      * 安装插件,需要在servlet服务启动前调用
      */
-    public final void install(BrokerContext brokerContext) {
+    public final void install(BrokerContext brokerContext) throws Throwable {
         checkSate();
         initPlugin(brokerContext);
         installed = true;
@@ -54,7 +54,7 @@ public abstract class Plugin {
     /**
      * 初始化插件
      */
-    protected void initPlugin(BrokerContext brokerContext) {
+    protected void initPlugin(BrokerContext brokerContext) throws Throwable {
         LOGGER.info("plugin:[" + pluginName() + "] do nothing when initPlugin!");
     }
 
