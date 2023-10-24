@@ -65,7 +65,6 @@ import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.timer.Timer;
 import org.smartboot.socket.transport.AioQuickServer;
-import org.smartboot.socket.transport.IOUtil;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
@@ -508,7 +507,7 @@ public class BrokerContextImpl implements BrokerContext {
         if (server != null) {
             server.shutdown();
         }
-        IOUtil.shutdown(brokerConfigure.getChannelGroup());
+        brokerConfigure.getChannelGroup().shutdown();
         timer.shutdown();
 
         brokerConfigure.getBufferPagePool().release();
