@@ -1,5 +1,2 @@
 broker:
   nodeId: smart-mqtt # 集群模式需确保唯一性
-  port: 1883
-  maxInflight: 256
-  lowMemory: false

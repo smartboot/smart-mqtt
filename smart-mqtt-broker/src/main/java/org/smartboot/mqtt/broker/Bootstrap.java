@@ -16,13 +16,7 @@ package org.smartboot.mqtt.broker;
  */
 public class Bootstrap {
     public static void main(String[] args) throws Throwable {
-        //格式化日志时间
-        System.setProperty("org.slf4j.simpleLogger.showDateTime", "true");
-        System.setProperty("org.slf4j.simpleLogger.dateTimeFormat", "[yyyy-MM-dd HH:mm:ss]");
-        System.setProperty("org.slf4j.simpleLogger.showShortLogName", "true");
-
         BrokerContext context = new BrokerContextImpl();
-//        context.getEventBus().subscribe(ServerEventType.BROKER_CONFIGURE_LOADED, (eventType, configure) -> configure.addPlugin(new MonitorPlugin<>(5)));
         context.init();
 
         Runtime.getRuntime().addShutdownHook(new Thread(context::destroy));

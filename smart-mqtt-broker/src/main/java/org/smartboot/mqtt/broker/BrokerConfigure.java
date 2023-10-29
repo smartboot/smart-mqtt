@@ -47,7 +47,7 @@ public class BrokerConfigure extends ToString {
     /**
      * 节点ID，集群内唯一
      */
-    private String nodeId;
+    private String nodeId = "smart-mqtt";
     /**
      * 地址
      */

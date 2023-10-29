@@ -105,7 +105,7 @@ public class BrokerContextImpl implements BrokerContext {
      *
      */
     private final ConcurrentMap<String, BrokerTopic> topicMap = new ConcurrentHashMap<>();
-    private BrokerConfigure brokerConfigure = new BrokerConfigure();
+    private BrokerConfigure brokerConfigure;
     private final TopicPublishTree topicPublishTree = new TopicPublishTree();
 
     private final TopicSubscribeTree subscribeTopicTree = new TopicSubscribeTree();
@@ -474,11 +474,11 @@ public class BrokerContextImpl implements BrokerContext {
 
     private void loadYamlConfig() throws IOException {
         String brokerConfig = System.getProperty(BrokerConfigure.SystemProperty.BrokerConfig);
-        InputStream inputStream = null;
+        InputStream inputStream;
 
         if (StringUtils.isBlank(brokerConfig)) {
             inputStream = BrokerContext.class.getClassLoader().getResourceAsStream("smart-mqtt.yaml");
-            LOGGER.info("load internal yaml config.");
+            LOGGER.info("load smart-mqtt.yaml from classpath.");
         } else {
             inputStream = Files.newInputStream(Paths.get(brokerConfig));
             LOGGER.info("load external yaml config.");
