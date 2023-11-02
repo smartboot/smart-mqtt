@@ -17,7 +17,5 @@ public interface MessageQueue {
 
     Message get(long offset);
 
-    long getOldestOffset();
-
     long getLatestOffset();
 }
