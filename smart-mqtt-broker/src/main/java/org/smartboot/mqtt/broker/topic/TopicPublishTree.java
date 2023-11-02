@@ -24,8 +24,7 @@ public class TopicPublishTree {
     private BrokerTopic brokerTopic;
     private final ConcurrentHashMap<String, TopicPublishTree> subNode = new ConcurrentHashMap<>();
 
-    public BrokerTopic addTopic(String topic) {
-        BrokerTopic brokerTopic = new BrokerTopic(topic);
+    public void addTopic(BrokerTopic brokerTopic) {
         TopicToken topicToken = brokerTopic.getTopicToken();
         TopicPublishTree treeNode = this;
         while (true) {
@@ -37,7 +36,6 @@ public class TopicPublishTree {
             }
         }
         treeNode.brokerTopic = brokerTopic;
-        return brokerTopic;
     }
 
     public void match(TopicToken topicToken, Consumer<BrokerTopic> consumer) {

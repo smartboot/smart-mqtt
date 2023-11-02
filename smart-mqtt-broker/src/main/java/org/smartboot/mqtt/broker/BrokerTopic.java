@@ -11,13 +11,14 @@
 package org.smartboot.mqtt.broker;
 
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
+import org.smartboot.mqtt.broker.eventbus.messagebus.MessageQueue;
 import org.smartboot.mqtt.common.TopicToken;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * Broker端的Topic
@@ -30,7 +31,7 @@ public class BrokerTopic {
      * 当前订阅的消费者
      */
     private final Map<MqttSession, TopicSubscriber> consumeOffsets = new ConcurrentHashMap<>();
-    private final AtomicInteger version = new AtomicInteger();
+    private final LongAdder version = new LongAdder();
     /**
      * 当前Topic是否圈闭推送完成
      */
@@ -42,20 +43,26 @@ public class BrokerTopic {
      */
     private Message retainMessage;
 
+    private final MessageQueue messageQueue;
     /**
      * 当前Topic处于监听状态的订阅者
      */
     private final ConcurrentLinkedQueue<TopicSubscriber> queue = new ConcurrentLinkedQueue<>();
 
     public BrokerTopic(String topic) {
+        this(topic, null);
+    }
+
+    public BrokerTopic(String topic, MessageQueue messageQueue) {
         this.topicToken = new TopicToken(topic);
+        this.messageQueue = messageQueue;
     }
 
     public Map<MqttSession, TopicSubscriber> getConsumeOffsets() {
         return consumeOffsets;
     }
 
-    public AtomicInteger getVersion() {
+    public LongAdder getVersion() {
         return version;
     }
 
@@ -81,6 +88,10 @@ public class BrokerTopic {
 
     public void setRetainMessage(Message retainMessage) {
         this.retainMessage = retainMessage;
+    }
+
+    public MessageQueue getMessageQueue() {
+        return messageQueue;
     }
 
     @Override

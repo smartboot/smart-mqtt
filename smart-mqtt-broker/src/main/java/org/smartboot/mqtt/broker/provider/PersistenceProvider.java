@@ -11,6 +11,7 @@
 package org.smartboot.mqtt.broker.provider;
 
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
+import org.smartboot.mqtt.broker.eventbus.messagebus.MessageQueue;
 
 /**
  * 消息持久化Provider
@@ -35,14 +36,6 @@ public interface PersistenceProvider {
      */
     Message get(String topic, long startOffset);
 
-    /**
-     * 获取存储topic消息最早的点位
-     */
-    long getOldestOffset(String topic);
-
-    /**
-     * 获取存储topic消息最近的点位
-     */
-    long getLatestOffset(String topic);
+    MessageQueue get(String topic);
 
 }

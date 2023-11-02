@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
-import org.smartboot.mqtt.broker.provider.PersistenceProvider;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
@@ -73,7 +72,7 @@ public class TopicSubscriber {
         session.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, this);
     }
 
-    public void batchPublish(BrokerContext brokerContext) {
+    public void batchPublish(BrokerContextImpl brokerContext) {
         if (mqttSession.isDisconnect() || !enable) {
             return;
         }
@@ -83,15 +82,14 @@ public class TopicSubscriber {
         }
     }
 
-    private void publishAvailable(BrokerContext brokerContext) {
-        PersistenceProvider persistenceProvider = brokerContext.getProviders().getPersistenceProvider();
-        Message message = persistenceProvider.get(topic.getTopic(), nextConsumerOffset);
+    private void publishAvailable(BrokerContextImpl brokerContext) {
+        Message message = topic.getMessageQueue().get(nextConsumerOffset);
         if (message == null) {
             if (semaphore.compareAndSet(true, false)) {
                 topic.getQueue().offer(this);
-                if (persistenceProvider.get(topic.getTopic(), nextConsumerOffset) != null) {
-                    topic.getVersion().incrementAndGet();
-                    brokerContext.getEventBus().publish(ServerEventType.NOTIFY_TOPIC_PUSH, topic);
+                if (topic.getMessageQueue().get(nextConsumerOffset) != null) {
+                    topic.getVersion().increment();
+                    brokerContext.notifyPush(topic);
                 }
             }
             return;
@@ -114,9 +112,9 @@ public class TopicSubscriber {
         CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = mqttSession.getInflightQueue().offer(publishBuilder, mqttPacketIdentifierMessage -> {
             if (semaphore.compareAndSet(true, false)) {
                 topic.getQueue().offer(TopicSubscriber.this);
-                topic.getVersion().incrementAndGet();
+                topic.getVersion().increment();
             }
-            brokerContext.getEventBus().publish(ServerEventType.NOTIFY_TOPIC_PUSH, topic);
+            brokerContext.notifyPush(topic);
         });
         if (future == null) {
             return;

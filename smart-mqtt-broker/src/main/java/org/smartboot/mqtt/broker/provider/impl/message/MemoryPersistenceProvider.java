@@ -11,6 +11,7 @@
 package org.smartboot.mqtt.broker.provider.impl.message;
 
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
+import org.smartboot.mqtt.broker.eventbus.messagebus.MessageQueue;
 import org.smartboot.mqtt.broker.provider.PersistenceProvider;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,21 +38,11 @@ public class MemoryPersistenceProvider implements PersistenceProvider {
 
     @Override
     public Message get(String topic, long startOffset) {
-        return getStoreQueue(topic).get(startOffset);
+        return get(topic).get(startOffset);
     }
 
-    @Override
-    public long getOldestOffset(String topic) {
-        return getStoreQueue(topic).getOldestOffset();
-    }
-
-    @Override
-    public long getLatestOffset(String topic) {
-        return getStoreQueue(topic).getLatestOffset();
-    }
-
-    private MemoryMessageStoreQueue getStoreQueue(String topic) {
-        MemoryMessageStoreQueue storeQueue = topicQueues.get(topic);
+    public MessageQueue get(String topic) {
+        MessageQueue storeQueue = topicQueues.computeIfAbsent(topic, s -> new MemoryMessageStoreQueue());
         return storeQueue == null ? EMPTY_QUEUE : storeQueue;
     }
 }

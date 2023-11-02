@@ -191,9 +191,8 @@ public class MqttSession extends AbstractSession {
             }
             return;
         }
-        long latestOffset = mqttContext.getProviders().getPersistenceProvider().getLatestOffset(topic.getTopic());
         //以当前消息队列的最新点位为起始点位
-        TopicSubscriber subscription = new TopicSubscriber(topic, MqttSession.this, mqttQoS, latestOffset + 1);
+        TopicSubscriber subscription = new TopicSubscriber(topic, MqttSession.this, mqttQoS, topic.getMessageQueue().getLatestOffset() + 1);
         subscription.setTopicFilterToken(topicToken);
         topic.getConsumeOffsets().put(MqttSession.this, subscription);
         subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, subscription);

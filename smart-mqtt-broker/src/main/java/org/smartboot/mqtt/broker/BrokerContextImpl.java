@@ -227,7 +227,7 @@ public class BrokerContextImpl implements BrokerContext {
                             ConcurrentLinkedQueue<TopicSubscriber> subscribers = brokerTopic.getQueue();
                             subscribers.offer(BREAK);
                             TopicSubscriber subscriber;
-                            int preVersion = brokerTopic.getVersion().get();
+                            int preVersion = brokerTopic.getVersion().intValue();
                             while ((subscriber = subscribers.poll()) != BREAK) {
                                 try {
                                     subscriber.batchPublish(BrokerContextImpl.this);
@@ -236,7 +236,7 @@ public class BrokerContextImpl implements BrokerContext {
                                 }
                             }
                             brokerTopic.getSemaphore().release();
-                            if (preVersion != brokerTopic.getVersion().get() && !subscribers.isEmpty()) {
+                            if (preVersion != brokerTopic.getVersion().intValue() && !subscribers.isEmpty()) {
                                 notifyPush(brokerTopic);
                             }
                         } catch (InterruptedException e) {
@@ -287,11 +287,9 @@ public class BrokerContextImpl implements BrokerContext {
 
         //消息总线消费完成，触发消息推送
         eventBus.subscribe(ServerEventType.MESSAGE_BUS_CONSUMED, (eventType, brokerTopic) -> {
-            brokerTopic.getVersion().incrementAndGet();
+            brokerTopic.getVersion().increment();
             notifyPush(brokerTopic);
         });
-
-        eventBus.subscribe(ServerEventType.NOTIFY_TOPIC_PUSH, (eventType, object) -> notifyPush(object));
 
         //一个新的订阅建立时，对每个匹配的主题名，如果存在最近保留的消息，它必须被发送给这个订阅者
         eventBus.subscribe(ServerEventType.SUBSCRIBE_TOPIC, (eventType, subscriber) -> retainPushThreadPool.execute(new AsyncTask() {
@@ -334,7 +332,7 @@ public class BrokerContextImpl implements BrokerContext {
         }));
     }
 
-    private void notifyPush(BrokerTopic topic) {
+    void notifyPush(BrokerTopic topic) {
         if (!topic.getSemaphore().tryAcquire()) {
             return;
         }
@@ -395,7 +393,8 @@ public class BrokerContextImpl implements BrokerContext {
     public BrokerTopic getOrCreateTopic(String topic) {
         return topicMap.computeIfAbsent(topic, topicName -> {
             ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topicName), "invalid topicName: " + topicName);
-            BrokerTopic newTopic = topicPublishTree.addTopic(topic);
+            BrokerTopic newTopic = new BrokerTopic(topic, providers.getPersistenceProvider().get(topic));
+            topicPublishTree.addTopic(newTopic);
             eventBus.publish(ServerEventType.TOPIC_CREATE, newTopic);
             return newTopic;
         });
