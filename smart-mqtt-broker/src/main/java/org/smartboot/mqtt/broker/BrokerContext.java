@@ -13,6 +13,7 @@ package org.smartboot.mqtt.broker;
 import org.smartboot.mqtt.broker.eventbus.messagebus.MessageBus;
 import org.smartboot.mqtt.broker.processor.MqttProcessor;
 import org.smartboot.mqtt.broker.provider.Providers;
+import org.smartboot.mqtt.broker.topic.BrokerTopic;
 import org.smartboot.mqtt.broker.topic.TopicPublishTree;
 import org.smartboot.mqtt.broker.topic.TopicSubscribeTree;
 import org.smartboot.mqtt.common.eventbus.EventBus;

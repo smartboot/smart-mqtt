@@ -12,7 +12,6 @@ package org.smartboot.mqtt.broker.topic;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartboot.mqtt.broker.BrokerTopic;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.util.MqttUtil;
 

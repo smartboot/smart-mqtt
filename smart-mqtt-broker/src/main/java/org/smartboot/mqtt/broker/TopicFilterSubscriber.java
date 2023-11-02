@@ -10,6 +10,7 @@
 
 package org.smartboot.mqtt.broker;
 
+import org.smartboot.mqtt.broker.topic.BrokerTopic;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 

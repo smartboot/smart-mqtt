@@ -8,9 +8,13 @@
  *  without special permission from the smartboot organization.
  */
 
-package org.smartboot.mqtt.broker.eventbus.messagebus;
+package org.smartboot.mqtt.broker.topic;
+
+import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 
 public interface MessageQueue {
+    void put(Message message);
+
     Message get(long offset);
 
     long getOldestOffset();

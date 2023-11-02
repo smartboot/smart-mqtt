@@ -10,7 +10,6 @@
 
 package org.smartboot.mqtt.broker.topic;
 
-import org.smartboot.mqtt.broker.BrokerTopic;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.TopicFilterSubscriber;
 import org.smartboot.mqtt.common.TopicToken;

@@ -8,10 +8,11 @@
  *  without special permission from the smartboot organization.
  */
 
-package org.smartboot.mqtt.broker;
+package org.smartboot.mqtt.broker.topic;
 
+import org.smartboot.mqtt.broker.MqttSession;
+import org.smartboot.mqtt.broker.TopicSubscriber;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
-import org.smartboot.mqtt.broker.eventbus.messagebus.MessageQueue;
 import org.smartboot.mqtt.common.TopicToken;
 
 import java.util.Map;
@@ -43,19 +44,15 @@ public class BrokerTopic {
      */
     private Message retainMessage;
 
-    private final MessageQueue messageQueue;
+    private final MessageQueue messageQueue = new MemoryMessageStoreQueue();
     /**
      * 当前Topic处于监听状态的订阅者
      */
     private final ConcurrentLinkedQueue<TopicSubscriber> queue = new ConcurrentLinkedQueue<>();
 
-    public BrokerTopic(String topic) {
-        this(topic, null);
-    }
 
-    public BrokerTopic(String topic, MessageQueue messageQueue) {
+    public BrokerTopic(String topic) {
         this.topicToken = new TopicToken(topic);
-        this.messageQueue = messageQueue;
     }
 
     public Map<MqttSession, TopicSubscriber> getConsumeOffsets() {

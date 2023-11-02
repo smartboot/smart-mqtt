@@ -10,8 +10,8 @@
 
 package org.smartboot.mqtt.broker.provider;
 
-import org.smartboot.mqtt.broker.BrokerTopic;
 import org.smartboot.mqtt.broker.MqttSession;
+import org.smartboot.mqtt.broker.topic.BrokerTopic;
 
 /**
  * Topic订阅

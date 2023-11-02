@@ -33,6 +33,7 @@ import org.smartboot.mqtt.broker.processor.PublishProcessor;
 import org.smartboot.mqtt.broker.processor.SubscribeProcessor;
 import org.smartboot.mqtt.broker.processor.UnSubscribeProcessor;
 import org.smartboot.mqtt.broker.provider.Providers;
+import org.smartboot.mqtt.broker.topic.BrokerTopic;
 import org.smartboot.mqtt.broker.topic.TopicPublishTree;
 import org.smartboot.mqtt.broker.topic.TopicSubscribeTree;
 import org.smartboot.mqtt.common.AsyncTask;
@@ -256,7 +257,7 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private void subscribeMessageBus() {
         //持久化消息
-        messageBusSubscriber.consumer(publishMessage -> providers.getPersistenceProvider().doSave(publishMessage));
+        messageBusSubscriber.consumer(publishMessage -> getOrCreateTopic(publishMessage.getTopic()).getMessageQueue().put(publishMessage));
         //消费retain消息
         messageBusSubscriber.consumer(new RetainPersistenceConsumer(this), Message::isRetained);
     }
@@ -393,7 +394,7 @@ public class BrokerContextImpl implements BrokerContext {
     public BrokerTopic getOrCreateTopic(String topic) {
         return topicMap.computeIfAbsent(topic, topicName -> {
             ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topicName), "invalid topicName: " + topicName);
-            BrokerTopic newTopic = new BrokerTopic(topic, providers.getPersistenceProvider().get(topic));
+            BrokerTopic newTopic = new BrokerTopic(topic);
             topicPublishTree.addTopic(newTopic);
             eventBus.publish(ServerEventType.TOPIC_CREATE, newTopic);
             return newTopic;
