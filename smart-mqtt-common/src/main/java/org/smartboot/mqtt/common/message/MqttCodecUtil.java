@@ -22,10 +22,6 @@ import java.nio.charset.StandardCharsets;
 
 public final class MqttCodecUtil {
 
-    public static final int MIN_CLIENT_ID_LENGTH = 1;
-    public static final int MAX_CLIENT_ID_LENGTH = 23;
-    private static final char[] TOPIC_WILDCARDS = {'#', '+'};
-
     private MqttCodecUtil() {
     }
 

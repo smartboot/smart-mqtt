@@ -25,7 +25,6 @@ import org.smartboot.mqtt.common.enums.MqttProtocolEnum;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventObject;
-import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
@@ -52,6 +51,7 @@ import static org.smartboot.mqtt.common.enums.MqttConnectReturnCode.UNSUPPORTED_
  */
 public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectProcessor.class);
+    private static final int MAX_CLIENT_ID_LENGTH = 23;
 
     @Override
     public void process(BrokerContext context, MqttSession session, MqttConnectMessage mqttConnectMessage) {
@@ -142,7 +142,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         //客户端标识符 (ClientId) 必须存在而且必须是 CONNECT 报文有效载荷的第一个字段
         //服务端必须允许 1 到 23 个字节长的 UTF-8 编码的客户端标识符，客户端标识符只能包含这些字符：
         //“0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ”（大写字母，小写字母和数字）
-        boolean invalidClient = StringUtils.isNotBlank(clientId) && (mqttVersion == MqttVersion.MQTT_3_1 && clientId.length() > MqttCodecUtil.MAX_CLIENT_ID_LENGTH);
+        boolean invalidClient = StringUtils.isNotBlank(clientId) && (mqttVersion == MqttVersion.MQTT_3_1 && clientId.length() > MAX_CLIENT_ID_LENGTH);
         ValidateUtils.isTrue(!invalidClient, "", () -> {
             connFailAck(CONNECTION_REFUSED_IDENTIFIER_REJECTED, session);
             LOGGER.error("The MQTT client ID cannot be empty. Username={}", payload.userName());
