@@ -20,7 +20,6 @@ import org.smartboot.socket.DecoderException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import static org.smartboot.mqtt.common.message.MqttCodecUtil.decodeMsbLsb;
 
 /**
  * @author 三刀
@@ -98,7 +97,7 @@ public abstract class MqttMessage extends ToString {
 
 
     protected final int decodeMessageId(ByteBuffer buffer) {
-        final int messageId = decodeMsbLsb(buffer);
+        final int messageId = MqttCodecUtil.decodeMsbLsb(buffer);
         if (messageId == 0) {
             throw new DecoderException("invalid messageId: " + messageId);
         }

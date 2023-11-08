@@ -124,20 +124,15 @@ public final class MqttCodecUtil {
         return bytearr;
     }
 
-
-    public static int decodeMsbLsb(ByteBuffer buffer) {
-        return decodeMsbLsb(buffer, 0, 65535);
-    }
-
     /**
      * 整数数值是 16 位，使用大端序（big-endian，高位字节在低位字节前面）。这意味着一个 16 位的字在网
      * 络上表示为最高有效字节（MSB），后面跟着最低有效字节（LSB）。
      */
-    public static int decodeMsbLsb(ByteBuffer buffer, int min, int max) {
+    public static int decodeMsbLsb(ByteBuffer buffer) {
         short msbSize = BufferUtils.readUnsignedByte(buffer);
         short lsbSize = BufferUtils.readUnsignedByte(buffer);
         int result = msbSize << 8 | lsbSize;
-        if (result < min || result > max) {
+        if (result < 0 || result > 65535) {
             result = -1;
         }
         return result;
