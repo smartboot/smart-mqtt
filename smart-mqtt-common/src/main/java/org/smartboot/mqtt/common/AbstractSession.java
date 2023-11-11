@@ -40,7 +40,7 @@ public abstract class AbstractSession {
     /**
      * 最近一次发送的消息
      */
-    private long latestSendMessageTime;
+    protected long latestSendMessageTime;
     /**
      * 最近一次收到客户端消息的时间
      */
@@ -110,9 +110,6 @@ public abstract class AbstractSession {
         }
     }
 
-    public long getLatestSendMessageTime() {
-        return latestSendMessageTime;
-    }
 
     public long getLatestReceiveMessageTime() {
         return latestReceiveMessageTime;
