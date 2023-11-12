@@ -10,6 +10,8 @@
 
 package org.smartboot.mqtt.client;
 
+import com.alibaba.fastjson2.annotation.JSONField;
+import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttMessage;
@@ -19,7 +21,7 @@ import javax.net.SocketFactory;
 import javax.net.ssl.HostnameVerifier;
 import java.util.Properties;
 
-public class MqttClientConfigure {
+public class MqttClientConfigure extends ToString {
     /**
      * The default keep alive interval in seconds if one is not specified
      */
@@ -37,6 +39,7 @@ public class MqttClientConfigure {
     private int maxInflight = MAX_INFLIGHT_DEFAULT;
     private WillMessage willMessage;
     private String userName;
+    @JSONField(serialize = false)
     private byte[] password;
     private SocketFactory socketFactory;
     private Properties sslClientProps = null;

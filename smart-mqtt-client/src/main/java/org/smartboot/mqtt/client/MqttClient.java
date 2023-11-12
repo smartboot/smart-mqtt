@@ -195,6 +195,8 @@ public class MqttClient extends AbstractSession {
     public void connect(AsynchronousChannelGroup asynchronousChannelGroup, BufferPagePool bufferPagePool, Consumer<MqttConnAckMessage> consumer) {
         //设置 connect ack 回调事件
         this.connectConsumer = consumer;
+        MqttUtil.updateConfig(clientConfigure, "mqtt.client");
+        LOGGER.info("mqtt client config:{}", clientConfigure);
 //        messageProcessor.addPlugin(new StreamMonitorPlugin<>());
 
         client = new AioQuickClient(clientConfigure.getHost(), clientConfigure.getPort(), new MqttProtocol(clientConfigure.getMaxPacketSize()), messageProcessor);
