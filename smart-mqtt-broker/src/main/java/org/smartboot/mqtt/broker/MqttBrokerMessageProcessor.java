@@ -52,7 +52,12 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
         MqttSession mqttSession = attachment.get(SESSION_KEY);
         mqttContext.getEventBus().publish(EventType.RECEIVE_MESSAGE, EventObject.newEventObject(mqttSession, msg));
         mqttSession.setLatestReceiveMessageTime(System.currentTimeMillis());
+        long start = System.currentTimeMillis();
         processor.process(mqttContext, mqttSession, msg);
+        long cost = System.currentTimeMillis() - start;
+        if (cost > 50) {
+            LOGGER.warn("process:{} cost:{}", processor.getClass().getSimpleName(), cost);
+        }
     }
 
     @Override
