@@ -115,7 +115,7 @@ public class MqttClient extends AbstractSession {
      * 重连Consumer
      */
     private Consumer<MqttConnAckMessage> reconnectConsumer;
-    private boolean pingTimeout = false;
+    private int pingTimeout;
 
     private TimerTask connectTimer;
 
@@ -153,12 +153,7 @@ public class MqttClient extends AbstractSession {
         //ping-pong消息超时监听
         getEventBus().subscribe(EventType.RECEIVE_MESSAGE, (eventType, object) -> {
             if (object.getObject() instanceof MqttPingRespMessage) {
-                pingTimeout = false;
-            }
-        });
-        getEventBus().subscribe(EventType.WRITE_MESSAGE, (eventType, object) -> {
-            if (object.getObject() instanceof MqttPingReqMessage) {
-                pingTimeout = true;
+                pingTimeout = 0;
             }
         });
         getEventBus().subscribe(EventType.RECEIVE_CONN_ACK_MESSAGE, (eventType, object) -> receiveConnAckMessage(object));
@@ -200,37 +195,6 @@ public class MqttClient extends AbstractSession {
     public void connect(AsynchronousChannelGroup asynchronousChannelGroup, BufferPagePool bufferPagePool, Consumer<MqttConnAckMessage> consumer) {
         //设置 connect ack 回调事件
         this.connectConsumer = consumer;
-        //启动心跳插件
-        if (clientConfigure.getKeepAliveInterval() > 0) {
-            timer.schedule(new AsyncTask() {
-                @Override
-                public void execute() {
-                    //客户端发送了 PINGREQ 报文之后，如果在合理的时间内仍没有收到 PINGRESP 报文，
-                    // 它应该关闭到服务端的网络连接。
-                    if (pingTimeout) {
-                        pingTimeout = false;
-                        release();
-                    }
-                    if (session == null || session.isInvalid()) {
-                        release();
-                        if (clientConfigure.isAutomaticReconnect()) {
-                            LOGGER.warn("mqtt client is disconnect, try to reconnect...");
-                            connect(asynchronousChannelGroup, reconnectConsumer == null ? consumer : reconnectConsumer);
-                        }
-                        return;
-                    }
-                    long delay = System.currentTimeMillis() - getLatestSendMessageTime() - clientConfigure.getKeepAliveInterval() * 1000L;
-                    //gap 10ms
-                    if (delay > -10) {
-                        timer.schedule(this, clientConfigure.getKeepAliveInterval(), TimeUnit.SECONDS);
-                        MqttPingReqMessage pingReqMessage = new MqttPingReqMessage();
-                        write(pingReqMessage);
-                    } else {
-                        timer.schedule(this, -delay, TimeUnit.MILLISECONDS);
-                    }
-                }
-            }, clientConfigure.getKeepAliveInterval(), TimeUnit.SECONDS);
-        }
 //        messageProcessor.addPlugin(new StreamMonitorPlugin<>());
 
         client = new AioQuickClient(clientConfigure.getHost(), clientConfigure.getPort(), new MqttProtocol(clientConfigure.getMaxPacketSize()), messageProcessor);
@@ -262,11 +226,45 @@ public class MqttClient extends AbstractSession {
                 @Override
                 public void execute() {
                     if (!connected) {
-                        disconnect();
+                        release();
                     }
                 }
             }, clientConfigure.getConnectAckTimeout(), TimeUnit.SECONDS);
             write(connectMessage);
+            //启动心跳插件
+            long keepAliveInterval = TimeUnit.SECONDS.toMillis(clientConfigure.getKeepAliveInterval());
+            if (keepAliveInterval > 0) {
+                timer.schedule(new AsyncTask() {
+                    @Override
+                    public void execute() {
+                        //客户端发送了 PINGREQ 报文之后，如果在合理的时间内仍没有收到 PINGRESP 报文，
+                        // 它应该关闭到服务端的网络连接。
+                        if (pingTimeout >= 3) {
+                            pingTimeout = 0;
+                            release();
+                        }
+                        if (session == null || session.isInvalid()) {
+                            release();
+                            if (clientConfigure.isAutomaticReconnect()) {
+                                LOGGER.warn("mqtt client:{} is disconnect, try to reconnect...", clientId);
+                                connect(asynchronousChannelGroup, reconnectConsumer == null ? consumer : reconnectConsumer);
+                            }
+                            return;
+                        }
+                        long delay = System.currentTimeMillis() - latestSendMessageTime - keepAliveInterval;
+                        //gap 10ms
+                        if (delay > -10) {
+                            MqttPingReqMessage pingReqMessage = new MqttPingReqMessage();
+                            write(pingReqMessage);
+                            pingTimeout++;
+                            timer.schedule(this, keepAliveInterval, TimeUnit.MILLISECONDS);
+                        } else {
+//                        LOGGER.info("client:{} ping listening was triggered early {}ms", clientId, -delay);
+                            timer.schedule(this, -delay, TimeUnit.MILLISECONDS);
+                        }
+                    }
+                }, keepAliveInterval, TimeUnit.MILLISECONDS);
+            }
         } catch (IOException e) {
             LOGGER.error(e.getMessage(), e);
         }
@@ -406,10 +404,6 @@ public class MqttClient extends AbstractSession {
     private void receiveConnAckMessage(MqttConnAckMessage connAckMessage) {
         connectTimer.cancel();
         connectTimer = null;
-//        long delay = System.currentTimeMillis() - connectTime;
-//        if (delay > 1000) {
-//            LOGGER.error("connAck cost long time: {}ms", delay);
-//        }
         if (!clientConfigure.isAutomaticReconnect()) {
             gcConfigure();
         }
@@ -417,11 +411,11 @@ public class MqttClient extends AbstractSession {
         //连接成功,注册订阅消息
         if (connAckMessage.getVariableHeader().connectReturnCode() == MqttConnectReturnCode.CONNECTION_ACCEPTED) {
             setInflightQueue(new InflightQueue(this, 16));
-            connected = true;
             //重连情况下重新触发订阅逻辑
             subscribes.forEach((k, v) -> {
                 subscribe(k, v.getQoS(), v.getConsumer());
             });
+            connected = true;
             consumeTask();
         }
         //客户端设置清理会话（CleanSession）标志为 0 重连时，客户端和服务端必须使用原始的报文标识符重发
@@ -431,7 +425,6 @@ public class MqttClient extends AbstractSession {
             //todo
         }
         connectConsumer.accept(connAckMessage);
-        connected = true;
     }
 
 
