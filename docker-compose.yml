@@ -67,8 +67,8 @@ services:
     security_opt:
       - no-new-privileges:true
     user: root:root
-#    environment:
-#      BROKER_LOWMEMORY: true
+    environment:
+      MQTT_CLIENT_CONNECTACKTIMEOUT: 10
     networks:
       mqtt-network: null
     logging:
