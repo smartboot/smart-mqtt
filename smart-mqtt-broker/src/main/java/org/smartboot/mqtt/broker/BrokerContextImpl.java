@@ -271,7 +271,7 @@ public class BrokerContextImpl implements BrokerContext {
             BrokerTopic topic = getOrCreateTopic(eventObject.getObject().getVariableHeader().getTopicName());
             try {
                 //触发消息总线
-                messageBusSubscriber.consume(eventObject.getSession(), eventObject.getObject());
+                messageBusSubscriber.publish(eventObject.getSession(), eventObject.getObject());
             } finally {
                 eventBus.publish(ServerEventType.MESSAGE_BUS_CONSUMED, topic);
             }

@@ -48,7 +48,7 @@ public class MessageBusSubscriber implements MessageBus {
     }
 
     @Override
-    public void consume(AbstractSession mqttSession, MqttPublishMessage message) {
+    public void publish(AbstractSession mqttSession, MqttPublishMessage message) {
         Message persistenceMessage = new Message(mqttSession, message);
         boolean remove = false;
         for (Consumer messageConsumer : messageBuses) {

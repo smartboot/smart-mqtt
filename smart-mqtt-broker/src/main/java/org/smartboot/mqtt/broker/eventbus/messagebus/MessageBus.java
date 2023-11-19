@@ -40,6 +40,6 @@ public interface MessageBus {
     /**
      * 发布消息至总线触发消费
      */
-    void consume(AbstractSession mqttSession, MqttPublishMessage storedMessage);
+    void publish(AbstractSession mqttSession, MqttPublishMessage storedMessage);
 
 }

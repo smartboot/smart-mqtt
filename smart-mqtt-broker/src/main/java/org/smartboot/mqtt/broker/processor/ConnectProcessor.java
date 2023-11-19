@@ -56,7 +56,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
     @Override
     public void process(BrokerContext context, MqttSession session, MqttConnectMessage mqttConnectMessage) {
 //        LOGGER.info("receive connect message:{}", mqttConnectMessage);
-        String clientId = mqttConnectMessage.getPayload().clientIdentifier();
+        String clientId = mqttConnectMessage.getPayload().clientId();
         //服务端可以允许客户端提供一个零字节的客户端标识符 (ClientId) ，如果这样做了，服务端必须将这看作特
         //殊情况并分配唯一的客户端标识符给那个客户端。然后它必须假设客户端提供了那个唯一的客户端标识符，正常处理这个 CONNECT 报文
         if (clientId.isEmpty()) {
@@ -128,7 +128,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         });
 
         MqttConnectPayload payload = mqttConnectMessage.getPayload();
-        String clientId = payload.clientIdentifier();
+        String clientId = payload.clientId();
 
         //对于 3.1.1 版协议，协议级别字段的值是 4(0x04)。
         // 如果发现不支持的协议级别，服务端必须给发送一个返回码为 0x01（不支持的协议级别）的 CONNACK 报文响应

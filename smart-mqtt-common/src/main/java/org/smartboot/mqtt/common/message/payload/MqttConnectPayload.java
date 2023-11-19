@@ -25,9 +25,9 @@ public final class MqttConnectPayload extends MqttPayload {
     /**
      * 客户端标识符
      */
-    private final String clientIdentifier;
+    private final String clientId;
 
-    private byte[] clientIdentifierBytes;
+    private byte[] clientIdBytes;
 
     /**
      * 遗嘱消息
@@ -45,15 +45,15 @@ public final class MqttConnectPayload extends MqttPayload {
     private final byte[] password;
 
 
-    public MqttConnectPayload(String clientIdentifier, WillMessage willMessage, String userName, byte[] password) {
-        this.clientIdentifier = clientIdentifier;
+    public MqttConnectPayload(String clientId, WillMessage willMessage, String userName, byte[] password) {
+        this.clientId = clientId;
         this.willMessage = willMessage;
         this.userName = userName;
         this.password = password;
     }
 
-    public String clientIdentifier() {
-        return clientIdentifier;
+    public String clientId() {
+        return clientId;
     }
 
     public WillMessage getWillMessage() {
@@ -70,8 +70,8 @@ public final class MqttConnectPayload extends MqttPayload {
 
     protected int preEncode() {
         int length = 0;
-        clientIdentifierBytes = MqttCodecUtil.encodeUTF8(clientIdentifier);
-        length += clientIdentifierBytes.length;
+        clientIdBytes = MqttCodecUtil.encodeUTF8(clientId);
+        length += clientIdBytes.length;
 
         if (willMessage != null) {
             length += willMessage.preEncode();
@@ -89,7 +89,7 @@ public final class MqttConnectPayload extends MqttPayload {
 
     protected void writeTo(MqttWriter mqttWriter) throws IOException {
         //客户端标识符 (ClientId) 必须存在而且必须是 CONNECT 报文有效载荷的第一个字段
-        mqttWriter.write(clientIdentifierBytes);
+        mqttWriter.write(clientIdBytes);
 
         //遗嘱
         if (willMessage != null) {
