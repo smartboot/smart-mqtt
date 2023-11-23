@@ -159,7 +159,7 @@ public class InflightQueue {
                     case PUBACK:
                     case PUBREC:
                         MqttPublishMessage mqttMessage = (MqttPublishMessage) inflightMessage.getOriginalMessage();
-                        MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(mqttMessage.getFixedHeader().getMessageType(), true, mqttMessage.getFixedHeader().getQosLevel(), mqttMessage.getFixedHeader().isRetain());
+                        MqttFixedHeader mqttFixedHeader = MqttFixedHeader.getInstance(mqttMessage.getFixedHeader().getMessageType(), true, mqttMessage.getFixedHeader().getQosLevel().value(), mqttMessage.getFixedHeader().isRetain());
                         MqttPublishMessage dupMessage = new MqttPublishMessage(mqttFixedHeader, mqttMessage.getVariableHeader(), mqttMessage.getPayload().getPayload());
                         session.write(dupMessage);
                         break;

@@ -69,13 +69,13 @@ public abstract class MqttMessage extends ToString {
     public final void write(MqttWriter mqttWriter) throws IOException {
         ValidateUtils.isTrue(mqttWriter.writeSize() == 0, "invlid write size");
         try {
-            MqttCodecUtil.writeFixedHeader(mqttWriter, getFixedHeader());
             MqttVariableHeader variableHeader = getVariableHeader();
             MqttPayload mqttPayload = getPayload();
             //剩余长度等于可变报头的长度（10 字节）加上有效载荷的长度。
             int remainingLength = variableHeader.preEncode() + mqttPayload.preEncode();
 
             //第一部分：固定报头
+            fixedHeader.writeTo(mqttWriter);
             MqttCodecUtil.writeVariableLengthInt(mqttWriter, remainingLength);
             int size = mqttWriter.writeSize();
             //第二部分：可变报头

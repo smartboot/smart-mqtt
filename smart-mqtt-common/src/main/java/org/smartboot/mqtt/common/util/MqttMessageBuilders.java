@@ -10,7 +10,6 @@
 
 package org.smartboot.mqtt.common.util;
 
-import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
@@ -164,11 +163,10 @@ public final class MqttMessageBuilders {
         }
 
         public MqttSubscribeMessage build() {
-            MqttFixedHeader mqttFixedHeader = new MqttFixedHeader(MqttMessageType.SUBSCRIBE, false, MqttQoS.AT_LEAST_ONCE, false);
             MqttSubscribePayload mqttSubscribePayload = new MqttSubscribePayload();
             mqttSubscribePayload.setTopicSubscriptions(subscriptions);
             MqttSubscribeVariableHeader variableHeader = new MqttSubscribeVariableHeader(packetId, subscribeProperties);
-            return new MqttSubscribeMessage(mqttFixedHeader, variableHeader, mqttSubscribePayload);
+            return new MqttSubscribeMessage(MqttFixedHeader.SUBSCRIBE_HEADER, variableHeader, mqttSubscribePayload);
         }
     }
 

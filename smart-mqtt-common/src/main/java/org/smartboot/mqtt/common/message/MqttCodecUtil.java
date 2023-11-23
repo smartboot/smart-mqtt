@@ -164,16 +164,4 @@ public final class MqttCodecUtil {
         return count;
     }
 
-    public static void writeFixedHeader(MqttWriter writer, MqttFixedHeader header) {
-        int ret = 0;
-        ret |= header.getMessageType().value() << 4;
-        if (header.isDup()) {
-            ret |= 0x08;
-        }
-        ret |= header.getQosLevel().value() << 1;
-        if (header.isRetain()) {
-            ret |= 0x01;
-        }
-        writer.writeByte((byte) ret);
-    }
 }

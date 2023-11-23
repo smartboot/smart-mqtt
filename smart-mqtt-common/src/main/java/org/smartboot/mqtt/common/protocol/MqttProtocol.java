@@ -14,8 +14,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttVersion;
+import org.smartboot.mqtt.common.message.MqttConnAckMessage;
+import org.smartboot.mqtt.common.message.MqttConnectMessage;
+import org.smartboot.mqtt.common.message.MqttDisconnectMessage;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.mqtt.common.message.MqttPingReqMessage;
+import org.smartboot.mqtt.common.message.MqttPingRespMessage;
+import org.smartboot.mqtt.common.message.MqttPubAckMessage;
+import org.smartboot.mqtt.common.message.MqttPubCompMessage;
+import org.smartboot.mqtt.common.message.MqttPubRecMessage;
+import org.smartboot.mqtt.common.message.MqttPubRelMessage;
+import org.smartboot.mqtt.common.message.MqttPublishMessage;
+import org.smartboot.mqtt.common.message.MqttSubAckMessage;
+import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
+import org.smartboot.mqtt.common.message.MqttUnsubAckMessage;
+import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.mqtt.common.util.MqttAttachKey;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.DecoderException;
@@ -64,13 +78,7 @@ public class MqttProtocol implements Protocol<MqttMessage> {
                     break;
                 }
                 buffer.mark();
-                short b1 = BufferUtils.readUnsignedByte(buffer);
-
-                MqttMessageType messageType = MqttMessageType.valueOf(b1 >> 4);
-//                    System.out.println("messageType:" + messageType);
-                boolean dupFlag = (b1 & 0x08) == 0x08;
-                int qosLevel = (b1 & 0x06) >> 1;
-                boolean retain = (b1 & 0x01) != 0;
+                final short b1 = BufferUtils.readUnsignedByte(buffer);
 
                 int remainingLength = 0;
                 int multiplier = 1;
@@ -88,14 +96,19 @@ public class MqttProtocol implements Protocol<MqttMessage> {
                     buffer.reset();
                     break;
                 }
+
+                MqttMessageType messageType = MqttMessageType.valueOf(b1 >> 4);
+                boolean dupFlag = (b1 & 0x08) == 0x08;
+                int qosLevel = (b1 & 0x06) >> 1;
+                boolean retain = (b1 & 0x01) != 0;
                 // MQTT protocol limits Remaining Length to 4 bytes
                 if (loops == 4 && (digit & 128) != 0) {
                     throw new DecoderException("remaining length exceeds 4 digits (" + messageType + ')');
                 }
                 buffer.mark();
 
-                MqttFixedHeader mqttFixedHeader = MqttMessageFactory.newMqttFixedHeader(messageType, dupFlag, qosLevel, retain);
-                unit.mqttMessage = MqttMessageFactory.newMessage(mqttFixedHeader);
+                MqttFixedHeader mqttFixedHeader = MqttFixedHeader.getInstance(messageType, dupFlag, qosLevel, retain);
+                unit.mqttMessage = newMessage(mqttFixedHeader);
                 unit.mqttMessage.setRemainingLength(remainingLength);
                 //非MqttConnectMessage对象为null,
                 if (unit.mqttMessage.getVersion() == null) {
@@ -165,4 +178,47 @@ public class MqttProtocol implements Protocol<MqttMessage> {
         }
     }
 
+    private static MqttMessage newMessage(MqttFixedHeader mqttFixedHeader) {
+        switch (mqttFixedHeader.getMessageType()) {
+            case CONNECT:
+                return new MqttConnectMessage(mqttFixedHeader);
+
+            case CONNACK:
+                return new MqttConnAckMessage(mqttFixedHeader);
+
+            case SUBSCRIBE:
+                return new MqttSubscribeMessage(mqttFixedHeader);
+
+            case SUBACK:
+                return new MqttSubAckMessage(mqttFixedHeader);
+
+            case UNSUBACK:
+                return new MqttUnsubAckMessage(mqttFixedHeader);
+
+            case UNSUBSCRIBE:
+                return new MqttUnsubscribeMessage(mqttFixedHeader);
+
+            case PUBLISH:
+                return new MqttPublishMessage(mqttFixedHeader);
+
+            case PUBACK:
+                return new MqttPubAckMessage(mqttFixedHeader);
+            case PUBREC:
+                return new MqttPubRecMessage(mqttFixedHeader);
+            case PUBREL:
+                return new MqttPubRelMessage(mqttFixedHeader);
+            case PUBCOMP:
+                return new MqttPubCompMessage(mqttFixedHeader);
+
+            case PINGREQ:
+                return new MqttPingReqMessage(mqttFixedHeader);
+            case PINGRESP:
+                return new MqttPingRespMessage(mqttFixedHeader);
+            case DISCONNECT:
+                return new MqttDisconnectMessage(mqttFixedHeader);
+
+            default:
+                throw new IllegalArgumentException("unknown message type: " + mqttFixedHeader.getMessageType());
+        }
+    }
 }

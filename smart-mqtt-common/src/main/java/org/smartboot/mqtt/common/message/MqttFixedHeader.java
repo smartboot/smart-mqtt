@@ -10,9 +10,12 @@
 
 package org.smartboot.mqtt.common.message;
 
+import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
+
+import java.io.IOException;
 
 /**
  * 固定报头，每个 MQTT 控制报文都包含一个固定报头。
@@ -68,15 +71,82 @@ public class MqttFixedHeader extends ToString {
      */
     private final boolean retain;
 
-    public MqttFixedHeader(MqttMessageType messageType, boolean dup, MqttQoS qosLevel, boolean retain) {
+    private byte encodeByte;
+
+    private MqttFixedHeader(MqttMessageType messageType, boolean dup, MqttQoS qosLevel, boolean retain) {
         this.messageType = messageType;
         this.dup = dup;
         this.qosLevel = qosLevel;
         this.retain = retain;
+        this.encodeByte = encodeByte();
     }
 
-    public MqttFixedHeader(MqttMessageType messageType, MqttQoS qosLevel) {
+    private MqttFixedHeader(MqttMessageType messageType, MqttQoS qosLevel) {
         this(messageType, false, qosLevel, false);
+    }
+
+    private byte encodeByte() {
+        int ret = 0;
+        ret |= messageType.value() << 4;
+        if (dup) {
+            ret |= 0x08;
+        }
+        ret |= qosLevel.value() << 1;
+        if (retain) {
+            ret |= 0x01;
+        }
+        return ((byte) ret);
+    }
+
+    public void writeTo(MqttWriter mqttWriter) throws IOException {
+        mqttWriter.writeByte(encodeByte);
+    }
+
+    public static MqttFixedHeader getInstance(MqttMessageType messageType, boolean dup, int qosLevel, boolean retain) {
+        switch (messageType) {
+            case CONNECT:
+                return MqttFixedHeader.CONNECT_HEADER;
+            case CONNACK:
+                return MqttFixedHeader.CONN_ACK_HEADER;
+            case SUBSCRIBE:
+                return dup ? MqttFixedHeader.SUBSCRIBE_HEADER_DUP : MqttFixedHeader.SUBSCRIBE_HEADER;
+            case SUBACK:
+                return MqttFixedHeader.SUB_ACK_HEADER;
+            case UNSUBACK:
+                return MqttFixedHeader.UNSUB_ACK_HEADER;
+            case UNSUBSCRIBE:
+                return dup ? MqttFixedHeader.UNSUBSCRIBE_HEADER_DUP : MqttFixedHeader.UNSUBSCRIBE_HEADER;
+            case PUBLISH:
+                if (dup || retain) {
+                    return new MqttFixedHeader(messageType, dup, MqttQoS.valueOf(qosLevel), retain);
+                }
+                switch (qosLevel) {
+                    case 0:
+                        return MqttFixedHeader.PUB_QOS0_HEADER;
+                    case 1:
+                        return MqttFixedHeader.PUB_QOS1_HEADER;
+                    case 2:
+                        return MqttFixedHeader.PUB_QOS2_HEADER;
+                    default:
+                        return MqttFixedHeader.PUB_FAILURE_HEADER;
+                }
+            case PUBACK:
+                return MqttFixedHeader.PUB_ACK_HEADER;
+            case PUBREC:
+                return MqttFixedHeader.PUB_REC_HEADER;
+            case PUBREL:
+                return dup ? MqttFixedHeader.PUB_REL_HEADER_DUP : MqttFixedHeader.PUB_REL_HEADER;
+            case PUBCOMP:
+                return MqttFixedHeader.PUB_COMP_HEADER;
+            case PINGREQ:
+                return MqttFixedHeader.PING_REQ_HEADER;
+            case PINGRESP:
+                return MqttFixedHeader.PING_RESP_HEADER;
+            case DISCONNECT:
+                return MqttFixedHeader.DISCONNECT_HEADER;
+            default:
+                throw new IllegalArgumentException("unknown message type: " + messageType);
+        }
     }
 
     public MqttMessageType getMessageType() {
