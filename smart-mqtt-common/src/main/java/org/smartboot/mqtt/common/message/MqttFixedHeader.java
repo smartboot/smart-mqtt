@@ -71,7 +71,7 @@ public class MqttFixedHeader extends ToString {
      */
     private final boolean retain;
 
-    private byte encodeByte;
+    private final byte encodeByte;
 
     private MqttFixedHeader(MqttMessageType messageType, boolean dup, MqttQoS qosLevel, boolean retain) {
         this.messageType = messageType;
@@ -117,16 +117,16 @@ public class MqttFixedHeader extends ToString {
             case UNSUBSCRIBE:
                 return dup ? MqttFixedHeader.UNSUBSCRIBE_HEADER_DUP : MqttFixedHeader.UNSUBSCRIBE_HEADER;
             case PUBLISH:
-                if (dup || retain) {
-                    return new MqttFixedHeader(messageType, dup, MqttQoS.valueOf(qosLevel), retain);
+                if (dup) {
+                    return new MqttFixedHeader(messageType, true, MqttQoS.valueOf(qosLevel), retain);
                 }
                 switch (qosLevel) {
                     case 0:
-                        return MqttFixedHeader.PUB_QOS0_HEADER;
+                        return retain ? MqttFixedHeader.PUB_RETAIN_QOS0_HEADER : MqttFixedHeader.PUB_QOS0_HEADER;
                     case 1:
-                        return MqttFixedHeader.PUB_QOS1_HEADER;
+                        return retain ? MqttFixedHeader.PUB_RETAIN_QOS1_HEADER : MqttFixedHeader.PUB_QOS1_HEADER;
                     case 2:
-                        return MqttFixedHeader.PUB_QOS2_HEADER;
+                        return retain ? MqttFixedHeader.PUB_RETAIN_QOS2_HEADER : MqttFixedHeader.PUB_QOS2_HEADER;
                     default:
                         return MqttFixedHeader.PUB_FAILURE_HEADER;
                 }

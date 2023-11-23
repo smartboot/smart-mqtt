@@ -10,6 +10,7 @@
 
 package org.smartboot.mqtt.common.util;
 
+import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
@@ -108,22 +109,8 @@ public final class MqttMessageBuilders {
         }
 
         public MqttPublishMessage build() {
-            MqttFixedHeader mqttFixedHeader;
-            switch (qos) {
-                case AT_MOST_ONCE:
-                    mqttFixedHeader = retained ? MqttFixedHeader.PUB_RETAIN_QOS0_HEADER : MqttFixedHeader.PUB_QOS0_HEADER;
-                    break;
-                case AT_LEAST_ONCE:
-                    mqttFixedHeader = retained ? MqttFixedHeader.PUB_RETAIN_QOS1_HEADER : MqttFixedHeader.PUB_QOS1_HEADER;
-                    break;
-                case EXACTLY_ONCE:
-                    mqttFixedHeader = retained ? MqttFixedHeader.PUB_RETAIN_QOS2_HEADER : MqttFixedHeader.PUB_QOS2_HEADER;
-                    break;
-                default:
-                    throw new IllegalStateException("qos value not supported");
-            }
             MqttPublishVariableHeader mqttVariableHeader = new MqttPublishVariableHeader(packetId, topic, publishProperties);
-            return new MqttPublishMessage(mqttFixedHeader, mqttVariableHeader, payload);
+            return new MqttPublishMessage(MqttFixedHeader.getInstance(MqttMessageType.PUBLISH, false, qos.value(), retained), mqttVariableHeader, payload);
         }
     }
 
