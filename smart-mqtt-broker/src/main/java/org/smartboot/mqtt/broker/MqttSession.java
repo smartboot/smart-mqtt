@@ -194,6 +194,7 @@ public class MqttSession extends AbstractSession {
         }
         //以当前消息队列的最新点位为起始点位
         TopicSubscriber subscription = new TopicSubscriber(topic, MqttSession.this, mqttQoS, topic.getMessageQueue().getLatestOffset() + 1);
+        mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, subscription);
         subscription.setTopicFilterToken(topicToken);
         topic.getConsumeOffsets().put(MqttSession.this, subscription);
         subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, subscription);
@@ -214,6 +215,7 @@ public class MqttSession extends AbstractSession {
             TopicSubscriber removeSubscriber = subscriber.getTopic().getConsumeOffsets().remove(this);
             if (subscriber == removeSubscriber) {
                 removeSubscriber.disable();
+                mqttContext.getEventBus().publish(ServerEventType.UNSUBSCRIBE_TOPIC, removeSubscriber);
                 LOGGER.debug("remove subscriber:{} success!", subscriber.getTopic().getTopic());
             } else {
                 LOGGER.error("remove subscriber:{} error!", removeSubscriber);

@@ -34,7 +34,7 @@ import java.util.Hashtable;
  */
 public abstract class AbstractSession {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSession.class);
-    private final EventBus eventBus;
+    protected final EventBus eventBus;
     protected String clientId;
     protected AioSession session;
     /**
@@ -125,10 +125,6 @@ public abstract class AbstractSession {
 
     public InetSocketAddress getRemoteAddress() throws IOException {
         return session.getRemoteAddress();
-    }
-
-    public EventBus getEventBus() {
-        return eventBus;
     }
 
     /**

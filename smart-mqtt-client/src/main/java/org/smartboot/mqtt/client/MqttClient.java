@@ -23,7 +23,7 @@ import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
-import org.smartboot.mqtt.common.eventbus.EventBusImpl;
+import org.smartboot.mqtt.common.eventbus.EventBus;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
@@ -136,7 +136,7 @@ public class MqttClient extends AbstractSession {
     }
 
     public MqttClient(String uri, String clientId, MqttVersion mqttVersion) {
-        super(new EventBusImpl(), TIMER);
+        super(new ClientEventBus(), TIMER);
 
         String[] array = uri.split(":");
         if (array[0].equals("mqtts")) {
@@ -151,12 +151,12 @@ public class MqttClient extends AbstractSession {
         clientConfigure.setMqttVersion(mqttVersion);
         this.clientId = clientId;
         //ping-pong消息超时监听
-        getEventBus().subscribe(EventType.RECEIVE_MESSAGE, (eventType, object) -> {
+        eventBus.subscribe(EventType.RECEIVE_MESSAGE, (eventType, object) -> {
             if (object.getObject() instanceof MqttPingRespMessage) {
                 pingTimeout = 0;
             }
         });
-        getEventBus().subscribe(EventType.RECEIVE_CONN_ACK_MESSAGE, (eventType, object) -> receiveConnAckMessage(object));
+        eventBus.subscribe(EventType.RECEIVE_CONN_ACK_MESSAGE, (eventType, object) -> receiveConnAckMessage(object));
     }
 
 
@@ -534,6 +534,9 @@ public class MqttClient extends AbstractSession {
         }
     }
 
+    public EventBus getEventBus() {
+        return eventBus;
+    }
 
     public void setReconnectConsumer(Consumer<MqttConnAckMessage> reconnectConsumer) {
         this.reconnectConsumer = reconnectConsumer;

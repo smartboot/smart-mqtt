@@ -42,7 +42,6 @@ import org.smartboot.mqtt.common.QosRetryPlugin;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventBus;
-import org.smartboot.mqtt.common.eventbus.EventBusImpl;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttDisconnectMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
@@ -115,7 +114,7 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private final Timer timer = new HashedWheelTimer(r -> new Thread(r, "broker-timer"), 50, 1024);
     private final MessageBus messageBusSubscriber = new MessageBusSubscriber();
-    private final EventBus eventBus = new EventBusImpl();
+    private final EventBus eventBus = new BrokerEventBus();
     private final List<Plugin> plugins = new ArrayList<>();
     private final Providers providers = new Providers();
     private ExecutorService pushThreadPool;

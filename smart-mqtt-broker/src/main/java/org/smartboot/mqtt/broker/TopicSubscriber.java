@@ -12,7 +12,6 @@ package org.smartboot.mqtt.broker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.broker.topic.BrokerTopic;
 import org.smartboot.mqtt.common.TopicToken;
@@ -70,7 +69,6 @@ public class TopicSubscriber {
         this.mqttSession = session;
         this.mqttQoS = mqttQoS;
         this.nextConsumerOffset = nextConsumerOffset;
-        session.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, this);
     }
 
     public void batchPublish(BrokerContextImpl brokerContext) {
@@ -169,7 +167,6 @@ public class TopicSubscriber {
 
     public void disable() {
         this.enable = false;
-        mqttSession.getEventBus().publish(ServerEventType.UNSUBSCRIBE_TOPIC, this);
     }
 
     public void setMqttQoS(MqttQoS mqttQoS) {

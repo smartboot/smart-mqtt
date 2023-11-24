@@ -8,10 +8,13 @@
  *  without special permission from the smartboot organization.
  */
 
-package org.smartboot.mqtt.common.eventbus;
+package org.smartboot.mqtt.broker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.common.eventbus.EventBus;
+import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
+import org.smartboot.mqtt.common.eventbus.EventType;
 
 import java.util.List;
 
@@ -19,8 +22,8 @@ import java.util.List;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/6/29
  */
-public class EventBusImpl implements EventBus {
-    private static final Logger LOGGER = LoggerFactory.getLogger(EventBusImpl.class);
+public class BrokerEventBus implements EventBus {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BrokerEventBus.class);
 
 
     @Override
