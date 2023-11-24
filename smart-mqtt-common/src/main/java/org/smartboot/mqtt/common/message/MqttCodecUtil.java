@@ -113,10 +113,10 @@ public final class MqttCodecUtil {
 
     public static int getVariableLengthInt(int num) {
         int count = 0;
-        while (num != 0) {
+        do {
             num >>>= 7;
             count++;
-        }
+        } while (num > 0);
         return count;
     }
 
