@@ -35,8 +35,6 @@ public class ServerEventType<T> extends EventType<T> {
 
     public static final ServerEventType<BrokerConfigure> BROKER_CONFIGURE_LOADED = new ServerEventType<>("brokerConfigureLoaded");
 
-    public static final ServerEventType<BrokerContext> OPEN_API_STARTED = new ServerEventType<>("open_api_started");
-
     /**
      * 停止Broker服务
      */
@@ -89,13 +87,6 @@ public class ServerEventType<T> extends EventType<T> {
      * 客户端连接请求
      */
     public static final ServerEventType<EventObject<MqttConnectMessage>> CONNECT = new ServerEventType<>("connect");
-
-    /**
-     * 连接响应
-     */
-    public static final ServerEventType<EventObject<MqttConnectMessage>> CONNACK = new ServerEventType<>("connect");
-
-    public static final ServerEventType<BrokerTopic> NOTIFY_TOPIC_PUSH = new ServerEventType<>("notify_topic_push");
 
     protected ServerEventType(String name) {
         super(name);
