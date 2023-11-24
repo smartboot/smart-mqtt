@@ -14,7 +14,6 @@ package org.smartboot.mqtt.common.message;
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.exception.MqttException;
 import org.smartboot.socket.DecoderException;
-import org.smartboot.socket.util.BufferUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -43,13 +42,13 @@ public final class MqttCodecUtil {
 
     public static void writeVariableLengthInt(MqttWriter buf, int num) {
         do {
-            int digit = num % 128;
-            num /= 128;
-            if (num > 0) {
-                digit |= 0x80;
+            int digit = num & 0x7F; // 取低7位
+            num >>>= 7; // 无符号右移7位
+            if (num != 0) {
+                digit |= 0x80; // 如果还有更多的字节，设置最高位为1
             }
             buf.writeByte((byte) digit);
-        } while (num > 0);
+        } while (num != 0);
     }
 
     public static String decodeUTF8(ByteBuffer buffer) {
@@ -65,8 +64,6 @@ public final class MqttCodecUtil {
     public static String decodeUTF8(ByteBuffer buffer, int minBytes, int maxBytes) {
         final int size = decodeMsbLsb(buffer);
         if (size < minBytes || size > maxBytes) {
-//            buffer.position(buffer.position() + size);
-//            return null;
             throw new DecoderException("invalid string length " + size);
         }
         byte[] bytes = new byte[size];
@@ -75,52 +72,17 @@ public final class MqttCodecUtil {
     }
 
     public static byte[] encodeUTF8(String str) {
-        int strlen = str.length();
-        int utflen = 0;
-        int c, count = 0;
+        byte[] bytes = str.getBytes(StandardCharsets.UTF_8);
 
-        /* use charAt instead of copying String to char array */
-        for (int i = 0; i < strlen; i++) {
-            c = str.charAt(i);
-            if ((c >= 0x0001) && (c <= 0x007F)) {
-                utflen++;
-            } else if (c > 0x07FF) {
-                utflen += 3;
-            } else {
-                utflen += 2;
-            }
-        }
-
-        if (utflen > 65535) {
-            throw new MqttException("encoded string too long: " + utflen + " bytes", () -> {
+        if (bytes.length > 65535) {
+            throw new MqttException("encoded string too long: " + bytes.length + " bytes", () -> {
             });
         }
-        byte[] bytearr = new byte[utflen + 2];
+        byte[] bytearr = new byte[bytes.length + 2];
 
-        bytearr[count++] = (byte) ((utflen >>> 8) & 0xFF);
-        bytearr[count++] = (byte) ((utflen >>> 0) & 0xFF);
-
-        int i = 0;
-        for (i = 0; i < strlen; i++) {
-            c = str.charAt(i);
-            if (!((c >= 0x0001) && (c <= 0x007F))) break;
-            bytearr[count++] = (byte) c;
-        }
-
-        for (; i < strlen; i++) {
-            c = str.charAt(i);
-            if ((c >= 0x0001) && (c <= 0x007F)) {
-                bytearr[count++] = (byte) c;
-
-            } else if (c > 0x07FF) {
-                bytearr[count++] = (byte) (0xE0 | ((c >> 12) & 0x0F));
-                bytearr[count++] = (byte) (0x80 | ((c >> 6) & 0x3F));
-                bytearr[count++] = (byte) (0x80 | ((c >> 0) & 0x3F));
-            } else {
-                bytearr[count++] = (byte) (0xC0 | ((c >> 6) & 0x1F));
-                bytearr[count++] = (byte) (0x80 | ((c >> 0) & 0x3F));
-            }
-        }
+        bytearr[0] = (byte) ((bytes.length >>> 8) & 0xFF);
+        bytearr[1] = (byte) (bytes.length & 0xFF);
+        System.arraycopy(bytes, 0, bytearr, 2, bytes.length);
         return bytearr;
     }
 
@@ -129,13 +91,7 @@ public final class MqttCodecUtil {
      * 络上表示为最高有效字节（MSB），后面跟着最低有效字节（LSB）。
      */
     public static int decodeMsbLsb(ByteBuffer buffer) {
-        short msbSize = BufferUtils.readUnsignedByte(buffer);
-        short lsbSize = BufferUtils.readUnsignedByte(buffer);
-        int result = msbSize << 8 | lsbSize;
-        if (result < 0 || result > 65535) {
-            result = -1;
-        }
-        return result;
+        return buffer.getShort();
     }
 
     public static void writeMsbLsb(MqttWriter writer, int v) throws IOException {
@@ -157,10 +113,10 @@ public final class MqttCodecUtil {
 
     public static int getVariableLengthInt(int num) {
         int count = 0;
-        do {
-            num /= 128;
+        while (num != 0) {
+            num >>>= 7;
             count++;
-        } while (num > 0);
+        }
         return count;
     }
 
