@@ -136,7 +136,7 @@ public class MqttClient extends AbstractSession {
     }
 
     public MqttClient(String uri, String clientId, MqttVersion mqttVersion) {
-        super(new EventBusImpl(EventType.types()), TIMER);
+        super(new EventBusImpl(), TIMER);
 
         String[] array = uri.split(":");
         if (array[0].equals("mqtts")) {

@@ -10,12 +10,14 @@
 
 package org.smartboot.mqtt.common.eventbus;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * 事件总线中支持的事件类型
@@ -24,9 +26,8 @@ import java.util.List;
  * @version V1.0 , 2022/6/29
  */
 public class EventType<T> {
-    private static int count = 0;
-    private static final List<EventType<?>> list = new ArrayList<>();
-    private final int index;
+    private static final Logger LOGGER = LoggerFactory.getLogger(EventType.class);
+    private final List<EventBusSubscriber<T>> subscribers = new CopyOnWriteArrayList<>();
     //客户端连接Broker
     public static final EventType<AbstractSession> CONNECT = new EventType<>("connect");
     //连接断开
@@ -50,20 +51,6 @@ public class EventType<T> {
 
     protected EventType(String name) {
         this.name = name;
-        index = count++;
-        list.add(index, this);
-    }
-
-    public static int count() {
-        return count;
-    }
-
-    public static List<EventType<?>> types() {
-        return list;
-    }
-
-    public int getIndex() {
-        return index;
     }
 
     @Override
@@ -71,5 +58,28 @@ public class EventType<T> {
         return "EventType{" +
                 "name='" + name + '\'' +
                 '}';
+    }
+
+    void subscribe(EventBusSubscriber<T> subscriber) {
+        subscribers.add(subscriber);
+    }
+
+
+    void publish(T object) {
+        boolean remove = false;
+        for (EventBusSubscriber<T> subscriber : subscribers) {
+            try {
+                if (subscriber.enable()) {
+                    subscriber.subscribe(this, object);
+                } else {
+                    remove = true;
+                }
+            } catch (Throwable throwable) {
+                LOGGER.error("publish event error", throwable);
+            }
+        }
+        if (remove) {
+            subscribers.removeIf(eventBusSubscriber -> !eventBusSubscriber.enable());
+        }
     }
 }

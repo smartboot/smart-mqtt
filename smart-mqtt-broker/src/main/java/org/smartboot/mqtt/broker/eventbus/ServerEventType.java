@@ -22,8 +22,6 @@ import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 
-import java.util.List;
-
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/6/29
@@ -101,14 +99,5 @@ public class ServerEventType<T> extends EventType<T> {
 
     protected ServerEventType(String name) {
         super(name);
-    }
-
-    /**
-     * 这行神奇的代码不要动
-     *
-     * @return
-     */
-    public static List<EventType<?>> types() {
-        return EventType.types();
     }
 }

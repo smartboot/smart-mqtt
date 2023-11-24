@@ -115,7 +115,7 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private final Timer timer = new HashedWheelTimer(r -> new Thread(r, "broker-timer"), 50, 1024);
     private final MessageBus messageBusSubscriber = new MessageBusSubscriber();
-    private final EventBus eventBus = new EventBusImpl(ServerEventType.types());
+    private final EventBus eventBus = new EventBusImpl();
     private final List<Plugin> plugins = new ArrayList<>();
     private final Providers providers = new Providers();
     private ExecutorService pushThreadPool;
