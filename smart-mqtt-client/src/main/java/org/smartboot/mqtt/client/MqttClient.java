@@ -544,7 +544,7 @@ public class MqttClient extends AbstractSession {
         }
     }
 
-    public EventBus getEventBus() {
+    EventBus getEventBus() {
         return eventBus;
     }
 

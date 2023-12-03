@@ -12,7 +12,6 @@ package org.smartboot.mqtt.client;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.client.processor.ConnAckProcessor;
 import org.smartboot.mqtt.client.processor.MqttAckProcessor;
 import org.smartboot.mqtt.client.processor.MqttPingRespProcessor;
 import org.smartboot.mqtt.client.processor.MqttProcessor;
@@ -50,7 +49,7 @@ public class MqttClientProcessor extends AbstractMessageProcessor<MqttMessage> {
     private static final Map<Class<? extends MqttMessage>, MqttProcessor<? extends MqttMessage>> processors = new HashMap<>();
 
     static {
-        processors.put(MqttConnAckMessage.class, new ConnAckProcessor());
+        processors.put(MqttConnAckMessage.class, (MqttProcessor<MqttConnAckMessage>) (client, message) -> client.getEventBus().publish(EventType.RECEIVE_CONN_ACK_MESSAGE, message));
         processors.put(MqttPubAckMessage.class, new MqttAckProcessor<MqttPubAckMessage>());
         processors.put(MqttPublishMessage.class, new PublishProcessor());
         processors.put(MqttPubRecMessage.class, new MqttAckProcessor<MqttPubRecMessage>());
