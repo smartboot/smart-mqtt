@@ -10,16 +10,35 @@
 
 package org.smartboot.mqtt.common.message;
 
+import org.smartboot.mqtt.common.enums.MqttDisConnectReturnCode;
+import org.smartboot.mqtt.common.enums.MqttVersion;
+import org.smartboot.mqtt.common.message.variable.MqttDisconnectVariableHeader;
+import org.smartboot.mqtt.common.message.variable.properties.DisConnectProperties;
+
+import java.nio.ByteBuffer;
+
 /**
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttDisconnectMessage extends OnlyFixedHeaderMessage {
-    public MqttDisconnectMessage(MqttFixedHeader mqttFixedHeader) {
-        super(mqttFixedHeader);
+public class MqttDisconnectMessage extends MqttVariableMessage<MqttDisconnectVariableHeader> {
+
+    public MqttDisconnectMessage(MqttDisconnectVariableHeader mqttConnAckVariableHeader) {
+        super(MqttFixedHeader.DISCONNECT_HEADER);
+        setVariableHeader(mqttConnAckVariableHeader);
+    }
+
+    @Override
+    protected void decodeVariableHeader0(ByteBuffer buffer) {
+        if (version == MqttVersion.MQTT_5) {
+            byte returnCode = buffer.get();
+            DisConnectProperties properties = new DisConnectProperties();
+            properties.decode(buffer);
+            setVariableHeader(new MqttDisconnectVariableHeader(MqttDisConnectReturnCode.valueOf(returnCode), properties));
+        }
     }
 
     public MqttDisconnectMessage() {
-        this(MqttFixedHeader.DISCONNECT_HEADER);
+        super(MqttFixedHeader.DISCONNECT_HEADER);
     }
 }

@@ -21,6 +21,7 @@ import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.QosRetryPlugin;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
+import org.smartboot.mqtt.common.enums.MqttDisConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.eventbus.EventBus;
@@ -40,8 +41,10 @@ import org.smartboot.mqtt.common.message.MqttUnsubAckMessage;
 import org.smartboot.mqtt.common.message.payload.MqttConnectPayload;
 import org.smartboot.mqtt.common.message.payload.WillMessage;
 import org.smartboot.mqtt.common.message.variable.MqttConnectVariableHeader;
+import org.smartboot.mqtt.common.message.variable.MqttDisconnectVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
+import org.smartboot.mqtt.common.message.variable.properties.DisConnectProperties;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 import org.smartboot.mqtt.common.message.variable.properties.SubscribeProperties;
@@ -518,7 +521,14 @@ public class MqttClient extends AbstractSession {
         }
         //DISCONNECT 报文是客户端发给服务端的最后一个控制报文。表示客户端正常断开连接。
         try {
-            write(new MqttDisconnectMessage());
+            if (getMqttVersion() == MqttVersion.MQTT_5) {
+                MqttDisconnectVariableHeader variableHeader = new MqttDisconnectVariableHeader(MqttDisConnectReturnCode.NORMAL_DISCONNECT, new DisConnectProperties());
+                MqttDisconnectMessage message = new MqttDisconnectMessage(variableHeader);
+                write(message);
+            } else {
+                write(new MqttDisconnectMessage());
+            }
+
         } finally {
             //关闭自动重连
             clientConfigure.setAutomaticReconnect(false);

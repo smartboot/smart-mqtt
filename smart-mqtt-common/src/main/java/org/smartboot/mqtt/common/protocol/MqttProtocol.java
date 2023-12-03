@@ -215,7 +215,7 @@ public class MqttProtocol implements Protocol<MqttMessage> {
             case PINGRESP:
                 return new MqttPingRespMessage(mqttFixedHeader);
             case DISCONNECT:
-                return new MqttDisconnectMessage(mqttFixedHeader);
+                return new MqttDisconnectMessage();
 
             default:
                 throw new IllegalArgumentException("unknown message type: " + mqttFixedHeader.getMessageType());
