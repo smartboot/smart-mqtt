@@ -192,7 +192,7 @@ public class BrokerContextImpl implements BrokerContext {
 
             @Override
             public Thread newThread(Runnable r) {
-                return new Thread(r, "broker-push-" + (index++));
+                return brokerConfigure.getBufferPagePool().newThread(r, "broker-push-" + (index++));
             }
         });
     }
@@ -277,16 +277,16 @@ public class BrokerContextImpl implements BrokerContext {
         loadYamlConfig();
         brokerConfigure = parseConfig("$.broker", BrokerConfigure.class);
         MqttUtil.updateConfig(brokerConfigure, "broker");
-
+        BufferPagePool bufferPagePool = new BufferPagePool(10 * 1024 * 1024, brokerConfigure.getThreadNum(), true);
         brokerConfigure.setChannelGroup(new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
             int i;
 
             @Override
             public Thread newThread(Runnable r) {
-                return new Thread(r, "smart-mqtt-broker-" + (++i));
+                return bufferPagePool.newThread(r, "smart-mqtt-broker-" + (++i));
             }
         }));
-        brokerConfigure.setBufferPagePool(new BufferPagePool(10 * 1024 * 1024, brokerConfigure.getThreadNum(), true));
+        brokerConfigure.setBufferPagePool(bufferPagePool);
         eventBus.publish(ServerEventType.BROKER_CONFIGURE_LOADED, brokerConfigure);
 //        System.out.println("brokerConfigure: " + brokerConfigure);
     }
