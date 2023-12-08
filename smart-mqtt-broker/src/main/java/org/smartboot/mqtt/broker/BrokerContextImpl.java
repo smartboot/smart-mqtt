@@ -80,15 +80,11 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 
 /**
@@ -119,7 +115,6 @@ public class BrokerContextImpl implements BrokerContext {
     private final Providers providers = new Providers();
     private ExecutorService pushThreadPool;
     private ExecutorService retainPushThreadPool;
-    private BlockingQueue<BrokerTopic> pushTopicQueue;
     /**
      * Broker Server
      */
@@ -128,7 +123,6 @@ public class BrokerContextImpl implements BrokerContext {
 
     //配置文件内容
     private String configJson;
-    private final static BrokerTopic SHUTDOWN_TOPIC = new BrokerTopic("");
 
     private final Map<String, Object> resources = new Hashtable<>();
     private final Map<Class<? extends MqttMessage>, MqttProcessor<?>> processors;
@@ -188,14 +182,10 @@ public class BrokerContextImpl implements BrokerContext {
         }
     }
 
-
-    private final TopicSubscriber BREAK = new TopicSubscriber();
-
     private void initPushThread() {
         if (brokerConfigure.getTopicLimit() <= 0) {
             brokerConfigure.setTopicLimit(10);
         }
-        pushTopicQueue = brokerConfigure.getTopicLimit() <= 4096 ? new ArrayBlockingQueue<>(brokerConfigure.getTopicLimit()) : new LinkedBlockingQueue<>(brokerConfigure.getTopicLimit());
         retainPushThreadPool = Executors.newFixedThreadPool(getBrokerConfigure().getPushThreadNum());
         pushThreadPool = Executors.newFixedThreadPool(getBrokerConfigure().getPushThreadNum(), new ThreadFactory() {
             int index = 0;
@@ -205,50 +195,6 @@ public class BrokerContextImpl implements BrokerContext {
                 return new Thread(r, "broker-push-" + (index++));
             }
         });
-
-        for (int i = 0; i < getBrokerConfigure().getPushThreadNum(); i++) {
-            pushThreadPool.execute(new AsyncTask() {
-                @Override
-                public void execute() {
-                    while (true) {
-                        try {
-                            BrokerTopic brokerTopic = pushTopicQueue.take();
-
-                            int size = pushTopicQueue.size();
-                            if (size > 1024) {
-                                System.out.println("queue:" + size);
-                            }
-                            //Broker停止服务
-                            if (SHUTDOWN_TOPIC == brokerTopic) {
-                                pushTopicQueue.put(SHUTDOWN_TOPIC);
-                                break;
-                            }
-                            //存在待输出消息
-                            ConcurrentLinkedQueue<TopicSubscriber> subscribers = brokerTopic.getQueue();
-                            subscribers.offer(BREAK);
-                            TopicSubscriber subscriber;
-                            int preVersion = brokerTopic.getVersion().intValue();
-                            while ((subscriber = subscribers.poll()) != BREAK) {
-                                try {
-                                    subscriber.batchPublish(BrokerContextImpl.this);
-                                } catch (Exception e) {
-                                    LOGGER.error("batch publish exception:{}", e.getMessage(), e);
-                                }
-                            }
-                            brokerTopic.getSemaphore().release();
-                            if (preVersion != brokerTopic.getVersion().intValue() && !subscribers.isEmpty()) {
-                                notifyPush(brokerTopic);
-                            }
-                        } catch (InterruptedException e) {
-                            LOGGER.error("pushTopicQueue exception", e);
-                            break;
-                        } catch (Exception e) {
-                            LOGGER.error("push message exception", e);
-                        }
-                    }
-                }
-            });
-        }
     }
 
     /**
@@ -272,7 +218,7 @@ public class BrokerContextImpl implements BrokerContext {
                 //触发消息总线
                 messageBusSubscriber.publish(eventObject.getSession(), eventObject.getObject());
             } finally {
-                eventBus.publish(ServerEventType.MESSAGE_BUS_CONSUMED, topic);
+                topic.push();
             }
         });
 
@@ -285,12 +231,6 @@ public class BrokerContextImpl implements BrokerContext {
             session.idleConnectTimer = null;
         });
 
-        //消息总线消费完成，触发消息推送
-        eventBus.subscribe(ServerEventType.MESSAGE_BUS_CONSUMED, (eventType, brokerTopic) -> {
-            brokerTopic.getVersion().increment();
-            notifyPush(brokerTopic);
-        });
-
         //一个新的订阅建立时，对每个匹配的主题名，如果存在最近保留的消息，它必须被发送给这个订阅者
         eventBus.subscribe(ServerEventType.SUBSCRIBE_TOPIC, (eventType, subscriber) -> retainPushThreadPool.execute(new AsyncTask() {
             @Override
@@ -298,7 +238,7 @@ public class BrokerContextImpl implements BrokerContext {
                 BrokerTopic topic = subscriber.getTopic();
                 Message retainMessage = topic.getRetainMessage();
                 if (retainMessage == null || retainMessage.getCreateTime() > subscriber.getLatestSubscribeTime()) {
-                    topic.getQueue().offer(subscriber);
+                    topic.addSubscriber(subscriber);
                     return;
                 }
                 MqttSession session = subscriber.getMqttSession();
@@ -310,7 +250,7 @@ public class BrokerContextImpl implements BrokerContext {
                 // Qos0不走飞行窗口
                 if (subscriber.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
                     session.write(publishBuilder.build());
-                    topic.getQueue().offer(subscriber);
+                    topic.addSubscriber(subscriber);
                     return;
                 }
                 InflightQueue inflightQueue = session.getInflightQueue();
@@ -318,7 +258,7 @@ public class BrokerContextImpl implements BrokerContext {
                 CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = inflightQueue.offer(publishBuilder);
                 future.whenComplete((mqttPacketIdentifierMessage, throwable) -> {
                     LOGGER.info("publish retain to client:{} success  ", session.getClientId());
-                    topic.getQueue().offer(subscriber);
+                    topic.addSubscriber(subscriber);
                 });
                 session.flush();
             }
@@ -330,18 +270,6 @@ public class BrokerContextImpl implements BrokerContext {
             }
             session.subscribeSuccess(topicFilterSubscriber.getMqttQoS(), topicFilterSubscriber.getTopicFilterToken(), object);
         }));
-    }
-
-    void notifyPush(BrokerTopic topic) {
-        if (!topic.getSemaphore().tryAcquire()) {
-            return;
-        }
-        //已加入推送队列
-        try {
-            pushTopicQueue.put(topic);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private void updateBrokerConfigure() throws IOException {
@@ -393,7 +321,7 @@ public class BrokerContextImpl implements BrokerContext {
     public BrokerTopic getOrCreateTopic(String topic) {
         return topicMap.computeIfAbsent(topic, topicName -> {
             ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topicName), "invalid topicName: " + topicName);
-            BrokerTopic newTopic = new BrokerTopic(topic);
+            BrokerTopic newTopic = new BrokerTopic(topic, pushThreadPool);
             topicPublishTree.addTopic(newTopic);
             eventBus.publish(ServerEventType.TOPIC_CREATE, newTopic);
             return newTopic;
@@ -501,7 +429,6 @@ public class BrokerContextImpl implements BrokerContext {
     public void destroy() {
         LOGGER.info("destroy broker...");
         eventBus.publish(ServerEventType.BROKER_DESTROY, this);
-        pushTopicQueue.offer(SHUTDOWN_TOPIC);
         pushThreadPool.shutdown();
         if (server != null) {
             server.shutdown();

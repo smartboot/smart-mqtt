@@ -13,8 +13,8 @@ package org.smartboot.mqtt.broker.eventbus;
 import org.smartboot.mqtt.broker.BrokerConfigure;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.broker.TopicSubscriber;
 import org.smartboot.mqtt.broker.topic.BrokerTopic;
+import org.smartboot.mqtt.broker.topic.TopicSubscriber;
 import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
@@ -77,11 +77,6 @@ public class ServerEventType<T> extends EventType<T> {
      * 客户端订阅Topic
      */
     public static final ServerEventType<TopicSubscriber> SUBSCRIBE_REFRESH_TOPIC = new ServerEventType<>("subscribe_refresh_topic");
-
-    /**
-     * 消息总线消费完成
-     */
-    public static final ServerEventType<BrokerTopic> MESSAGE_BUS_CONSUMED = new ServerEventType<>("messageBusProduced");
 
     /**
      * 客户端连接请求

@@ -35,7 +35,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Consumer;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -80,12 +79,12 @@ public class InflightQueue {
     }
 
     public CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> offer(MqttMessageBuilders.MessageBuilder publishBuilder) {
-        return offer(publishBuilder, mqttPacketIdentifierMessage -> {
+        return offer(publishBuilder, () -> {
 
         });
     }
 
-    public CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> offer(MqttMessageBuilders.MessageBuilder publishBuilder, Consumer<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> consumer) {
+    public CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> offer(MqttMessageBuilders.MessageBuilder publishBuilder, Runnable runnable) {
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
@@ -94,7 +93,7 @@ public class InflightQueue {
                 if (i < 0) {
                     i = queue.length - 1;
                 }
-                queue[i].getFuture().thenAccept(consumer);
+                queue[i].getFuture().thenRun(runnable);
                 return null;
             } else {
                 return enqueue(publishBuilder);

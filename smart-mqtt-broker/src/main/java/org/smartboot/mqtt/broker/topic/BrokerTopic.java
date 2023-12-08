@@ -10,16 +10,18 @@
 
 package org.smartboot.mqtt.broker.topic;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.broker.TopicSubscriber;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
+import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.TopicToken;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.LongAdder;
 
 /**
  * Broker端的Topic
@@ -28,16 +30,36 @@ import java.util.concurrent.atomic.LongAdder;
  * @version V1.0 , 2018/5/3
  */
 public class BrokerTopic {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BrokerTopic.class);
     /**
      * 当前订阅的消费者
      */
     private final Map<MqttSession, TopicSubscriber> consumeOffsets = new ConcurrentHashMap<>();
-    private final LongAdder version = new LongAdder();
     /**
      * 当前Topic是否圈闭推送完成
      */
     private final Semaphore semaphore = new Semaphore(1);
     private final TopicToken topicToken;
+    private final ExecutorService executorService;
+
+    private final AsyncTask asyncTask = new AsyncTask() {
+        @Override
+        public void execute() {
+            TopicSubscriber subscriber;
+            int i = 0;
+            while (++i < 1000 && (subscriber = queue.poll()) != null) {
+                try {
+                    subscriber.pushToClient();
+                } catch (Exception e) {
+                    LOGGER.error("batch publish exception:{}", e.getMessage(), e);
+                }
+            }
+            semaphore.release();
+            if (!queue.isEmpty()) {
+                push();
+            }
+        }
+    };
 
     /**
      * 保留消息
@@ -52,23 +74,20 @@ public class BrokerTopic {
 
 
     public BrokerTopic(String topic) {
+        this(topic, null);
+    }
+
+    public BrokerTopic(String topic, ExecutorService executorService) {
         this.topicToken = new TopicToken(topic);
+        this.executorService = executorService;
     }
 
     public Map<MqttSession, TopicSubscriber> getConsumeOffsets() {
         return consumeOffsets;
     }
 
-    public LongAdder getVersion() {
-        return version;
-    }
-
-    public Semaphore getSemaphore() {
-        return semaphore;
-    }
-
-    public ConcurrentLinkedQueue<TopicSubscriber> getQueue() {
-        return queue;
+    public void addSubscriber(TopicSubscriber subscriber) {
+        queue.offer(subscriber);
     }
 
     public TopicToken getTopicToken() {
@@ -95,4 +114,15 @@ public class BrokerTopic {
     public String toString() {
         return getTopic();
     }
+
+    /**
+     * 触发消息推送
+     */
+    public void push() {
+        if (semaphore.tryAcquire()) {
+            //已加入推送队列
+            executorService.execute(asyncTask);
+        }
+    }
+
 }

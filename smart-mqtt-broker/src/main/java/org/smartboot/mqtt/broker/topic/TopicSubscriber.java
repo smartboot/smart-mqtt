@@ -8,12 +8,12 @@
  *  without special permission from the smartboot organization.
  */
 
-package org.smartboot.mqtt.broker;
+package org.smartboot.mqtt.broker.topic;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
-import org.smartboot.mqtt.broker.topic.BrokerTopic;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
@@ -59,11 +59,6 @@ public class TopicSubscriber {
 
     private boolean enable = true;
 
-    TopicSubscriber() {
-        topic = null;
-        mqttSession = null;
-    }
-
     public TopicSubscriber(BrokerTopic topic, MqttSession session, MqttQoS mqttQoS, long nextConsumerOffset) {
         this.topic = topic;
         this.mqttSession = session;
@@ -71,24 +66,26 @@ public class TopicSubscriber {
         this.nextConsumerOffset = nextConsumerOffset;
     }
 
-    public void batchPublish(BrokerContextImpl brokerContext) {
+    /**
+     * 推送消息到客户端
+     */
+    void pushToClient() {
         if (mqttSession.isDisconnect() || !enable) {
             return;
         }
         if (semaphore.compareAndSet(false, true)) {
-            publishAvailable(brokerContext);
+            push0();
             mqttSession.flush();
         }
     }
 
-    private void publishAvailable(BrokerContextImpl brokerContext) {
+    private void push0() {
         Message message = topic.getMessageQueue().get(nextConsumerOffset);
         if (message == null) {
             if (semaphore.compareAndSet(true, false)) {
-                topic.getQueue().offer(this);
+                topic.addSubscriber(this);
                 if (topic.getMessageQueue().get(nextConsumerOffset) != null) {
-                    topic.getVersion().increment();
-                    brokerContext.notifyPush(topic);
+                    topic.push();
                 }
             }
             return;
@@ -99,33 +96,26 @@ public class TopicSubscriber {
             publishBuilder.publishProperties(new PublishProperties());
         }
 
-        long offset = message.getOffset();
-        nextConsumerOffset = offset + 1;
+        nextConsumerOffset = message.getOffset() + 1;
         //Qos0直接发送
         if (mqttQoS == MqttQoS.AT_MOST_ONCE) {
             mqttSession.write(publishBuilder.build(), false);
-            publishAvailable(brokerContext);
+            push0();
             return;
         }
 
-        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = mqttSession.getInflightQueue().offer(publishBuilder, mqttPacketIdentifierMessage -> {
+        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = mqttSession.getInflightQueue().offer(publishBuilder, () -> {
             if (semaphore.compareAndSet(true, false)) {
-                topic.getQueue().offer(TopicSubscriber.this);
-                topic.getVersion().increment();
+                topic.addSubscriber(TopicSubscriber.this);
             }
-            brokerContext.notifyPush(topic);
+            topic.push();
         });
         if (future == null) {
             return;
         }
-        future.whenComplete((mqttPacketIdentifierMessage, throwable) -> {
-            //最早发送的消息若收到响应，则更新点位
-            commitNextConsumerOffset(offset + 1);
-            commitRetainConsumerTimestamp(message.getCreateTime());
-            publishAvailable(brokerContext);
-        });
+        future.whenComplete((mqttPacketIdentifierMessage, throwable) -> push0());
 
-        publishAvailable(brokerContext);
+        push0();
     }
 
     public BrokerTopic getTopic() {
@@ -138,19 +128,6 @@ public class TopicSubscriber {
 
     public MqttQoS getMqttQoS() {
         return mqttQoS;
-    }
-
-    public long getNextConsumerOffset() {
-        return nextConsumerOffset;
-    }
-
-
-    public void commitRetainConsumerTimestamp(long retainConsumerTimestamp) {
-        //todo
-    }
-
-    public void commitNextConsumerOffset(long nextConsumerOffset) {
-        //todo
     }
 
     public long getLatestSubscribeTime() {
