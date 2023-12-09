@@ -32,9 +32,6 @@ import org.smartboot.socket.util.Attachment;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -49,13 +46,9 @@ public class InflightQueue {
     private int putIndex;
     private int count;
 
-    private final AtomicInteger packetId = new AtomicInteger(0);
+    private int packetId = 0;
 
     private final AbstractSession session;
-
-    private final ReentrantLock lock = new ReentrantLock(false);
-
-    private final Condition notFull = lock.newCondition();
 
     public InflightQueue(AbstractSession session, int size) {
         ValidateUtils.isTrue(size > 0, "inflight must >0");
@@ -63,18 +56,14 @@ public class InflightQueue {
         this.session = session;
     }
 
-    public CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> put(MqttMessageBuilders.MessageBuilder publishBuilder) {
-        final ReentrantLock lock = this.lock;
+    public synchronized CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> put(MqttMessageBuilders.MessageBuilder publishBuilder) {
         try {
-            lock.lockInterruptibly();
             while (count == queue.length) {
-                notFull.await();
+                this.wait();
             }
             return enqueue(publishBuilder);
         } catch (Exception e) {
             throw new MqttException("put message into inflight queue exception", e);
-        } finally {
-            lock.unlock();
         }
     }
 
@@ -84,33 +73,26 @@ public class InflightQueue {
         });
     }
 
-    public CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> offer(MqttMessageBuilders.MessageBuilder publishBuilder, Runnable runnable) {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            if (count == queue.length) {
-                int i = putIndex - 1;
-                if (i < 0) {
-                    i = queue.length - 1;
-                }
-                queue[i].getFuture().thenRun(runnable);
-                return null;
-            } else {
-                return enqueue(publishBuilder);
+    public synchronized CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> offer(MqttMessageBuilders.MessageBuilder publishBuilder, Runnable runnable) {
+        if (count == queue.length) {
+            int i = putIndex - 1;
+            if (i < 0) {
+                i = queue.length - 1;
             }
-        } finally {
-            lock.unlock();
+            queue[i].getFuture().thenRun(runnable);
+            return null;
+        } else {
+            return enqueue(publishBuilder);
         }
     }
 
 
-    public CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> enqueue(MqttMessageBuilders.MessageBuilder publishBuilder) {
-
-        int id = packetId.incrementAndGet();
+    private CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> enqueue(MqttMessageBuilders.MessageBuilder publishBuilder) {
+        int id = ++packetId;
         // 16位无符号最大值65535
         if (id > 65535) {
             id = id % queue.length + queue.length;
-            packetId.set(id);
+            packetId = id;
         }
         MqttPacketIdentifierMessage mqttMessage = publishBuilder.packetId(id).build();
         InflightMessage inflightMessage = new InflightMessage(id, mqttMessage);
@@ -202,18 +184,14 @@ public class InflightQueue {
             case PUBACK:
             case PUBCOMP: {
                 if (message.getFixedHeader().getMessageType() != inflightMessage.getExpectMessageType() || message.getVariableHeader().getPacketId() != inflightMessage.getAssignedPacketId()) {
-//                    System.out.println("maybe dup ack,ignore:" + message.getFixedHeader().getMessageType());
+                    LOGGER.info("maybe dup ack,message:{} {} ,except:{} {}", message.getFixedHeader().getMessageType(), message.getVariableHeader().getPacketId(), inflightMessage.getExpectMessageType(), inflightMessage.getAssignedPacketId());
                     break;
                 }
                 inflightMessage.setResponseMessage(message);
                 inflightMessage.setLatestTime(System.currentTimeMillis());
-                final ReentrantLock lock = this.lock;
-                lock.lock();
-                try {
-                    commit(inflightMessage);
-                } finally {
-                    lock.unlock();
-                }
+
+                commit(inflightMessage);
+
                 break;
             }
             case PUBREC:
@@ -239,13 +217,16 @@ public class InflightQueue {
         }
     }
 
-    private void commit(InflightMessage inflightMessage) {
+    private synchronized void commit(InflightMessage inflightMessage) {
         MqttVariableMessage<? extends MqttPacketIdVariableHeader> originalMessage = inflightMessage.getOriginalMessage();
         ValidateUtils.isTrue(originalMessage.getFixedHeader().getQosLevel().value() == 0 || originalMessage.getVariableHeader().getPacketId() == inflightMessage.getAssignedPacketId(), "invalid message");
         inflightMessage.setCommit(true);
 
         if ((inflightMessage.getAssignedPacketId() - 1) % queue.length != takeIndex) {
             return;
+        }
+        if (count < queue.length) {
+            this.notifyAll();
         }
         queue[takeIndex++] = null;
         count--;
@@ -256,15 +237,12 @@ public class InflightQueue {
         inflightMessage.getFuture().complete(inflightMessage.getResponseMessage());
         while (count > 0 && queue[takeIndex].isCommit()) {
             inflightMessage = queue[takeIndex];
-            inflightMessage.getFuture().complete(inflightMessage.getResponseMessage());
             queue[takeIndex++] = null;
             if (takeIndex == queue.length) {
                 takeIndex = 0;
             }
             count--;
-        }
-        if (count < queue.length) {
-            notFull.signal();
+            inflightMessage.getFuture().complete(inflightMessage.getResponseMessage());
         }
         if (count > 0) {
             //注册超时监听任务
