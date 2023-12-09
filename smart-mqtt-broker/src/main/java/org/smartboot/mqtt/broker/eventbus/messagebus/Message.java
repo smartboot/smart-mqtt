@@ -18,6 +18,7 @@ import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.PayloadEncodeEnum;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
+import org.smartboot.mqtt.common.util.MqttUtil;
 
 import java.util.Base64;
 
@@ -46,7 +47,7 @@ public class Message extends ToString {
     /**
      * 消息存储时间
      */
-    private final long createTime = System.currentTimeMillis();
+    private final long createTime = MqttUtil.currentTimeMillis();
 
     private final String clientId;
 

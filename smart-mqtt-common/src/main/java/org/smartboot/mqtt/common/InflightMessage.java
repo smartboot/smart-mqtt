@@ -17,6 +17,7 @@ import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
+import org.smartboot.mqtt.common.util.MqttUtil;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -62,7 +63,7 @@ public class InflightMessage {
             throw new UnsupportedOperationException();
         }
 
-        this.latestTime = System.currentTimeMillis();
+        this.latestTime = MqttUtil.currentTimeMillis();
     }
 
     public MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> getOriginalMessage() {

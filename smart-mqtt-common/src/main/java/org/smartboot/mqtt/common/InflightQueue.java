@@ -26,6 +26,7 @@ import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 import org.smartboot.mqtt.common.util.MqttAttachKey;
 import org.smartboot.mqtt.common.util.MqttMessageBuilders;
+import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.util.AttachKey;
 import org.smartboot.socket.util.Attachment;
@@ -128,13 +129,13 @@ public class InflightQueue {
                     LOGGER.debug("session is disconnect , pause qos monitor.");
                     return;
                 }
-                long delay = TimeUnit.SECONDS.toMillis(TIMEOUT) - System.currentTimeMillis() + inflightMessage.getLatestTime();
+                long delay = TimeUnit.SECONDS.toMillis(TIMEOUT) - MqttUtil.currentTimeMillis() + inflightMessage.getLatestTime();
                 if (delay > 0) {
                     LOGGER.info("the time is not up, try again in {} milliseconds ", delay);
                     session.getTimer().schedule(this, delay, TimeUnit.MILLISECONDS);
                     return;
                 }
-                inflightMessage.setLatestTime(System.currentTimeMillis());
+                inflightMessage.setLatestTime(MqttUtil.currentTimeMillis());
                 LOGGER.info("message:{} time out,retry...", inflightMessage.getExpectMessageType());
                 switch (inflightMessage.getExpectMessageType()) {
                     case PUBACK:
@@ -166,7 +167,7 @@ public class InflightQueue {
                 //不断重试直至完成
                 session.getTimer().schedule(this, TIMEOUT, TimeUnit.SECONDS);
             }
-        }, TimeUnit.SECONDS.toMillis(TIMEOUT) - (System.currentTimeMillis() - inflightMessage.getLatestTime()), TimeUnit.MILLISECONDS);
+        }, TimeUnit.SECONDS.toMillis(TIMEOUT) - (MqttUtil.currentTimeMillis() - inflightMessage.getLatestTime()), TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -188,7 +189,7 @@ public class InflightQueue {
                     break;
                 }
                 inflightMessage.setResponseMessage(message);
-                inflightMessage.setLatestTime(System.currentTimeMillis());
+                inflightMessage.setLatestTime(MqttUtil.currentTimeMillis());
 
                 commit(inflightMessage);
 
@@ -201,7 +202,7 @@ public class InflightQueue {
                     break;
                 }
                 inflightMessage.setResponseMessage(message);
-                inflightMessage.setLatestTime(System.currentTimeMillis());
+                inflightMessage.setLatestTime(MqttUtil.currentTimeMillis());
                 inflightMessage.setExpectMessageType(MqttMessageType.PUBCOMP);
                 //todo
                 ReasonProperties properties = null;

@@ -17,11 +17,13 @@ import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.exception.MqttException;
 import org.smartboot.mqtt.common.message.MqttCodecUtil;
+import org.smartboot.socket.timer.HashedWheelTimer;
 
 import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -35,6 +37,20 @@ public class MqttUtil {
     private static final char[] TOPIC_WILDCARDS = {'#', '+'};
 
     private static final Map<String, byte[]> cache = new ConcurrentHashMap<>();
+
+
+    /**
+     * 当前时间
+     */
+    private static long currentTimeMillis = System.currentTimeMillis();
+
+    static {
+        HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(() -> currentTimeMillis = System.currentTimeMillis(), 1, TimeUnit.SECONDS);
+    }
+
+    public static long currentTimeMillis() {
+        return currentTimeMillis;
+    }
 
     public static boolean containsTopicWildcards(String topicName) {
         for (char c : TOPIC_WILDCARDS) {

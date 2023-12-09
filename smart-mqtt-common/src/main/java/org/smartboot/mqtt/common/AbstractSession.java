@@ -19,6 +19,7 @@ import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
+import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.timer.Timer;
 import org.smartboot.socket.transport.AioSession;
@@ -94,7 +95,7 @@ public abstract class AbstractSession {
             if (autoFlush) {
                 mqttWriter.flush();
             }
-            latestSendMessageTime = System.currentTimeMillis();
+            latestSendMessageTime = MqttUtil.currentTimeMillis();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
