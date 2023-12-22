@@ -8,13 +8,13 @@
  *  without special permission from the smartboot organization.
  */
 
-package org.smartboot.mqtt.common.eventbus.subscriber;
+package org.smartboot.mqtt.broker.eventbus.subscriber;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
-import org.smartboot.mqtt.common.eventbus.EventObject;
-import org.smartboot.mqtt.common.eventbus.EventType;
+import org.smartboot.mqtt.broker.eventbus.EventBusSubscriber;
+import org.smartboot.mqtt.broker.eventbus.EventObject;
+import org.smartboot.mqtt.broker.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPingReqMessage;
 

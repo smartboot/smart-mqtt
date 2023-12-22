@@ -14,9 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.broker.eventbus.ServerEventType;
+import org.smartboot.mqtt.broker.eventbus.EventObject;
+import org.smartboot.mqtt.broker.eventbus.EventType;
 import org.smartboot.mqtt.common.enums.MqttVersion;
-import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.message.MqttUnsubAckMessage;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.mqtt.common.message.payload.Mqtt5UnsubAckPayload;
@@ -35,7 +35,7 @@ public class UnSubscribeProcessor extends AuthorizedMqttProcessor<MqttUnsubscrib
     @Override
     public void process0(BrokerContext context, MqttSession session, MqttUnsubscribeMessage unsubscribeMessage) {
         LOGGER.info("receive unsubscribe message:{}", unsubscribeMessage);
-        context.getEventBus().publish(ServerEventType.UNSUBSCRIBE_ACCEPT, EventObject.newEventObject(session, unsubscribeMessage));
+        context.getEventBus().publish(EventType.UNSUBSCRIBE_ACCEPT, EventObject.newEventObject(session, unsubscribeMessage));
 
         //TODO
         //如果服务端删除了一个订阅：

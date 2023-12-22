@@ -12,7 +12,9 @@ package org.smartboot.mqtt.broker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.eventbus.ServerEventType;
+import org.smartboot.mqtt.broker.eventbus.EventBus;
+import org.smartboot.mqtt.broker.eventbus.EventObject;
+import org.smartboot.mqtt.broker.eventbus.EventType;
 import org.smartboot.mqtt.broker.provider.impl.session.SessionState;
 import org.smartboot.mqtt.broker.topic.BrokerTopic;
 import org.smartboot.mqtt.broker.topic.TopicSubscriber;
@@ -21,7 +23,7 @@ import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
-import org.smartboot.mqtt.common.eventbus.EventType;
+import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
 import org.smartboot.mqtt.common.util.ValidateUtils;
@@ -48,7 +50,7 @@ public class MqttSession extends AbstractSession {
     private final Map<String, TopicFilterSubscriber> subscribers = new ConcurrentHashMap<>();
 
     private final BrokerContext mqttContext;
-
+    private final EventBus eventBus;
     private String username;
     /**
      * 已授权
@@ -65,7 +67,8 @@ public class MqttSession extends AbstractSession {
     TimerTask idleConnectTimer;
 
     public MqttSession(BrokerContext mqttContext, AioSession session, MqttWriter mqttWriter) {
-        super(mqttContext.getEventBus(), mqttContext.getTimer());
+        super(mqttContext.getTimer());
+        this.eventBus = mqttContext.getEventBus();
         this.mqttContext = mqttContext;
         this.session = session;
         this.mqttWriter = mqttWriter;
@@ -78,7 +81,7 @@ public class MqttSession extends AbstractSession {
                 }
             }
         }, mqttContext.getBrokerConfigure().getNoConnectIdleTimeout(), TimeUnit.MILLISECONDS);
-        mqttContext.getEventBus().publish(ServerEventType.SESSION_CREATE, this);
+        mqttContext.getEventBus().publish(EventType.SESSION_CREATE, this);
     }
 
     public ConnectProperties getProperties() {
@@ -95,6 +98,12 @@ public class MqttSession extends AbstractSession {
 
     public void setCleanSession(boolean cleanSession) {
         this.cleanSession = cleanSession;
+    }
+
+    @Override
+    public synchronized void write(MqttMessage mqttMessage, boolean autoFlush) {
+        eventBus.publish(EventType.WRITE_MESSAGE, EventObject.newEventObject(this, mqttMessage));
+        super.write(mqttMessage, autoFlush);
     }
 
     public synchronized void disconnect() {
@@ -188,14 +197,14 @@ public class MqttSession extends AbstractSession {
                     preSubscription.setTopicFilterToken(topicToken);
                     //绑定新的订阅关系
                     subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, preSubscription);
-                    mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_REFRESH_TOPIC, preSubscription);
+                    mqttContext.getEventBus().publish(EventType.SUBSCRIBE_REFRESH_TOPIC, preSubscription);
                 }
             }
             return;
         }
         //以当前消息队列的最新点位为起始点位
         TopicSubscriber subscription = new TopicSubscriber(topic, MqttSession.this, mqttQoS, topic.getMessageQueue().getLatestOffset() + 1);
-        mqttContext.getEventBus().publish(ServerEventType.SUBSCRIBE_TOPIC, subscription);
+        mqttContext.getEventBus().publish(EventType.SUBSCRIBE_TOPIC, subscription);
         subscription.setTopicFilterToken(topicToken);
         topic.getConsumeOffsets().put(MqttSession.this, subscription);
         subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, subscription);
@@ -216,7 +225,7 @@ public class MqttSession extends AbstractSession {
             TopicSubscriber removeSubscriber = subscriber.getTopic().getConsumeOffsets().remove(this);
             if (subscriber == removeSubscriber) {
                 removeSubscriber.disable();
-                mqttContext.getEventBus().publish(ServerEventType.UNSUBSCRIBE_TOPIC, removeSubscriber);
+                mqttContext.getEventBus().publish(EventType.UNSUBSCRIBE_TOPIC, removeSubscriber);
                 LOGGER.debug("remove subscriber:{} success!", subscriber.getTopic().getTopic());
             } else {
                 LOGGER.error("remove subscriber:{} error!", removeSubscriber);

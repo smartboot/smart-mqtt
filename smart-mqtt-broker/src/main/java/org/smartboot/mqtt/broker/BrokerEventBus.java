@@ -12,9 +12,9 @@ package org.smartboot.mqtt.broker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.common.eventbus.EventBus;
-import org.smartboot.mqtt.common.eventbus.EventBusSubscriber;
-import org.smartboot.mqtt.common.eventbus.EventType;
+import org.smartboot.mqtt.broker.eventbus.EventBus;
+import org.smartboot.mqtt.broker.eventbus.EventBusSubscriber;
+import org.smartboot.mqtt.broker.eventbus.EventType;
 
 import java.util.List;
 

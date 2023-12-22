@@ -13,12 +13,9 @@ package org.smartboot.mqtt.client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.client.processor.MqttAckProcessor;
-import org.smartboot.mqtt.client.processor.MqttPingRespProcessor;
 import org.smartboot.mqtt.client.processor.MqttProcessor;
 import org.smartboot.mqtt.client.processor.PubRelProcessor;
 import org.smartboot.mqtt.client.processor.PublishProcessor;
-import org.smartboot.mqtt.common.eventbus.EventObject;
-import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.exception.MqttException;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
@@ -49,14 +46,14 @@ public class MqttClientProcessor extends AbstractMessageProcessor<MqttMessage> {
     private static final Map<Class<? extends MqttMessage>, MqttProcessor<? extends MqttMessage>> processors = new HashMap<>();
 
     static {
-        processors.put(MqttConnAckMessage.class, (MqttProcessor<MqttConnAckMessage>) (client, message) -> client.getEventBus().publish(EventType.RECEIVE_CONN_ACK_MESSAGE, message));
+        processors.put(MqttConnAckMessage.class, (MqttProcessor<MqttConnAckMessage>) MqttClient::receiveConnAckMessage);
         processors.put(MqttPubAckMessage.class, new MqttAckProcessor<MqttPubAckMessage>());
         processors.put(MqttPublishMessage.class, new PublishProcessor());
         processors.put(MqttPubRecMessage.class, new MqttAckProcessor<MqttPubRecMessage>());
         processors.put(MqttPubCompMessage.class, new MqttAckProcessor<MqttPubCompMessage>());
         processors.put(MqttPubRelMessage.class, new PubRelProcessor());
         processors.put(MqttSubAckMessage.class, new MqttAckProcessor<MqttSubAckMessage>());
-        processors.put(MqttPingRespMessage.class, new MqttPingRespProcessor());
+        processors.put(MqttPingRespMessage.class, (MqttProcessor<MqttPingRespMessage>) (mqttClient, message) -> mqttClient.pingTimeout = 0);
     }
 
 
@@ -65,7 +62,6 @@ public class MqttClientProcessor extends AbstractMessageProcessor<MqttMessage> {
         Attachment attachment = session.getAttachment();
         MqttClient client = attachment.get(SESSION_KEY);
         client.setLatestReceiveMessageTime(System.currentTimeMillis());
-        client.getEventBus().publish(EventType.RECEIVE_MESSAGE, EventObject.newEventObject(client, msg));
         MqttProcessor processor = processors.get(msg.getClass());
 //        LOGGER.info("receive msg:{}", msg);
         if (processor != null) {

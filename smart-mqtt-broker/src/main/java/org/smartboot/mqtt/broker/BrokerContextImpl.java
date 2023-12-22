@@ -16,8 +16,9 @@ import com.alibaba.fastjson2.JSONReader;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.broker.eventbus.EventBus;
+import org.smartboot.mqtt.broker.eventbus.EventType;
 import org.smartboot.mqtt.broker.eventbus.KeepAliveMonitorSubscriber;
-import org.smartboot.mqtt.broker.eventbus.ServerEventType;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.broker.eventbus.messagebus.MessageBus;
 import org.smartboot.mqtt.broker.eventbus.messagebus.MessageBusSubscriber;
@@ -41,7 +42,6 @@ import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.QosRetryPlugin;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
-import org.smartboot.mqtt.common.eventbus.EventBus;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttDisconnectMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
@@ -168,7 +168,7 @@ public class BrokerContextImpl implements BrokerContext {
         }
 
 
-        eventBus.publish(ServerEventType.BROKER_STARTED, this);
+        eventBus.publish(EventType.BROKER_STARTED, this);
         //释放内存
         configJson = null;
         System.out.println(BrokerConfigure.BANNER + "\r\n :: smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
@@ -192,7 +192,7 @@ public class BrokerContextImpl implements BrokerContext {
 
             @Override
             public Thread newThread(Runnable r) {
-                return brokerConfigure.getBufferPagePool().newThread(r, "broker-push-" + (index++));
+                return new Thread(r, "broker-push-" + (index++));
             }
         });
     }
@@ -211,7 +211,7 @@ public class BrokerContextImpl implements BrokerContext {
      * 订阅事件总线
      */
     private void subscribeEventBus() {
-        eventBus.subscribe(ServerEventType.RECEIVE_PUBLISH_MESSAGE, (eventType, eventObject) -> {
+        eventBus.subscribe(EventType.RECEIVE_PUBLISH_MESSAGE, (eventType, eventObject) -> {
             //进入到消息总线前要先确保BrokerTopic已创建
             BrokerTopic topic = getOrCreateTopic(eventObject.getObject().getVariableHeader().getTopicName());
             try {
@@ -223,16 +223,16 @@ public class BrokerContextImpl implements BrokerContext {
         });
 
         //保持连接状态监听,长时间没有消息通信将断开连接
-        eventBus.subscribe(ServerEventType.CONNECT, new KeepAliveMonitorSubscriber(this));
+        eventBus.subscribe(EventType.CONNECT, new KeepAliveMonitorSubscriber(this));
         //完成连接认证，移除监听器
-        eventBus.subscribe(ServerEventType.CONNECT, (eventType, object) -> {
+        eventBus.subscribe(EventType.CONNECT, (eventType, object) -> {
             MqttSession session = (MqttSession) object.getSession();
             session.idleConnectTimer.cancel();
             session.idleConnectTimer = null;
         });
 
         //一个新的订阅建立时，对每个匹配的主题名，如果存在最近保留的消息，它必须被发送给这个订阅者
-        eventBus.subscribe(ServerEventType.SUBSCRIBE_TOPIC, (eventType, subscriber) -> retainPushThreadPool.execute(new AsyncTask() {
+        eventBus.subscribe(EventType.SUBSCRIBE_TOPIC, (eventType, subscriber) -> retainPushThreadPool.execute(new AsyncTask() {
             @Override
             public void execute() {
                 BrokerTopic topic = subscriber.getTopic();
@@ -264,7 +264,7 @@ public class BrokerContextImpl implements BrokerContext {
             }
         }));
 
-        eventBus.subscribe(ServerEventType.TOPIC_CREATE, (eventType, object) -> subscribeTopicTree.match(object, (session, topicFilterSubscriber) -> {
+        eventBus.subscribe(EventType.TOPIC_CREATE, (eventType, object) -> subscribeTopicTree.match(object, (session, topicFilterSubscriber) -> {
             if (!providers.getSubscribeProvider().subscribeTopic(object.getTopic(), session)) {
                 return;
             }
@@ -283,11 +283,11 @@ public class BrokerContextImpl implements BrokerContext {
 
             @Override
             public Thread newThread(Runnable r) {
-                return bufferPagePool.newThread(r, "smart-mqtt-broker-" + (++i));
+                return new Thread(r, "smart-mqtt-broker-" + (++i));
             }
         }));
         brokerConfigure.setBufferPagePool(bufferPagePool);
-        eventBus.publish(ServerEventType.BROKER_CONFIGURE_LOADED, brokerConfigure);
+        eventBus.publish(EventType.BROKER_CONFIGURE_LOADED, brokerConfigure);
 //        System.out.println("brokerConfigure: " + brokerConfigure);
     }
 
@@ -323,7 +323,7 @@ public class BrokerContextImpl implements BrokerContext {
             ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topicName), "invalid topicName: " + topicName);
             BrokerTopic newTopic = new BrokerTopic(topic, pushThreadPool);
             topicPublishTree.addTopic(newTopic);
-            eventBus.publish(ServerEventType.TOPIC_CREATE, newTopic);
+            eventBus.publish(EventType.TOPIC_CREATE, newTopic);
             return newTopic;
         });
     }
@@ -428,7 +428,7 @@ public class BrokerContextImpl implements BrokerContext {
     @Override
     public void destroy() {
         LOGGER.info("destroy broker...");
-        eventBus.publish(ServerEventType.BROKER_DESTROY, this);
+        eventBus.publish(EventType.BROKER_DESTROY, this);
         pushThreadPool.shutdown();
         if (server != null) {
             server.shutdown();

@@ -14,9 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.broker.eventbus.ServerEventType;
+import org.smartboot.mqtt.broker.eventbus.EventObject;
+import org.smartboot.mqtt.broker.eventbus.EventType;
 import org.smartboot.mqtt.common.enums.MqttVersion;
-import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.message.MqttSubAckMessage;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
@@ -41,7 +41,7 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
         int i = 0;
         for (MqttTopicSubscription mqttTopicSubscription : mqttSubscribeMessage.getPayload().getTopicSubscriptions()) {
             qosArray[i++] = session.subscribe(mqttTopicSubscription.getTopicFilter(), mqttTopicSubscription.getQualityOfService()).value();
-            context.getEventBus().publish(ServerEventType.SUBSCRIBE_ACCEPT, EventObject.newEventObject(session, mqttTopicSubscription));
+            context.getEventBus().publish(EventType.SUBSCRIBE_ACCEPT, EventObject.newEventObject(session, mqttTopicSubscription));
         }
 
 

@@ -24,15 +24,12 @@ import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttDisConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
-import org.smartboot.mqtt.common.eventbus.EventBus;
-import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttDisconnectMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPingReqMessage;
-import org.smartboot.mqtt.common.message.MqttPingRespMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttSubAckMessage;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
@@ -118,7 +115,7 @@ public class MqttClient extends AbstractSession {
      * 重连Consumer
      */
     private Consumer<MqttConnAckMessage> reconnectConsumer;
-    private int pingTimeout;
+    int pingTimeout;
 
     private TimerTask connectTimer;
 
@@ -139,7 +136,7 @@ public class MqttClient extends AbstractSession {
     }
 
     public MqttClient(String uri, String clientId, MqttVersion mqttVersion) {
-        super(new ClientEventBus(), TIMER);
+        super(TIMER);
 
         String[] array = uri.split(":");
         if (array[0].equals("mqtts")) {
@@ -153,13 +150,6 @@ public class MqttClient extends AbstractSession {
         clientConfigure.setPort(NumberUtils.toInt(array[2]));
         clientConfigure.setMqttVersion(mqttVersion);
         this.clientId = clientId;
-        //ping-pong消息超时监听
-        eventBus.subscribe(EventType.RECEIVE_MESSAGE, (eventType, object) -> {
-            if (object.getObject() instanceof MqttPingRespMessage) {
-                pingTimeout = 0;
-            }
-        });
-        eventBus.subscribe(EventType.RECEIVE_CONN_ACK_MESSAGE, (eventType, object) -> receiveConnAckMessage(object));
     }
 
 
@@ -406,7 +396,7 @@ public class MqttClient extends AbstractSession {
 
     }
 
-    private void receiveConnAckMessage(MqttConnAckMessage connAckMessage) {
+    void receiveConnAckMessage(MqttConnAckMessage connAckMessage) {
         connectTimer.cancel();
         connectTimer = null;
         if (!clientConfigure.isAutomaticReconnect()) {
@@ -542,10 +532,6 @@ public class MqttClient extends AbstractSession {
             client.shutdown();
             client = null;
         }
-    }
-
-    EventBus getEventBus() {
-        return eventBus;
     }
 
     public void setReconnectConsumer(Consumer<MqttConnAckMessage> reconnectConsumer) {

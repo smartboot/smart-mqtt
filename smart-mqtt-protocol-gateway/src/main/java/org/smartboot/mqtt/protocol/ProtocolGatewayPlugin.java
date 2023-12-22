@@ -11,15 +11,14 @@
 package org.smartboot.mqtt.protocol;
 
 import org.smartboot.mqtt.broker.BrokerContext;
-import org.smartboot.mqtt.broker.eventbus.ServerEventType;
+import org.smartboot.mqtt.broker.eventbus.DisposableEventBusSubscriber;
+import org.smartboot.mqtt.broker.eventbus.EventType;
 import org.smartboot.mqtt.broker.plugin.Plugin;
-import org.smartboot.mqtt.common.eventbus.DisposableEventBusSubscriber;
-import org.smartboot.mqtt.common.eventbus.EventType;
 
 public abstract class ProtocolGatewayPlugin extends Plugin {
     @Override
     protected void initPlugin(BrokerContext brokerContext) {
-        brokerContext.getEventBus().subscribe(ServerEventType.BROKER_STARTED, new DisposableEventBusSubscriber<BrokerContext>() {
+        brokerContext.getEventBus().subscribe(EventType.BROKER_STARTED, new DisposableEventBusSubscriber<BrokerContext>() {
             @Override
             public void subscribe(EventType<BrokerContext> eventType, BrokerContext object) {
                 Config config = init(brokerContext);

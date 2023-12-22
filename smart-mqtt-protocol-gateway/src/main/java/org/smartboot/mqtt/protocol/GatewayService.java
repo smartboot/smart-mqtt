@@ -11,10 +11,10 @@
 package org.smartboot.mqtt.protocol;
 
 import org.smartboot.mqtt.broker.BrokerContext;
-import org.smartboot.mqtt.broker.eventbus.ServerEventType;
+import org.smartboot.mqtt.broker.eventbus.EventObject;
+import org.smartboot.mqtt.broker.eventbus.EventType;
 import org.smartboot.mqtt.client.MqttClient;
 import org.smartboot.mqtt.common.enums.MqttQoS;
-import org.smartboot.mqtt.common.eventbus.EventObject;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 import org.smartboot.mqtt.common.util.MqttUtil;
@@ -57,7 +57,7 @@ public class GatewayService {
         MqttPublishMessage message = MqttMessageBuilders.publish()
                 .qos(MqttQoS.AT_MOST_ONCE)
                 .topicName(topic).payload(payload).build();
-        brokerContext.getEventBus().publish(ServerEventType.RECEIVE_PUBLISH_MESSAGE, EventObject.newEventObject(client, message));
+        brokerContext.getEventBus().publish(EventType.RECEIVE_PUBLISH_MESSAGE, EventObject.newEventObject(client, message));
     }
 
     public void addSession(String key, AioSession session) {

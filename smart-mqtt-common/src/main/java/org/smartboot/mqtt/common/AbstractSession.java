@@ -10,12 +10,7 @@
 
 package org.smartboot.mqtt.common;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.enums.MqttVersion;
-import org.smartboot.mqtt.common.eventbus.EventBus;
-import org.smartboot.mqtt.common.eventbus.EventObject;
-import org.smartboot.mqtt.common.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
 import org.smartboot.mqtt.common.protocol.MqttProtocol;
@@ -34,8 +29,7 @@ import java.util.Hashtable;
  * @version V1.0 , 2022/4/12
  */
 public abstract class AbstractSession {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSession.class);
-    protected final EventBus eventBus;
+
     protected String clientId;
     protected AioSession session;
     /**
@@ -60,8 +54,7 @@ public abstract class AbstractSession {
 
     protected final Timer timer;
 
-    public AbstractSession(EventBus eventBus, Timer timer) {
-        this.eventBus = eventBus;
+    public AbstractSession(Timer timer) {
         this.timer = timer;
     }
 
@@ -82,15 +75,13 @@ public abstract class AbstractSession {
     }
 
 
-    public final synchronized void write(MqttMessage mqttMessage, boolean autoFlush) {
+    public synchronized void write(MqttMessage mqttMessage, boolean autoFlush) {
         try {
             if (disconnect) {
 //                this.disconnect();
                 ValidateUtils.isTrue(false, "已断开连接,无法发送消息");
             }
             mqttMessage.setVersion(mqttVersion);
-            eventBus.publish(EventType.WRITE_MESSAGE, EventObject.newEventObject(this, mqttMessage));
-
             mqttMessage.write(mqttWriter);
             if (autoFlush) {
                 mqttWriter.flush();

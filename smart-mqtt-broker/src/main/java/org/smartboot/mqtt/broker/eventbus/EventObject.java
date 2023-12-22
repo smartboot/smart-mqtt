@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package org.smartboot.mqtt.common.eventbus;
+package org.smartboot.mqtt.broker.eventbus;
 
 import org.smartboot.mqtt.common.AbstractSession;
 
