@@ -61,9 +61,7 @@ public class MqttClientProcessor extends AbstractMessageProcessor<MqttMessage> {
     public void process0(AioSession session, MqttMessage msg) {
         Attachment attachment = session.getAttachment();
         MqttClient client = attachment.get(SESSION_KEY);
-        client.setLatestReceiveMessageTime(System.currentTimeMillis());
         MqttProcessor processor = processors.get(msg.getClass());
-//        LOGGER.info("receive msg:{}", msg);
         if (processor != null) {
             processor.process(client, msg);
         } else {

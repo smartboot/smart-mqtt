@@ -36,10 +36,7 @@ public abstract class AbstractSession {
      * 最近一次发送的消息
      */
     protected long latestSendMessageTime;
-    /**
-     * 最近一次收到客户端消息的时间
-     */
-    private long latestReceiveMessageTime;
+
 
     /**
      * 是否正常断开连接
@@ -100,15 +97,6 @@ public abstract class AbstractSession {
         if (!disconnect) {
             mqttWriter.flush();
         }
-    }
-
-
-    public long getLatestReceiveMessageTime() {
-        return latestReceiveMessageTime;
-    }
-
-    public void setLatestReceiveMessageTime(long latestReceiveMessageTime) {
-        this.latestReceiveMessageTime = latestReceiveMessageTime;
     }
 
     public final String getClientId() {

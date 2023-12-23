@@ -10,7 +10,7 @@
 
 package org.smartboot.mqtt.broker.eventbus;
 
-import org.smartboot.mqtt.common.AbstractSession;
+import org.smartboot.mqtt.broker.MqttSession;
 
 /**
  * 通用事件模型
@@ -19,19 +19,19 @@ import org.smartboot.mqtt.common.AbstractSession;
  * @version V1.0 , 2022/6/29
  */
 public class EventObject<T> {
-    private final AbstractSession session;
+    private final MqttSession session;
     private final T object;
 
-    private EventObject(AbstractSession session, T object) {
+    private EventObject(MqttSession session, T object) {
         this.session = session;
         this.object = object;
     }
 
-    public static <T> EventObject<T> newEventObject(AbstractSession mqttSession, T object) {
+    public static <T> EventObject<T> newEventObject(MqttSession mqttSession, T object) {
         return new EventObject<>(mqttSession, object);
     }
 
-    public AbstractSession getSession() {
+    public MqttSession getSession() {
         return session;
     }
 

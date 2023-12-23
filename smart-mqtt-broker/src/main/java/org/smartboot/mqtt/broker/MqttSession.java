@@ -65,6 +65,10 @@ public class MqttSession extends AbstractSession {
     private ConnectProperties properties;
 
     TimerTask idleConnectTimer;
+    /**
+     * 最近一次收到客户端消息的时间
+     */
+    private long latestReceiveMessageTime;
 
     public MqttSession(BrokerContext mqttContext, AioSession session, MqttWriter mqttWriter) {
         super(mqttContext.getTimer());
@@ -253,5 +257,13 @@ public class MqttSession extends AbstractSession {
 
     public Map<String, TopicFilterSubscriber> getSubscribers() {
         return subscribers;
+    }
+
+    public long getLatestReceiveMessageTime() {
+        return latestReceiveMessageTime;
+    }
+
+    public void setLatestReceiveMessageTime(long latestReceiveMessageTime) {
+        this.latestReceiveMessageTime = latestReceiveMessageTime;
     }
 }
