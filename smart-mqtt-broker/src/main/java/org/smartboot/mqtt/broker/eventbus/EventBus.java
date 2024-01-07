@@ -10,20 +10,34 @@
 
 package org.smartboot.mqtt.broker.eventbus;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/6/29
  */
-public interface EventBus {
+public class EventBus {
+    private static final Logger LOGGER = LoggerFactory.getLogger(EventBus.class);
 
-    <T> void subscribe(EventType<T> type, EventBusSubscriber<T> subscriber);
 
-    <T> void subscribe(List<EventType<T>> types, EventBusSubscriber<T> subscriber);
+    public <T> void subscribe(EventType<T> type, EventBusSubscriber<T> subscriber) {
+        LOGGER.debug("subscribe eventbus, type: {} ,subscriber: {}", type, subscriber);
+        type.subscribe(subscriber);
+    }
+
+    public <T> void subscribe(List<EventType<T>> types, EventBusSubscriber<T> subscriber) {
+        for (EventType<T> eventType : types) {
+            subscribe(eventType, subscriber);
+        }
+    }
 
     /**
      * 发布消息至总线
      */
-    <T> void publish(EventType<T> eventType, T object);
+    public <T> void publish(EventType<T> eventType, T object) {
+        eventType.publish(object);
+    }
 }

@@ -121,12 +121,12 @@ public class EventType<T> {
                 '}';
     }
 
-    public void subscribe(EventBusSubscriber<T> subscriber) {
+    void subscribe(EventBusSubscriber<T> subscriber) {
         subscribers.add(subscriber);
     }
 
 
-    public void publish(T object) {
+    void publish(T object) {
         boolean remove = false;
         for (EventBusSubscriber<T> subscriber : subscribers) {
             try {

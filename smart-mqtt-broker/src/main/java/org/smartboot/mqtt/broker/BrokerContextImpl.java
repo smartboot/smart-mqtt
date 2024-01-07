@@ -21,7 +21,6 @@ import org.smartboot.mqtt.broker.eventbus.EventType;
 import org.smartboot.mqtt.broker.eventbus.KeepAliveMonitorSubscriber;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.broker.eventbus.messagebus.MessageBus;
-import org.smartboot.mqtt.broker.eventbus.messagebus.MessageBusSubscriber;
 import org.smartboot.mqtt.broker.eventbus.messagebus.consumer.RetainPersistenceConsumer;
 import org.smartboot.mqtt.broker.plugin.Plugin;
 import org.smartboot.mqtt.broker.processor.ConnectProcessor;
@@ -109,8 +108,11 @@ public class BrokerContextImpl implements BrokerContext {
      * Keep-Alive监听线程
      */
     private final Timer timer = new HashedWheelTimer(r -> new Thread(r, "broker-timer"), 50, 1024);
-    private final MessageBus messageBusSubscriber = new MessageBusSubscriber();
-    private final EventBus eventBus = new BrokerEventBus();
+    private final MessageBus messageBusSubscriber = new MessageBus();
+    /**
+     * 事件总线
+     */
+    private final EventBus eventBus = new EventBus();
     private final List<Plugin> plugins = new ArrayList<>();
     private final Providers providers = new Providers();
     private ExecutorService pushThreadPool;

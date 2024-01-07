@@ -10,10 +10,14 @@
 
 package org.smartboot.mqtt.broker.eventbus.messagebus;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.eventbus.messagebus.consumer.Consumer;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Predicate;
 
 /**
@@ -22,24 +26,53 @@ import java.util.function.Predicate;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/4/4
  */
-public interface MessageBus {
+public class MessageBus {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageBus.class);
+    /**
+     * 消息总线消费者
+     */
+    private final List<Consumer> messageBuses = new ArrayList<>();
 
     /**
      * 订阅消息总线消费者
      */
-    void consumer(Consumer consumer);
+    public void consumer(Consumer consumer) {
+        messageBuses.add(consumer);
+    }
 
     /**
      * 订阅消息总线消费者
      *
      * @param consumer  消费者
-     * @param predicate 消费条件
+     * @param filter 消费条件
      */
-    void consumer(Consumer consumer, Predicate<Message> predicate);
+    public void consumer(Consumer consumer, Predicate<Message> filter) {
+        consumer((publishMessage) -> {
+            if (filter.test(publishMessage)) {
+                consumer.consume(publishMessage);
+            }
+        });
+    }
 
     /**
      * 发布消息至总线触发消费
      */
-    void publish(AbstractSession mqttSession, MqttPublishMessage storedMessage);
-
+    public void publish(AbstractSession mqttSession, MqttPublishMessage message) {
+        Message persistenceMessage = new Message(mqttSession, message);
+        boolean remove = false;
+        for (Consumer messageConsumer : messageBuses) {
+            try {
+                if (messageConsumer.enable()) {
+                    messageConsumer.consume(persistenceMessage);
+                } else {
+                    remove = true;
+                }
+            } catch (Throwable throwable) {
+                LOGGER.info("messageBus conumse exception", throwable);
+            }
+        }
+        if (remove) {
+            messageBuses.removeIf(consumer -> !consumer.enable());
+        }
+    }
 }
