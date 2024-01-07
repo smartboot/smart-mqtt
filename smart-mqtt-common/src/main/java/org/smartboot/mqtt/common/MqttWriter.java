@@ -10,24 +10,55 @@
 
 package org.smartboot.mqtt.common;
 
+import org.smartboot.mqtt.common.util.ValidateUtils;
+import org.smartboot.socket.transport.WriteBuffer;
+
 import java.io.IOException;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/12/2
  */
-public interface MqttWriter {
-    void reset();
+public class MqttWriter {
+    private final WriteBuffer writeBuffer;
+    private int size;
 
-    void writeByte(byte b);
+    public MqttWriter(WriteBuffer writeBuffer) {
+        this.writeBuffer = writeBuffer;
+    }
 
-    void writeShort(short data) throws IOException;
+    public void reset() {
+        size = 0;
+    }
 
-    void writeInt(int data) throws IOException;
+    public void writeByte(byte b) {
+        size++;
+        writeBuffer.writeByte(b);
+    }
 
-    void write(byte[] data) throws IOException;
+    public void writeShort(short data) throws IOException {
+        ValidateUtils.isTrue(size != 0, "error: writeShort can't write data, because writer is empty");
+        size += 2;
+        writeBuffer.writeShort(data);
+    }
 
-    void flush();
+    public void writeInt(int data) throws IOException {
+        ValidateUtils.isTrue(size != 0, "error: writeShort can't write data, because writer is empty");
+        size += 4;
+        writeBuffer.writeInt(data);
+    }
 
-    int writeSize();
+    public synchronized void write(byte[] data) throws IOException {
+        ValidateUtils.isTrue(size != 0, "error: writeShort can't write data, because writer is empty");
+        size += data.length;
+        writeBuffer.write(data);
+    }
+
+    public void flush() {
+        writeBuffer.flush();
+    }
+
+    public int writeSize() {
+        return size;
+    }
 }
