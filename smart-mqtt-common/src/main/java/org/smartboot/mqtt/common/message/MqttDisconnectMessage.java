@@ -38,7 +38,10 @@ public class MqttDisconnectMessage extends MqttVariableMessage<MqttDisconnectVar
         }
     }
 
+    /**
+     * MQTT3 的构造方法
+     */
     public MqttDisconnectMessage() {
-        super(MqttFixedHeader.DISCONNECT_HEADER);
+        this(MqttDisconnectVariableHeader.MQTT3_DISCONNECT_VARIABLE_HEADER);
     }
 }

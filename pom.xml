@@ -286,5 +286,6 @@
         <module>smart-mqtt-client</module>
         <module>plugins</module>
         <module>smart-mqtt-protocol-gateway</module>
+        <module>smart-mqtt-test</module>
     </modules>
 </project>

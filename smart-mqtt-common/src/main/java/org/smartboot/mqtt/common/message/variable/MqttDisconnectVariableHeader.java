@@ -22,6 +22,21 @@ import java.io.IOException;
  * @version V1.0 , 2018/4/22
  */
 public class MqttDisconnectVariableHeader extends MqttVariableHeader<DisConnectProperties> {
+
+    /**
+     *  MQTT3 报文没有可变报头,没有有效载荷。
+     */
+    public static final MqttDisconnectVariableHeader MQTT3_DISCONNECT_VARIABLE_HEADER = new MqttDisconnectVariableHeader(null, null) {
+        @Override
+        public int preEncode0() {
+            return 0;
+        }
+
+        @Override
+        public void writeTo(MqttWriter mqttWriter) throws IOException {
+
+        }
+    };
     /**
      * MQTT5: 断开原因值
      */
