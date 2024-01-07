@@ -15,6 +15,7 @@ import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.Codec;
 import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.common.message.variable.properties.WillProperties;
+import org.smartboot.mqtt.common.util.ValidateUtils;
 
 import java.io.IOException;
 
@@ -55,6 +56,12 @@ public class WillMessage extends Codec {
 
     public void setPayload(byte[] payload) {
         this.payload = payload;
+    }
+
+    void check() {
+        ValidateUtils.notBlank(topic, "topic is null");
+        ValidateUtils.notNull(willQos, "qos is null");
+        ValidateUtils.notNull(payload, "payload is null");
     }
 
     public MqttQoS getWillQos() {

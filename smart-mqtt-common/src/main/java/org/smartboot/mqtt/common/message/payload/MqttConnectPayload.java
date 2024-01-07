@@ -74,6 +74,7 @@ public final class MqttConnectPayload extends MqttPayload {
         length += clientIdBytes.length;
 
         if (willMessage != null) {
+            willMessage.check();
             length += willMessage.preEncode();
         }
         if (userName != null) {

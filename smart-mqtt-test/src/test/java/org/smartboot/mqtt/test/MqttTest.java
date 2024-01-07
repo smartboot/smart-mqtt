@@ -20,6 +20,7 @@ import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.BrokerContextImpl;
 import org.smartboot.mqtt.client.MqttClient;
 import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.common.message.payload.WillMessage;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
@@ -104,7 +105,6 @@ public class MqttTest {
         CountDownLatch countDownLatch = new CountDownLatch(i);
         String payload = "hello";
         mqttClient.subscribe("/a", MqttQoS.AT_MOST_ONCE, (mqttClient1, mqttPublishMessage) -> {
-//            System.out.println(new String(mqttPublishMessage.getPayload().getPayload()));
             countDownLatch.countDown();
         }, (mqttClient1, mqttQoS) -> {
             int j = i;
@@ -112,8 +112,29 @@ public class MqttTest {
                 mqttClient.publish("/a", MqttQoS.AT_MOST_ONCE, payload.getBytes());
             }
         });
-        countDownLatch.await(5, TimeUnit.SECONDS);
+        countDownLatch.await(2, TimeUnit.SECONDS);
         Assert.assertEquals(0, countDownLatch.getCount());
         System.out.println("count: " + countDownLatch.getCount());
+    }
+
+    @Test
+    public void testWillMessage() throws InterruptedException, ExecutionException {
+        MqttClient mqttClient = new MqttClient("mqtt://127.0.0.1:1883");
+        WillMessage willMessage = new WillMessage();
+        willMessage.setTopic("/will");
+        willMessage.setWillQos(MqttQoS.AT_MOST_ONCE);
+        willMessage.setPayload("willPayload".getBytes());
+        mqttClient.willMessage(willMessage);
+        mqttClient.connect();
+
+        CompletableFuture<String> completableFuture = new CompletableFuture<>();
+        MqttClient mqttClient2 = new MqttClient("mqtt://127.0.0.1:1883");
+        mqttClient2.connect();
+        mqttClient2.subscribe("/will", MqttQoS.AT_MOST_ONCE, (mqttClient1, mqttPublishMessage) -> {
+            System.out.println(new String(mqttPublishMessage.getPayload().getPayload()));
+            completableFuture.complete(new String(mqttPublishMessage.getPayload().getPayload()));
+        }, (mqttClient1, mqttQoS) -> mqttClient.disconnect());
+
+        Assert.assertEquals(completableFuture.get(), "willPayload");
     }
 }
