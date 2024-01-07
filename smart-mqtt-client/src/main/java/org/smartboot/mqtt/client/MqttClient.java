@@ -16,8 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.AsyncTask;
+import org.smartboot.mqtt.common.DefaultMqttWriter;
 import org.smartboot.mqtt.common.InflightQueue;
-import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.QosRetryPlugin;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
@@ -203,7 +203,7 @@ public class MqttClient extends AbstractSession {
             session.setAttachment(attachment);
             attachment.put(MqttClientProcessor.SESSION_KEY, this);
             setMqttVersion(clientConfigure.getMqttVersion());
-            mqttWriter = new MqttWriter(session.writeBuffer());
+            mqttWriter = new DefaultMqttWriter(session.writeBuffer());
 
             //todo
             ConnectProperties properties = null;

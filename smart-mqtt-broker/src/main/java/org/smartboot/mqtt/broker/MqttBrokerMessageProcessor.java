@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.eventbus.EventObject;
 import org.smartboot.mqtt.broker.eventbus.EventType;
 import org.smartboot.mqtt.broker.processor.MqttProcessor;
-import org.smartboot.mqtt.common.MqttWriter;
+import org.smartboot.mqtt.common.DefaultMqttWriter;
 import org.smartboot.mqtt.common.exception.MqttException;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.util.MqttAttachKey;
@@ -69,7 +69,7 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
             case NEW_SESSION: {
                 Attachment attachment = new Attachment();
                 session.setAttachment(attachment);
-                attachment.put(SESSION_KEY, new MqttSession(mqttContext, session, new MqttWriter(session.writeBuffer())));
+                attachment.put(SESSION_KEY, new MqttSession(mqttContext, session, new DefaultMqttWriter(session.writeBuffer())));
                 break;
             }
             case SESSION_CLOSED:
