@@ -14,16 +14,20 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.BrokerContextImpl;
 import org.smartboot.mqtt.client.MqttClient;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public class MqttTest {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(MqttTest.class);
     private BrokerContext brokerContext;
 
     @Before
@@ -49,7 +53,45 @@ public class MqttTest {
         });
         mqttClient.publish("/a", MqttQoS.AT_MOST_ONCE, payload.getBytes());
         Assert.assertEquals(payload, completableFuture.get());
+        LOGGER.info("payload: {}", completableFuture.get());
         mqttClient.disconnect();
-//        Thread.sleep(100);
+    }
+
+    @Test
+    public void test1() throws ExecutionException, InterruptedException {
+        MqttClient mqttClient = new MqttClient("mqtt://127.0.0.1:1883");
+        System.out.println(mqttClient.getClientId());
+        mqttClient.connect();
+        CompletableFuture<String> completableFuture = new CompletableFuture<>();
+        String payload = "hello";
+        mqttClient.subscribe("/a", MqttQoS.AT_MOST_ONCE, (mqttClient1, mqttPublishMessage) -> {
+            completableFuture.complete(new String(mqttPublishMessage.getPayload().getPayload()));
+        });
+        mqttClient.publish("/a", MqttQoS.AT_MOST_ONCE, payload.getBytes());
+        Thread.sleep(100);
+        mqttClient.disconnect();
+        Assert.assertEquals(payload, completableFuture.get());
+        LOGGER.info("payload: {}", completableFuture.get());
+    }
+
+    @Test
+    public void test2() throws ExecutionException, InterruptedException {
+        MqttClient mqttClient = new MqttClient("mqtt://127.0.0.1:1883");
+        System.out.println(mqttClient.getClientId());
+        mqttClient.connect();
+        final int i = 100;
+        CountDownLatch countDownLatch = new CountDownLatch(i);
+        String payload = "hello";
+        mqttClient.subscribe("/a", MqttQoS.AT_MOST_ONCE, (mqttClient1, mqttPublishMessage) -> {
+//            System.out.println(new String(mqttPublishMessage.getPayload().getPayload()));
+            countDownLatch.countDown();
+        }, (mqttClient1, mqttQoS) -> {
+            int j = i;
+            while (j-- > 0) {
+                mqttClient.publish("/a", MqttQoS.AT_MOST_ONCE, payload.getBytes());
+            }
+        });
+        countDownLatch.await(1, TimeUnit.SECONDS);
+        Assert.assertEquals(0, countDownLatch.getCount());
     }
 }

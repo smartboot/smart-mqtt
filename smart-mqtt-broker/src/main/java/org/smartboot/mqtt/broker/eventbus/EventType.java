@@ -10,8 +10,6 @@
 
 package org.smartboot.mqtt.broker.eventbus;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerConfigure;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
@@ -25,9 +23,6 @@ import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 /**
  * 事件总线中支持的事件类型
  *
@@ -35,8 +30,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @version V1.0 , 2022/6/29
  */
 public class EventType<T> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(EventType.class);
-    private final List<EventBusSubscriber<T>> subscribers = new CopyOnWriteArrayList<>();
     //连接断开
     public static final EventType<AbstractSession> DISCONNECT = new EventType<>("disconnect");
 
@@ -119,28 +112,5 @@ public class EventType<T> {
         return "EventType{" +
                 "name='" + name + '\'' +
                 '}';
-    }
-
-    void subscribe(EventBusSubscriber<T> subscriber) {
-        subscribers.add(subscriber);
-    }
-
-
-    void publish(T object) {
-        boolean remove = false;
-        for (EventBusSubscriber<T> subscriber : subscribers) {
-            try {
-                if (subscriber.enable()) {
-                    subscriber.subscribe(this, object);
-                } else {
-                    remove = true;
-                }
-            } catch (Throwable throwable) {
-                LOGGER.error("publish event error", throwable);
-            }
-        }
-        if (remove) {
-            subscribers.removeIf(eventBusSubscriber -> !eventBusSubscriber.enable());
-        }
     }
 }

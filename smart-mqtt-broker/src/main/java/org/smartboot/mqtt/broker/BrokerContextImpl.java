@@ -228,7 +228,7 @@ public class BrokerContextImpl implements BrokerContext {
         eventBus.subscribe(EventType.CONNECT, new KeepAliveMonitorSubscriber(this));
         //完成连接认证，移除监听器
         eventBus.subscribe(EventType.CONNECT, (eventType, object) -> {
-            MqttSession session = (MqttSession) object.getSession();
+            MqttSession session = object.getSession();
             session.idleConnectTimer.cancel();
             session.idleConnectTimer = null;
         });
