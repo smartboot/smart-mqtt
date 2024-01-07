@@ -431,6 +431,7 @@ public class BrokerContextImpl implements BrokerContext {
     public void destroy() {
         LOGGER.info("destroy broker...");
         eventBus.publish(EventType.BROKER_DESTROY, this);
+        topicMap.values().forEach(BrokerTopic::disable);
         pushThreadPool.shutdown();
         if (server != null) {
             server.shutdown();

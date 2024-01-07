@@ -75,7 +75,7 @@ public class MqttTest {
     }
 
     @Test
-    public void test2() throws ExecutionException, InterruptedException {
+    public void test2() throws InterruptedException {
         MqttClient mqttClient = new MqttClient("mqtt://127.0.0.1:1883");
         System.out.println(mqttClient.getClientId());
         mqttClient.connect();
@@ -93,5 +93,27 @@ public class MqttTest {
         });
         countDownLatch.await(1, TimeUnit.SECONDS);
         Assert.assertEquals(0, countDownLatch.getCount());
+    }
+
+    @Test
+    public void test3() throws InterruptedException {
+        MqttClient mqttClient = new MqttClient("mqtt://127.0.0.1:1883");
+        System.out.println(mqttClient.getClientId());
+        mqttClient.connect();
+        final int i = 1000;
+        CountDownLatch countDownLatch = new CountDownLatch(i);
+        String payload = "hello";
+        mqttClient.subscribe("/a", MqttQoS.AT_MOST_ONCE, (mqttClient1, mqttPublishMessage) -> {
+//            System.out.println(new String(mqttPublishMessage.getPayload().getPayload()));
+            countDownLatch.countDown();
+        }, (mqttClient1, mqttQoS) -> {
+            int j = i;
+            while (j-- > 0) {
+                mqttClient.publish("/a", MqttQoS.AT_MOST_ONCE, payload.getBytes());
+            }
+        });
+        countDownLatch.await(5, TimeUnit.SECONDS);
+        Assert.assertEquals(0, countDownLatch.getCount());
+        System.out.println("count: " + countDownLatch.getCount());
     }
 }

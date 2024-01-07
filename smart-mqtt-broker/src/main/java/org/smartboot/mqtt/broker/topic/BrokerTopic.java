@@ -42,6 +42,8 @@ public class BrokerTopic {
     private final TopicToken topicToken;
     private final ExecutorService executorService;
 
+    private boolean enabled = true;
+
     private final AsyncTask asyncTask = new AsyncTask() {
         @Override
         public void execute() {
@@ -119,10 +121,13 @@ public class BrokerTopic {
      * 触发消息推送
      */
     public void push() {
-        if (semaphore.tryAcquire()) {
+        if (enabled && semaphore.tryAcquire()) {
             //已加入推送队列
             executorService.execute(asyncTask);
         }
     }
 
+    public void disable() {
+        this.enabled = false;
+    }
 }
