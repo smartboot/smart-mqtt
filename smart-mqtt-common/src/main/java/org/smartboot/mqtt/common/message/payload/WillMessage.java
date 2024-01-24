@@ -20,6 +20,11 @@ import org.smartboot.mqtt.common.util.ValidateUtils;
 import java.io.IOException;
 
 /**
+ * 遗嘱消息发布的条件，包括但不限于：
+ * - 服务端检测到了一个 I/O 错误或者网络故障。
+ * - 客户端在保持连接（Keep Alive）的时间内未能通讯。
+ * - 客户端没有先发送 DISCONNECT 报文直接关闭了网络连接。
+ * - 由于协议错误服务端关闭了网络连接。
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/4/6
  */

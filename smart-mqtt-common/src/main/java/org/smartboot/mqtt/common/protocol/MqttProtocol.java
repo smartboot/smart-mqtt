@@ -87,7 +87,7 @@ public class MqttProtocol implements Protocol<MqttMessage> {
                 do {
                     digit = BufferUtils.readUnsignedByte(buffer);
                     remainingLength += (digit & 127) * multiplier;
-                    multiplier *= 128;
+                    multiplier <<= 7;
                     loops++;
                 } while (buffer.hasRemaining() && (digit & 128) != 0 && loops < 4);
 
@@ -95,6 +95,9 @@ public class MqttProtocol implements Protocol<MqttMessage> {
                 if (!buffer.hasRemaining() && (digit & 128) != 0) {
                     buffer.reset();
                     break;
+                }
+                if (remainingLength > maxBytesInMessage) {
+                    throw new DecoderException("too large message: " + remainingLength + " bytes");
                 }
 
                 MqttMessageType messageType = MqttMessageType.valueOf(b1 >> 4);
@@ -120,9 +123,6 @@ public class MqttProtocol implements Protocol<MqttMessage> {
             }
             case READ_VARIABLE_HEADER: {
                 int remainingLength = unit.mqttMessage.getRemainingLength();
-                if (remainingLength > maxBytesInMessage) {
-                    throw new DecoderException("too large message: " + remainingLength + " bytes");
-                }
                 ByteBuffer payloadBuffer;
                 if (remainingLength > buffer.capacity()) {
                     if (unit.disposableBuffer == null) {
@@ -150,16 +150,9 @@ public class MqttProtocol implements Protocol<MqttMessage> {
                 }
                 int p = payloadBuffer.position();
                 unit.mqttMessage.decodeVariableHeader(payloadBuffer);
-
-
-                if (unit.disposableBuffer == null) {
-                    unit.mqttMessage.decodePlayLoad(payloadBuffer);
-                    ValidateUtils.isTrue((payloadBuffer.position() - p) == remainingLength, "Payload size is wrong");
-                } else {
-                    unit.mqttMessage.decodePlayLoad(payloadBuffer);
-                    ValidateUtils.isTrue(payloadBuffer.remaining() == 0, "decode error");
-                    unit.disposableBuffer = null;
-                }
+                unit.mqttMessage.decodePlayLoad(payloadBuffer);
+                ValidateUtils.isTrue((payloadBuffer.position() - p) == remainingLength, "Payload size is wrong");
+                unit.disposableBuffer = null;
                 unit.state = FINISH;
                 break;
             }

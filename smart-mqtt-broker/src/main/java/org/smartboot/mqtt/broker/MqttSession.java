@@ -12,7 +12,6 @@ package org.smartboot.mqtt.broker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.eventbus.EventBus;
 import org.smartboot.mqtt.broker.eventbus.EventObject;
 import org.smartboot.mqtt.broker.eventbus.EventType;
 import org.smartboot.mqtt.broker.provider.impl.session.SessionState;
@@ -50,7 +49,6 @@ public class MqttSession extends AbstractSession {
     private final Map<String, TopicFilterSubscriber> subscribers = new ConcurrentHashMap<>();
 
     private final BrokerContext mqttContext;
-    private final EventBus eventBus;
     private String username;
     /**
      * 已授权
@@ -72,7 +70,6 @@ public class MqttSession extends AbstractSession {
 
     public MqttSession(BrokerContext mqttContext, AioSession session, MqttWriter mqttWriter) {
         super(mqttContext.getTimer());
-        this.eventBus = mqttContext.getEventBus();
         this.mqttContext = mqttContext;
         this.session = session;
         this.mqttWriter = mqttWriter;
@@ -106,7 +103,7 @@ public class MqttSession extends AbstractSession {
 
     @Override
     public synchronized void write(MqttMessage mqttMessage, boolean autoFlush) {
-        eventBus.publish(EventType.WRITE_MESSAGE, EventObject.newEventObject(this, mqttMessage));
+        mqttContext.getEventBus().publish(EventType.WRITE_MESSAGE, EventObject.newEventObject(this, mqttMessage));
         super.write(mqttMessage, autoFlush);
     }
 
