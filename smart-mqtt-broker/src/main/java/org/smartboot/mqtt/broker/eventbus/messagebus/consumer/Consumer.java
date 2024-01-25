@@ -10,6 +10,7 @@
 
 package org.smartboot.mqtt.broker.eventbus.messagebus.consumer;
 
+import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 
 /**
@@ -17,7 +18,12 @@ import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
  * @version V1.0 , 2022/6/25
  */
 public interface Consumer {
-    void consume(Message publishMessage);
+    /**
+     * 消息消费
+     * @param session   消息来源
+     * @param message
+     */
+    void consume(MqttSession session, Message message);
 
     default boolean enable() {
         return true;

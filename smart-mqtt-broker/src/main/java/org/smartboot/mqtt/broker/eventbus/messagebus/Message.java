@@ -13,7 +13,6 @@ package org.smartboot.mqtt.broker.eventbus.messagebus;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.annotation.JSONField;
-import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.PayloadEncodeEnum;
@@ -49,10 +48,7 @@ public class Message extends ToString {
      */
     private final long createTime = MqttUtil.currentTimeMillis();
 
-    private final String clientId;
-
-    Message(AbstractSession session, MqttPublishMessage message) {
-        this.clientId = session.getClientId();
+    Message(MqttPublishMessage message) {
         this.payload = message.getPayload().getPayload();
         this.retained = message.getFixedHeader().isRetain();
         this.topic = message.getVariableHeader().getTopicName();
@@ -85,10 +81,6 @@ public class Message extends ToString {
 
     public void setOffset(long offset) {
         this.offset = offset;
-    }
-
-    public String getClientId() {
-        return clientId;
     }
 
     @JSONField(serialize = false)

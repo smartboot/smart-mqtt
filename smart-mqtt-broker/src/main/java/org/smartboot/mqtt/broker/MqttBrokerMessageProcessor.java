@@ -12,6 +12,7 @@ package org.smartboot.mqtt.broker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.broker.eventbus.EventBus;
 import org.smartboot.mqtt.broker.eventbus.EventObject;
 import org.smartboot.mqtt.broker.eventbus.EventType;
 import org.smartboot.mqtt.broker.processor.MqttProcessor;
@@ -50,7 +51,9 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
         ValidateUtils.notNull(processor, "unSupport message");
         Attachment attachment = session.getAttachment();
         MqttSession mqttSession = attachment.get(SESSION_KEY);
-        mqttContext.getEventBus().publish(EventType.RECEIVE_MESSAGE, EventObject.newEventObject(mqttSession, msg));
+        if (EventBus.RECEIVE_MESSAGE_SUBSCRIBER_COUNT > 0) {
+            mqttContext.getEventBus().publish(EventType.RECEIVE_MESSAGE, EventObject.newEventObject(mqttSession, msg));
+        }
         mqttSession.setLatestReceiveMessageTime(System.currentTimeMillis());
         long start = System.currentTimeMillis();
         processor.process(mqttContext, mqttSession, msg);

@@ -18,7 +18,7 @@ import java.util.Properties;
 import java.util.concurrent.Future;
 
 /**
-* @Description: KafkaPlugin插件
+ * @Description: KafkaPlugin插件
  * @Author: learnhope
  * @Date: 2023/9/19
  */
@@ -28,6 +28,7 @@ public class KafkaPlugin extends DataPersistPlugin<KafkaPluginConfig> {
     private static StrUtils<MessageNodeInfo> StrUtil = new StrUtils<>();
     private static final Properties KAFKAPROPS = new Properties();
     private KafkaProducer<String, String> producer;
+
     @Override
     protected KafkaPluginConfig connect(BrokerContext brokerContext) {
         KafkaPluginConfig config = brokerContext.parseConfig(CONFIG_JSON_PATH, KafkaPluginConfig.class);
@@ -50,14 +51,15 @@ public class KafkaPlugin extends DataPersistPlugin<KafkaPluginConfig> {
         producer = new KafkaProducer<String, String>(KAFKAPROPS);
         return config;
     }
+
     @Override
     protected void listenAndPushMessage(BrokerContext brokerContext, KafkaPluginConfig config) {
         MessageBus messageBus = brokerContext.getMessageBus();
-        messageBus.consumer(busMessage -> {
+        messageBus.consumer((session, busMessage) -> {
             MessageNodeInfo messageNodeInfo = new MessageNodeInfo(busMessage);
             String message = messageNodeInfo.toString();
             // 完成playload信息base64编码
-            if (config.isBase64()){
+            if (config.isBase64()) {
                 message = StrUtil.base64(messageNodeInfo);
             }
             // 异步发送消息
@@ -72,6 +74,7 @@ public class KafkaPlugin extends DataPersistPlugin<KafkaPluginConfig> {
             });
         });
     }
+
     @Override
     protected void destroyPlugin() {
         producer.flush();

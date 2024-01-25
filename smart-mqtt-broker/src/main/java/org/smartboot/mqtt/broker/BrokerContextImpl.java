@@ -204,7 +204,7 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private void subscribeMessageBus() {
         //持久化消息
-        messageBusSubscriber.consumer(publishMessage -> getOrCreateTopic(publishMessage.getTopic()).getMessageQueue().put(publishMessage));
+        messageBusSubscriber.consumer((session, publishMessage) -> getOrCreateTopic(publishMessage.getTopic()).getMessageQueue().put(publishMessage));
         //消费retain消息
         messageBusSubscriber.consumer(new RetainPersistenceConsumer(this), Message::isRetained);
     }
@@ -213,17 +213,6 @@ public class BrokerContextImpl implements BrokerContext {
      * 订阅事件总线
      */
     private void subscribeEventBus() {
-        eventBus.subscribe(EventType.RECEIVE_PUBLISH_MESSAGE, (eventType, eventObject) -> {
-            //进入到消息总线前要先确保BrokerTopic已创建
-            BrokerTopic topic = getOrCreateTopic(eventObject.getObject().getVariableHeader().getTopicName());
-            try {
-                //触发消息总线
-                messageBusSubscriber.publish(eventObject.getSession(), eventObject.getObject());
-            } finally {
-                topic.push();
-            }
-        });
-
         //保持连接状态监听,长时间没有消息通信将断开连接
         eventBus.subscribe(EventType.CONNECT, new KeepAliveMonitorSubscriber(this));
         //完成连接认证，移除监听器

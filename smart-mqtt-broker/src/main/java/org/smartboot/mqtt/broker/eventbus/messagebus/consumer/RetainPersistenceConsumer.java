@@ -13,6 +13,7 @@ package org.smartboot.mqtt.broker.eventbus.messagebus.consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
+import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.broker.topic.BrokerTopic;
 import org.smartboot.mqtt.common.enums.MqttQoS;
@@ -32,7 +33,7 @@ public class RetainPersistenceConsumer implements Consumer {
     }
 
     @Override
-    public void consume(Message message) {
+    public void consume(MqttSession session, Message message) {
         if (!message.isRetained()) {
             return;
         }

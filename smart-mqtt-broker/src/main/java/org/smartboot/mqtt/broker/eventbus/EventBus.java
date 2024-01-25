@@ -27,8 +27,16 @@ public class EventBus {
 
     private final Map<EventType, List<EventBusSubscriber>> map = new ConcurrentHashMap<>();
 
+    public static int RECEIVE_MESSAGE_SUBSCRIBER_COUNT = 0;
+    public static int WRITE_MESSAGE_SUBSCRIBER_COUNT = 0;
+
     public <T> void subscribe(EventType<T> type, EventBusSubscriber<T> subscriber) {
         LOGGER.debug("subscribe eventbus, type: {} ,subscriber: {}", type, subscriber);
+        if (type == EventType.RECEIVE_MESSAGE) {
+            RECEIVE_MESSAGE_SUBSCRIBER_COUNT++;
+        } else if (type == EventType.WRITE_MESSAGE) {
+            WRITE_MESSAGE_SUBSCRIBER_COUNT++;
+        }
         getSubscribers(type).add(subscriber);
     }
 

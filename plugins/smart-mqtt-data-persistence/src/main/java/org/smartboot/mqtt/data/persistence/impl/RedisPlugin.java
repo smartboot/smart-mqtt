@@ -25,12 +25,12 @@ public class RedisPlugin extends DataPersistPlugin<RedisPluginConfig> {
     private static final String CONFIG_JSON_PATH = "$['plugins']['redis-bridge'][0]";
     private static final String MESSAGE_PREFIX = "smart-mqtt-message:";
     private static StrUtils<MessageNodeInfo> StrUtil = new StrUtils<>();
-    
+
     private static AtomicInteger atomicInteger = new AtomicInteger(0);
     private static StatefulRedisConnection<String, String> CONNECTION;
     private static RedisClient CLIENT;
     private static RedisAsyncCommands<String, String> ASYNC_COMMAND;
-    
+
     @Override
     protected RedisPluginConfig connect(BrokerContext brokerContext) {
         RedisPluginConfig config = brokerContext.parseConfig(CONFIG_JSON_PATH, RedisPluginConfig.class);
@@ -40,7 +40,7 @@ public class RedisPlugin extends DataPersistPlugin<RedisPluginConfig> {
             throw new PluginException("start DataPersistRedisPlugin exception");
         }
         this.setConfig(config);
-        
+
         LOGGER.info("redisPoll create success");
         RedisURI redisUri = RedisURI.builder()
                 .withHost(config.getHost().split(":")[0])
@@ -55,31 +55,32 @@ public class RedisPlugin extends DataPersistPlugin<RedisPluginConfig> {
         ASYNC_COMMAND = CONNECTION.async();
         return config;
     }
-    
+
     @Override
     protected void listenAndPushMessage(BrokerContext brokerContext, RedisPluginConfig config) {
         // 消息总线监听
         MessageBus messageBus = brokerContext.getMessageBus();
         // 客户端发送消息来了，到消息总线调用consumer方法
         long start = System.currentTimeMillis();
-        messageBus.consumer(busMessage -> {
+        messageBus.consumer((session, busMessage) -> {
             // 获得message信息Vo对象
             MessageNodeInfo messageNodeInfo = new MessageNodeInfo(busMessage);
-            String key = MESSAGE_PREFIX +  ":" + busMessage.getTopic();
+            String key = MESSAGE_PREFIX + ":" + busMessage.getTopic();
             String message = messageNodeInfo.toString();
             // 完成playload信息base64编码
-            if (config.isBase64()){
+            if (config.isBase64()) {
                 message = StrUtil.base64(messageNodeInfo);
             }
             // 是否加上随机Id
-            if (!config.isSimple()){
+            if (!config.isSimple()) {
                 message = StrUtil.addId(message);
             }
             RedisFuture<Long> future = ASYNC_COMMAND.zadd(key, messageNodeInfo.getCreateTime(), message);
-            future.thenAccept(value -> {});
+            future.thenAccept(value -> {
+            });
         });
     }
-    
+
     @Override
     protected void destroyPlugin() {
         CONNECTION.close();

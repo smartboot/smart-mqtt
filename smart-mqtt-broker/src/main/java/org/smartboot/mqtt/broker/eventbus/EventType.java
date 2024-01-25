@@ -19,7 +19,6 @@ import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
-import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 
@@ -67,11 +66,6 @@ public class EventType<T> {
      * 创建新Topic
      */
     public static final EventType<BrokerTopic> TOPIC_CREATE = new EventType<>("topicCreate");
-
-    /**
-     * Broker接收到客户端发送过来的消息
-     */
-    public static final EventType<EventObject<MqttPublishMessage>> RECEIVE_PUBLISH_MESSAGE = new EventType<>("receivePublishMessage");
 
     /**
      * 接受订阅请求

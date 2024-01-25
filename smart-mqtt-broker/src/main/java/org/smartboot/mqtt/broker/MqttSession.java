@@ -12,6 +12,7 @@ package org.smartboot.mqtt.broker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.broker.eventbus.EventBus;
 import org.smartboot.mqtt.broker.eventbus.EventObject;
 import org.smartboot.mqtt.broker.eventbus.EventType;
 import org.smartboot.mqtt.broker.provider.impl.session.SessionState;
@@ -103,7 +104,9 @@ public class MqttSession extends AbstractSession {
 
     @Override
     public synchronized void write(MqttMessage mqttMessage, boolean autoFlush) {
-        mqttContext.getEventBus().publish(EventType.WRITE_MESSAGE, EventObject.newEventObject(this, mqttMessage));
+        if (EventBus.WRITE_MESSAGE_SUBSCRIBER_COUNT > 0) {
+            mqttContext.getEventBus().publish(EventType.WRITE_MESSAGE, EventObject.newEventObject(this, mqttMessage));
+        }
         super.write(mqttMessage, autoFlush);
     }
 

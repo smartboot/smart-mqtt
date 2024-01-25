@@ -12,8 +12,8 @@ package org.smartboot.mqtt.broker.eventbus.messagebus;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.eventbus.messagebus.consumer.Consumer;
-import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 import java.util.ArrayList;
@@ -47,9 +47,9 @@ public class MessageBus {
      * @param filter 消费条件
      */
     public void consumer(Consumer consumer, Predicate<Message> filter) {
-        consumer((publishMessage) -> {
+        consumer((session, publishMessage) -> {
             if (filter.test(publishMessage)) {
-                consumer.consume(publishMessage);
+                consumer.consume(session, publishMessage);
             }
         });
     }
@@ -57,13 +57,13 @@ public class MessageBus {
     /**
      * 发布消息至总线触发消费
      */
-    public void publish(AbstractSession mqttSession, MqttPublishMessage message) {
-        Message persistenceMessage = new Message(mqttSession, message);
+    public void publish(MqttSession mqttSession, MqttPublishMessage publishMessage) {
+        Message message = new Message(publishMessage);
         boolean remove = false;
         for (Consumer messageConsumer : messageBuses) {
             try {
                 if (messageConsumer.enable()) {
-                    messageConsumer.consume(persistenceMessage);
+                    messageConsumer.consume(mqttSession, message);
                 } else {
                     remove = true;
                 }
