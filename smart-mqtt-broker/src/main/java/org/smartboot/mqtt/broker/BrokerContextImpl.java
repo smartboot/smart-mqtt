@@ -310,13 +310,20 @@ public class BrokerContextImpl implements BrokerContext {
 
     @Override
     public BrokerTopic getOrCreateTopic(String topic) {
-        return topicMap.computeIfAbsent(topic, topicName -> {
-            ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topicName), "invalid topicName: " + topicName);
-            BrokerTopic newTopic = new BrokerTopic(topic, pushThreadPool);
-            topicPublishTree.addTopic(newTopic);
-            eventBus.publish(EventType.TOPIC_CREATE, newTopic);
-            return newTopic;
-        });
+        BrokerTopic brokerTopic = topicMap.get(topic);
+        if (brokerTopic == null) {
+            synchronized (this) {
+                brokerTopic = topicMap.get(topic);
+                if (brokerTopic == null) {
+                    ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topic), "invalid topicName: " + topic);
+                    brokerTopic = new BrokerTopic(topic, pushThreadPool);
+                    topicPublishTree.addTopic(brokerTopic);
+                    eventBus.publish(EventType.TOPIC_CREATE, brokerTopic);
+                    topicMap.put(topic, brokerTopic);
+                }
+            }
+        }
+        return brokerTopic;
     }
 
     @Override

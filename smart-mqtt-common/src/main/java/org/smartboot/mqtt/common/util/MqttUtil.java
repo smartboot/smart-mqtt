@@ -75,7 +75,12 @@ public class MqttUtil {
     }
 
     public static byte[] encodeCache(String topicName) {
-        return cache.computeIfAbsent(topicName, s -> MqttCodecUtil.encodeUTF8(topicName));
+        byte[] bytes = cache.get(topicName);
+        if (bytes == null) {
+            bytes = MqttCodecUtil.encodeUTF8(topicName);
+            cache.put(topicName, bytes);
+        }
+        return bytes;
     }
 
     public static boolean match(TopicToken pubTopicToken, TopicToken subTopicToken) {
