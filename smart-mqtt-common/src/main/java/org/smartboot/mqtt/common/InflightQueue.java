@@ -24,12 +24,9 @@ import org.smartboot.mqtt.common.message.MqttVariableMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
-import org.smartboot.mqtt.common.util.MqttAttachKey;
 import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
-import org.smartboot.socket.util.AttachKey;
-import org.smartboot.socket.util.Attachment;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +37,6 @@ import java.util.concurrent.TimeUnit;
  */
 public class InflightQueue {
     private static final Logger LOGGER = LoggerFactory.getLogger(InflightQueue.class);
-    static final AttachKey<Runnable> RETRY_TASK_ATTACH_KEY = AttachKey.valueOf(MqttAttachKey.RETRY_TASK);
     private static final int TIMEOUT = 30;
     private final InflightMessage[] queue;
     private int takeIndex;
@@ -247,9 +243,8 @@ public class InflightQueue {
         }
         if (count > 0) {
             //注册超时监听任务
-            Attachment attachment = session.session.getAttachment();
             InflightMessage monitorMessage = queue[takeIndex];
-            attachment.put(RETRY_TASK_ATTACH_KEY, () -> session.getInflightQueue().retry(monitorMessage));
+            session.setRetryRunnable(() -> session.getInflightQueue().retry(monitorMessage));
         }
     }
 }

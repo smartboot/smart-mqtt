@@ -13,7 +13,6 @@ package org.smartboot.mqtt.common;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.socket.extension.plugins.AbstractPlugin;
 import org.smartboot.socket.transport.AioSession;
-import org.smartboot.socket.util.Attachment;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -23,16 +22,16 @@ public class QosRetryPlugin extends AbstractPlugin<MqttMessage> {
 
     @Override
     public void beforeRead(AioSession session) {
-        Attachment attachment = session.getAttachment();
-        if (attachment == null) {
+        AbstractSession abstractSession = session.getAttachment();
+        if (abstractSession == null) {
             return;
         }
-        Runnable runnable = attachment.get(InflightQueue.RETRY_TASK_ATTACH_KEY);
+        Runnable runnable = abstractSession.getRetryRunnable();
         if (runnable != null) {
             try {
                 runnable.run();
             } finally {
-                attachment.remove(InflightQueue.RETRY_TASK_ATTACH_KEY);
+                abstractSession.setRetryRunnable(null);
             }
         }
     }

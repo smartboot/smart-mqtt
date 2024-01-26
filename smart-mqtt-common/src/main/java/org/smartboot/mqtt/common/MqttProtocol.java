@@ -8,12 +8,11 @@
  *  without special permission from the smartboot organization.
  */
 
-package org.smartboot.mqtt.common.protocol;
+package org.smartboot.mqtt.common;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
-import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttDisconnectMessage;
@@ -30,20 +29,13 @@ import org.smartboot.mqtt.common.message.MqttSubAckMessage;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttUnsubAckMessage;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
-import org.smartboot.mqtt.common.util.MqttAttachKey;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.DecoderException;
 import org.smartboot.socket.Protocol;
 import org.smartboot.socket.transport.AioSession;
-import org.smartboot.socket.util.AttachKey;
-import org.smartboot.socket.util.Attachment;
 import org.smartboot.socket.util.BufferUtils;
 
 import java.nio.ByteBuffer;
-
-import static org.smartboot.mqtt.common.protocol.DecoderState.FINISH;
-import static org.smartboot.mqtt.common.protocol.DecoderState.READ_FIXED_HEADER;
-import static org.smartboot.mqtt.common.protocol.DecoderState.READ_VARIABLE_HEADER;
 
 /**
  * @author 三刀
@@ -53,9 +45,6 @@ public class MqttProtocol implements Protocol<MqttMessage> {
     private static final Logger logger = LoggerFactory.getLogger(MqttProtocol.class);
     private final int maxBytesInMessage;
 
-    public static final AttachKey<MqttVersion> MQTT_VERSION_ATTACH_KEY = AttachKey.valueOf(MqttAttachKey.MQTT_VERSION);
-    private static final AttachKey<DecodeUnit> DECODE_UNIT_ATTACH_KEY = AttachKey.valueOf(MqttAttachKey.DECODE_UNIT);
-
 
     public MqttProtocol(int maxBytesInMessage) {
         this.maxBytesInMessage = maxBytesInMessage;
@@ -64,15 +53,8 @@ public class MqttProtocol implements Protocol<MqttMessage> {
 
     @Override
     public MqttMessage decode(ByteBuffer buffer, AioSession session) {
-        Attachment attachment = session.getAttachment();
-        DecodeUnit unit = attachment.get(DECODE_UNIT_ATTACH_KEY);
-        if (unit == null) {
-            unit = new DecodeUnit();
-            unit.state = READ_FIXED_HEADER;
-            attachment.put(DECODE_UNIT_ATTACH_KEY, unit);
-        }
-
-        switch (unit.state) {
+        AbstractSession abstractSession = session.getAttachment();
+        switch (abstractSession.state) {
             case READ_FIXED_HEADER: {
                 if (buffer.remaining() < 2) {
                     break;
@@ -111,24 +93,24 @@ public class MqttProtocol implements Protocol<MqttMessage> {
                 buffer.mark();
 
                 MqttFixedHeader mqttFixedHeader = MqttFixedHeader.getInstance(messageType, dupFlag, qosLevel, retain);
-                unit.mqttMessage = newMessage(mqttFixedHeader);
-                unit.mqttMessage.setRemainingLength(remainingLength);
+                abstractSession.mqttMessage = newMessage(mqttFixedHeader);
+                abstractSession.mqttMessage.setRemainingLength(remainingLength);
                 //非MqttConnectMessage对象为null,
-                if (unit.mqttMessage.getVersion() == null) {
-                    unit.mqttMessage.setVersion(attachment.get(MQTT_VERSION_ATTACH_KEY));
+                if (abstractSession.mqttMessage.getVersion() == null) {
+                    abstractSession.mqttMessage.setVersion(abstractSession.getMqttVersion());
                 }
 
-                unit.state = READ_VARIABLE_HEADER;
+                abstractSession.state = DecoderState.READ_VARIABLE_HEADER;
 
             }
             case READ_VARIABLE_HEADER: {
-                int remainingLength = unit.mqttMessage.getRemainingLength();
+                int remainingLength = abstractSession.mqttMessage.getRemainingLength();
                 ByteBuffer payloadBuffer;
                 if (remainingLength > buffer.capacity()) {
-                    if (unit.disposableBuffer == null) {
-                        payloadBuffer = unit.disposableBuffer = ByteBuffer.allocate(remainingLength);
+                    if (abstractSession.disposableBuffer == null) {
+                        payloadBuffer = abstractSession.disposableBuffer = ByteBuffer.allocate(remainingLength);
                     } else {
-                        payloadBuffer = unit.disposableBuffer;
+                        payloadBuffer = abstractSession.disposableBuffer;
                         payloadBuffer.compact();
                     }
 
@@ -149,11 +131,11 @@ public class MqttProtocol implements Protocol<MqttMessage> {
                     break;
                 }
                 int p = payloadBuffer.position();
-                unit.mqttMessage.decodeVariableHeader(payloadBuffer);
-                unit.mqttMessage.decodePlayLoad(payloadBuffer);
+                abstractSession.mqttMessage.decodeVariableHeader(payloadBuffer);
+                abstractSession.mqttMessage.decodePlayLoad(payloadBuffer);
                 ValidateUtils.isTrue((payloadBuffer.position() - p) == remainingLength, "Payload size is wrong");
-                unit.disposableBuffer = null;
-                unit.state = FINISH;
+                abstractSession.disposableBuffer = null;
+                abstractSession.state = DecoderState.FINISH;
                 break;
             }
 
@@ -161,17 +143,17 @@ public class MqttProtocol implements Protocol<MqttMessage> {
                 // Shouldn't reach here.
                 throw new Error();
         }
-        if (unit.state == FINISH) {
-            MqttMessage mqttMessage = unit.mqttMessage;
-            unit.state = READ_FIXED_HEADER;
-            unit.mqttMessage = null;
+        if (abstractSession.state == DecoderState.FINISH) {
+            MqttMessage mqttMessage = abstractSession.mqttMessage;
+            abstractSession.state = DecoderState.READ_FIXED_HEADER;
+            abstractSession.mqttMessage = null;
             return mqttMessage;
         } else {
             return null;
         }
     }
 
-    private static MqttMessage newMessage(MqttFixedHeader mqttFixedHeader) {
+    private MqttMessage newMessage(MqttFixedHeader mqttFixedHeader) {
         switch (mqttFixedHeader.getMessageType()) {
             case CONNECT:
                 return new MqttConnectMessage(mqttFixedHeader);

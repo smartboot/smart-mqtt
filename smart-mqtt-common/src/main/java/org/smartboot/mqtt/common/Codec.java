@@ -8,14 +8,18 @@
  *  without special permission from the smartboot organization.
  */
 
-package org.smartboot.mqtt.common.protocol;
+package org.smartboot.mqtt.common;
 
 import org.smartboot.mqtt.common.message.MqttMessage;
 
 import java.nio.ByteBuffer;
 
-class DecodeUnit {
-    DecoderState state;
+/**
+ * 消息解码器
+ *
+ */
+abstract class Codec {
+    DecoderState state = DecoderState.READ_FIXED_HEADER;
     MqttMessage mqttMessage;
     ByteBuffer disposableBuffer;
 }

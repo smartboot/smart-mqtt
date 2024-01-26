@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package org.smartboot.mqtt.common.protocol;
+package org.smartboot.mqtt.common;
 
 enum DecoderState {
     READ_FIXED_HEADER, READ_VARIABLE_HEADER, FINISH,

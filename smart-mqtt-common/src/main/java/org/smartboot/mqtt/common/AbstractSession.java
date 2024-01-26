@@ -13,22 +13,21 @@ package org.smartboot.mqtt.common;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
-import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.timer.Timer;
 import org.smartboot.socket.transport.AioSession;
-import org.smartboot.socket.util.Attachment;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Hashtable;
 
+
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/4/12
  */
-public abstract class AbstractSession {
+public abstract class AbstractSession extends Codec {
 
     protected String clientId;
     protected AioSession session;
@@ -36,7 +35,6 @@ public abstract class AbstractSession {
      * 最近一次发送的消息
      */
     protected long latestSendMessageTime;
-
 
     /**
      * 是否正常断开连接
@@ -50,6 +48,16 @@ public abstract class AbstractSession {
     private final Hashtable<Integer, Runnable> ackMessageCacheMap = new Hashtable<>();
 
     protected final Timer timer;
+
+    private Runnable retryRunnable;
+
+    Runnable getRetryRunnable() {
+        return retryRunnable;
+    }
+
+    void setRetryRunnable(Runnable retryRunnable) {
+        this.retryRunnable = retryRunnable;
+    }
 
     public AbstractSession(Timer timer) {
         this.timer = timer;
@@ -122,8 +130,6 @@ public abstract class AbstractSession {
 
     public void setMqttVersion(MqttVersion mqttVersion) {
         this.mqttVersion = mqttVersion;
-        Attachment attachment = session.getAttachment();
-        attachment.put(MqttProtocol.MQTT_VERSION_ATTACH_KEY, mqttVersion);
     }
 
     public void setInflightQueue(InflightQueue inflightQueue) {

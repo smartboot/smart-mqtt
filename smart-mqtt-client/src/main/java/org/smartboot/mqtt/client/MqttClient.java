@@ -18,6 +18,7 @@ import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.DefaultMqttWriter;
 import org.smartboot.mqtt.common.InflightQueue;
+import org.smartboot.mqtt.common.MqttProtocol;
 import org.smartboot.mqtt.common.QosRetryPlugin;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
@@ -46,7 +47,6 @@ import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 import org.smartboot.mqtt.common.message.variable.properties.SubscribeProperties;
 import org.smartboot.mqtt.common.message.variable.properties.WillProperties;
-import org.smartboot.mqtt.common.protocol.MqttProtocol;
 import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
@@ -56,7 +56,6 @@ import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.timer.TimerTask;
 import org.smartboot.socket.transport.AioQuickClient;
-import org.smartboot.socket.util.Attachment;
 
 import java.io.IOException;
 import java.nio.channels.AsynchronousChannelGroup;
@@ -199,9 +198,7 @@ public class MqttClient extends AbstractSession {
             }
             client.setReadBufferSize(clientConfigure.getBufferSize()).setWriteBuffer(clientConfigure.getBufferSize(), 8).connectTimeout(clientConfigure.getConnectionTimeout());
             session = client.start(asynchronousChannelGroup);
-            Attachment attachment = new Attachment();
-            session.setAttachment(attachment);
-            attachment.put(MqttClientProcessor.SESSION_KEY, this);
+            session.setAttachment(this);
             setMqttVersion(clientConfigure.getMqttVersion());
             mqttWriter = new DefaultMqttWriter(session.writeBuffer());
 

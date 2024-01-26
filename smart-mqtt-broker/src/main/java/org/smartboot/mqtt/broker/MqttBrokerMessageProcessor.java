@@ -19,13 +19,10 @@ import org.smartboot.mqtt.broker.processor.MqttProcessor;
 import org.smartboot.mqtt.common.DefaultMqttWriter;
 import org.smartboot.mqtt.common.exception.MqttException;
 import org.smartboot.mqtt.common.message.MqttMessage;
-import org.smartboot.mqtt.common.util.MqttAttachKey;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioSession;
-import org.smartboot.socket.util.AttachKey;
-import org.smartboot.socket.util.Attachment;
 
 /**
  * @author 三刀
@@ -38,8 +35,6 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
      */
     private final BrokerContext mqttContext;
 
-    private final static AttachKey<MqttSession> SESSION_KEY = AttachKey.valueOf(MqttAttachKey.MQTT_SESSION);
-
 
     public MqttBrokerMessageProcessor(BrokerContext mqttContext) {
         this.mqttContext = mqttContext;
@@ -49,8 +44,7 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
     public void process0(AioSession session, MqttMessage msg) {
         MqttProcessor processor = mqttContext.getMessageProcessors().get(msg.getClass());
         ValidateUtils.notNull(processor, "unSupport message");
-        Attachment attachment = session.getAttachment();
-        MqttSession mqttSession = attachment.get(SESSION_KEY);
+        MqttSession mqttSession = session.getAttachment();
         mqttContext.getEventBus().publish(EventType.RECEIVE_MESSAGE, EventObject.newEventObject(mqttSession, msg), EventBus.RECEIVE_MESSAGE_SUBSCRIBER_LIST);
         mqttSession.setLatestReceiveMessageTime(System.currentTimeMillis());
         long start = System.currentTimeMillis();
@@ -68,14 +62,12 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
                 LOGGER.error("decode exception", throwable);
                 break;
             case NEW_SESSION: {
-                Attachment attachment = new Attachment();
-                session.setAttachment(attachment);
-                attachment.put(SESSION_KEY, new MqttSession(mqttContext, session, new DefaultMqttWriter(session.writeBuffer())));
+                session.setAttachment(new MqttSession(mqttContext, session, new DefaultMqttWriter(session.writeBuffer())));
                 break;
             }
             case SESSION_CLOSED:
-                Attachment attachment = session.getAttachment();
-                attachment.get(SESSION_KEY).disconnect();
+                MqttSession mqttSession = session.getAttachment();
+                mqttSession.disconnect();
                 break;
             case PROCESS_EXCEPTION:
                 if (throwable instanceof MqttException) {

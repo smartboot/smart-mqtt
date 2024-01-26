@@ -26,12 +26,9 @@ import org.smartboot.mqtt.common.message.MqttPubRecMessage;
 import org.smartboot.mqtt.common.message.MqttPubRelMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttSubAckMessage;
-import org.smartboot.mqtt.common.util.MqttAttachKey;
 import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioSession;
-import org.smartboot.socket.util.AttachKey;
-import org.smartboot.socket.util.Attachment;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,7 +39,6 @@ import java.util.Map;
  */
 public class MqttClientProcessor extends AbstractMessageProcessor<MqttMessage> {
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttClientProcessor.class);
-    final static AttachKey<MqttClient> SESSION_KEY = AttachKey.valueOf(MqttAttachKey.MQTT_SESSION);
     private static final Map<Class<? extends MqttMessage>, MqttProcessor<? extends MqttMessage>> processors = new HashMap<>();
 
     static {
@@ -59,8 +55,7 @@ public class MqttClientProcessor extends AbstractMessageProcessor<MqttMessage> {
 
     @Override
     public void process0(AioSession session, MqttMessage msg) {
-        Attachment attachment = session.getAttachment();
-        MqttClient client = attachment.get(SESSION_KEY);
+        MqttClient client = session.getAttachment();
         MqttProcessor processor = processors.get(msg.getClass());
         if (processor != null) {
             processor.process(client, msg);
@@ -76,8 +71,8 @@ public class MqttClientProcessor extends AbstractMessageProcessor<MqttMessage> {
                 LOGGER.error("decode exception", throwable);
                 break;
             case SESSION_CLOSED:
-                Attachment attachment = session.getAttachment();
-                attachment.get(SESSION_KEY).release();
+                MqttClient client = session.getAttachment();
+                client.release();
                 break;
             case PROCESS_EXCEPTION:
                 if (throwable instanceof MqttException) {
