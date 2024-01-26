@@ -19,6 +19,7 @@ import org.smartboot.mqtt.broker.processor.MqttProcessor;
 import org.smartboot.mqtt.common.DefaultMqttWriter;
 import org.smartboot.mqtt.common.exception.MqttException;
 import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
@@ -45,14 +46,11 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
         MqttProcessor processor = mqttContext.getMessageProcessors().get(msg.getClass());
         ValidateUtils.notNull(processor, "unSupport message");
         MqttSession mqttSession = session.getAttachment();
-        mqttContext.getEventBus().publish(EventType.RECEIVE_MESSAGE, EventObject.newEventObject(mqttSession, msg), EventBus.RECEIVE_MESSAGE_SUBSCRIBER_LIST);
-        mqttSession.setLatestReceiveMessageTime(System.currentTimeMillis());
-        long start = System.currentTimeMillis();
-        processor.process(mqttContext, mqttSession, msg);
-        long cost = System.currentTimeMillis() - start;
-        if (cost > 50) {
-            LOGGER.warn("process:{} cost:{}", processor.getClass().getSimpleName(), cost);
+        if (!EventBus.RECEIVE_MESSAGE_SUBSCRIBER_LIST.isEmpty()) {
+            mqttContext.getEventBus().publish(EventType.RECEIVE_MESSAGE, EventObject.newEventObject(mqttSession, msg), EventBus.RECEIVE_MESSAGE_SUBSCRIBER_LIST);
         }
+        mqttSession.setLatestReceiveMessageTime(MqttUtil.currentTimeMillis());
+        processor.process(mqttContext, mqttSession, msg);
     }
 
     @Override

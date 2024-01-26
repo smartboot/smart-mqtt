@@ -106,7 +106,9 @@ public class MqttSession extends AbstractSession {
     @Override
     public void write(MqttMessage mqttMessage, boolean autoFlush) {
         super.write(mqttMessage, autoFlush);
-        mqttContext.getEventBus().publish(EventType.WRITE_MESSAGE, EventObject.newEventObject(this, mqttMessage), EventBus.WRITE_MESSAGE_SUBSCRIBER_LIST);
+        if (!EventBus.WRITE_MESSAGE_SUBSCRIBER_LIST.isEmpty()) {
+            mqttContext.getEventBus().publish(EventType.WRITE_MESSAGE, EventObject.newEventObject(this, mqttMessage), EventBus.WRITE_MESSAGE_SUBSCRIBER_LIST);
+        }
     }
 
     public synchronized void disconnect() {
