@@ -13,7 +13,6 @@ package org.smartboot.mqtt.broker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.eventbus.EventBus;
-import org.smartboot.mqtt.broker.eventbus.EventBusSubscriber;
 import org.smartboot.mqtt.broker.eventbus.EventObject;
 import org.smartboot.mqtt.broker.eventbus.EventType;
 import org.smartboot.mqtt.broker.provider.impl.session.SessionState;
@@ -31,7 +30,6 @@ import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.timer.TimerTask;
 import org.smartboot.socket.transport.AioSession;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -71,14 +69,12 @@ public class MqttSession extends AbstractSession {
      */
     private long latestReceiveMessageTime;
 
-    private List<EventBusSubscriber> writeSubscribers;
 
     public MqttSession(BrokerContext mqttContext, AioSession session, MqttWriter mqttWriter) {
         super(mqttContext.getTimer());
         this.mqttContext = mqttContext;
         this.session = session;
         this.mqttWriter = mqttWriter;
-        this.writeSubscribers = mqttContext.getEventBus().getSubscribers(EventType.WRITE_MESSAGE);
         idleConnectTimer = mqttContext.getTimer().schedule(new AsyncTask() {
             @Override
             public void execute() {
@@ -110,9 +106,7 @@ public class MqttSession extends AbstractSession {
     @Override
     public void write(MqttMessage mqttMessage, boolean autoFlush) {
         super.write(mqttMessage, autoFlush);
-        if (!EventBus.WRITE_MESSAGE_SUBSCRIBER_LIST.isEmpty()) {
-            mqttContext.getEventBus().publish(EventType.WRITE_MESSAGE, EventObject.newEventObject(this, mqttMessage), EventBus.WRITE_MESSAGE_SUBSCRIBER_LIST);
-        }
+        mqttContext.getEventBus().publish(EventType.WRITE_MESSAGE, EventObject.newEventObject(this, mqttMessage), EventBus.WRITE_MESSAGE_SUBSCRIBER_LIST);
     }
 
     public synchronized void disconnect() {

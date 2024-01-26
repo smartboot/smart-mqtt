@@ -34,7 +34,16 @@ public class EventBus {
 
     public <T> void subscribe(EventType<T> type, EventBusSubscriber<T> subscriber) {
         LOGGER.debug("subscribe eventbus, type: {} ,subscriber: {}", type, subscriber);
-        getSubscribers(type).add(subscriber);
+        if (type.isOnce() && !(subscriber instanceof DisposableEventBusSubscriber)) {
+            getSubscribers(type).add(new DisposableEventBusSubscriber<T>() {
+                @Override
+                public void subscribe(EventType<T> eventType, T object) {
+                    subscriber.subscribe(eventType, object);
+                }
+            });
+        } else {
+            getSubscribers(type).add(subscriber);
+        }
     }
 
     public <T> void subscribe(List<EventType<T>> types, EventBusSubscriber<T> subscriber) {
@@ -72,7 +81,7 @@ public class EventBus {
         }
     }
 
-    public List<EventBusSubscriber> getSubscribers(EventType eventType) {
+    private List<EventBusSubscriber> getSubscribers(EventType eventType) {
         return map.computeIfAbsent(eventType, type -> {
             if (type == EventType.WRITE_MESSAGE) {
                 return WRITE_MESSAGE_SUBSCRIBER_LIST;
@@ -83,16 +92,4 @@ public class EventBus {
             return new CopyOnWriteArrayList<>();
         });
     }
-//    public List<EventBusSubscriber> getSubscribers(EventType eventType) {
-//        List<EventBusSubscriber> list = map.get(eventType);
-//        if (list != null) {
-//            return list;
-//        }
-//        synchronized (eventType) {
-//            if (!map.containsKey(eventType)) {
-//                map.put(eventType, new CopyOnWriteArrayList<>());
-//            }
-//        }
-//        return getSubscribers(eventType);
-//    }
 }

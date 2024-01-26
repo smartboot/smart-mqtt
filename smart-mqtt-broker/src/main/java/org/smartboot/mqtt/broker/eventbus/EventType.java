@@ -49,14 +49,14 @@ public class EventType<T> {
     /**
      * Broker服务启动成功
      */
-    public static final EventType<BrokerContext> BROKER_STARTED = new EventType<>("brokerStarted");
+    public static final EventType<BrokerContext> BROKER_STARTED = new EventType<>("brokerStarted", true);
 
-    public static final EventType<BrokerConfigure> BROKER_CONFIGURE_LOADED = new EventType<>("brokerConfigureLoaded");
+    public static final EventType<BrokerConfigure> BROKER_CONFIGURE_LOADED = new EventType<>("brokerConfigureLoaded", true);
 
     /**
      * 停止Broker服务
      */
-    public static final EventType<BrokerContext> BROKER_DESTROY = new EventType<>("brokerDestroy");
+    public static final EventType<BrokerContext> BROKER_DESTROY = new EventType<>("brokerDestroy", true);
     /**
      * 创建MqttSession对象
      */
@@ -97,14 +97,26 @@ public class EventType<T> {
     public static final EventType<EventObject<MqttConnectMessage>> CONNECT = new EventType<>("connect");
     private final String name;
 
-    protected EventType(String name) {
+    /**
+     *一次性事件
+     */
+    private final boolean once;
+
+    EventType(String name, boolean once) {
         this.name = name;
+        this.once = once;
+    }
+
+    EventType(String name) {
+        this(name, false);
+    }
+
+    boolean isOnce() {
+        return once;
     }
 
     @Override
     public String toString() {
-        return "EventType{" +
-                "name='" + name + '\'' +
-                '}';
+        return "EventType{" + "name='" + name + '\'' + '}';
     }
 }
