@@ -51,8 +51,8 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
         ValidateUtils.notNull(processor, "unSupport message");
         Attachment attachment = session.getAttachment();
         MqttSession mqttSession = attachment.get(SESSION_KEY);
-        if (EventBus.RECEIVE_MESSAGE_SUBSCRIBER_COUNT > 0) {
-            mqttContext.getEventBus().publish(EventType.RECEIVE_MESSAGE, EventObject.newEventObject(mqttSession, msg));
+        if (!EventBus.RECEIVE_MESSAGE_SUBSCRIBER_LIST.isEmpty()) {
+            mqttContext.getEventBus().publish(EventType.RECEIVE_MESSAGE, EventObject.newEventObject(mqttSession, msg), EventBus.RECEIVE_MESSAGE_SUBSCRIBER_LIST);
         }
         mqttSession.setLatestReceiveMessageTime(System.currentTimeMillis());
         long start = System.currentTimeMillis();

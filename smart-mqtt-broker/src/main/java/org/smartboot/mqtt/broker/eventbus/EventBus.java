@@ -27,16 +27,13 @@ public class EventBus {
 
     private final Map<EventType, List<EventBusSubscriber>> map = new ConcurrentHashMap<>();
 
-    public static int RECEIVE_MESSAGE_SUBSCRIBER_COUNT = 0;
-    public static int WRITE_MESSAGE_SUBSCRIBER_COUNT = 0;
+    public static List<EventBusSubscriber> WRITE_MESSAGE_SUBSCRIBER_LIST = new CopyOnWriteArrayList<>();
+
+    public static List<EventBusSubscriber> RECEIVE_MESSAGE_SUBSCRIBER_LIST = new CopyOnWriteArrayList<>();
+
 
     public <T> void subscribe(EventType<T> type, EventBusSubscriber<T> subscriber) {
         LOGGER.debug("subscribe eventbus, type: {} ,subscriber: {}", type, subscriber);
-        if (type == EventType.RECEIVE_MESSAGE) {
-            RECEIVE_MESSAGE_SUBSCRIBER_COUNT++;
-        } else if (type == EventType.WRITE_MESSAGE) {
-            WRITE_MESSAGE_SUBSCRIBER_COUNT++;
-        }
         getSubscribers(type).add(subscriber);
     }
 
@@ -51,8 +48,15 @@ public class EventBus {
      */
     public <T> void publish(EventType<T> eventType, T object) {
         List<EventBusSubscriber> list = getSubscribers(eventType);
+        publish(eventType, object, list);
+    }
+
+    /**
+     * 发布消息至总线
+     */
+    public <T> void publish(EventType<T> eventType, T object, List<EventBusSubscriber> subscribers) {
         boolean remove = false;
-        for (EventBusSubscriber subscriber : list) {
+        for (EventBusSubscriber subscriber : subscribers) {
             try {
                 if (subscriber.enable()) {
                     subscriber.subscribe(eventType, object);
@@ -64,11 +68,31 @@ public class EventBus {
             }
         }
         if (remove) {
-            list.removeIf(eventBusSubscriber -> !eventBusSubscriber.enable());
+            subscribers.removeIf(eventBusSubscriber -> !eventBusSubscriber.enable());
         }
     }
 
-    private List<EventBusSubscriber> getSubscribers(EventType eventType) {
-        return map.computeIfAbsent(eventType, eventType1 -> new CopyOnWriteArrayList<>());
+    public List<EventBusSubscriber> getSubscribers(EventType eventType) {
+        return map.computeIfAbsent(eventType, type -> {
+            if (type == EventType.WRITE_MESSAGE) {
+                return WRITE_MESSAGE_SUBSCRIBER_LIST;
+            }
+            if (type == EventType.RECEIVE_MESSAGE) {
+                return RECEIVE_MESSAGE_SUBSCRIBER_LIST;
+            }
+            return new CopyOnWriteArrayList<>();
+        });
     }
+//    public List<EventBusSubscriber> getSubscribers(EventType eventType) {
+//        List<EventBusSubscriber> list = map.get(eventType);
+//        if (list != null) {
+//            return list;
+//        }
+//        synchronized (eventType) {
+//            if (!map.containsKey(eventType)) {
+//                map.put(eventType, new CopyOnWriteArrayList<>());
+//            }
+//        }
+//        return getSubscribers(eventType);
+//    }
 }
