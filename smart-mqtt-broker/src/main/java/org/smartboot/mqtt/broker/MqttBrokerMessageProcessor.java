@@ -71,6 +71,8 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
                 if (throwable instanceof MqttException) {
                     LOGGER.warn("process exception", throwable);
                     ((MqttException) throwable).getCallback().run();
+                }else{
+                    throwable.printStackTrace();
                 }
                 break;
             default:

@@ -203,6 +203,7 @@ public class MqttSession extends AbstractSession {
                 ValidateUtils.isTrue(preToken.getTopicFilter().equals(subscribeTopic.getTopicFilterToken().getTopicFilter()), "invalid subscriber");
                 TopicConsumerRecord record = new TopicConsumerRecord(topic, MqttSession.this, subscribeTopic, topic.getMessageQueue().getLatestOffset() + 1);
                 subscriberGroup.addSubscriber(record);
+                subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, record);
             } else if (preToken.isWildcards()) {
                 if (!topicToken.isWildcards() || topicToken.getTopicFilter().length() > preToken.getTopicFilter().length()) {
                     //解除旧的订阅关系

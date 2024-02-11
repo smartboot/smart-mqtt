@@ -60,12 +60,14 @@ class TopicConsumerOrderShareRecord extends AbstractConsumerRecord {
             TopicConsumerRecord record = queue.poll();
             if (record == null) {
                 if (semaphore.compareAndSet(true, false)) {
+                    topic.addSubscriber(this);
                     if (topic.getMessageQueue().get(nextConsumerOffset) != null && !queue.isEmpty()) {
-                        topic.addSubscriber(this);
                         topic.push();
                     }
                 }
                 return;
+            } else if (!record.enable) {
+                continue;
             }
 
             MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(message.getPayload()).qos(record.getMqttQoS()).topicName(message.getTopic());

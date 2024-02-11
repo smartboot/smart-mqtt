@@ -21,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * Broker端的Topic
@@ -45,12 +46,15 @@ public class BrokerTopic {
 
     private boolean enabled = true;
 
+    private final LongAdder version = new LongAdder();
+
     private final AsyncTask asyncTask = new AsyncTask() {
         @Override
         public void execute() {
             AbstractConsumerRecord subscriber;
-            int i = 0;
-            while (++i < 1000 && (subscriber = queue.poll()) != null) {
+            queue.offer(BREAK);
+            int preVersion = version.intValue();
+            while ((subscriber = queue.poll()) != BREAK) {
                 try {
                     subscriber.pushToClient();
                 } catch (Exception e) {
@@ -58,7 +62,7 @@ public class BrokerTopic {
                 }
             }
             semaphore.release();
-            if (!queue.isEmpty()) {
+            if (preVersion != version.intValue() && !queue.isEmpty()) {
                 push();
             }
         }
@@ -74,6 +78,13 @@ public class BrokerTopic {
      * 当前Topic处于监听状态的订阅者
      */
     private final ConcurrentLinkedQueue<AbstractConsumerRecord> queue = new ConcurrentLinkedQueue<>();
+
+    private static final AbstractConsumerRecord BREAK = new AbstractConsumerRecord(null, null, -1) {
+        @Override
+        public void pushToClient() {
+            throw new UnsupportedOperationException();
+        }
+    };
 
     public BrokerTopic(String topic) {
         this(topic, null);
@@ -135,6 +146,10 @@ public class BrokerTopic {
             //已加入推送队列
             executorService.execute(asyncTask);
         }
+    }
+
+    public LongAdder getVersion() {
+        return version;
     }
 
     public void disable() {
