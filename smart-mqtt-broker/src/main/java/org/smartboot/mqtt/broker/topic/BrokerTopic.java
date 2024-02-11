@@ -12,7 +12,6 @@ package org.smartboot.mqtt.broker.topic;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.TopicToken;
@@ -31,10 +30,12 @@ import java.util.concurrent.Semaphore;
  */
 public class BrokerTopic {
     private static final Logger LOGGER = LoggerFactory.getLogger(BrokerTopic.class);
+
+    private final SubscriberGroup defaultGroup = new SubscriberGroup();
     /**
-     * 当前订阅的消费者
+     * 订阅组
      */
-    private final Map<MqttSession, TopicSubscriber> consumeOffsets = new ConcurrentHashMap<>();
+    private final Map<String, SubscriberGroup> subscribers = new ConcurrentHashMap<>();
     /**
      * 当前Topic是否圈闭推送完成
      */
@@ -47,7 +48,7 @@ public class BrokerTopic {
     private final AsyncTask asyncTask = new AsyncTask() {
         @Override
         public void execute() {
-            TopicSubscriber subscriber;
+            AbstractConsumerRecord subscriber;
             int i = 0;
             while (++i < 1000 && (subscriber = queue.poll()) != null) {
                 try {
@@ -72,8 +73,7 @@ public class BrokerTopic {
     /**
      * 当前Topic处于监听状态的订阅者
      */
-    private final ConcurrentLinkedQueue<TopicSubscriber> queue = new ConcurrentLinkedQueue<>();
-
+    private final ConcurrentLinkedQueue<AbstractConsumerRecord> queue = new ConcurrentLinkedQueue<>();
 
     public BrokerTopic(String topic) {
         this(topic, null);
@@ -84,11 +84,21 @@ public class BrokerTopic {
         this.executorService = executorService;
     }
 
-    public Map<MqttSession, TopicSubscriber> getConsumeOffsets() {
-        return consumeOffsets;
+
+    public SubscriberGroup getSubscriberGroup(TopicToken topicToken) {
+        if (topicToken.isShared()) {
+            return subscribers.computeIfAbsent(topicToken.getTopicFilter(), s -> new SubscriberSharedGroup(topicToken, BrokerTopic.this));
+        } else {
+            return defaultGroup;
+        }
     }
 
-    public void addSubscriber(TopicSubscriber subscriber) {
+    public void removeShareGroup(String topicFilter) {
+        subscribers.remove(topicFilter);
+    }
+
+
+    public void addSubscriber(AbstractConsumerRecord subscriber) {
         queue.offer(subscriber);
     }
 

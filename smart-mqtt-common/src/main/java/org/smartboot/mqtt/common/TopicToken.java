@@ -18,25 +18,30 @@ import org.smartboot.mqtt.common.util.ValidateUtils;
  */
 public class TopicToken {
     private final String node;
-    private String topicFilter;
-    private TopicToken nextNode;
+    private final String topicFilter;
+    private final TopicToken nextNode;
 
     public TopicToken(String node) {
         this(node, 0);
-        this.topicFilter = node;
     }
 
-    public TopicToken(String node, int offset) {
+    TopicToken(String node, int offset) {
         int index = node.indexOf('/', offset);
         if (index == -1) {
             this.node = node.substring(offset);
             ValidateUtils.isTrue(this.node.indexOf('#') == -1 || this.node.length() == 1, "invalid topic filter");
             ValidateUtils.isTrue(this.node.indexOf('+') == -1 || this.node.length() == 1, "invalid topic filter");
+            this.nextNode = null;
         } else {
             this.node = node.substring(offset, index);
             ValidateUtils.isTrue(this.node.indexOf('#') == -1, "invalid topic filter");
             ValidateUtils.isTrue(this.node.indexOf('+') == -1 || this.node.length() == 1, "invalid topic filter");
             this.nextNode = new TopicToken(node, index + 1);
+        }
+        if (offset == 0) {
+            this.topicFilter = node;
+        } else {
+            this.topicFilter = null;
         }
     }
 
@@ -57,5 +62,9 @@ public class TopicToken {
             return true;
         }
         return nextNode != null && nextNode.isWildcards();
+    }
+
+    public boolean isShared() {
+        return this.node.equals("$share");
     }
 }

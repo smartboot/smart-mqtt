@@ -22,7 +22,7 @@ import org.smartboot.mqtt.broker.topic.BrokerTopic;
 public interface SubscribeProvider {
     default boolean subscribeTopic(String topicFilter, MqttSession session) {
         //4.7.2 应用不能使用 $ 字符开头的主题
-        return !topicFilter.startsWith("$");
+        return !topicFilter.startsWith("$") || topicFilter.startsWith("$share/");
     }
 
     default boolean matchTopic(BrokerTopic brokerTopic, MqttSession session) {
