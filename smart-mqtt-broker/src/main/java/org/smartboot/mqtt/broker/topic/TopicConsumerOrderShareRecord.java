@@ -68,7 +68,7 @@ class TopicConsumerOrderShareRecord extends AbstractConsumerRecord {
             TopicConsumerRecord record = queue.poll();
             if (record == null) {
                 return;
-            } else if (!record.enable) {
+            } else if (!record.enable || record.getMqttSession().isDisconnect()) {
                 continue;
             }
 
