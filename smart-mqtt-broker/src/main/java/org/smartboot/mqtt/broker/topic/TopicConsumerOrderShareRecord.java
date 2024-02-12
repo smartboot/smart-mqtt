@@ -82,7 +82,7 @@ class TopicConsumerOrderShareRecord extends AbstractConsumerRecord {
                 nextConsumerOffset++;
                 record.getMqttSession().write(publishBuilder.build());
                 queue.offer(record);
-                LOGGER.info("publish share subscribe");
+                LOGGER.debug("publish share subscribe:{}", topicFilterToken.getTopicFilter());
                 continue;
             }
 

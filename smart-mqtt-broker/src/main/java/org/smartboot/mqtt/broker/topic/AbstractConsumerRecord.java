@@ -34,7 +34,7 @@ public abstract class AbstractConsumerRecord {
      */
     private final long latestSubscribeTime = System.currentTimeMillis();
 
-    private final TopicToken topicFilterToken;
+    protected final TopicToken topicFilterToken;
 
     protected boolean enable = true;
 

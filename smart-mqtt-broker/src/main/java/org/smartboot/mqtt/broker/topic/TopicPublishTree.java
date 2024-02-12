@@ -38,7 +38,11 @@ public class TopicPublishTree {
     }
 
     public void match(TopicToken topicToken, Consumer<BrokerTopic> consumer) {
-        match(this, topicToken, consumer);
+        if (topicToken.isShared()) {
+            match(this, topicToken.getNextNode().getNextNode(), consumer);
+        } else {
+            match(this, topicToken, consumer);
+        }
     }
 
     private void match(TopicPublishTree treeNode, TopicToken topicToken, Consumer<BrokerTopic> consumer) {
