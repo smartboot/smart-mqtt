@@ -24,7 +24,7 @@ import java.util.Map;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/7/13
  */
-public class SubscribeTopic {
+public class TopicSubscriber {
     private final TopicToken topicFilterToken;
 
     private MqttQoS mqttQoS;
@@ -34,7 +34,7 @@ public class SubscribeTopic {
      */
     private final Map<BrokerTopic, TopicConsumerRecord> topicSubscribers = new HashMap<>();
 
-    SubscribeTopic(TopicToken topicFilterToken, MqttQoS mqttQoS) {
+    TopicSubscriber(TopicToken topicFilterToken, MqttQoS mqttQoS) {
         this.topicFilterToken = topicFilterToken;
         this.mqttQoS = mqttQoS;
     }
@@ -51,7 +51,7 @@ public class SubscribeTopic {
         this.mqttQoS = mqttQoS;
     }
 
-    public Map<BrokerTopic, TopicConsumerRecord> getTopicSubscribers() {
+    Map<BrokerTopic, TopicConsumerRecord> getTopicSubscribers() {
         return topicSubscribers;
     }
 }

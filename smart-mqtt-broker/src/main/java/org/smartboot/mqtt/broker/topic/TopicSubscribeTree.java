@@ -11,7 +11,7 @@
 package org.smartboot.mqtt.broker.topic;
 
 import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.broker.SubscribeTopic;
+import org.smartboot.mqtt.broker.TopicSubscriber;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 
@@ -24,13 +24,13 @@ import java.util.function.BiConsumer;
  * @version V1.0 , 5/28/23
  */
 public class TopicSubscribeTree {
-    private final Map<MqttSession, SubscribeTopic> subscribers = new ConcurrentHashMap<>();
+    private final Map<MqttSession, TopicSubscriber> subscribers = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, TopicSubscribeTree> subNode = new ConcurrentHashMap<>();
 
     /**
      * 将此订阅注册到订阅树
      */
-    public void subscribeTopic(MqttSession session, SubscribeTopic subscriber) {
+    public void subscribeTopic(MqttSession session, TopicSubscriber subscriber) {
         TopicSubscribeTree treeNode = this;
         TopicToken token = subscriber.getTopicFilterToken();
         do {
@@ -39,7 +39,7 @@ public class TopicSubscribeTree {
         treeNode.subscribers.put(session, subscriber);
     }
 
-    public void unsubscribe(MqttSession session, SubscribeTopic subscriber) {
+    public void unsubscribe(MqttSession session, TopicSubscriber subscriber) {
         TopicSubscribeTree subscribeTree = this;
         TopicToken topicToken = subscriber.getTopicFilterToken();
         while (true) {
@@ -55,7 +55,7 @@ public class TopicSubscribeTree {
     /**
      * 新增的Topic触发与订阅树匹配关系的刷新
      */
-    public void refreshMatchRelation(BrokerTopic topicToken, BiConsumer<MqttSession, SubscribeTopic> consumer) {
+    public void refreshMatchRelation(BrokerTopic topicToken, BiConsumer<MqttSession, TopicSubscriber> consumer) {
         //遍历共享订阅
         TopicSubscribeTree shareTree = subNode.get("$share");
         if (shareTree != null) {
@@ -64,7 +64,7 @@ public class TopicSubscribeTree {
         match0(topicToken.getTopicToken(), consumer);
     }
 
-    private void match0(TopicToken topicToken, BiConsumer<MqttSession, SubscribeTopic> consumer) {
+    private void match0(TopicToken topicToken, BiConsumer<MqttSession, TopicSubscriber> consumer) {
         //精确匹配
         TopicSubscribeTree subscribeTree = subNode.get(topicToken.getNode());
         if (subscribeTree != null) {

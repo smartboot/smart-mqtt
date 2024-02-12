@@ -13,7 +13,7 @@ package org.smartboot.mqtt.broker.topic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.broker.SubscribeTopic;
+import org.smartboot.mqtt.broker.TopicSubscriber;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
@@ -37,12 +37,12 @@ public class TopicConsumerRecord extends AbstractConsumerRecord {
 
     protected final AtomicBoolean semaphore = new AtomicBoolean(false);
 
-    private final SubscribeTopic subscribeTopic;
+    private final TopicSubscriber topicSubscriber;
 
-    public TopicConsumerRecord(BrokerTopic topic, MqttSession session, SubscribeTopic subscribeTopic, long nextConsumerOffset) {
-        super(topic, subscribeTopic.getTopicFilterToken(), nextConsumerOffset);
+    public TopicConsumerRecord(BrokerTopic topic, MqttSession session, TopicSubscriber topicSubscriber, long nextConsumerOffset) {
+        super(topic, topicSubscriber.getTopicFilterToken(), nextConsumerOffset);
         this.mqttSession = session;
-        this.subscribeTopic = subscribeTopic;
+        this.topicSubscriber = topicSubscriber;
     }
 
     /**
@@ -70,14 +70,14 @@ public class TopicConsumerRecord extends AbstractConsumerRecord {
             return;
         }
 
-        MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(message.getPayload()).qos(subscribeTopic.getMqttQoS()).topicName(message.getTopic());
+        MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(message.getPayload()).qos(topicSubscriber.getMqttQoS()).topicName(message.getTopic());
         if (mqttSession.getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());
         }
 
         nextConsumerOffset = message.getOffset() + 1;
         //Qos0直接发送
-        if (subscribeTopic.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
+        if (topicSubscriber.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
             mqttSession.write(publishBuilder.build(), false);
             push0();
             return;
@@ -102,6 +102,6 @@ public class TopicConsumerRecord extends AbstractConsumerRecord {
     }
 
     public MqttQoS getMqttQoS() {
-        return subscribeTopic.getMqttQoS();
+        return topicSubscriber.getMqttQoS();
     }
 }
