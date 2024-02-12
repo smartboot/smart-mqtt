@@ -37,7 +37,7 @@ public class SubscriberGroup {
         return subscribers.get(session);
     }
 
-    public TopicConsumerRecord removeSubscriber(MqttSession session) {
+    public AbstractConsumerRecord removeSubscriber(MqttSession session) {
         return subscribers.remove(session);
     }
 

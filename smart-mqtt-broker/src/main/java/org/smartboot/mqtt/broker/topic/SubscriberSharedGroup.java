@@ -13,20 +13,11 @@ package org.smartboot.mqtt.broker.topic;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.common.TopicToken;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
-
 public class SubscriberSharedGroup extends SubscriberGroup {
     private final TopicConsumerOrderShareRecord record;
-    private final ConcurrentLinkedQueue<TopicConsumerRecord> queue = new ConcurrentLinkedQueue<>();
 
     public SubscriberSharedGroup(TopicToken topicFilterToken, BrokerTopic brokerTopic) {
-        record = new TopicConsumerOrderShareRecord(brokerTopic, topicFilterToken, queue);
-    }
-
-    @Override
-    public void addSubscriber(TopicConsumerRecord subscriber) {
-        super.addSubscriber(subscriber);
-        queue.add(subscriber);
+        record = new TopicConsumerOrderShareRecord(brokerTopic, topicFilterToken);
     }
 
     @Override
@@ -35,8 +26,14 @@ public class SubscriberSharedGroup extends SubscriberGroup {
     }
 
     @Override
-    public TopicConsumerRecord removeSubscriber(MqttSession session) {
-        TopicConsumerRecord consumerRecord = super.removeSubscriber(session);
+    public void addSubscriber(TopicConsumerRecord subscriber) {
+        super.addSubscriber(subscriber);
+        record.getQueue().offer(subscriber);
+    }
+
+    @Override
+    public AbstractConsumerRecord removeSubscriber(MqttSession session) {
+        AbstractConsumerRecord consumerRecord = super.removeSubscriber(session);
         if (subscribers.isEmpty()) {
             record.disable();
             record.topic.removeShareGroup(record.getTopicFilterToken().getTopicFilter());

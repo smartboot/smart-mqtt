@@ -13,6 +13,7 @@ package org.smartboot.mqtt.broker.eventbus;
 import org.smartboot.mqtt.broker.BrokerConfigure;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
+import org.smartboot.mqtt.broker.topic.AbstractConsumerRecord;
 import org.smartboot.mqtt.broker.topic.BrokerTopic;
 import org.smartboot.mqtt.broker.topic.TopicConsumerRecord;
 import org.smartboot.mqtt.common.AbstractSession;
@@ -84,7 +85,7 @@ public class EventType<T> {
     /**
      * 客户端取消订阅Topic
      */
-    public static final EventType<TopicConsumerRecord> UNSUBSCRIBE_TOPIC = new EventType<>("unsubscribe_topic");
+    public static final EventType<AbstractConsumerRecord> UNSUBSCRIBE_TOPIC = new EventType<>("unsubscribe_topic");
 
     /**
      * 客户端订阅Topic

@@ -10,6 +10,8 @@
 
 package org.smartboot.mqtt.broker.topic;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
@@ -27,20 +29,32 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * 顺序共享订阅
  */
 class TopicConsumerOrderShareRecord extends AbstractConsumerRecord {
-    private final ConcurrentLinkedQueue<TopicConsumerRecord> queue;
+    private static final Logger LOGGER = LoggerFactory.getLogger(TopicConsumerOrderShareRecord.class);
+    private final ConcurrentLinkedQueue<TopicConsumerRecord> queue = new ConcurrentLinkedQueue<>();
 
     private final AtomicBoolean semaphore = new AtomicBoolean(false);
 
-    public TopicConsumerOrderShareRecord(BrokerTopic topic, TopicToken topicFilterToken, ConcurrentLinkedQueue<TopicConsumerRecord> queue) {
+    public TopicConsumerOrderShareRecord(BrokerTopic topic, TopicToken topicFilterToken) {
         super(topic, topicFilterToken, topic.getMessageQueue().getLatestOffset() + 1);
-        this.queue = queue;
         topic.addSubscriber(this);
+    }
+
+    public ConcurrentLinkedQueue<TopicConsumerRecord> getQueue() {
+        return queue;
     }
 
     @Override
     public void pushToClient() {
         if (semaphore.compareAndSet(false, true)) {
-            push0();
+            try {
+                push0();
+            } finally {
+                semaphore.set(false);
+                topic.addSubscriber(this);
+                if (topic.getMessageQueue().get(nextConsumerOffset) != null && !queue.isEmpty()) {
+                    topic.push();
+                }
+            }
         }
     }
 
@@ -49,22 +63,10 @@ class TopicConsumerOrderShareRecord extends AbstractConsumerRecord {
         while (i-- > 0) {
             Message message = topic.getMessageQueue().get(nextConsumerOffset);
             if (message == null) {
-                if (semaphore.compareAndSet(true, false)) {
-                    topic.addSubscriber(this);
-                    if (topic.getMessageQueue().get(nextConsumerOffset) != null && !queue.isEmpty()) {
-                        topic.push();
-                    }
-                }
                 return;
             }
             TopicConsumerRecord record = queue.poll();
             if (record == null) {
-                if (semaphore.compareAndSet(true, false)) {
-                    topic.addSubscriber(this);
-                    if (topic.getMessageQueue().get(nextConsumerOffset) != null && !queue.isEmpty()) {
-                        topic.push();
-                    }
-                }
                 return;
             } else if (!record.enable) {
                 continue;
@@ -80,6 +82,7 @@ class TopicConsumerOrderShareRecord extends AbstractConsumerRecord {
                 nextConsumerOffset++;
                 record.getMqttSession().write(publishBuilder.build());
                 queue.offer(record);
+                LOGGER.info("publish share subscribe");
                 continue;
             }
 
@@ -88,14 +91,10 @@ class TopicConsumerOrderShareRecord extends AbstractConsumerRecord {
             });
             if (future != null) {
                 nextConsumerOffset++;
+                record.getMqttSession().flush();
                 queue.offer(record);
             }
         }
-        if (semaphore.compareAndSet(true, false)) {
-            topic.addSubscriber(this);
-            if (topic.getMessageQueue().get(nextConsumerOffset) != null && !queue.isEmpty()) {
-                topic.push();
-            }
-        }
+
     }
 }
