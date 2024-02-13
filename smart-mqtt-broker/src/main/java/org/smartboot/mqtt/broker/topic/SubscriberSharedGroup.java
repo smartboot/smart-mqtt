@@ -13,7 +13,7 @@ package org.smartboot.mqtt.broker.topic;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.common.TopicToken;
 
-public class SubscriberSharedGroup extends SubscriberGroup {
+class SubscriberSharedGroup extends SubscriberGroup {
     private final TopicConsumerOrderShareRecord record;
 
     public SubscriberSharedGroup(TopicToken topicFilterToken, BrokerTopic brokerTopic) {

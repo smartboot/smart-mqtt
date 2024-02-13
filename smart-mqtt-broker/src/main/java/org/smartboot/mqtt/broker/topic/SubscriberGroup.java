@@ -22,17 +22,6 @@ public class SubscriberGroup {
 
     protected final Map<MqttSession, TopicConsumerRecord> subscribers = new ConcurrentHashMap<>();
 
-
-    /**
-     * 最近一次订阅时间
-     */
-    private final long latestSubscribeTime = System.currentTimeMillis();
-
-
-    public long getLatestSubscribeTime() {
-        return latestSubscribeTime;
-    }
-
     public AbstractConsumerRecord getSubscriber(MqttSession session) {
         return subscribers.get(session);
     }
