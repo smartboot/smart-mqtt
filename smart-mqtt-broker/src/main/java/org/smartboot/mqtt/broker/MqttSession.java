@@ -52,7 +52,6 @@ public class MqttSession extends AbstractSession {
     private final Map<String, TopicSubscriber> subscribers = new ConcurrentHashMap<>();
 
     private final BrokerContext mqttContext;
-    private String username;
     /**
      * 已授权
      */
@@ -153,13 +152,6 @@ public class MqttSession extends AbstractSession {
         this.clientId = clientId;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
 
     public MqttQoS subscribe(String topicFilter, MqttQoS mqttQoS) {
         if (mqttContext.getProviders().getSubscribeProvider().subscribeTopic(topicFilter, this)) {
@@ -239,6 +231,7 @@ public class MqttSession extends AbstractSession {
         //移除当前Session的映射关系
         TopicSubscriber filterSubscriber = subscribers.remove(topicFilter);
         if (filterSubscriber == null) {
+            LOGGER.warn("unsubscribe waring! topic:{} is not exists", topicFilter);
             return;
         }
         //移除关联Broker中的映射关系
@@ -269,13 +262,13 @@ public class MqttSession extends AbstractSession {
         this.willMessage = willMessage;
     }
 
-    public BrokerContext getMqttContext() {
-        return mqttContext;
-    }
-
-    public Map<String, TopicSubscriber> getSubscribers() {
-        return subscribers;
-    }
+//    public BrokerContext getMqttContext() {
+//        return mqttContext;
+//    }
+//
+//    public Map<String, TopicSubscriber> getSubscribers() {
+//        return subscribers;
+//    }
 
     public long getLatestReceiveMessageTime() {
         return latestReceiveMessageTime;

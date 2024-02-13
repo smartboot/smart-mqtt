@@ -53,7 +53,7 @@ public class BrokerTopic {
         public void execute() {
             AbstractConsumerRecord subscriber;
             queue.offer(BREAK);
-            int preVersion = version.intValue();
+            int mark = version.intValue();
             while ((subscriber = queue.poll()) != BREAK) {
                 try {
                     subscriber.pushToClient();
@@ -62,7 +62,7 @@ public class BrokerTopic {
                 }
             }
             semaphore.release();
-            if (preVersion != version.intValue() && !queue.isEmpty()) {
+            if (mark != version.intValue() && !queue.isEmpty()) {
                 push();
             }
         }

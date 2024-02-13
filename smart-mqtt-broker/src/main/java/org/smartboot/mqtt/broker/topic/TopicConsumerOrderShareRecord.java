@@ -23,7 +23,7 @@ import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.Semaphore;
 
 /**
  * 顺序共享订阅
@@ -32,7 +32,7 @@ class TopicConsumerOrderShareRecord extends AbstractConsumerRecord {
     private static final Logger LOGGER = LoggerFactory.getLogger(TopicConsumerOrderShareRecord.class);
     private final ConcurrentLinkedQueue<TopicConsumerRecord> queue = new ConcurrentLinkedQueue<>();
 
-    private final AtomicBoolean semaphore = new AtomicBoolean(false);
+    private final Semaphore semaphore = new Semaphore(1);
 
     public TopicConsumerOrderShareRecord(BrokerTopic topic, TopicToken topicFilterToken) {
         super(topic, topicFilterToken, topic.getMessageQueue().getLatestOffset() + 1);
@@ -45,20 +45,21 @@ class TopicConsumerOrderShareRecord extends AbstractConsumerRecord {
 
     @Override
     public void pushToClient() {
-        if (semaphore.compareAndSet(false, true)) {
+        if (semaphore.tryAcquire()) {
             try {
                 push0();
             } finally {
-                semaphore.set(false);
-                topic.addSubscriber(this);
-                if (topic.getMessageQueue().get(nextConsumerOffset) != null && !queue.isEmpty()) {
-                    topic.push();
-                }
+                semaphore.release();
+            }
+            topic.addSubscriber(this);
+            if (topic.getMessageQueue().get(nextConsumerOffset) != null && !queue.isEmpty()) {
+                //触发下一轮推送
+                topic.getVersion().increment();
             }
         }
     }
 
-    public void push0() {
+    private void push0() {
         int i = 10000;
         while (i-- > 0) {
             Message message = topic.getMessageQueue().get(nextConsumerOffset);
@@ -66,9 +67,12 @@ class TopicConsumerOrderShareRecord extends AbstractConsumerRecord {
                 return;
             }
             TopicConsumerRecord record = queue.poll();
+            //共享订阅列表无可用通道
             if (record == null) {
                 return;
-            } else if (!record.enable || record.getMqttSession().isDisconnect()) {
+            }
+
+            if (!record.enable || record.getMqttSession().isDisconnect()) {
                 continue;
             }
 
@@ -95,6 +99,5 @@ class TopicConsumerOrderShareRecord extends AbstractConsumerRecord {
                 queue.offer(record);
             }
         }
-
     }
 }
