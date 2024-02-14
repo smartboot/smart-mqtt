@@ -409,7 +409,7 @@ public class BrokerContextImpl implements BrokerContext {
             LOGGER.debug("load smart-mqtt.yaml from classpath.");
         } else {
             inputStream = Files.newInputStream(Paths.get(brokerConfig));
-            LOGGER.info("load external yaml config.");
+            LOGGER.debug("load external yaml config.");
         }
         Yaml yaml = new Yaml();
         Object object = yaml.load(inputStream);
