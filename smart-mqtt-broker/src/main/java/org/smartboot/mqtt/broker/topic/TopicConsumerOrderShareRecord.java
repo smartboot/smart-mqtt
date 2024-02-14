@@ -54,7 +54,7 @@ class TopicConsumerOrderShareRecord extends AbstractConsumerRecord {
             topic.addSubscriber(this);
             if (topic.getMessageQueue().get(nextConsumerOffset) != null && !queue.isEmpty()) {
                 //触发下一轮推送
-                topic.getVersion().increment();
+                topic.getVersion().incrementAndGet();
             }
         }
     }

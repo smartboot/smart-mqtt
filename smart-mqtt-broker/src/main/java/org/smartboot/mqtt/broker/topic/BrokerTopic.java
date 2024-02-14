@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.LongAdder;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Broker端的Topic
@@ -32,11 +32,14 @@ import java.util.concurrent.atomic.LongAdder;
 public class BrokerTopic {
     private static final Logger LOGGER = LoggerFactory.getLogger(BrokerTopic.class);
 
+    /**
+     * 默认订阅组
+     */
     private final SubscriberGroup defaultGroup = new SubscriberGroup();
     /**
      * 订阅组
      */
-    private final Map<String, SubscriberGroup> subscribers = new ConcurrentHashMap<>();
+    private final Map<String, SubscriberGroup> shareSubscribers = new ConcurrentHashMap<>();
     /**
      * 当前Topic是否圈闭推送完成
      */
@@ -46,14 +49,14 @@ public class BrokerTopic {
 
     private boolean enabled = true;
 
-    private final LongAdder version = new LongAdder();
+    private final AtomicInteger version = new AtomicInteger();
 
     private final AsyncTask asyncTask = new AsyncTask() {
         @Override
         public void execute() {
             AbstractConsumerRecord subscriber;
             queue.offer(BREAK);
-            int mark = version.intValue();
+            int mark = version.get();
             while ((subscriber = queue.poll()) != BREAK) {
                 try {
                     subscriber.pushToClient();
@@ -62,7 +65,7 @@ public class BrokerTopic {
                 }
             }
             semaphore.release();
-            if (mark != version.intValue() && !queue.isEmpty()) {
+            if (mark != version.get() && !queue.isEmpty()) {
                 push();
             }
         }
@@ -98,14 +101,14 @@ public class BrokerTopic {
 
     public SubscriberGroup getSubscriberGroup(TopicToken topicToken) {
         if (topicToken.isShared()) {
-            return subscribers.computeIfAbsent(topicToken.getTopicFilter(), s -> new SubscriberSharedGroup(topicToken, BrokerTopic.this));
+            return shareSubscribers.computeIfAbsent(topicToken.getTopicFilter(), s -> new SubscriberSharedGroup(topicToken, BrokerTopic.this));
         } else {
             return defaultGroup;
         }
     }
 
     void removeShareGroup(String topicFilter) {
-        subscribers.remove(topicFilter);
+        shareSubscribers.remove(topicFilter);
     }
 
 
@@ -148,7 +151,7 @@ public class BrokerTopic {
         }
     }
 
-    public LongAdder getVersion() {
+    public AtomicInteger getVersion() {
         return version;
     }
 
