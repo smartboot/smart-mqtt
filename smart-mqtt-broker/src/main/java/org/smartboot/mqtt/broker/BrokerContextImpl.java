@@ -174,9 +174,10 @@ public class BrokerContextImpl implements BrokerContext {
         eventBus.publish(EventType.BROKER_STARTED, this);
         //释放内存
         configJson = null;
-        System.out.println(BrokerConfigure.BANNER + "\r\n :: smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
-        System.out.println("❤️Gitee: https://gitee.com/smartboot/smart-mqtt");
+        System.out.println(BrokerConfigure.BANNER + "\r\n ::smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
+        System.out.println("Gitee: https://gitee.com/smartboot/smart-mqtt");
         System.out.println("Github: https://github.com/smartboot/smart-mqtt");
+        System.out.println("Document: https://smartboot.tech/smart-mqtt");
         System.out.println("Support: zhengjunweimail@163.com");
         if (StringUtils.isBlank(brokerConfigure.getHost())) {
             System.out.println("\uD83C\uDF89start smart-mqtt success! [port:" + brokerConfigure.getPort() + "]");
@@ -405,7 +406,7 @@ public class BrokerContextImpl implements BrokerContext {
 
         if (StringUtils.isBlank(brokerConfig)) {
             inputStream = BrokerContext.class.getClassLoader().getResourceAsStream("smart-mqtt.yaml");
-            LOGGER.info("load smart-mqtt.yaml from classpath.");
+            LOGGER.debug("load smart-mqtt.yaml from classpath.");
         } else {
             inputStream = Files.newInputStream(Paths.get(brokerConfig));
             LOGGER.info("load external yaml config.");
