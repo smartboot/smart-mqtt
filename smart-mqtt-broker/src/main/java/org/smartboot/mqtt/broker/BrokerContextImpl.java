@@ -34,6 +34,7 @@ import org.smartboot.mqtt.broker.processor.SubscribeProcessor;
 import org.smartboot.mqtt.broker.processor.UnSubscribeProcessor;
 import org.smartboot.mqtt.broker.provider.Providers;
 import org.smartboot.mqtt.broker.topic.BrokerTopic;
+import org.smartboot.mqtt.broker.topic.TopicConsumerRecord;
 import org.smartboot.mqtt.broker.topic.TopicPublishTree;
 import org.smartboot.mqtt.broker.topic.TopicSubscribeTree;
 import org.smartboot.mqtt.common.AsyncTask;
@@ -173,9 +174,10 @@ public class BrokerContextImpl implements BrokerContext {
         eventBus.publish(EventType.BROKER_STARTED, this);
         //释放内存
         configJson = null;
-        System.out.println(BrokerConfigure.BANNER + "\r\n :: smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
-        System.out.println("❤️Gitee: https://gitee.com/smartboot/smart-mqtt");
+        System.out.println(BrokerConfigure.BANNER + "\r\n ::smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
+        System.out.println("Gitee: https://gitee.com/smartboot/smart-mqtt");
         System.out.println("Github: https://github.com/smartboot/smart-mqtt");
+        System.out.println("Document: https://smartboot.tech/smart-mqtt");
         System.out.println("Support: zhengjunweimail@163.com");
         if (StringUtils.isBlank(brokerConfigure.getHost())) {
             System.out.println("\uD83C\uDF89start smart-mqtt success! [port:" + brokerConfigure.getPort() + "]");
@@ -223,25 +225,26 @@ public class BrokerContextImpl implements BrokerContext {
         });
 
         //一个新的订阅建立时，对每个匹配的主题名，如果存在最近保留的消息，它必须被发送给这个订阅者
-        eventBus.subscribe(EventType.SUBSCRIBE_TOPIC, (eventType, subscriber) -> retainPushThreadPool.execute(new AsyncTask() {
+        eventBus.subscribe(EventType.SUBSCRIBE_TOPIC, (eventType, eventObject) -> retainPushThreadPool.execute(new AsyncTask() {
             @Override
             public void execute() {
-                BrokerTopic topic = subscriber.getTopic();
+                TopicConsumerRecord consumerRecord = eventObject.getObject();
+                BrokerTopic topic = consumerRecord.getTopic();
                 Message retainMessage = topic.getRetainMessage();
-                if (retainMessage == null || retainMessage.getCreateTime() > subscriber.getLatestSubscribeTime()) {
-                    topic.addSubscriber(subscriber);
+                if (retainMessage == null || retainMessage.getCreateTime() > consumerRecord.getLatestSubscribeTime()) {
+                    topic.addSubscriber(consumerRecord);
                     return;
                 }
-                MqttSession session = subscriber.getMqttSession();
+                MqttSession session = eventObject.getSession();
 
-                MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(retainMessage.getPayload()).qos(subscriber.getMqttQoS()).topicName(retainMessage.getTopic());
+                MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(retainMessage.getPayload()).qos(consumerRecord.getMqttQoS()).topicName(retainMessage.getTopic());
                 if (session.getMqttVersion() == MqttVersion.MQTT_5) {
                     publishBuilder.publishProperties(new PublishProperties());
                 }
                 // Qos0不走飞行窗口
-                if (subscriber.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
+                if (consumerRecord.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
                     session.write(publishBuilder.build());
-                    topic.addSubscriber(subscriber);
+                    topic.addSubscriber(consumerRecord);
                     return;
                 }
                 InflightQueue inflightQueue = session.getInflightQueue();
@@ -249,17 +252,17 @@ public class BrokerContextImpl implements BrokerContext {
                 CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = inflightQueue.offer(publishBuilder);
                 future.whenComplete((mqttPacketIdentifierMessage, throwable) -> {
                     LOGGER.info("publish retain to client:{} success  ", session.getClientId());
-                    topic.addSubscriber(subscriber);
+                    topic.addSubscriber(consumerRecord);
                 });
                 session.flush();
             }
         }));
 
-        eventBus.subscribe(EventType.TOPIC_CREATE, (eventType, object) -> subscribeTopicTree.match(object, (session, topicFilterSubscriber) -> {
-            if (!providers.getSubscribeProvider().subscribeTopic(object.getTopic(), session)) {
+        eventBus.subscribe(EventType.TOPIC_CREATE, (eventType, brokerTopic) -> subscribeTopicTree.refreshMatchRelation(brokerTopic, (session, topicFilterSubscriber) -> {
+            if (!providers.getSubscribeProvider().subscribeTopic(brokerTopic.getTopic(), session)) {
                 return;
             }
-            session.subscribeSuccess(topicFilterSubscriber.getMqttQoS(), topicFilterSubscriber.getTopicFilterToken(), object);
+            session.subscribeSuccess(topicFilterSubscriber, brokerTopic);
         }));
     }
 
@@ -403,10 +406,10 @@ public class BrokerContextImpl implements BrokerContext {
 
         if (StringUtils.isBlank(brokerConfig)) {
             inputStream = BrokerContext.class.getClassLoader().getResourceAsStream("smart-mqtt.yaml");
-            LOGGER.info("load smart-mqtt.yaml from classpath.");
+            LOGGER.debug("load smart-mqtt.yaml from classpath.");
         } else {
             inputStream = Files.newInputStream(Paths.get(brokerConfig));
-            LOGGER.info("load external yaml config.");
+            LOGGER.debug("load external yaml config.");
         }
         Yaml yaml = new Yaml();
         Object object = yaml.load(inputStream);

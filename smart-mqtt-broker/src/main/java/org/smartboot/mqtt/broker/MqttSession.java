@@ -16,8 +16,10 @@ import org.smartboot.mqtt.broker.eventbus.EventBus;
 import org.smartboot.mqtt.broker.eventbus.EventObject;
 import org.smartboot.mqtt.broker.eventbus.EventType;
 import org.smartboot.mqtt.broker.provider.impl.session.SessionState;
+import org.smartboot.mqtt.broker.topic.AbstractConsumerRecord;
 import org.smartboot.mqtt.broker.topic.BrokerTopic;
-import org.smartboot.mqtt.broker.topic.TopicSubscriber;
+import org.smartboot.mqtt.broker.topic.SubscriberGroup;
+import org.smartboot.mqtt.broker.topic.TopicConsumerRecord;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.MqttWriter;
@@ -47,10 +49,9 @@ public class MqttSession extends AbstractSession {
     /**
      * 当前连接订阅的Topic的消费信息
      */
-    private final Map<String, TopicFilterSubscriber> subscribers = new ConcurrentHashMap<>();
+    private final Map<String, TopicSubscriber> subscribers = new ConcurrentHashMap<>();
 
     private final BrokerContext mqttContext;
-    private String username;
     /**
      * 已授权
      */
@@ -151,13 +152,6 @@ public class MqttSession extends AbstractSession {
         this.clientId = clientId;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
 
     public MqttQoS subscribe(String topicFilter, MqttQoS mqttQoS) {
         if (mqttContext.getProviders().getSubscribeProvider().subscribeTopic(topicFilter, this)) {
@@ -169,71 +163,87 @@ public class MqttSession extends AbstractSession {
     }
 
     private void subscribe0(String topicFilter, MqttQoS mqttQoS) {
-        TopicFilterSubscriber subscriber = subscribers.get(topicFilter);
-        if (subscriber != null) {
-            subscriber.setMqttQoS(mqttQoS);
-            subscriber.getTopicSubscribers().values().forEach(sub -> sub.setMqttQoS(mqttQoS));
+        TopicSubscriber preSubscriber = subscribers.get(topicFilter);
+        //订阅topic已存在，可能只是更新了Qos
+        if (preSubscriber != null) {
+            preSubscriber.setMqttQoS(mqttQoS);
             return;
         }
         TopicToken topicToken = new TopicToken(topicFilter);
         if (!topicToken.isWildcards()) {
             mqttContext.getOrCreateTopic(topicFilter);
         }
-        subscriber = new TopicFilterSubscriber(topicToken, mqttQoS);
-        TopicFilterSubscriber preSubscriber = subscribers.put(topicFilter, subscriber);
-        ValidateUtils.isTrue(preSubscriber == null, "duplicate topic filter");
-        mqttContext.getTopicSubscribeTree().subscribeTopic(this, subscriber);
-        mqttContext.getPublishTopicTree().match(topicToken, topic -> subscribeSuccess(mqttQoS, topicToken, topic));
+        TopicSubscriber newSubscriber = new TopicSubscriber(topicToken, mqttQoS);
+        ValidateUtils.isTrue(subscribers.put(topicFilter, newSubscriber) == null, "duplicate topic filter");
+        mqttContext.getTopicSubscribeTree().subscribeTopic(this, newSubscriber);
+        mqttContext.getPublishTopicTree().match(topicToken, topic -> subscribeSuccess(newSubscriber, topic));
     }
 
-    public void subscribeSuccess(MqttQoS mqttQoS, TopicToken topicToken, BrokerTopic topic) {
+    public void subscribeSuccess(TopicSubscriber topicSubscriber, BrokerTopic topic) {
+        TopicToken topicToken = topicSubscriber.getTopicFilterToken();
         if (!mqttContext.getProviders().getSubscribeProvider().matchTopic(topic, this)) {
             return;
         }
-        TopicSubscriber topicSubscriber = topic.getConsumeOffsets().get(this);
-        if (topicSubscriber != null) {
-            //此前的订阅关系
-            TopicToken preToken = topicSubscriber.getTopicFilterToken();
-            if (preToken.isWildcards()) {
-                if (!topicToken.isWildcards() || topicToken.getTopicFilter().length() > preToken.getTopicFilter().length()) {
-                    //解除旧的订阅关系
-                    TopicSubscriber preSubscription = subscribers.get(preToken.getTopicFilter()).getTopicSubscribers().remove(topic);
-                    preSubscription.setMqttQoS(mqttQoS);
-                    preSubscription.setTopicFilterToken(topicToken);
-                    //绑定新的订阅关系
-                    subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, preSubscription);
-                    mqttContext.getEventBus().publish(EventType.SUBSCRIBE_REFRESH_TOPIC, preSubscription);
-                }
-            }
+        SubscriberGroup subscriberGroup = topic.getSubscriberGroup(topicSubscriber.getTopicFilterToken());
+        AbstractConsumerRecord consumerRecord = subscriberGroup.getSubscriber(this);
+        //共享订阅不会为null
+        if (consumerRecord == null) {
+            TopicConsumerRecord record = new TopicConsumerRecord(topic, MqttSession.this, topicSubscriber, topic.getMessageQueue().getLatestOffset() + 1);
+            mqttContext.getEventBus().publish(EventType.SUBSCRIBE_TOPIC, EventObject.newEventObject(this, record));
+            subscriberGroup.addSubscriber(record);
+            subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, record);
             return;
         }
-        //以当前消息队列的最新点位为起始点位
-        TopicSubscriber subscription = new TopicSubscriber(topic, MqttSession.this, mqttQoS, topic.getMessageQueue().getLatestOffset() + 1);
-        mqttContext.getEventBus().publish(EventType.SUBSCRIBE_TOPIC, subscription);
-        subscription.setTopicFilterToken(topicToken);
-        topic.getConsumeOffsets().put(MqttSession.this, subscription);
-        subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, subscription);
+        //此前的订阅关系
+        TopicToken preToken = consumerRecord.getTopicFilterToken();
+        //此前为统配订阅或者未共享订阅，则更新订阅关系
+        if (topicToken.isShared()) {
+            ValidateUtils.isTrue(preToken.getTopicFilter().equals(topicSubscriber.getTopicFilterToken().getTopicFilter()), "invalid subscriber");
+            TopicConsumerRecord record = new TopicConsumerRecord(topic, MqttSession.this, topicSubscriber, topic.getMessageQueue().getLatestOffset() + 1) {
+                @Override
+                public void pushToClient() {
+                    throw new IllegalStateException();
+                }
+            };
+            subscriberGroup.addSubscriber(record);
+            subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, record);
+        } else if (preToken.isWildcards()) {
+            if (!topicToken.isWildcards() || topicToken.getTopicFilter().length() > preToken.getTopicFilter().length()) {
+                //解除旧的订阅关系
+                TopicConsumerRecord preRecord = subscribers.get(preToken.getTopicFilter()).getTopicSubscribers().remove(topic);
+                ValidateUtils.isTrue(preRecord == consumerRecord, "invalid consumerRecord");
+                preRecord.disable();
+
+                //绑定新的订阅关系
+                TopicConsumerRecord record = new TopicConsumerRecord(topic, MqttSession.this, topicSubscriber, preRecord.getNextConsumerOffset());
+                subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, record);
+                mqttContext.getEventBus().publish(EventType.SUBSCRIBE_REFRESH_TOPIC, record);
+            }
+        }
+
     }
 
     public void resubscribe() {
-        subscribers.values().stream().filter(subscriber -> subscriber.getTopicFilterToken().isWildcards()).forEach(subscriber -> {
-            mqttContext.getPublishTopicTree().match(subscriber.getTopicFilterToken(), topic -> subscribeSuccess(subscriber.getMqttQoS(), subscriber.getTopicFilterToken(), topic));
-        });
+        subscribers.values().stream().filter(subscriber -> subscriber.getTopicFilterToken().isWildcards()).forEach(subscriber -> mqttContext.getPublishTopicTree().match(subscriber.getTopicFilterToken(), topic -> subscribeSuccess(subscriber, topic)));
     }
 
     public void unsubscribe(String topicFilter) {
-        TopicFilterSubscriber filterSubscriber = subscribers.remove(topicFilter);
+        //移除当前Session的映射关系
+        TopicSubscriber filterSubscriber = subscribers.remove(topicFilter);
         if (filterSubscriber == null) {
+            LOGGER.warn("unsubscribe waring! topic:{} is not exists", topicFilter);
             return;
         }
-        filterSubscriber.getTopicSubscribers().values().forEach(subscriber -> {
-            TopicSubscriber removeSubscriber = subscriber.getTopic().getConsumeOffsets().remove(this);
-            if (subscriber == removeSubscriber) {
-                removeSubscriber.disable();
-                mqttContext.getEventBus().publish(EventType.UNSUBSCRIBE_TOPIC, removeSubscriber);
-                LOGGER.debug("remove subscriber:{} success!", subscriber.getTopic().getTopic());
+        //移除关联Broker中的映射关系
+        filterSubscriber.getTopicSubscribers().forEach((brokerTopic, subscriber) -> {
+            SubscriberGroup subscriberGroup = brokerTopic.getSubscriberGroup(filterSubscriber.getTopicFilterToken());
+            AbstractConsumerRecord consumerRecord = subscriberGroup.removeSubscriber(this);
+            if (subscriber == consumerRecord) {
+                consumerRecord.disable();
+                mqttContext.getEventBus().publish(EventType.UNSUBSCRIBE_TOPIC, consumerRecord);
+                LOGGER.debug("remove subscriber:{} success!", brokerTopic.getTopic());
             } else {
-                LOGGER.error("remove subscriber:{} error!", removeSubscriber);
+                LOGGER.error("remove subscriber:{} error!", subscriberGroup);
             }
         });
         mqttContext.getTopicSubscribeTree().unsubscribe(this, filterSubscriber);
@@ -252,13 +262,13 @@ public class MqttSession extends AbstractSession {
         this.willMessage = willMessage;
     }
 
-    public BrokerContext getMqttContext() {
-        return mqttContext;
-    }
-
-    public Map<String, TopicFilterSubscriber> getSubscribers() {
-        return subscribers;
-    }
+//    public BrokerContext getMqttContext() {
+//        return mqttContext;
+//    }
+//
+//    public Map<String, TopicSubscriber> getSubscribers() {
+//        return subscribers;
+//    }
 
     public long getLatestReceiveMessageTime() {
         return latestReceiveMessageTime;

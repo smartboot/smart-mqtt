@@ -11,7 +11,7 @@
 package org.smartboot.mqtt.broker.topic;
 
 import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.broker.TopicFilterSubscriber;
+import org.smartboot.mqtt.broker.TopicSubscriber;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 
@@ -24,10 +24,13 @@ import java.util.function.BiConsumer;
  * @version V1.0 , 5/28/23
  */
 public class TopicSubscribeTree {
-    private final Map<MqttSession, TopicFilterSubscriber> subscribers = new ConcurrentHashMap<>();
+    private final Map<MqttSession, TopicSubscriber> subscribers = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, TopicSubscribeTree> subNode = new ConcurrentHashMap<>();
 
-    public void subscribeTopic(MqttSession session, TopicFilterSubscriber subscriber) {
+    /**
+     * 将此订阅注册到订阅树
+     */
+    public void subscribeTopic(MqttSession session, TopicSubscriber subscriber) {
         TopicSubscribeTree treeNode = this;
         TopicToken token = subscriber.getTopicFilterToken();
         do {
@@ -36,7 +39,7 @@ public class TopicSubscribeTree {
         treeNode.subscribers.put(session, subscriber);
     }
 
-    public void unsubscribe(MqttSession session, TopicFilterSubscriber subscriber) {
+    public void unsubscribe(MqttSession session, TopicSubscriber subscriber) {
         TopicSubscribeTree subscribeTree = this;
         TopicToken topicToken = subscriber.getTopicFilterToken();
         while (true) {
@@ -49,18 +52,26 @@ public class TopicSubscribeTree {
         subscribeTree.subscribers.remove(session);
     }
 
-    public void match(BrokerTopic topicToken, BiConsumer<MqttSession, TopicFilterSubscriber> consumer) {
-        match(topicToken.getTopicToken(), consumer);
+    /**
+     * 新增的Topic触发与订阅树匹配关系的刷新
+     */
+    public void refreshMatchRelation(BrokerTopic topicToken, BiConsumer<MqttSession, TopicSubscriber> consumer) {
+        //遍历共享订阅
+        TopicSubscribeTree shareTree = subNode.get("$share");
+        if (shareTree != null) {
+            shareTree.subNode.values().forEach(tree -> tree.match0(topicToken.getTopicToken(), consumer));
+        }
+        match0(topicToken.getTopicToken(), consumer);
     }
 
-    private void match(TopicToken topicToken, BiConsumer<MqttSession, TopicFilterSubscriber> consumer) {
+    private void match0(TopicToken topicToken, BiConsumer<MqttSession, TopicSubscriber> consumer) {
         //精确匹配
         TopicSubscribeTree subscribeTree = subNode.get(topicToken.getNode());
         if (subscribeTree != null) {
             if (topicToken.getNextNode() == null) {
                 subscribers.forEach(consumer);
             } else {
-                subscribeTree.match(topicToken.getNextNode(), consumer);
+                subscribeTree.match0(topicToken.getNextNode(), consumer);
             }
         }
         subscribeTree = subNode.get("#");
@@ -74,7 +85,7 @@ public class TopicSubscribeTree {
             if (topicToken.getNextNode() == null) {
                 subscribers.forEach(consumer);
             } else {
-                subscribeTree.subNode.values().forEach(t -> match(topicToken.getNextNode(), consumer));
+                subscribeTree.subNode.values().forEach(t -> match0(topicToken.getNextNode(), consumer));
             }
         }
     }

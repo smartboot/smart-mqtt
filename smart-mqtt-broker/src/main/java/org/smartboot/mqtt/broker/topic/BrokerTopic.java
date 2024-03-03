@@ -12,7 +12,6 @@ package org.smartboot.mqtt.broker.topic;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.TopicToken;
@@ -22,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Broker端的Topic
@@ -31,10 +31,15 @@ import java.util.concurrent.Semaphore;
  */
 public class BrokerTopic {
     private static final Logger LOGGER = LoggerFactory.getLogger(BrokerTopic.class);
+
     /**
-     * 当前订阅的消费者
+     * 默认订阅组
      */
-    private final Map<MqttSession, TopicSubscriber> consumeOffsets = new ConcurrentHashMap<>();
+    private final SubscriberGroup defaultGroup = new SubscriberGroup();
+    /**
+     * 订阅组
+     */
+    private final Map<String, SubscriberGroup> shareSubscribers = new ConcurrentHashMap<>();
     /**
      * 当前Topic是否圈闭推送完成
      */
@@ -44,12 +49,15 @@ public class BrokerTopic {
 
     private boolean enabled = true;
 
+    private final AtomicInteger version = new AtomicInteger();
+
     private final AsyncTask asyncTask = new AsyncTask() {
         @Override
         public void execute() {
-            TopicSubscriber subscriber;
-            int i = 0;
-            while (++i < 1000 && (subscriber = queue.poll()) != null) {
+            AbstractConsumerRecord subscriber;
+            queue.offer(BREAK);
+            int mark = version.get();
+            while ((subscriber = queue.poll()) != BREAK) {
                 try {
                     subscriber.pushToClient();
                 } catch (Exception e) {
@@ -57,7 +65,7 @@ public class BrokerTopic {
                 }
             }
             semaphore.release();
-            if (!queue.isEmpty()) {
+            if (mark != version.get() && !queue.isEmpty()) {
                 push();
             }
         }
@@ -72,8 +80,14 @@ public class BrokerTopic {
     /**
      * 当前Topic处于监听状态的订阅者
      */
-    private final ConcurrentLinkedQueue<TopicSubscriber> queue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<AbstractConsumerRecord> queue = new ConcurrentLinkedQueue<>();
 
+    private static final AbstractConsumerRecord BREAK = new AbstractConsumerRecord(null, null, -1) {
+        @Override
+        public void pushToClient() {
+            throw new UnsupportedOperationException();
+        }
+    };
 
     public BrokerTopic(String topic) {
         this(topic, null);
@@ -84,11 +98,21 @@ public class BrokerTopic {
         this.executorService = executorService;
     }
 
-    public Map<MqttSession, TopicSubscriber> getConsumeOffsets() {
-        return consumeOffsets;
+
+    public SubscriberGroup getSubscriberGroup(TopicToken topicToken) {
+        if (topicToken.isShared()) {
+            return shareSubscribers.computeIfAbsent(topicToken.getTopicFilter(), s -> new SubscriberSharedGroup(topicToken, BrokerTopic.this));
+        } else {
+            return defaultGroup;
+        }
     }
 
-    public void addSubscriber(TopicSubscriber subscriber) {
+    void removeShareGroup(String topicFilter) {
+        shareSubscribers.remove(topicFilter);
+    }
+
+
+    public void addSubscriber(AbstractConsumerRecord subscriber) {
         queue.offer(subscriber);
     }
 
@@ -125,6 +149,10 @@ public class BrokerTopic {
             //已加入推送队列
             executorService.execute(asyncTask);
         }
+    }
+
+    public AtomicInteger getVersion() {
+        return version;
     }
 
     public void disable() {

@@ -13,8 +13,8 @@ package org.smartboot.mqtt.broker.topic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.MqttSession;
+import org.smartboot.mqtt.broker.TopicSubscriber;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
-import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
@@ -31,45 +31,24 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/25
  */
-public class TopicSubscriber {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TopicSubscriber.class);
+public class TopicConsumerRecord extends AbstractConsumerRecord {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TopicConsumerRecord.class);
     private final MqttSession mqttSession;
-    /**
-     * 定义消息主题
-     */
-    private final BrokerTopic topic;
-    /**
-     * 服务端向客户端发送应用消息所允许的最大 QoS 等级
-     */
-    private MqttQoS mqttQoS;
 
-    /**
-     * 期望消费的点位
-     */
-    private long nextConsumerOffset;
+    protected final AtomicBoolean semaphore = new AtomicBoolean(false);
 
-    /**
-     * 最近一次订阅时间
-     */
-    private final long latestSubscribeTime = System.currentTimeMillis();
+    private final TopicSubscriber topicSubscriber;
 
-    private TopicToken topicFilterToken;
-
-    private final AtomicBoolean semaphore = new AtomicBoolean(false);
-
-    private boolean enable = true;
-
-    public TopicSubscriber(BrokerTopic topic, MqttSession session, MqttQoS mqttQoS, long nextConsumerOffset) {
-        this.topic = topic;
+    public TopicConsumerRecord(BrokerTopic topic, MqttSession session, TopicSubscriber topicSubscriber, long nextConsumerOffset) {
+        super(topic, topicSubscriber.getTopicFilterToken(), nextConsumerOffset);
         this.mqttSession = session;
-        this.mqttQoS = mqttQoS;
-        this.nextConsumerOffset = nextConsumerOffset;
+        this.topicSubscriber = topicSubscriber;
     }
 
     /**
      * 推送消息到客户端
      */
-    void pushToClient() {
+    public void pushToClient() {
         if (mqttSession.isDisconnect() || !enable) {
             return;
         }
@@ -91,14 +70,14 @@ public class TopicSubscriber {
             return;
         }
 
-        MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(message.getPayload()).qos(mqttQoS).topicName(message.getTopic());
+        MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(message.getPayload()).qos(topicSubscriber.getMqttQoS()).topicName(message.getTopic());
         if (mqttSession.getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());
         }
 
         nextConsumerOffset = message.getOffset() + 1;
         //Qos0直接发送
-        if (mqttQoS == MqttQoS.AT_MOST_ONCE) {
+        if (topicSubscriber.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
             mqttSession.write(publishBuilder.build(), false);
             push0();
             return;
@@ -106,7 +85,7 @@ public class TopicSubscriber {
 
         CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = mqttSession.getInflightQueue().offer(publishBuilder, () -> {
             if (semaphore.compareAndSet(true, false)) {
-                topic.addSubscriber(TopicSubscriber.this);
+                topic.addSubscriber(this);
             }
             topic.push();
         });
@@ -118,35 +97,11 @@ public class TopicSubscriber {
         push0();
     }
 
-    public BrokerTopic getTopic() {
-        return topic;
-    }
-
     public MqttSession getMqttSession() {
         return mqttSession;
     }
 
     public MqttQoS getMqttQoS() {
-        return mqttQoS;
-    }
-
-    public long getLatestSubscribeTime() {
-        return latestSubscribeTime;
-    }
-
-    public TopicToken getTopicFilterToken() {
-        return topicFilterToken;
-    }
-
-    public void setTopicFilterToken(TopicToken topicFilterToken) {
-        this.topicFilterToken = topicFilterToken;
-    }
-
-    public void disable() {
-        this.enable = false;
-    }
-
-    public void setMqttQoS(MqttQoS mqttQoS) {
-        this.mqttQoS = mqttQoS;
+        return topicSubscriber.getMqttQoS();
     }
 }
