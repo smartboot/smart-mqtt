@@ -13,6 +13,7 @@ package org.smartboot.mqtt.common.message;
 
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.exception.MqttException;
+import org.smartboot.mqtt.common.util.TopicByteTree;
 import org.smartboot.socket.DecoderException;
 import org.smartboot.socket.util.BufferUtils;
 
@@ -55,6 +56,14 @@ public final class MqttCodecUtil {
     public static String decodeUTF8(ByteBuffer buffer) {
         return decodeUTF8(buffer, 0, Integer.MAX_VALUE);
     }
+
+    public static final TopicByteTree cache = new TopicByteTree();
+
+    public static TopicByteTree scanTopicTree(ByteBuffer buffer, TopicByteTree cache) {
+        final int size = decodeMsbLsb(buffer);
+        return cache.search(buffer, size, true);
+    }
+
 
     /**
      * 每一个字符串都有一个两字节的长度字段作为前缀，它给出这个字符串 UTF-8 编码的字节数，它们在图例

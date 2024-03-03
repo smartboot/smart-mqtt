@@ -13,7 +13,6 @@ package org.smartboot.mqtt.common.message.variable;
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
-import org.smartboot.mqtt.common.util.MqttUtil;
 
 import java.io.IOException;
 
@@ -27,29 +26,32 @@ public class MqttPublishVariableHeader extends MqttPacketIdVariableHeader<Publis
      * PUBLISH 报文中的主题名不能包含通配符
      */
     private final String topicName;
-    private byte[] topicNameBytes;
+    private final byte[] encodedTopic;
 
-
-    public MqttPublishVariableHeader(int packetId, String topicName, PublishProperties properties) {
+    public MqttPublishVariableHeader(int packetId, String topicName, byte[] encodedTopic, PublishProperties properties) {
         super(packetId, properties);
         this.topicName = topicName;
+        this.encodedTopic = encodedTopic;
     }
 
     public String getTopicName() {
         return topicName;
     }
 
+    public byte[] getEncodedTopic() {
+        return encodedTopic;
+    }
+
     @Override
     protected int preEncode0() {
         int length = getPacketId() > 0 ? 2 : 0;
-        topicNameBytes = MqttUtil.encodeCache(topicName);
-        length += topicNameBytes.length;
+        length += encodedTopic.length;
         return length;
     }
 
     @Override
     protected void writeTo(MqttWriter mqttWriter) throws IOException {
-        mqttWriter.write(topicNameBytes);
+        mqttWriter.write(encodedTopic);
         if (getPacketId() > 0) {
             MqttCodecUtil.writeMsbLsb(mqttWriter, getPacketId());
         }

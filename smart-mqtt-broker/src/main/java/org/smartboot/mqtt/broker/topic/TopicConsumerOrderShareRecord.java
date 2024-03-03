@@ -76,7 +76,7 @@ class TopicConsumerOrderShareRecord extends AbstractConsumerRecord {
                 continue;
             }
 
-            MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(message.getPayload()).qos(record.getMqttQoS()).topicName(message.getTopic());
+            MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(message.getPayload()).qos(record.getMqttQoS()).topic(message.getTopicBytes());
             if (record.getMqttSession().getMqttVersion() == MqttVersion.MQTT_5) {
                 publishBuilder.publishProperties(new PublishProperties());
             }

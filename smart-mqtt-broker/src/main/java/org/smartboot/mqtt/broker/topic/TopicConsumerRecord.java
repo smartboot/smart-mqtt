@@ -70,7 +70,7 @@ public class TopicConsumerRecord extends AbstractConsumerRecord {
             return;
         }
 
-        MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(message.getPayload()).qos(topicSubscriber.getMqttQoS()).topicName(message.getTopic());
+        MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(message.getPayload()).qos(topicSubscriber.getMqttQoS()).topic(message.getTopicBytes());
         if (mqttSession.getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());
         }

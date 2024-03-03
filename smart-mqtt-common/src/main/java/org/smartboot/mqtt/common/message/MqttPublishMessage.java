@@ -15,6 +15,7 @@ import org.smartboot.mqtt.common.message.payload.MqttPublishPayload;
 import org.smartboot.mqtt.common.message.variable.MqttPublishVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.util.MqttUtil;
+import org.smartboot.mqtt.common.util.TopicByteTree;
 import org.smartboot.socket.DecoderException;
 
 import java.nio.ByteBuffer;
@@ -39,10 +40,10 @@ public class MqttPublishMessage extends MqttPacketIdentifierMessage<MqttPublishV
 
     @Override
     public void decodeVariableHeader0(ByteBuffer buffer) {
-        final String decodedTopic = MqttCodecUtil.decodeUTF8(buffer);
+        final TopicByteTree topic = MqttCodecUtil.scanTopicTree(buffer, MqttCodecUtil.cache);
         //PUBLISH 报文中的主题名不能包含通配符
-        if (MqttUtil.containsTopicWildcards(decodedTopic)) {
-            throw new DecoderException("invalid publish topic name: " + decodedTopic + " (contains wildcards)");
+        if (MqttUtil.containsTopicWildcards(topic.getTopicName())) {
+            throw new DecoderException("invalid publish topic name: " + topic + " (contains wildcards)");
         }
         int packetId = -1;
         //只有当 QoS 等级是 1 或 2 时，报文标识符（Packet Identifier）字段才能出现在 PUBLISH 报文中。
@@ -53,9 +54,9 @@ public class MqttPublishMessage extends MqttPacketIdentifierMessage<MqttPublishV
         if (version == MqttVersion.MQTT_5) {
             PublishProperties properties = new PublishProperties();
             properties.decode(buffer);
-            variableHeader = new MqttPublishVariableHeader(packetId, decodedTopic, properties);
+            variableHeader = new MqttPublishVariableHeader(packetId, topic.getTopicName(), topic.getBytes(), properties);
         } else {
-            variableHeader = new MqttPublishVariableHeader(packetId, decodedTopic, null);
+            variableHeader = new MqttPublishVariableHeader(packetId, topic.getTopicName(), topic.getBytes(), null);
         }
 
         setVariableHeader(variableHeader);

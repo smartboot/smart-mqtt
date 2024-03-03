@@ -36,6 +36,11 @@ public class Message extends ToString {
      */
     private final String topic;
 
+    /**
+     * 主题
+     */
+    private final byte[] topicBytes;
+
     private final boolean retained;
     /**
      * 存储的消息偏移量
@@ -52,6 +57,7 @@ public class Message extends ToString {
         this.payload = message.getPayload().getPayload();
         this.retained = message.getFixedHeader().isRetain();
         this.topic = message.getVariableHeader().getTopicName();
+        this.topicBytes = message.getVariableHeader().getEncodedTopic();
         this.qos = message.getFixedHeader().getQosLevel();
     }
 
@@ -61,6 +67,10 @@ public class Message extends ToString {
 
     public String getTopic() {
         return topic;
+    }
+
+    public byte[] getTopicBytes() {
+        return topicBytes;
     }
 
     public boolean isRetained() {
