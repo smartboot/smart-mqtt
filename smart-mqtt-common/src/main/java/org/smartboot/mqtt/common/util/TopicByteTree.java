@@ -69,6 +69,14 @@ public class TopicByteTree {
             }
         }
         if (offset == len) {
+            if(topicByteTree.bytes==null){
+                //在当前节点上追加子节点
+                byte[] b = new byte[len + 2];
+                bytes.position(bytes.position() - offset - 2);
+                bytes.get(b);
+                topicByteTree.bytes = b;
+                topicByteTree.topicName = new String(b, 2, len);
+            }
             return topicByteTree;
         } else if (cache && topicByteTree.depth < MAX_DEPTH) {
             //在当前节点上追加子节点
