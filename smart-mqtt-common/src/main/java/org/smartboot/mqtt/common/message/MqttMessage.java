@@ -67,7 +67,7 @@ public abstract class MqttMessage extends ToString {
     }
 
     public final void write(MqttWriter mqttWriter) throws IOException {
-        ValidateUtils.isTrue(mqttWriter.writeSize() == 0, "invlid write size");
+        ValidateUtils.isTrue(mqttWriter.writeSize() == 0, "invalid write size");
         try {
             MqttVariableHeader variableHeader = getVariableHeader();
             MqttPayload mqttPayload = getPayload();
