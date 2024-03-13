@@ -69,7 +69,7 @@ public class TopicByteTree {
             }
         }
         if (offset == len) {
-            if(topicByteTree.bytes==null){
+            if (topicByteTree.topicName == null) {
                 //在当前节点上追加子节点
                 byte[] b = new byte[len + 2];
                 bytes.position(bytes.position() - offset - 2);
