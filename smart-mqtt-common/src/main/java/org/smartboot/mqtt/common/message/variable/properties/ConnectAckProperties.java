@@ -12,7 +12,23 @@ package org.smartboot.mqtt.common.message.variable.properties;
 
 import java.util.List;
 
-import static org.smartboot.mqtt.common.util.MqttPropertyConstant.*;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.ASSIGNED_CLIENT_IDENTIFIER_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.AUTHENTICATION_DATA_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.AUTHENTICATION_METHOD_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.MAXIMUM_PACKET_SIZE_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.MAXIMUM_QOS_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.REASON_STRING_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.RECEIVE_MAXIMUM_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.RESPONSE_INFORMATION_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.RETAIN_AVAILABLE_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.SERVER_KEEP_ALIVE_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.SERVER_REFERENCE_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.SESSION_EXPIRY_INTERVAL_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.SHARED_SUBSCRIPTION_AVAILABLE_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.SUBSCRIPTION_IDENTIFIER_AVAILABLE_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.TOPIC_ALIAS_MAXIMUM_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.USER_PROPERTY_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.WILDCARD_SUBSCRIPTION_AVAILABLE_BIT;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）

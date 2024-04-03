@@ -12,7 +12,15 @@ package org.smartboot.mqtt.common.message.variable.properties;
 
 import java.util.List;
 
-import static org.smartboot.mqtt.common.util.MqttPropertyConstant.*;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.AUTHENTICATION_DATA_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.AUTHENTICATION_METHOD_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.MAXIMUM_PACKET_SIZE_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.RECEIVE_MAXIMUM_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.REQUEST_PROBLEM_INFORMATION_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.REQUEST_RESPONSE_INFORMATION_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.SESSION_EXPIRY_INTERVAL_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.TOPIC_ALIAS_MAXIMUM_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.USER_PROPERTY_BIT;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）

@@ -40,7 +40,6 @@ import org.smartboot.mqtt.broker.topic.TopicSubscribeTree;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.MqttProtocol;
-import org.smartboot.mqtt.common.QosRetryPlugin;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
@@ -160,7 +159,6 @@ public class BrokerContextImpl implements BrokerContext {
 
 
         try {
-            brokerConfigure.addPlugin(new QosRetryPlugin());
             brokerConfigure.getPlugins().forEach(processor::addPlugin);
             server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(brokerConfigure.getMaxPacketSize()), processor);
             server.setBannerEnabled(false).setLowMemory(brokerConfigure.isLowMemory()).setReadBufferSize(brokerConfigure.getBufferSize()).setWriteBuffer(brokerConfigure.getBufferSize(), Math.min(brokerConfigure.getMaxInflight(), 16)).setBufferPagePool(brokerConfigure.getBufferPagePool()).setThreadNum(Math.max(2, brokerConfigure.getThreadNum()));

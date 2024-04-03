@@ -20,6 +20,7 @@ import org.smartboot.socket.transport.AioSession;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.util.Hashtable;
 
 
@@ -27,7 +28,7 @@ import java.util.Hashtable;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/4/12
  */
-public abstract class AbstractSession extends Codec {
+public abstract class AbstractSession {
 
     protected String clientId;
     protected AioSession session;
@@ -49,15 +50,14 @@ public abstract class AbstractSession extends Codec {
 
     protected final Timer timer;
 
-    private Runnable retryRunnable;
-
-    Runnable getRetryRunnable() {
-        return retryRunnable;
-    }
-
-    void setRetryRunnable(Runnable retryRunnable) {
-        this.retryRunnable = retryRunnable;
-    }
+    //消息超时重发任务
+    Runnable retryRunnable;
+    // 当前所处的解码状态
+    DecoderState state = DecoderState.READ_FIXED_HEADER;
+    // 当前正在解码的消息
+    MqttMessage mqttMessage;
+    // 当前正在解码的消息
+    ByteBuffer disposableBuffer;
 
     public AbstractSession(Timer timer) {
         this.timer = timer;

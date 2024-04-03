@@ -12,7 +12,13 @@ package org.smartboot.mqtt.common.message.variable.properties;
 
 import java.util.List;
 
-import static org.smartboot.mqtt.common.util.MqttPropertyConstant.*;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.CONTENT_TYPE_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.CORRELATION_DATA_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.MESSAGE_EXPIRY_INTERVAL_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.PAYLOAD_FORMAT_INDICATOR_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.RESPONSE_TOPIC_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.USER_PROPERTY_BIT;
+import static org.smartboot.mqtt.common.util.MqttPropertyConstant.WILL_DELAY_INTERVAL_BIT;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）

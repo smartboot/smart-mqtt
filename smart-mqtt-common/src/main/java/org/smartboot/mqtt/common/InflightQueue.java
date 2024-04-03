@@ -244,7 +244,7 @@ public class InflightQueue {
         if (count > 0) {
             //注册超时监听任务
             InflightMessage monitorMessage = queue[takeIndex];
-            session.setRetryRunnable(() -> session.getInflightQueue().retry(monitorMessage));
+            session.retryRunnable = () -> session.getInflightQueue().retry(monitorMessage);
         }
     }
 }

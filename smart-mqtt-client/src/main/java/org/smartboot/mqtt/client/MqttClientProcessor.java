@@ -16,6 +16,7 @@ import org.smartboot.mqtt.client.processor.MqttAckProcessor;
 import org.smartboot.mqtt.client.processor.MqttProcessor;
 import org.smartboot.mqtt.client.processor.PubRelProcessor;
 import org.smartboot.mqtt.client.processor.PublishProcessor;
+import org.smartboot.mqtt.common.MqttMessageProcessor;
 import org.smartboot.mqtt.common.exception.MqttException;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
@@ -27,7 +28,6 @@ import org.smartboot.mqtt.common.message.MqttPubRelMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.MqttSubAckMessage;
 import org.smartboot.socket.StateMachineEnum;
-import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioSession;
 
 import java.util.HashMap;
@@ -37,7 +37,7 @@ import java.util.Map;
  * @author 三刀
  * @version V1.0 , 2018/4/24
  */
-public class MqttClientProcessor extends AbstractMessageProcessor<MqttMessage> {
+public class MqttClientProcessor extends MqttMessageProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttClientProcessor.class);
     private static final Map<Class<? extends MqttMessage>, MqttProcessor<? extends MqttMessage>> processors = new HashMap<>();
 

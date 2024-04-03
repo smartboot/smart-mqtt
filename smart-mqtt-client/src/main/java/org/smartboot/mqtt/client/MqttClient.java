@@ -19,7 +19,6 @@ import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.DefaultMqttWriter;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.MqttProtocol;
-import org.smartboot.mqtt.common.QosRetryPlugin;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttDisConnectReturnCode;
@@ -82,10 +81,6 @@ public class MqttClient extends AbstractSession {
      */
     private final MqttClientConfigure clientConfigure = new MqttClientConfigure();
     private static final AbstractMessageProcessor<MqttMessage> messageProcessor = new MqttClientProcessor();
-
-    static {
-        messageProcessor.addPlugin(new QosRetryPlugin());
-    }
 
     /**
      * 完成connect之前注册的事件

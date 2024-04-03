@@ -17,19 +17,19 @@ import org.smartboot.mqtt.broker.eventbus.EventObject;
 import org.smartboot.mqtt.broker.eventbus.EventType;
 import org.smartboot.mqtt.broker.processor.MqttProcessor;
 import org.smartboot.mqtt.common.DefaultMqttWriter;
+import org.smartboot.mqtt.common.MqttMessageProcessor;
 import org.smartboot.mqtt.common.exception.MqttException;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.StateMachineEnum;
-import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioSession;
 
 /**
  * @author 三刀
  * @version V1.0 , 2018/4/24
  */
-public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMessage> {
+public class MqttBrokerMessageProcessor extends MqttMessageProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttBrokerMessageProcessor.class);
     /**
      * Mqtt服务全局Context
@@ -71,7 +71,7 @@ public class MqttBrokerMessageProcessor extends AbstractMessageProcessor<MqttMes
                 if (throwable instanceof MqttException) {
                     LOGGER.warn("process exception", throwable);
                     ((MqttException) throwable).getCallback().run();
-                }else{
+                } else {
                     throwable.printStackTrace();
                 }
                 break;
