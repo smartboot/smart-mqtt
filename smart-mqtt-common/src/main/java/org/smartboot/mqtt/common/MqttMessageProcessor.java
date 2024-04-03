@@ -15,7 +15,14 @@ import org.smartboot.socket.extension.plugins.AbstractPlugin;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioSession;
 
+/**
+ * MQTT消息处理器基类。
+ */
 public abstract class MqttMessageProcessor extends AbstractMessageProcessor<MqttMessage> {
+    /**
+     * 构造函数，初始化消息处理器。
+     * 自动添加一个插件，该插件在读取消息前执行，用于处理重试逻辑。
+     */
     public MqttMessageProcessor() {
         this.addPlugin(new AbstractPlugin<MqttMessage>() {
             @Override
@@ -24,12 +31,10 @@ public abstract class MqttMessageProcessor extends AbstractMessageProcessor<Mqtt
                 if (mqttSession == null) {
                     return;
                 }
-                if (mqttSession.retryRunnable != null) {
-                    try {
-                        mqttSession.retryRunnable.run();
-                    } finally {
-                        mqttSession.retryRunnable = null;
-                    }
+                Runnable runnable = mqttSession.retryRunnable;
+                if (runnable != null) {
+                    mqttSession.retryRunnable = null;
+                    runnable.run();
                 }
             }
         });
