@@ -21,6 +21,10 @@ public class TopicByteTree {
     private final int depth;
     private final TopicByteTree parent;
     protected String topicName;
+    /**
+     * topic是否包含通配符
+     */
+    private boolean wildcards;
     private byte[] bytes;
     private int shift = -1;
     private TopicByteTree[] nodes = new TopicByteTree[1];
@@ -75,7 +79,7 @@ public class TopicByteTree {
                 bytes.position(bytes.position() - offset - 2);
                 bytes.get(b);
                 topicByteTree.bytes = b;
-                topicByteTree.topicName = new String(b, 2, len);
+                topicByteTree.setTopicName(new String(b, 2, len));
             }
             return topicByteTree;
         } else if (cache && topicByteTree.depth < MAX_DEPTH) {
@@ -96,16 +100,6 @@ public class TopicByteTree {
         }
     }
 
-    public void addTopic(String value) {
-        byte[] bytes = value.getBytes();
-        TopicByteTree tree = this;
-        while (tree.depth > 0) {
-            tree = tree.parent;
-        }
-        TopicByteTree leafNode = tree.addTopic(bytes, 0, bytes.length);
-        leafNode.topicName = value;
-    }
-
     private TopicByteTree addTopic(byte[] value, int offset, int len) {
         if (offset == len) {
             byte[] b = new byte[len + 2];
@@ -113,7 +107,7 @@ public class TopicByteTree {
             b[1] = (byte) (len & 0xFF);
             System.arraycopy(value, 0, b, 2, len);
             bytes = b;
-            topicName = new String(b, 2, len);
+            setTopicName(new String(b, 2, len));
             return this;
         }
         if (this.depth >= MAX_DEPTH) {
@@ -155,11 +149,19 @@ public class TopicByteTree {
         return topicName;
     }
 
+    public boolean isWildcards() {
+        return wildcards;
+    }
+
+    void setTopicName(String topicName) {
+        this.topicName = topicName;
+        wildcards = MqttUtil.containsTopicWildcards(topicName);
+    }
 
     private static class VirtualTopicByteTree extends TopicByteTree {
         public VirtualTopicByteTree(byte[] b, String s) {
             super();
-            super.topicName = s;
+            super.setTopicName(s);
             super.bytes = b;
         }
     }

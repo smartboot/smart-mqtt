@@ -14,7 +14,6 @@ import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.payload.MqttPublishPayload;
 import org.smartboot.mqtt.common.message.variable.MqttPublishVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
-import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.TopicByteTree;
 import org.smartboot.socket.DecoderException;
 
@@ -42,7 +41,7 @@ public class MqttPublishMessage extends MqttPacketIdentifierMessage<MqttPublishV
     public void decodeVariableHeader0(ByteBuffer buffer) {
         final TopicByteTree topic = MqttCodecUtil.scanTopicTree(buffer, MqttCodecUtil.cache);
         //PUBLISH 报文中的主题名不能包含通配符
-        if (MqttUtil.containsTopicWildcards(topic.getTopicName())) {
+        if (topic.isWildcards()) {
             throw new DecoderException("invalid publish topic name: " + topic + " (contains wildcards)");
         }
         int packetId = -1;
