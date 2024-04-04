@@ -10,6 +10,12 @@
 
 package org.smartboot.mqtt.common;
 
-enum DecoderState {
-    READ_FIXED_HEADER, READ_VARIABLE_HEADER, FINISH,
+import java.nio.ByteBuffer;
+
+/**
+ * @author 三刀
+ * @version V1.0 , 2020/3/30
+ */
+interface Decoder {
+    Decoder decode(ByteBuffer buffer, AbstractSession session);
 }

@@ -52,8 +52,10 @@ public abstract class AbstractSession {
 
     //消息超时重发任务
     Runnable retryRunnable;
-    // 当前所处的解码状态
-    DecoderState state = DecoderState.READ_FIXED_HEADER;
+    /**
+     * 当前使用的解码器
+     */
+    Decoder decoder;
     // 当前正在解码的消息
     MqttMessage mqttMessage;
     // 当前正在解码的消息
