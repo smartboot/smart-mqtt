@@ -15,7 +15,6 @@ import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.exception.MqttException;
 import org.smartboot.mqtt.common.util.TopicByteTree;
 import org.smartboot.socket.DecoderException;
-import org.smartboot.socket.util.BufferUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -101,13 +100,7 @@ public final class MqttCodecUtil {
      * 络上表示为最高有效字节（MSB），后面跟着最低有效字节（LSB）。
      */
     public static int decodeMsbLsb(ByteBuffer buffer) {
-        short msbSize = BufferUtils.readUnsignedByte(buffer);
-        short lsbSize = BufferUtils.readUnsignedByte(buffer);
-        int result = msbSize << 8 | lsbSize;
-        if (result < 0 || result > 65535) {
-            result = -1;
-        }
-        return result;
+        return buffer.getShort() & 0xffff;
     }
 
     public static void writeMsbLsb(MqttWriter writer, int v) throws IOException {
@@ -119,11 +112,6 @@ public final class MqttCodecUtil {
         byte[] bytes = new byte[decodedSize];
         buffer.get(bytes);
         return bytes;
-    }
-
-    public static void writeByteArray(MqttWriter writer, byte[] bytes) throws IOException {
-        writer.writeShort((short) bytes.length);
-        writer.write(bytes);
     }
 
 
