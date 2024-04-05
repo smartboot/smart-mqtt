@@ -54,7 +54,7 @@ final class MqttHeaderDecoder implements Decoder {
         int multiplier = 1;
         int loops = 0;
         do {
-            short digit = BufferUtils.readUnsignedByte(buffer);
+            byte digit = buffer.get();
             if ((digit & 128) == 0) {
                 remainingLength += digit * multiplier;
                 break;
