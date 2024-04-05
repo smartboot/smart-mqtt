@@ -5,7 +5,7 @@ services:
   mqtt-broker:
     container_name: smart-mqtt
     hostname: mqtt-broker
-    image: smartboot/smart-mqtt:0.36
+    image: smartboot/smart-mqtt:0.37
     networks:
       mqtt-network: null
 #    environment:

@@ -42,7 +42,7 @@ public class BrokerConfigure extends ToString {
     /**
      * 当前smart-mqtt
      */
-    public static final String VERSION = "v0.36";
+    public static final String VERSION = "v0.37";
 
     /**
      * 节点ID，集群内唯一
