@@ -41,15 +41,23 @@ public final class MqttCodecUtil {
         return value;
     }
 
-    public static void writeVariableLengthInt(MqttWriter buf, int num) {
-        do {
-            int digit = num & 0x7F; // 取低7位
-            num >>>= 7; // 无符号右移7位
-            if (num != 0) {
-                digit |= 0x80; // 如果还有更多的字节，设置最高位为1
-            }
-            buf.writeByte((byte) digit);
-        } while (num != 0);
+    public static void writeVariableLengthInt(MqttWriter buf, int num) throws IOException {
+        if (num <= 127) {
+            buf.writeByte((byte) num);
+        } else if (num <= 16383) {
+            buf.writeShort((short) (((num & 0x7f | 0x80) << 8) | ((num >>> 7) & 0x7f)));
+        } else if (num <= 268435455) {
+            do {
+                int digit = num & 0x7F; // 取低7位
+                num >>>= 7; // 无符号右移7位
+                if (num != 0) {
+                    digit |= 0x80; // 如果还有更多的字节，设置最高位为1
+                }
+                buf.writeByte((byte) digit);
+            } while (num != 0);
+        } else {
+            throw new IOException("payload too large");
+        }
     }
 
     public static String decodeUTF8(ByteBuffer buffer) {

@@ -22,6 +22,7 @@ import org.smartboot.mqtt.client.MqttClient;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.payload.WillMessage;
 
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -33,6 +34,8 @@ public class MqttTest {
 
     @Before
     public void init() throws Throwable {
+        System.setProperty("broker.maxPacketSize", String.valueOf(Integer.MAX_VALUE));
+        System.setProperty("broker.bufferSize", String.valueOf(1024 * 1024));
         brokerContext = new BrokerContextImpl();
         brokerContext.init();
     }
@@ -56,6 +59,66 @@ public class MqttTest {
         Assert.assertEquals(payload, completableFuture.get());
         LOGGER.info("payload: {}", completableFuture.get());
         mqttClient.disconnect();
+    }
+
+    @Test
+    public void testA() throws Throwable {
+        MqttClient mqttClient = new MqttClient("mqtt://127.0.0.1:1883");
+        mqttClient.getClientConfigure().setMaxPacketSize(Integer.MAX_VALUE);
+        System.out.println(mqttClient.getClientId());
+        mqttClient.connect();
+        for (int i = 0; i <= 128; i++) {
+            checkPayloadSize(i, mqttClient);
+        }
+        for (int i = 128; i <= 256; i++) {
+            checkPayloadSize(i, mqttClient);
+        }
+
+        for (int i = 16300; i <= 16383; i++) {
+            checkPayloadSize(i, mqttClient);
+        }
+
+        for (int i = 16384; i <= 16400; i++) {
+            checkPayloadSize(i, mqttClient);
+        }
+        for (int i = 2097100; i <= 2097151; i++) {
+            checkPayloadSize(i, mqttClient);
+        }
+        for (int i = 2097152; i <= 2097160; i++) {
+            checkPayloadSize(i, mqttClient);
+        }
+        mqttClient.disconnect();
+    }
+
+    @Test
+    public void testB() throws Throwable {
+        System.setProperty("broker.maxPacketSize", String.valueOf(Integer.MAX_VALUE));
+        System.setProperty("broker.bufferSize", String.valueOf(16 * 1024 * 1024));
+        brokerContext.destroy();
+        brokerContext = new BrokerContextImpl();
+        brokerContext.init();
+        MqttClient mqttClient = new MqttClient("mqtt://127.0.0.1:1883");
+        mqttClient.getClientConfigure().setMaxPacketSize(Integer.MAX_VALUE);
+        mqttClient.getClientConfigure().setBufferSize(16 * 1024 * 1024);
+        System.out.println(mqttClient.getClientId());
+        mqttClient.connect();
+        for (int i = 268435441; i <= 268435451; i++) {
+            checkPayloadSize(i, mqttClient);
+            System.out.println("index:" + i);
+            System.gc();
+        }
+        mqttClient.disconnect();
+    }
+
+    private static void checkPayloadSize(int i, MqttClient mqttClient) throws InterruptedException, ExecutionException {
+        CompletableFuture<byte[]> completableFuture = new CompletableFuture<>();
+        byte[] bytes = new byte[i];
+        Arrays.fill(bytes, (byte) i);
+        mqttClient.subscribe("/a", MqttQoS.AT_MOST_ONCE, (mqttClient1, mqttPublishMessage) -> {
+            completableFuture.complete(mqttPublishMessage.getPayload().getPayload());
+        });
+        mqttClient.publish("/a", MqttQoS.AT_MOST_ONCE, bytes);
+        Assert.assertArrayEquals("index: " + i, bytes, completableFuture.get());
     }
 
     @Test
