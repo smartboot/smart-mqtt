@@ -46,7 +46,7 @@ final class MqttHeaderDecoder implements Decoder {
         }
         buffer.mark();
         final byte b1 = buffer.get();
-        MqttMessageType messageType = MqttMessageType.valueOf(b1 < 0 ? (b1 & 0xff) >> 4 : b1 >> 4);
+        MqttMessageType messageType = MqttMessageType.valueOf((b1 & 0xff) >> 4);
 
         //解析MQTT消息长度
         int remainingLength = 0;
