@@ -28,7 +28,6 @@ import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttUnsubAckMessage;
 import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.socket.DecoderException;
-import org.smartboot.socket.util.BufferUtils;
 
 import java.nio.ByteBuffer;
 
@@ -46,8 +45,8 @@ final class MqttHeaderDecoder implements Decoder {
             return this;
         }
         buffer.mark();
-        final short b1 = BufferUtils.readUnsignedByte(buffer);
-        MqttMessageType messageType = MqttMessageType.valueOf(b1 >> 4);
+        final byte b1 = buffer.get();
+        MqttMessageType messageType = MqttMessageType.valueOf(b1 < 0 ? (b1 & 0xff) >> 4 : b1 >> 4);
 
         //解析MQTT消息长度
         int remainingLength = 0;
