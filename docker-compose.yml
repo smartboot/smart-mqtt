@@ -8,7 +8,8 @@ services:
     image: smartboot/smart-mqtt:0.37
     networks:
       mqtt-network: null
-#    environment:
+    environment:
+      ENTERPRISE_ENABLE: true
 #      BROKER_LOWMEMORY: true
 #      BROKER_MAXINFLIGHT: 4
     restart: always
