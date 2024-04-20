@@ -100,7 +100,7 @@ public class TopicByteTree {
         }
     }
 
-    private TopicByteTree addTopic(byte[] value, int offset, int len) {
+    private synchronized TopicByteTree addTopic(byte[] value, int offset, int len) {
         if (offset == len) {
             byte[] b = new byte[len + 2];
             b[0] = (byte) ((len >>> 8) & 0xFF);

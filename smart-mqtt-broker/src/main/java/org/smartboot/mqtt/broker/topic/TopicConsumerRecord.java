@@ -17,7 +17,6 @@ import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.util.MqttMessageBuilders;
-import org.smartboot.mqtt.common.util.ValidateUtils;
 
 /**
  * Topic订阅者
@@ -31,7 +30,6 @@ public class TopicConsumerRecord extends AbstractConsumerRecord {
 
     public TopicConsumerRecord(BrokerTopic topic, MqttSession session, TopicSubscriber topicSubscriber, long nextConsumerOffset) {
         super(topic, topicSubscriber.getTopicFilterToken(), nextConsumerOffset);
-        ValidateUtils.isTrue(topicSubscriber.getMqttQoS() == MqttQoS.AT_MOST_ONCE, "invalid qos");
         this.mqttSession = session;
         this.mqttQoS = topicSubscriber.getMqttQoS();
     }

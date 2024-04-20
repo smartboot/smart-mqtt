@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 class MemoryMessageStoreQueue implements MessageQueue {
     private static final Logger LOGGER = LoggerFactory.getLogger(MemoryMessageStoreQueue.class);
-    private final static int length = 1 << 6;
+    private final static int length = 1 << 7;
     private Message[] store = new Message[length];
     private final static int mask = length - 1;
 
@@ -46,14 +46,6 @@ class MemoryMessageStoreQueue implements MessageQueue {
         } else {
             return null;
         }
-    }
-
-    /**
-     * 获取最早的消息点位。该点位随时可能被新增的消息覆盖
-     */
-    public long getOldestOffset() {
-        long offset = putOffset.get() - store.length;
-        return offset > 0 ? offset : 0;
     }
 
     /**
