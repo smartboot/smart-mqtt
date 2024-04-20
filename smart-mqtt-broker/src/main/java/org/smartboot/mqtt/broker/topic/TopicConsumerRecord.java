@@ -43,15 +43,22 @@ public class TopicConsumerRecord extends AbstractConsumerRecord {
         if (mqttSession.isDisconnect() || !enable) {
             return;
         }
-        push0();
+        int i = 0;
+        while (push0()) {
+            if (i++ > 100) {
+                topic.addSubscriber(this);
+                topic.addVersion();
+                break;
+            }
+        }
         mqttSession.flush();
     }
 
-    private void push0() {
+    private boolean push0() {
         Message message = topic.getMessageQueue().get(nextConsumerOffset);
         if (message == null) {
             topic.addSubscriber(this);
-            return;
+            return false;
         }
 
         MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(message.getPayload()).qos(mqttQoS).topic(message.getTopicBytes());
@@ -61,7 +68,7 @@ public class TopicConsumerRecord extends AbstractConsumerRecord {
 
         nextConsumerOffset = message.getOffset() + 1;
         mqttSession.write(publishBuilder.build(), false);
-        push0();
+        return true;
     }
 
     public final MqttSession getMqttSession() {
