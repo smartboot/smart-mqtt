@@ -68,7 +68,7 @@ public class MessageBus {
                     remove = true;
                 }
             } catch (Throwable throwable) {
-                LOGGER.info("messageBus conumse exception", throwable);
+                LOGGER.info("messageBus consume exception", throwable);
             }
         }
         if (remove) {
