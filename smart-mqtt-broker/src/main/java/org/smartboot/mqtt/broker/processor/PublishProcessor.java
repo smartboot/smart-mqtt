@@ -63,8 +63,10 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
             //触发消息总线
             context.getMessageBus().publish(session, mqttPublishMessage);
         } finally {
-            topic.getVersion().incrementAndGet();
-            topic.push();
+            if (!topic.isNoneSubscriber()) {
+                topic.getVersion().incrementAndGet();
+                topic.push();
+            }
         }
     }
 

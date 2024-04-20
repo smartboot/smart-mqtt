@@ -63,7 +63,7 @@ public class TopicConsumerRecord extends AbstractConsumerRecord {
         if (message == null) {
             if (semaphore.compareAndSet(true, false)) {
                 topic.addSubscriber(this);
-                if (topic.getMessageQueue().get(nextConsumerOffset) != null) {
+                if (topicSubscriber.getMqttQoS() != MqttQoS.AT_MOST_ONCE && topic.getMessageQueue().get(nextConsumerOffset) != null) {
                     topic.push();
                 }
             }
