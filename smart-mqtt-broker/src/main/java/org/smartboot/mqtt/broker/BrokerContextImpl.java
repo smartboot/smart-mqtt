@@ -204,7 +204,14 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private void subscribeMessageBus() {
         //持久化消息
-        messageBusSubscriber.consumer((session, publishMessage) -> getOrCreateTopic(publishMessage.getTopic()).getMessageQueue().put(publishMessage));
+        messageBusSubscriber.consumer((session, publishMessage) -> {
+            BrokerTopic brokerTopic = getOrCreateTopic(publishMessage.getTopic());
+            if (brokerTopic != null && !brokerTopic.isNoneSubscriber()) {
+                brokerTopic.getMessageQueue().put(publishMessage);
+            } else {
+                LOGGER.debug("none subscriber,ignore message");
+            }
+        });
         //消费retain消息
         messageBusSubscriber.consumer(new RetainPersistenceConsumer(this), Message::isRetained);
     }

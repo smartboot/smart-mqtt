@@ -170,6 +170,7 @@ public class MqttSession extends AbstractSession {
             return;
         }
         TopicToken topicToken = new TopicToken(topicFilter);
+        //非通配符匹配需创建BrokerTopic
         if (!topicToken.isWildcards()) {
             mqttContext.getOrCreateTopic(topicFilter);
         }
@@ -238,6 +239,11 @@ public class MqttSession extends AbstractSession {
         filterSubscriber.getTopicSubscribers().forEach((brokerTopic, subscriber) -> {
             SubscriberGroup subscriberGroup = brokerTopic.getSubscriberGroup(filterSubscriber.getTopicFilterToken());
             AbstractConsumerRecord consumerRecord = subscriberGroup.removeSubscriber(this);
+            //移除后，如果BrokerTopic没有订阅者，则清除消息队列
+            if (brokerTopic.isNoneSubscriber()) {
+                LOGGER.info("clear topic{} message queue", brokerTopic.getTopic());
+                brokerTopic.getMessageQueue().clear();
+            }
             if (subscriber == consumerRecord) {
                 consumerRecord.disable();
                 mqttContext.getEventBus().publish(EventType.UNSUBSCRIBE_TOPIC, consumerRecord);

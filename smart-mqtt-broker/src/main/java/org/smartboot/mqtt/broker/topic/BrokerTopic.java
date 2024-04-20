@@ -76,6 +76,7 @@ public class BrokerTopic {
      */
     private Message retainMessage;
 
+    // 消息队列
     private final MessageQueue messageQueue = new MemoryMessageStoreQueue();
     /**
      * 当前Topic处于监听状态的订阅者
@@ -111,6 +112,13 @@ public class BrokerTopic {
         shareSubscribers.remove(topicFilter);
     }
 
+    /**
+     * 是否存在订阅者
+     * @return
+     */
+    public boolean isNoneSubscriber() {
+        return shareSubscribers.isEmpty() && defaultGroup.isEmpty();
+    }
 
     public void addSubscriber(AbstractConsumerRecord subscriber) {
         queue.offer(subscriber);

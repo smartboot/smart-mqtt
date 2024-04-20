@@ -33,4 +33,8 @@ public class SubscriberGroup {
     public void addSubscriber(TopicConsumerRecord subscriber) {
         subscribers.put(subscriber.getMqttSession(), subscriber);
     }
+
+    public boolean isEmpty() {
+        return subscribers.isEmpty();
+    }
 }

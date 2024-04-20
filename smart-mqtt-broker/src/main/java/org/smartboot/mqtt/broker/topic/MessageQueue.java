@@ -18,4 +18,9 @@ public interface MessageQueue {
     Message get(long offset);
 
     long getLatestOffset();
+
+    /**
+     * 清空消息队列
+     */
+    void clear();
 }
