@@ -60,10 +60,6 @@ public final class MqttCodecUtil {
         }
     }
 
-    public static String decodeUTF8(ByteBuffer buffer) {
-        return decodeUTF8(buffer, 0, Integer.MAX_VALUE);
-    }
-
     public static final TopicByteTree cache = new TopicByteTree();
 
     public static TopicByteTree scanTopicTree(ByteBuffer buffer, TopicByteTree cache) {
@@ -78,9 +74,9 @@ public final class MqttCodecUtil {
      * 65535 字节。
      * 除非另有说明，所有的 UTF-8 编码字符串的长度都必须在 0 到 65535 字节这个范围内。
      */
-    public static String decodeUTF8(ByteBuffer buffer, int minBytes, int maxBytes) {
+    public static String decodeUTF8(ByteBuffer buffer) {
         final int size = decodeMsbLsb(buffer);
-        if (size < minBytes || size > maxBytes) {
+        if (size < 0 || size > 65535) {
             throw new DecoderException("invalid string length " + size);
         }
         byte[] bytes = new byte[size];
