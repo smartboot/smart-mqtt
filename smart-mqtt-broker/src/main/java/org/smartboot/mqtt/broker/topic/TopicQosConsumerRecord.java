@@ -10,14 +10,21 @@
 
 package org.smartboot.mqtt.broker.topic;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.TopicSubscriber;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
+import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
+import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 import org.smartboot.mqtt.common.util.ValidateUtils;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Topic订阅者
@@ -25,15 +32,15 @@ import org.smartboot.mqtt.common.util.ValidateUtils;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/25
  */
-public class TopicConsumerRecord extends AbstractConsumerRecord {
-    protected final MqttSession mqttSession;
-    protected final MqttQoS mqttQoS;
+public class TopicQosConsumerRecord extends TopicConsumerRecord {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TopicQosConsumerRecord.class);
 
-    public TopicConsumerRecord(BrokerTopic topic, MqttSession session, TopicSubscriber topicSubscriber, long nextConsumerOffset) {
-        super(topic, topicSubscriber.getTopicFilterToken(), nextConsumerOffset);
-        ValidateUtils.isTrue(topicSubscriber.getMqttQoS() == MqttQoS.AT_MOST_ONCE, "invalid qos");
-        this.mqttSession = session;
-        this.mqttQoS = topicSubscriber.getMqttQoS();
+    protected final AtomicBoolean semaphore = new AtomicBoolean(false);
+
+
+    public TopicQosConsumerRecord(BrokerTopic topic, MqttSession session, TopicSubscriber topicSubscriber, long nextConsumerOffset) {
+        super(topic, session, topicSubscriber, nextConsumerOffset);
+        ValidateUtils.isTrue(topicSubscriber.getMqttQoS() != MqttQoS.AT_MOST_ONCE, "invalid qos");
     }
 
     /**
@@ -43,14 +50,21 @@ public class TopicConsumerRecord extends AbstractConsumerRecord {
         if (mqttSession.isDisconnect() || !enable) {
             return;
         }
-        push0();
-        mqttSession.flush();
+        if (semaphore.compareAndSet(false, true)) {
+            push0();
+            mqttSession.flush();
+        }
     }
 
     private void push0() {
         Message message = topic.getMessageQueue().get(nextConsumerOffset);
         if (message == null) {
-            topic.addSubscriber(this);
+            if (semaphore.compareAndSet(true, false)) {
+                topic.addSubscriber(this);
+                if (topic.getMessageQueue().get(nextConsumerOffset) != null) {
+                    topic.push();
+                }
+            }
             return;
         }
 
@@ -60,15 +74,19 @@ public class TopicConsumerRecord extends AbstractConsumerRecord {
         }
 
         nextConsumerOffset = message.getOffset() + 1;
-        mqttSession.write(publishBuilder.build(), false);
+
+        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = mqttSession.getInflightQueue().offer(publishBuilder, () -> {
+            if (semaphore.compareAndSet(true, false)) {
+                topic.addSubscriber(this);
+            }
+            topic.push();
+        });
+        if (future == null) {
+            return;
+        }
+        future.whenComplete((mqttPacketIdentifierMessage, throwable) -> push0());
+
         push0();
     }
 
-    public final MqttSession getMqttSession() {
-        return mqttSession;
-    }
-
-    public final MqttQoS getMqttQoS() {
-        return mqttQoS;
-    }
 }

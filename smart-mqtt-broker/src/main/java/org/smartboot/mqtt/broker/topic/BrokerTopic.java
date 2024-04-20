@@ -21,7 +21,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Broker端的Topic
@@ -49,14 +48,14 @@ public class BrokerTopic {
 
     private boolean enabled = true;
 
-    private final AtomicInteger version = new AtomicInteger();
+    private volatile int version = 0;
 
     private final AsyncTask asyncTask = new AsyncTask() {
         @Override
         public void execute() {
             AbstractConsumerRecord subscriber;
             queue.offer(BREAK);
-            int mark = version.get();
+            int mark = version;
             while ((subscriber = queue.poll()) != BREAK) {
                 try {
                     subscriber.pushToClient();
@@ -65,7 +64,7 @@ public class BrokerTopic {
                 }
             }
             semaphore.release();
-            if (mark != version.get() && !queue.isEmpty()) {
+            if (mark != version && !queue.isEmpty()) {
                 push();
             }
         }
@@ -159,8 +158,8 @@ public class BrokerTopic {
         }
     }
 
-    public AtomicInteger getVersion() {
-        return version;
+    public void addVersion() {
+        version++;
     }
 
     public void disable() {

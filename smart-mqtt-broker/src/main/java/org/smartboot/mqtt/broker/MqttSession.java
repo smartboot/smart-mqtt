@@ -20,6 +20,7 @@ import org.smartboot.mqtt.broker.topic.AbstractConsumerRecord;
 import org.smartboot.mqtt.broker.topic.BrokerTopic;
 import org.smartboot.mqtt.broker.topic.SubscriberGroup;
 import org.smartboot.mqtt.broker.topic.TopicConsumerRecord;
+import org.smartboot.mqtt.broker.topic.TopicQosConsumerRecord;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.MqttWriter;
@@ -189,7 +190,7 @@ public class MqttSession extends AbstractSession {
         AbstractConsumerRecord consumerRecord = subscriberGroup.getSubscriber(this);
         //共享订阅不会为null
         if (consumerRecord == null) {
-            TopicConsumerRecord record = new TopicConsumerRecord(topic, MqttSession.this, topicSubscriber, topic.getMessageQueue().getLatestOffset() + 1);
+            TopicConsumerRecord record = newConsumerRecord(topic, topicSubscriber, topic.getMessageQueue().getLatestOffset() + 1);
             mqttContext.getEventBus().publish(EventType.SUBSCRIBE_TOPIC, EventObject.newEventObject(this, record));
             subscriberGroup.addSubscriber(record);
             subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, record);
@@ -216,12 +217,20 @@ public class MqttSession extends AbstractSession {
                 preRecord.disable();
 
                 //绑定新的订阅关系
-                TopicConsumerRecord record = new TopicConsumerRecord(topic, MqttSession.this, topicSubscriber, preRecord.getNextConsumerOffset());
+                TopicConsumerRecord record = newConsumerRecord(topic, topicSubscriber, preRecord.getNextConsumerOffset());
                 subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, record);
                 mqttContext.getEventBus().publish(EventType.SUBSCRIBE_REFRESH_TOPIC, record);
             }
         }
 
+    }
+
+    private TopicConsumerRecord newConsumerRecord(BrokerTopic topic, TopicSubscriber topicSubscriber, long nextConsumerOffset) {
+        if (topicSubscriber.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
+            return new TopicConsumerRecord(topic, this, topicSubscriber, nextConsumerOffset);
+        } else {
+            return new TopicQosConsumerRecord(topic, this, topicSubscriber, nextConsumerOffset);
+        }
     }
 
     public void resubscribe() {
