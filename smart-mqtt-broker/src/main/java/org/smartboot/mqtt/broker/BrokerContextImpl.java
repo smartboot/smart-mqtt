@@ -210,6 +210,8 @@ public class BrokerContextImpl implements BrokerContext {
                 LOGGER.debug("none subscriber,ignore message");
             } else {
                 brokerTopic.getMessageQueue().put(publishMessage);
+                brokerTopic.getVersion().incrementAndGet();
+                brokerTopic.push();
             }
         });
         //消费retain消息
