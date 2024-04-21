@@ -48,7 +48,7 @@ public class BrokerTopic {
 
     private boolean enabled = true;
 
-    private volatile int version = 0;
+    private int version = 0;
 
     private final AsyncTask asyncTask = new AsyncTask() {
         @Override

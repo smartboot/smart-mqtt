@@ -9,7 +9,7 @@ services:
     networks:
       mqtt-network: null
     environment:
-      ENTERPRISE_ENABLE: true
+      ENTERPRISE_ENABLE: false
 #      BROKER_LOWMEMORY: true
 #      BROKER_MAXINFLIGHT: 4
     restart: always
