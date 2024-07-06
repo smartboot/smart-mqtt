@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <packaging>pom</packaging>
-    <groupId>org.smartboot.mqtt</groupId>
+    <groupId>io.github.smartboot.mqtt</groupId>
     <artifactId>smart-mqtt</artifactId>
     <name>smart-mqtt</name>
     <version>0.38</version>
@@ -22,22 +22,22 @@
                 <version>${smart-socket.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.smartboot.mqtt</groupId>
+                <groupId>io.github.smartboot.mqtt</groupId>
                 <artifactId>smart-mqtt-common</artifactId>
                 <version>${smart.mqtt.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.smartboot.mqtt</groupId>
+                <groupId>io.github.smartboot.mqtt</groupId>
                 <artifactId>smart-mqtt-broker</artifactId>
                 <version>${smart.mqtt.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.smartboot.mqtt</groupId>
+                <groupId>io.github.smartboot.mqtt</groupId>
                 <artifactId>smart-mqtt-client</artifactId>
                 <version>${smart.mqtt.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.smartboot.mqtt</groupId>
+                <groupId>io.github.smartboot.mqtt</groupId>
                 <artifactId>plugins</artifactId>
                 <version>${smart.mqtt.version}</version>
             </dependency>
@@ -140,21 +140,32 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>17</source>
-                    <target>17</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.4.0</version>
                 <extensions>true</extensions>
                 <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                    <publishingServerId>ossrh</publishingServerId>
+                    <tokenAuth>true</tokenAuth>
+                    <autoPublish>true</autoPublish>
                 </configuration>
             </plugin>
+<!--            <plugin>-->
+<!--                <groupId>org.sonatype.plugins</groupId>-->
+<!--                <artifactId>nexus-staging-maven-plugin</artifactId>-->
+<!--                <extensions>true</extensions>-->
+<!--                <configuration>-->
+<!--                    <serverId>ossrh</serverId>-->
+<!--                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>-->
+<!--                    <autoReleaseAfterClose>true</autoReleaseAfterClose>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
@@ -191,8 +202,8 @@
                 <executions>
                     <execution>
                         <id>sign-artifacts</id>
-                        <!--                                                <phase>verify</phase>-->
-                        <phase>deploy</phase>
+                                                                        <phase>verify</phase>
+<!--                        <phase>deploy</phase>-->
                         <goals>
                             <goal>sign</goal>
                         </goals>
@@ -221,11 +232,6 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.10.1</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.sonatype.plugins</groupId>
-                    <artifactId>nexus-staging-maven-plugin</artifactId>
-                    <version>1.6.7</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
