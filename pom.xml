@@ -10,7 +10,7 @@
 
     <properties>
         <smart.mqtt.version>0.38</smart.mqtt.version>
-        <smart-socket.version>1.5.45</smart-socket.version>
+        <smart-socket.version>1.5.47</smart-socket.version>
         <commons.lang.version>2.6</commons.lang.version>
         <junit.version>4.13.2</junit.version>
     </properties>
@@ -140,8 +140,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>17</source>
+                    <target>17</target>
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
