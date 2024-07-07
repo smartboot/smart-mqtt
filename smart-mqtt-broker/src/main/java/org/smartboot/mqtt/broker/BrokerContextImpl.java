@@ -411,7 +411,8 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     private void loadYamlConfig() throws IOException {
-        String brokerConfig = System.getProperty(BrokerConfigure.SystemProperty.BrokerConfig);
+        String brokerConfig = StringUtils.defaultString(System.getProperty(BrokerConfigure.SystemProperty.BrokerConfig), System.getenv(BrokerConfigure.SystemProperty.BrokerConfig));
+
         InputStream inputStream;
 
         if (StringUtils.isBlank(brokerConfig)) {
