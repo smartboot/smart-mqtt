@@ -1,0 +1,10 @@
+{
+  "resources": [
+    {
+      "pattern": "LICENSE"
+    },
+    {
+      "pattern": "smart-mqtt.yaml"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+[
+  {
+    "name": "org.smartboot.mqtt.broker.BrokerConfigure",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": []
+      }
+    ],
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  }
+]
