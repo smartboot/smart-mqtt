@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.common.enums.MqttReasonCode;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
@@ -68,10 +69,9 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
         byte reasonCode = 0;
         if (session.getMqttVersion() == MqttVersion.MQTT_5) {
             //消息被接收，但没有订阅者。只有服务端会发送此原因码。如果服务端得知没有匹配的订阅者，服务端可以使用此原因码代替0x00（成功）。
-            //todo
-//            if (context.getOrCreateTopic(mqttPublishMessage.getVariableHeader().getTopicName()).getUnSharedSubscribers().isEmpty()) {
-//                reasonCode = MqttReasonCode.NO_MATCHING_SUBSCRIBERS.getCode();
-//            }
+            if (context.getOrCreateTopic(mqttPublishMessage.getVariableHeader().getTopicName()).isNoneSubscriber()) {
+                reasonCode = MqttReasonCode.NO_MATCHING_SUBSCRIBERS.getCode();
+            }
         }
         if (reasonCode != 0) {
             ReasonProperties properties = new ReasonProperties();
@@ -92,10 +92,9 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
         byte reasonCode = 0;
         if (session.getMqttVersion() == MqttVersion.MQTT_5) {
             //消息被接收，但没有订阅者。只有服务端会发送此原因码。如果服务端得知没有匹配的订阅者，服务端可以使用此原因码代替0x00（成功）。
-            //todo
-            /*if (context.getOrCreateTopic(mqttPublishMessage.getVariableHeader().getTopicName()).getUnSharedSubscribers().isEmpty()) {
+            if (context.getOrCreateTopic(mqttPublishMessage.getVariableHeader().getTopicName()).isNoneSubscriber()) {
                 reasonCode = MqttReasonCode.NO_MATCHING_SUBSCRIBERS.getCode();
-            }*/
+            }
         }
         if (reasonCode != 0) {
             ReasonProperties properties = new ReasonProperties();

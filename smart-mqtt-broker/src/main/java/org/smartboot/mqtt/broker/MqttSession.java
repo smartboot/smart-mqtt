@@ -277,14 +277,6 @@ public class MqttSession extends AbstractSession {
         this.willMessage = willMessage;
     }
 
-//    public BrokerContext getMqttContext() {
-//        return mqttContext;
-//    }
-//
-//    public Map<String, TopicSubscriber> getSubscribers() {
-//        return subscribers;
-//    }
-
     public long getLatestReceiveMessageTime() {
         return latestReceiveMessageTime;
     }

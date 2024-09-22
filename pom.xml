@@ -10,7 +10,7 @@
 
     <properties>
         <smart.mqtt.version>0.38</smart.mqtt.version>
-        <smart-socket.version>1.5.47</smart-socket.version>
+        <smart-socket.version>1.5.52</smart-socket.version>
         <commons.lang.version>2.6</commons.lang.version>
         <junit.version>4.13.2</junit.version>
     </properties>
@@ -36,11 +36,11 @@
                 <artifactId>smart-mqtt-client</artifactId>
                 <version>${smart.mqtt.version}</version>
             </dependency>
-            <dependency>
-                <groupId>io.github.smartboot.mqtt</groupId>
-                <artifactId>plugins</artifactId>
-                <version>${smart.mqtt.version}</version>
-            </dependency>
+<!--            <dependency>-->
+<!--                <groupId>io.github.smartboot.mqtt</groupId>-->
+<!--                <artifactId>plugins</artifactId>-->
+<!--                <version>${smart.mqtt.version}</version>-->
+<!--            </dependency>-->
             <dependency>
                 <groupId>commons-lang</groupId>
                 <artifactId>commons-lang</artifactId>
@@ -80,7 +80,7 @@
         </dependencies>
     </dependencyManagement>
 
-    <url>http://git.oschina.net/smartboot/smart-http</url>
+    <url>https://github.com/smartboot/smart-mqtt</url>
 
     <!-- 项目团队 -->
     <developers>
@@ -103,8 +103,8 @@
 
     <scm>
         <url>http://git.oschina.net/smartboot/smart-mqtt</url>
-        <connection>scm:git:https://git.oschina.net/smartboot/smart-mqtt.git</connection>
-        <developerConnection>scm:git:ssh://git.oschina.net:smartboot/smart-mqtt.git</developerConnection>
+        <connection>scm:git:https://github.com/smartboot/smart-mqtt.git</connection>
+        <developerConnection>scm:git:ssh://github.com:smartboot/smart-mqtt.git</developerConnection>
         <tag>master</tag>
     </scm>
 
@@ -290,8 +290,8 @@
         <module>smart-mqtt-broker</module>
         <module>smart-mqtt-common</module>
         <module>smart-mqtt-client</module>
-        <module>plugins</module>
-        <module>smart-mqtt-protocol-gateway</module>
+<!--        <module>plugins</module>-->
+<!--        <module>smart-mqtt-protocol-gateway</module>-->
         <module>smart-mqtt-test</module>
     </modules>
 </project>

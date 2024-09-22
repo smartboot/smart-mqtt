@@ -76,7 +76,7 @@ public class BrokerTopic {
     private Message retainMessage;
 
     // 消息队列
-    private final MessageQueue messageQueue = new MemoryMessageStoreQueue();
+    private final MessageQueue messageQueue;
     /**
      * 当前Topic处于监听状态的订阅者
      */
@@ -90,12 +90,13 @@ public class BrokerTopic {
     };
 
     public BrokerTopic(String topic) {
-        this(topic, null);
+        this(topic, new MemoryMessageStoreQueue(), null);
     }
 
-    public BrokerTopic(String topic, ExecutorService executorService) {
+    public BrokerTopic(String topic, MessageQueue messageQueue, ExecutorService executorService) {
         this.topicToken = new TopicToken(topic);
         this.executorService = executorService;
+        this.messageQueue = messageQueue;
     }
 
 
@@ -113,6 +114,7 @@ public class BrokerTopic {
 
     /**
      * 是否存在订阅者
+     *
      * @return
      */
     public boolean isNoneSubscriber() {

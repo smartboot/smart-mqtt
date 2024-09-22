@@ -97,6 +97,8 @@ public class BrokerConfigure extends ToString {
      */
     private int maxInflight = 8;
 
+    private int maxMessageQueueLength = 1024;
+
     private final List<Plugin<MqttMessage>> plugins = new LinkedList<>();
 
     private AsynchronousChannelGroup channelGroup;
@@ -215,6 +217,14 @@ public class BrokerConfigure extends ToString {
 
     public BufferPagePool getBufferPagePool() {
         return bufferPagePool;
+    }
+
+    public int getMaxMessageQueueLength() {
+        return maxMessageQueueLength;
+    }
+
+    public void setMaxMessageQueueLength(int maxMessageQueueLength) {
+        this.maxMessageQueueLength = maxMessageQueueLength;
     }
 
     public void setBufferPagePool(BufferPagePool bufferPagePool) {

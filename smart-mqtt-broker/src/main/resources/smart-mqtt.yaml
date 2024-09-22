@@ -1,2 +1,3 @@
 broker:
   nodeId: smart-mqtt # 集群模式需确保唯一性
+  maxMessageQueueLength: 1024

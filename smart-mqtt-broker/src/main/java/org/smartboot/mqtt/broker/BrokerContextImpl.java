@@ -34,6 +34,7 @@ import org.smartboot.mqtt.broker.processor.SubscribeProcessor;
 import org.smartboot.mqtt.broker.processor.UnSubscribeProcessor;
 import org.smartboot.mqtt.broker.provider.Providers;
 import org.smartboot.mqtt.broker.topic.BrokerTopic;
+import org.smartboot.mqtt.broker.topic.MemoryMessageStoreQueue;
 import org.smartboot.mqtt.broker.topic.TopicConsumerRecord;
 import org.smartboot.mqtt.broker.topic.TopicPublishTree;
 import org.smartboot.mqtt.broker.topic.TopicSubscribeTree;
@@ -329,7 +330,7 @@ public class BrokerContextImpl implements BrokerContext {
                 brokerTopic = topicMap.get(topic);
                 if (brokerTopic == null) {
                     ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topic), "invalid topicName: " + topic);
-                    brokerTopic = new BrokerTopic(topic, pushThreadPool);
+                    brokerTopic = new BrokerTopic(topic, new MemoryMessageStoreQueue(brokerConfigure.getMaxMessageQueueLength()), pushThreadPool);
                     topicPublishTree.addTopic(brokerTopic);
                     eventBus.publish(EventType.TOPIC_CREATE, brokerTopic);
                     topicMap.put(topic, brokerTopic);

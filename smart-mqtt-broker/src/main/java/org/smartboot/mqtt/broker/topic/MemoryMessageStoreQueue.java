@@ -20,13 +20,23 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author 三刀
  * @version V1.0 , 2018/5/3
  */
-class MemoryMessageStoreQueue implements MessageQueue {
+public class MemoryMessageStoreQueue implements MessageQueue {
     private static final Logger LOGGER = LoggerFactory.getLogger(MemoryMessageStoreQueue.class);
-    private final static int length = 1 << 7;
-    private Message[] store = new Message[length];
-    private final static int mask = length - 1;
+    private final int length;
+    private Message[] store;
+    private final int mask;
 
     private final AtomicLong putOffset = new AtomicLong(-1);
+
+    public MemoryMessageStoreQueue() {
+        this(1 << 7);
+    }
+
+    public MemoryMessageStoreQueue(int maxMessageQueueLength) {
+        this.length = Integer.highestOneBit(maxMessageQueueLength);
+        this.store = new Message[length];
+        mask = length - 1;
+    }
 
     public void put(Message message) {
         message.setOffset(putOffset.incrementAndGet());
