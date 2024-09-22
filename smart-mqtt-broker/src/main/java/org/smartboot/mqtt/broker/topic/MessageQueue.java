@@ -23,4 +23,7 @@ public interface MessageQueue {
      * 清空消息队列
      */
     void clear();
+
+    //消息队列容量
+    int capacity();
 }

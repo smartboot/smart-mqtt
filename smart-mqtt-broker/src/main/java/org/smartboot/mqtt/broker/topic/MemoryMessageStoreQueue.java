@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class MemoryMessageStoreQueue implements MessageQueue {
     private static final Logger LOGGER = LoggerFactory.getLogger(MemoryMessageStoreQueue.class);
-    private final int length;
+    private final int capacity;
     private Message[] store;
     private final int mask;
 
@@ -33,9 +33,12 @@ public class MemoryMessageStoreQueue implements MessageQueue {
     }
 
     public MemoryMessageStoreQueue(int maxMessageQueueLength) {
-        this.length = Integer.highestOneBit(maxMessageQueueLength);
-        this.store = new Message[length];
-        mask = length - 1;
+        this.capacity = Integer.highestOneBit(maxMessageQueueLength);
+        if (this.capacity != maxMessageQueueLength) {
+            LOGGER.warn("maxMessageQueueLength:{} is not power of 2, use {} instead", maxMessageQueueLength, this.capacity);
+        }
+        this.store = new Message[capacity];
+        mask = capacity - 1;
     }
 
     public void put(Message message) {
@@ -69,7 +72,12 @@ public class MemoryMessageStoreQueue implements MessageQueue {
 
     @Override
     public void clear() {
-        store = new Message[length];
+        store = new Message[capacity];
+    }
+
+    @Override
+    public int capacity() {
+        return capacity;
     }
 
 }
