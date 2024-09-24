@@ -24,6 +24,7 @@ jobs:
         name: 下载 smart-mqtt
         with:
           repository: smartboot/smart-mqtt-enterprise
+          token: ${{ secrets.GH_PAT }}
           path: smart-mqtt-enterprise
       - name: Set up Maven 3.9
         uses: stCarolas/setup-maven@v5
