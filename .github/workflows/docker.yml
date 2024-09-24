@@ -54,7 +54,7 @@ jobs:
         name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: smart-mqtt-enterprise
           push: true
-          file: smart-mqtt-enterprise/Dockerfile
+          file: Dockerfile
           tags: smartboot/smart-mqtt:latest
