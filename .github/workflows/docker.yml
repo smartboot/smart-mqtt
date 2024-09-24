@@ -56,5 +56,5 @@ jobs:
         with:
           context: smart-mqtt-enterprise
           push: true
-#          file: Dockerfile
+          platforms: linux/amd64,linux/arm64
           tags: smartboot/smart-mqtt:latest
