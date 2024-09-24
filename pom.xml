@@ -269,11 +269,11 @@
         </repository>
     </repositories>
     <pluginRepositories>
-        <pluginRepository>
-            <id>alimaven</id>
-            <name>aliyun maven</name>
-            <url>https://maven.aliyun.com/repository/public</url>
-        </pluginRepository>
+<!--        <pluginRepository>-->
+<!--            <id>alimaven</id>-->
+<!--            <name>aliyun maven</name>-->
+<!--            <url>https://maven.aliyun.com/repository/public</url>-->
+<!--        </pluginRepository>-->
         <pluginRepository>
             <id>sonatype-nexus-snapshots</id>
             <name>Sonatype Nexus Snapshots</name>
