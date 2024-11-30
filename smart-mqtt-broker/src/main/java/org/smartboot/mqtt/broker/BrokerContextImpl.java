@@ -129,6 +129,7 @@ public class BrokerContextImpl implements BrokerContext {
 
     private final Map<String, Object> resources = new Hashtable<>();
     private final Map<Class<? extends MqttMessage>, MqttProcessor<?>> processors;
+    private final BufferPagePool bufferPagePool = new BufferPagePool(1, true);
 
     {
         Map<Class<? extends MqttMessage>, MqttProcessor<?>> mqttProcessors = new HashMap<>();
@@ -161,8 +162,9 @@ public class BrokerContextImpl implements BrokerContext {
 
         try {
             brokerConfigure.getPlugins().forEach(processor::addPlugin);
-            server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(), new MqttProtocol(brokerConfigure.getMaxPacketSize()), processor);
-            server.setBannerEnabled(false).setReadBufferSize(brokerConfigure.getBufferSize()).setWriteBuffer(brokerConfigure.getBufferSize(), Math.min(brokerConfigure.getMaxInflight(), 16)).setBufferPagePool(brokerConfigure.getBufferPagePool()).setThreadNum(Math.max(2, brokerConfigure.getThreadNum()));
+            server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(),
+                    new MqttProtocol(brokerConfigure.getMaxPacketSize()), processor);
+            server.setBannerEnabled(false).setReadBufferSize(brokerConfigure.getBufferSize()).setWriteBuffer(brokerConfigure.getBufferSize(), Math.min(brokerConfigure.getMaxInflight(), 16)).setBufferPagePool(bufferPagePool).setThreadNum(Math.max(2, brokerConfigure.getThreadNum()));
             if (!brokerConfigure.isLowMemory()) {
                 server.disableLowMemory();
             }
@@ -236,45 +238,50 @@ public class BrokerContextImpl implements BrokerContext {
         });
 
         //一个新的订阅建立时，对每个匹配的主题名，如果存在最近保留的消息，它必须被发送给这个订阅者
-        eventBus.subscribe(EventType.SUBSCRIBE_TOPIC, (eventType, eventObject) -> retainPushThreadPool.execute(new AsyncTask() {
-            @Override
-            public void execute() {
-                TopicConsumerRecord consumerRecord = eventObject.getObject();
-                BrokerTopic topic = consumerRecord.getTopic();
-                Message retainMessage = topic.getRetainMessage();
-                if (retainMessage == null || retainMessage.getCreateTime() > consumerRecord.getLatestSubscribeTime()) {
-                    topic.addSubscriber(consumerRecord);
-                    return;
-                }
-                MqttSession session = eventObject.getSession();
+        eventBus.subscribe(EventType.SUBSCRIBE_TOPIC,
+                (eventType, eventObject) -> retainPushThreadPool.execute(new AsyncTask() {
+                    @Override
+                    public void execute() {
+                        TopicConsumerRecord consumerRecord = eventObject.getObject();
+                        BrokerTopic topic = consumerRecord.getTopic();
+                        Message retainMessage = topic.getRetainMessage();
+                        if (retainMessage == null || retainMessage.getCreateTime() > consumerRecord.getLatestSubscribeTime()) {
+                            topic.addSubscriber(consumerRecord);
+                            return;
+                        }
+                        MqttSession session = eventObject.getSession();
 
-                MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(retainMessage.getPayload()).qos(consumerRecord.getMqttQoS()).topic(retainMessage.getTopicBytes());
-                if (session.getMqttVersion() == MqttVersion.MQTT_5) {
-                    publishBuilder.publishProperties(new PublishProperties());
-                }
-                // Qos0不走飞行窗口
-                if (consumerRecord.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
-                    session.write(publishBuilder.build());
-                    topic.addSubscriber(consumerRecord);
-                    return;
-                }
-                InflightQueue inflightQueue = session.getInflightQueue();
-                // retain消息逐个推送
-                CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = inflightQueue.offer(publishBuilder);
-                future.whenComplete((mqttPacketIdentifierMessage, throwable) -> {
-                    LOGGER.info("publish retain to client:{} success  ", session.getClientId());
-                    topic.addSubscriber(consumerRecord);
-                });
-                session.flush();
-            }
-        }));
+                        MqttMessageBuilders.PublishBuilder publishBuilder =
+                                MqttMessageBuilders.publish().payload(retainMessage.getPayload()).qos(consumerRecord.getMqttQoS()).topic(retainMessage.getTopicBytes());
+                        if (session.getMqttVersion() == MqttVersion.MQTT_5) {
+                            publishBuilder.publishProperties(new PublishProperties());
+                        }
+                        // Qos0不走飞行窗口
+                        if (consumerRecord.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
+                            session.write(publishBuilder.build());
+                            topic.addSubscriber(consumerRecord);
+                            return;
+                        }
+                        InflightQueue inflightQueue = session.getInflightQueue();
+                        // retain消息逐个推送
+                        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future =
+                                inflightQueue.offer(publishBuilder);
+                        future.whenComplete((mqttPacketIdentifierMessage, throwable) -> {
+                            LOGGER.info("publish retain to client:{} success  ", session.getClientId());
+                            topic.addSubscriber(consumerRecord);
+                        });
+                        session.flush();
+                    }
+                }));
 
-        eventBus.subscribe(EventType.TOPIC_CREATE, (eventType, brokerTopic) -> subscribeTopicTree.refreshMatchRelation(brokerTopic, (session, topicFilterSubscriber) -> {
-            if (!providers.getSubscribeProvider().subscribeTopic(brokerTopic.getTopic(), session)) {
-                return;
-            }
-            session.subscribeSuccess(topicFilterSubscriber, brokerTopic);
-        }));
+        eventBus.subscribe(EventType.TOPIC_CREATE,
+                (eventType, brokerTopic) -> subscribeTopicTree.refreshMatchRelation(brokerTopic, (session,
+                                                                                                  topicFilterSubscriber) -> {
+                    if (!providers.getSubscribeProvider().subscribeTopic(brokerTopic.getTopic(), session)) {
+                        return;
+                    }
+                    session.subscribeSuccess(topicFilterSubscriber, brokerTopic);
+                }));
     }
 
     private void updateBrokerConfigure() throws IOException {
@@ -282,7 +289,6 @@ public class BrokerContextImpl implements BrokerContext {
         loadYamlConfig();
         brokerConfigure = parseConfig("$.broker", BrokerConfigure.class);
         MqttUtil.updateConfig(brokerConfigure, "broker");
-        BufferPagePool bufferPagePool = new BufferPagePool(10 * 1024 * 1024, brokerConfigure.getThreadNum(), true);
         brokerConfigure.setChannelGroup(new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
             int i;
 
@@ -291,7 +297,6 @@ public class BrokerContextImpl implements BrokerContext {
                 return new Thread(r, "smart-mqtt-broker-" + (++i));
             }
         }));
-        brokerConfigure.setBufferPagePool(bufferPagePool);
         eventBus.publish(EventType.BROKER_CONFIGURE_LOADED, brokerConfigure);
 //        System.out.println("brokerConfigure: " + brokerConfigure);
     }
@@ -330,7 +335,8 @@ public class BrokerContextImpl implements BrokerContext {
                 brokerTopic = topicMap.get(topic);
                 if (brokerTopic == null) {
                     ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topic), "invalid topicName: " + topic);
-                    brokerTopic = new BrokerTopic(topic, new MemoryMessageStoreQueue(brokerConfigure.getMaxMessageQueueLength()), pushThreadPool);
+                    brokerTopic = new BrokerTopic(topic,
+                            new MemoryMessageStoreQueue(brokerConfigure.getMaxMessageQueueLength()), pushThreadPool);
                     LOGGER.info("create topic: {} capacity is {}", topic, brokerTopic.getMessageQueue().capacity());
                     topicPublishTree.addTopic(brokerTopic);
                     eventBus.publish(EventType.TOPIC_CREATE, brokerTopic);
@@ -413,7 +419,9 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     private void loadYamlConfig() throws IOException {
-        String brokerConfig = StringUtils.defaultString(System.getProperty(BrokerConfigure.SystemProperty.BrokerConfig), System.getenv(BrokerConfigure.SystemProperty.BrokerConfig));
+        String brokerConfig =
+                StringUtils.defaultString(System.getProperty(BrokerConfigure.SystemProperty.BrokerConfig),
+                        System.getenv(BrokerConfigure.SystemProperty.BrokerConfig));
 
         InputStream inputStream;
 
@@ -451,7 +459,7 @@ public class BrokerContextImpl implements BrokerContext {
         brokerConfigure.getChannelGroup().shutdown();
         timer.shutdown();
 
-        brokerConfigure.getBufferPagePool().release();
+        bufferPagePool.release();
         //卸载插件
         plugins.forEach(Plugin::uninstall);
         plugins.clear();

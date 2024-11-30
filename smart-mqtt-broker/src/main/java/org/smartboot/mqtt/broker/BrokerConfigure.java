@@ -12,7 +12,6 @@ package org.smartboot.mqtt.broker;
 
 import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.message.MqttMessage;
-import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.extension.plugins.Plugin;
 
 import java.nio.channels.AsynchronousChannelGroup;
@@ -103,7 +102,6 @@ public class BrokerConfigure extends ToString {
 
     private AsynchronousChannelGroup channelGroup;
 
-    private BufferPagePool bufferPagePool;
 
     /**
      * 低内存模式
@@ -215,9 +213,6 @@ public class BrokerConfigure extends ToString {
         this.channelGroup = channelGroup;
     }
 
-    public BufferPagePool getBufferPagePool() {
-        return bufferPagePool;
-    }
 
     public int getMaxMessageQueueLength() {
         return maxMessageQueueLength;
@@ -227,9 +222,6 @@ public class BrokerConfigure extends ToString {
         this.maxMessageQueueLength = maxMessageQueueLength;
     }
 
-    public void setBufferPagePool(BufferPagePool bufferPagePool) {
-        this.bufferPagePool = bufferPagePool;
-    }
 
     public boolean isLowMemory() {
         return lowMemory;

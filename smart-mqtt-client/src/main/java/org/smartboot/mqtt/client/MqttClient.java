@@ -49,7 +49,6 @@ import org.smartboot.mqtt.common.message.variable.properties.WillProperties;
 import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
-import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.timer.HashedWheelTimer;
@@ -168,18 +167,7 @@ public class MqttClient extends AbstractSession {
         });
     }
 
-
-    public void connect(AsynchronousChannelGroup asynchronousChannelGroup, BufferPagePool bufferPagePool) {
-        connect(asynchronousChannelGroup, bufferPagePool, connAckMessage -> {
-        });
-    }
-
-
     public void connect(AsynchronousChannelGroup asynchronousChannelGroup, Consumer<MqttConnAckMessage> consumer) {
-        connect(asynchronousChannelGroup, null, consumer);
-    }
-
-    public void connect(AsynchronousChannelGroup asynchronousChannelGroup, BufferPagePool bufferPagePool, Consumer<MqttConnAckMessage> consumer) {
         //设置 connect ack 回调事件
         this.connectConsumer = consumer;
         MqttUtil.updateConfig(clientConfigure, "mqtt.client");
@@ -188,9 +176,6 @@ public class MqttClient extends AbstractSession {
 
         client = new AioQuickClient(clientConfigure.getHost(), clientConfigure.getPort(), new MqttProtocol(clientConfigure.getMaxPacketSize()), messageProcessor);
         try {
-            if (bufferPagePool != null) {
-                client.setBufferPagePool(bufferPagePool);
-            }
             client.setReadBufferSize(clientConfigure.getBufferSize()).setWriteBuffer(clientConfigure.getBufferSize(), 8).connectTimeout(clientConfigure.getConnectionTimeout());
             session = client.start(asynchronousChannelGroup);
             session.setAttachment(this);

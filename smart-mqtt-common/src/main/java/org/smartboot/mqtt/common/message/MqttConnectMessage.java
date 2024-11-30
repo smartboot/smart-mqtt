@@ -17,7 +17,6 @@ import org.smartboot.mqtt.common.message.payload.WillMessage;
 import org.smartboot.mqtt.common.message.variable.MqttConnectVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
 import org.smartboot.mqtt.common.message.variable.properties.WillProperties;
-import org.smartboot.socket.util.BufferUtils;
 
 import java.nio.ByteBuffer;
 
@@ -57,7 +56,7 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
         final byte protocolLevel = buffer.get();
 
         //连接标志
-        final int b1 = BufferUtils.readUnsignedByte(buffer);
+        final int b1 = buffer.get() & 255;
 
         //保持连接
         final int keepAlive = MqttCodecUtil.decodeMsbLsb(buffer);

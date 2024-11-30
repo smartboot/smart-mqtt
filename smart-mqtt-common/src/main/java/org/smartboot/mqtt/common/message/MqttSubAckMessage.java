@@ -14,7 +14,6 @@ import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.payload.MqttSubAckPayload;
 import org.smartboot.mqtt.common.message.variable.MqttReasonVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
-import org.smartboot.socket.util.BufferUtils;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -56,7 +55,7 @@ public class MqttSubAckMessage extends MqttPacketIdentifierMessage<MqttReasonVar
         int limit = buffer.limit();
         buffer.limit(buffer.position() + payloadLength);
         while (buffer.hasRemaining()) {
-            int qos = BufferUtils.readUnsignedByte(buffer) & 0x03;
+            int qos = buffer.get() & 0x03;
             grantedQos.add(qos);
         }
         buffer.limit(limit);

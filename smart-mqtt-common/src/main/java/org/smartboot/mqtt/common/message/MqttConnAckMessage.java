@@ -14,7 +14,6 @@ import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.variable.MqttConnAckVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectAckProperties;
-import org.smartboot.socket.util.BufferUtils;
 
 import java.nio.ByteBuffer;
 
@@ -36,7 +35,7 @@ public class MqttConnAckMessage extends MqttVariableMessage<MqttConnAckVariableH
 
     @Override
     public void decodeVariableHeader0(ByteBuffer buffer) {
-        final boolean sessionPresent = (BufferUtils.readUnsignedByte(buffer) & 0x01) == 0x01;
+        final boolean sessionPresent = (buffer.get() & 0x01) == 0x01;
         byte returnCode = buffer.get();
 
         MqttConnAckVariableHeader variableHeader;
