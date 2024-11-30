@@ -212,9 +212,11 @@ public class BrokerContextImpl implements BrokerContext {
         //持久化消息
         messageBusSubscriber.consumer((session, publishMessage) -> {
             BrokerTopic brokerTopic = getOrCreateTopic(publishMessage.getTopic());
-            if (brokerTopic.isNoneSubscriber()) {
+            int count = brokerTopic.subscribeCount();
+            if (count == 0) {
                 LOGGER.debug("none subscriber,ignore message");
             } else {
+                publishMessage.setPushSemaphore(count);
                 brokerTopic.getMessageQueue().put(publishMessage);
                 brokerTopic.addVersion();
                 brokerTopic.push();

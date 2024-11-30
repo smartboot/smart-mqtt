@@ -249,7 +249,7 @@ public class MqttSession extends AbstractSession {
             SubscriberGroup subscriberGroup = brokerTopic.getSubscriberGroup(filterSubscriber.getTopicFilterToken());
             AbstractConsumerRecord consumerRecord = subscriberGroup.removeSubscriber(this);
             //移除后，如果BrokerTopic没有订阅者，则清除消息队列
-            if (brokerTopic.isNoneSubscriber()) {
+            if (brokerTopic.subscribeCount() == 0) {
                 LOGGER.info("clear topic: {} message queue", brokerTopic.getTopic());
                 brokerTopic.getMessageQueue().clear();
             }

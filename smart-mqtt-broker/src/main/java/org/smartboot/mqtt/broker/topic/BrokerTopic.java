@@ -117,8 +117,8 @@ public class BrokerTopic {
      *
      * @return
      */
-    public boolean isNoneSubscriber() {
-        return shareSubscribers.isEmpty() && defaultGroup.isEmpty();
+    public int subscribeCount() {
+        return shareSubscribers.size() + defaultGroup.count();
     }
 
     public void addSubscriber(AbstractConsumerRecord subscriber) {

@@ -19,7 +19,7 @@ import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 
 /**
- * Topic订阅者
+ * Qos 0Topic订阅者
  *
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/25
@@ -65,6 +65,7 @@ public class TopicConsumerRecord extends AbstractConsumerRecord {
         }
 
         nextConsumerOffset = message.getOffset() + 1;
+        topic.getMessageQueue().commit(message.getOffset());
         mqttSession.write(publishBuilder.build(), false);
         return true;
     }

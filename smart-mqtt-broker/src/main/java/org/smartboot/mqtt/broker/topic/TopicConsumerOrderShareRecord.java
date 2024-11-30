@@ -83,7 +83,7 @@ class TopicConsumerOrderShareRecord extends AbstractConsumerRecord {
 
             //Qos0直接发送
             if (record.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
-                nextConsumerOffset++;
+                topic.getMessageQueue().commit(nextConsumerOffset++);
                 record.getMqttSession().write(publishBuilder.build());
                 queue.offer(record);
                 LOGGER.debug("publish share subscribe:{} to {}", topicFilterToken.getTopicFilter(), record.getMqttSession().getClientId());
@@ -94,7 +94,7 @@ class TopicConsumerOrderShareRecord extends AbstractConsumerRecord {
                 queue.offer(record);
             });
             if (future != null) {
-                nextConsumerOffset++;
+                topic.getMessageQueue().commit(nextConsumerOffset++);
                 record.getMqttSession().flush();
                 queue.offer(record);
             }

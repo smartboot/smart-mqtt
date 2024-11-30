@@ -69,7 +69,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
         byte reasonCode = 0;
         if (session.getMqttVersion() == MqttVersion.MQTT_5) {
             //消息被接收，但没有订阅者。只有服务端会发送此原因码。如果服务端得知没有匹配的订阅者，服务端可以使用此原因码代替0x00（成功）。
-            if (context.getOrCreateTopic(mqttPublishMessage.getVariableHeader().getTopicName()).isNoneSubscriber()) {
+            if (context.getOrCreateTopic(mqttPublishMessage.getVariableHeader().getTopicName()).subscribeCount() == 0) {
                 reasonCode = MqttReasonCode.NO_MATCHING_SUBSCRIBERS.getCode();
             }
         }
@@ -92,7 +92,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
         byte reasonCode = 0;
         if (session.getMqttVersion() == MqttVersion.MQTT_5) {
             //消息被接收，但没有订阅者。只有服务端会发送此原因码。如果服务端得知没有匹配的订阅者，服务端可以使用此原因码代替0x00（成功）。
-            if (context.getOrCreateTopic(mqttPublishMessage.getVariableHeader().getTopicName()).isNoneSubscriber()) {
+            if (context.getOrCreateTopic(mqttPublishMessage.getVariableHeader().getTopicName()).subscribeCount() == 0) {
                 reasonCode = MqttReasonCode.NO_MATCHING_SUBSCRIBERS.getCode();
             }
         }

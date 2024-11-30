@@ -10,8 +10,6 @@
 
 package org.smartboot.mqtt.broker.topic;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.TopicSubscriber;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
@@ -27,13 +25,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Topic订阅者
+ * Qos1/2 Topic订阅者
  *
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/25
  */
 public class TopicQosConsumerRecord extends TopicConsumerRecord {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TopicQosConsumerRecord.class);
 
     protected final AtomicBoolean semaphore = new AtomicBoolean(false);
 
@@ -72,7 +69,7 @@ public class TopicQosConsumerRecord extends TopicConsumerRecord {
         if (mqttSession.getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());
         }
-
+        topic.getMessageQueue().commit(message.getOffset());
         nextConsumerOffset = message.getOffset() + 1;
 
         CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = mqttSession.getInflightQueue().offer(publishBuilder, () -> {

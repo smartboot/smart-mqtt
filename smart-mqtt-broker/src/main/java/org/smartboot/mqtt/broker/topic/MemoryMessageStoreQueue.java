@@ -61,6 +61,14 @@ public class MemoryMessageStoreQueue implements MessageQueue {
         }
     }
 
+    @Override
+    public void commit(long offset) {
+        Message message = get(offset);
+        if (message != null && message.getOffset() == offset && message.decrementAndGet() == 0) {
+            store[(int) (message.getOffset() & mask)] = null;
+        }
+    }
+
     /**
      * 获取最近的消息点位
      *

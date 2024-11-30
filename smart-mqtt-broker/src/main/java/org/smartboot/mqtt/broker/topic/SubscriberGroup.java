@@ -34,7 +34,7 @@ public class SubscriberGroup {
         subscribers.put(subscriber.getMqttSession(), subscriber);
     }
 
-    public boolean isEmpty() {
-        return subscribers.isEmpty();
+    public int count() {
+        return subscribers.size();
     }
 }

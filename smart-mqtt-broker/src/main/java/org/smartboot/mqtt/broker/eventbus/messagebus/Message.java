@@ -20,6 +20,7 @@ import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.util.MqttUtil;
 
 import java.util.Base64;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -52,6 +53,11 @@ public class Message extends ToString {
      * 消息存储时间
      */
     private final long createTime = MqttUtil.currentTimeMillis();
+
+    /**
+     * 本条消息可推送的次数
+     */
+    private AtomicInteger pushSemaphore;
 
     Message(MqttPublishMessage message) {
         this.payload = message.getPayload().getPayload();
@@ -91,6 +97,14 @@ public class Message extends ToString {
 
     public void setOffset(long offset) {
         this.offset = offset;
+    }
+
+    public int decrementAndGet() {
+        return pushSemaphore.decrementAndGet();
+    }
+
+    public void setPushSemaphore(int pushSemaphore) {
+        this.pushSemaphore = new AtomicInteger(pushSemaphore);
     }
 
     @JSONField(serialize = false)

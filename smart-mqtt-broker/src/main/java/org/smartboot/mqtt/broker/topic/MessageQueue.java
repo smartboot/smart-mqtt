@@ -17,6 +17,9 @@ public interface MessageQueue {
 
     Message get(long offset);
 
+    //提交指定offset的消息
+    void commit(long offset);
+
     long getLatestOffset();
 
     /**
