@@ -105,7 +105,6 @@ public class MqttTest {
         for (int i = 268435441; i <= 268435451; i++) {
             checkPayloadSize(i, mqttClient);
             System.out.println("index:" + i);
-            System.gc();
         }
         mqttClient.disconnect();
     }
