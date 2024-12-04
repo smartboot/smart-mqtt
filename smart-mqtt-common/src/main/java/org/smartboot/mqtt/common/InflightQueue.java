@@ -43,7 +43,7 @@ public class InflightQueue {
     private final InflightMessage[] queue;
     private int takeIndex;
     private int putIndex;
-    private int count;
+    private volatile int count;
 
     private int packetId = 0;
 
@@ -141,7 +141,8 @@ public class InflightQueue {
                     case PUBACK:
                     case PUBREC:
                         MqttPublishMessage mqttMessage = (MqttPublishMessage) inflightMessage.getOriginalMessage();
-                        MqttFixedHeader mqttFixedHeader = MqttFixedHeader.getInstance(mqttMessage.getFixedHeader().getMessageType(), true, mqttMessage.getFixedHeader().getQosLevel().value(), mqttMessage.getFixedHeader().isRetain());
+                        MqttFixedHeader mqttFixedHeader = MqttFixedHeader.getInstance(mqttMessage.getFixedHeader().getMessageType(), true, mqttMessage.getFixedHeader().getQosLevel().value(),
+                                mqttMessage.getFixedHeader().isRetain());
                         MqttPublishMessage dupMessage = new MqttPublishMessage(mqttFixedHeader, mqttMessage.getVariableHeader(), mqttMessage.getPayload().getPayload());
                         session.write(dupMessage);
                         break;
@@ -185,7 +186,8 @@ public class InflightQueue {
             case PUBACK:
             case PUBCOMP: {
                 if (message.getFixedHeader().getMessageType() != inflightMessage.getExpectMessageType() || message.getVariableHeader().getPacketId() != inflightMessage.getAssignedPacketId()) {
-                    LOGGER.info("maybe dup ack,message:{} {} ,except:{} {}", message.getFixedHeader().getMessageType(), message.getVariableHeader().getPacketId(), inflightMessage.getExpectMessageType(), inflightMessage.getAssignedPacketId());
+                    LOGGER.info("maybe dup ack,message:{} {} ,except:{} {}", message.getFixedHeader().getMessageType(), message.getVariableHeader().getPacketId(),
+                            inflightMessage.getExpectMessageType(), inflightMessage.getAssignedPacketId());
                     break;
                 }
                 inflightMessage.setResponseMessage(message);
@@ -220,7 +222,8 @@ public class InflightQueue {
 
     private synchronized void commit(InflightMessage inflightMessage) {
         MqttVariableMessage<? extends MqttPacketIdVariableHeader> originalMessage = inflightMessage.getOriginalMessage();
-        ValidateUtils.isTrue(originalMessage.getFixedHeader().getQosLevel().value() == 0 || originalMessage.getVariableHeader().getPacketId() == inflightMessage.getAssignedPacketId(), "invalid message");
+        ValidateUtils.isTrue(originalMessage.getFixedHeader().getQosLevel().value() == 0 || originalMessage.getVariableHeader().getPacketId() == inflightMessage.getAssignedPacketId(), "invalid " +
+                "message");
         inflightMessage.setCommit(true);
 
         if ((inflightMessage.getAssignedPacketId() - 1) % queue.length != takeIndex) {

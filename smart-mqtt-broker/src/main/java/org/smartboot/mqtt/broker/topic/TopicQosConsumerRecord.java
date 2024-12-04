@@ -67,7 +67,7 @@ public class TopicQosConsumerRecord extends TopicConsumerRecord {
         }
         int available = mqttSession.getInflightQueue().available();
         //当前连接的飞行窗口已满
-        if (mqttSession.getInflightQueue().available() == 0) {
+        if (available == 0) {
             if (semaphore.compareAndSet(true, false)) {
                 topic.addSubscriber(this);
                 if (mqttSession.getInflightQueue().available() > 0) {
@@ -81,14 +81,17 @@ public class TopicQosConsumerRecord extends TopicConsumerRecord {
         if (mqttSession.getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());
         }
+        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = mqttSession.getInflightQueue().offer(publishBuilder);
+
+        if (future == null) {
+            push0();
+            return;
+        }
         topic.getMessageQueue().commit(message.getOffset());
         nextConsumerOffset = message.getOffset() + 1;
-
-        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = mqttSession.getInflightQueue().offer(publishBuilder);
+        //如果存在共享订阅，则有可能出现available为1，但future为null的情况
         if (available == 1) {
             future.whenComplete((mqttPacketIdentifierMessage, throwable) -> push0());
-        } else {
-            push0();
         }
     }
 }
