@@ -40,7 +40,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
         MqttQoS mqttQoS = mqttPublishMessage.getFixedHeader().getQosLevel();
         switch (mqttQoS) {
             case AT_MOST_ONCE:
-                publishToMessageBus(context, session, mqttPublishMessage);
+                session.accepted(mqttPublishMessage);
                 break;
             case AT_LEAST_ONCE:
                 processQos1(context, session, mqttPublishMessage);
@@ -55,13 +55,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
 
     }
 
-    private void publishToMessageBus(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
-        //触发消息总线
-        context.getMessageBus().publish(session, mqttPublishMessage);
-    }
-
     private void processQos1(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
-
         final int messageId = mqttPublishMessage.getVariableHeader().getPacketId();
         //给 publisher 回响应
         MqttPubQosVariableHeader variableHeader;
@@ -83,7 +77,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
         MqttPubAckMessage pubAckMessage = new MqttPubAckMessage(variableHeader);
         session.write(pubAckMessage, false);
         // 消息投递至消息总线
-        publishToMessageBus(context, session, mqttPublishMessage);
+        session.accepted(mqttPublishMessage);
     }
 
     private void processQos2(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
@@ -106,6 +100,6 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
         MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(variableHeader);
 
         //响应监听
-        session.write(pubRecMessage, () -> publishToMessageBus(context, session, mqttPublishMessage));
+        session.write(pubRecMessage, mqttPublishMessage);
     }
 }

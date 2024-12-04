@@ -19,25 +19,13 @@ import java.util.function.BiConsumer;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/4/7
  */
-public class Subscribe {
-    private final String topicFilter;
+class Subscribe {
     private final MqttQoS qoS;
     private final BiConsumer<MqttClient, MqttPublishMessage> consumer;
 
-    /**
-     * This topic has unsubscribed.
-     */
-    private volatile boolean unsubscribed;
-    private volatile long unsubscribedTime = -1L;
-
-    public Subscribe(String topicFilter, MqttQoS qoS, BiConsumer<MqttClient, MqttPublishMessage> consumer) {
-        this.topicFilter = topicFilter;
+    public Subscribe(MqttQoS qoS, BiConsumer<MqttClient, MqttPublishMessage> consumer) {
         this.qoS = qoS;
         this.consumer = consumer;
-    }
-
-    public String getTopicFilter() {
-        return topicFilter;
     }
 
     public MqttQoS getQoS() {
@@ -46,18 +34,5 @@ public class Subscribe {
 
     public BiConsumer<MqttClient, MqttPublishMessage> getConsumer() {
         return consumer;
-    }
-
-    public boolean getUnsubscribed() {
-        return unsubscribed;
-    }
-
-    public void setUnsubscribed(boolean unsubscribed) {
-        this.unsubscribed = unsubscribed;
-        this.unsubscribedTime = System.currentTimeMillis();
-    }
-
-    public long getUnsubscribedTime() {
-        return unsubscribedTime;
     }
 }

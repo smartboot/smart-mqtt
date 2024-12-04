@@ -40,6 +40,7 @@ import org.smartboot.mqtt.common.message.payload.WillMessage;
 import org.smartboot.mqtt.common.message.variable.MqttConnectVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttDisconnectVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
+import org.smartboot.mqtt.common.message.variable.MqttPublishVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
 import org.smartboot.mqtt.common.message.variable.properties.DisConnectProperties;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
@@ -187,7 +188,8 @@ public class MqttClient extends AbstractSession {
             if (clientConfigure.getMqttVersion() == MqttVersion.MQTT_5) {
                 properties = new ConnectProperties();
             }
-            MqttConnectVariableHeader variableHeader = new MqttConnectVariableHeader(clientConfigure.getMqttVersion(), StringUtils.isNotBlank(clientConfigure.getUserName()), clientConfigure.getPassword() != null, clientConfigure.getWillMessage(), clientConfigure.isCleanSession(), clientConfigure.getKeepAliveInterval(), properties);
+            MqttConnectVariableHeader variableHeader = new MqttConnectVariableHeader(clientConfigure.getMqttVersion(), StringUtils.isNotBlank(clientConfigure.getUserName()),
+                    clientConfigure.getPassword() != null, clientConfigure.getWillMessage(), clientConfigure.isCleanSession(), clientConfigure.getKeepAliveInterval(), properties);
             MqttConnectPayload payload = new MqttConnectPayload(clientId, clientConfigure.getWillMessage(), clientConfigure.getUserName(), clientConfigure.getPassword());
 
             MqttConnectMessage connectMessage = new MqttConnectMessage(variableHeader, payload);
@@ -355,7 +357,7 @@ public class MqttClient extends AbstractSession {
                 MqttQoS minQos = MqttQoS.valueOf(Math.min(subscription.getQualityOfService().value(), qosValues.get(i++)));
                 clientConfigure.getTopicListener().subscribe(subscription.getTopicFilter(), subscription.getQualityOfService() == MqttQoS.FAILURE ? MqttQoS.FAILURE : minQos);
                 if (subscription.getQualityOfService() != MqttQoS.FAILURE) {
-                    subscribes.put(subscription.getTopicFilter(), new Subscribe(subscription.getTopicFilter(), minQos, consumer));
+                    subscribes.put(subscription.getTopicFilter(), new Subscribe(minQos, consumer));
                     //缓存统配匹配的topic
                     TopicToken topicToken = new TopicToken(subscription.getTopicFilter());
                     if (topicToken.isWildcards()) {
@@ -464,16 +466,36 @@ public class MqttClient extends AbstractSession {
         return clientConfigure;
     }
 
-    public Map<String, Subscribe> getSubscribes() {
-        return subscribes;
-    }
-
-    public Map<String, Subscribe> getMapping() {
-        return mapping;
-    }
 
     public List<TopicToken> getWildcardsToken() {
         return wildcardsToken;
+    }
+
+    @Override
+    public void accepted(MqttPublishMessage mqttPublishMessage) {
+        MqttPublishVariableHeader header = mqttPublishMessage.getVariableHeader();
+        Subscribe subscribe = mapping.get(header.getTopicName());
+        if (subscribe == null) {
+            subscribe = subscribes.get(header.getTopicName());
+            //尝试通配符匹配
+            if (subscribe == null) {
+                subscribe = matchWildcardsSubscribe(header.getTopicName());
+            }
+            if (subscribe != null) {
+                mapping.put(header.getTopicName(), subscribe);
+            }
+        }
+
+        // If unsubscribed, maybe null.
+        if (subscribe != null) {
+            subscribe.getConsumer().accept(this, mqttPublishMessage);
+        }
+    }
+
+    private Subscribe matchWildcardsSubscribe(String topicName) {
+        TopicToken publicTopicToken = new TopicToken(topicName);
+        TopicToken matchToken = getWildcardsToken().stream().filter(topicToken -> MqttUtil.match(publicTopicToken, topicToken)).findFirst().orElse(null);
+        return matchToken != null ? subscribes.get(matchToken.getTopicFilter()) : null;
     }
 
     /**

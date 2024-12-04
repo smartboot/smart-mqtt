@@ -13,17 +13,13 @@ package org.smartboot.mqtt.client.processor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.client.MqttClient;
-import org.smartboot.mqtt.client.Subscribe;
-import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttPubAckMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
-import org.smartboot.mqtt.common.message.variable.MqttPublishVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
-import org.smartboot.mqtt.common.util.MqttUtil;
 
 /**
  * 发布Topic
@@ -39,7 +35,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
         MqttQoS mqttQoS = mqttPublishMessage.getFixedHeader().getQosLevel();
         switch (mqttQoS) {
             case AT_MOST_ONCE:
-                processQos0(session, mqttPublishMessage);
+                session.accepted(mqttPublishMessage);
                 break;
             case AT_LEAST_ONCE:
                 processQos1(session, mqttPublishMessage);
@@ -54,39 +50,9 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
 
     }
 
-    private void processQos0(MqttClient mqttClient, MqttPublishMessage mqttPublishMessage) {
-//        LOGGER.info("receive publish:{}", mqttPublishMessage);
-        processPublishMessage(mqttPublishMessage, mqttClient);
-    }
-
-    private void processPublishMessage(MqttPublishMessage mqttPublishMessage, MqttClient mqttClient) {
-        MqttPublishVariableHeader header = mqttPublishMessage.getVariableHeader();
-        Subscribe subscribe = mqttClient.getMapping().get(header.getTopicName());
-        if (subscribe == null) {
-            subscribe = mqttClient.getSubscribes().get(header.getTopicName());
-            //尝试通配符匹配
-            if (subscribe == null) {
-                subscribe = matchWildcardsSubscribe(mqttClient, header.getTopicName());
-            }
-            if (subscribe != null) {
-                mqttClient.getMapping().put(header.getTopicName(), subscribe);
-            }
-        }
-
-        // If unsubscribed, maybe null.
-        if (subscribe != null && !subscribe.getUnsubscribed()) {
-            subscribe.getConsumer().accept(mqttClient, mqttPublishMessage);
-        }
-    }
-
-    private static Subscribe matchWildcardsSubscribe(MqttClient mqttClient, String topicName) {
-        TopicToken publicTopicToken = new TopicToken(topicName);
-        TopicToken matchToken = mqttClient.getWildcardsToken().stream().filter(topicToken -> MqttUtil.match(publicTopicToken, topicToken)).findFirst().orElse(null);
-        return matchToken != null ? mqttClient.getSubscribes().get(matchToken.getTopicFilter()) : null;
-    }
 
     private void processQos1(MqttClient mqttClient, MqttPublishMessage mqttPublishMessage) {
-        processPublishMessage(mqttPublishMessage, mqttClient);
+        mqttClient.accepted(mqttPublishMessage);
         //todo
         ReasonProperties properties = null;
         if (mqttPublishMessage.getVersion() == MqttVersion.MQTT_5) {
@@ -107,7 +73,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
         MqttPubQosVariableHeader variableHeader = new MqttPubQosVariableHeader(messageId, properties);
 
         MqttPubRecMessage pubRecMessage = new MqttPubRecMessage(variableHeader);
-        session.write(pubRecMessage, () -> processPublishMessage(mqttPublishMessage, session));
+        session.write(pubRecMessage, mqttPublishMessage);
     }
 
 }

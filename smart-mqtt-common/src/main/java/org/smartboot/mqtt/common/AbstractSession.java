@@ -13,6 +13,7 @@ package org.smartboot.mqtt.common;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPubRecMessage;
+import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.socket.timer.Timer;
@@ -46,7 +47,7 @@ public abstract class AbstractSession {
     private MqttVersion mqttVersion;
 
     protected InflightQueue inflightQueue;
-    private final Hashtable<Integer, Runnable> ackMessageCacheMap = new Hashtable<>();
+    private final Hashtable<Integer, MqttPublishMessage> ackMessageCacheMap = new Hashtable<>();
 
     protected final Timer timer;
 
@@ -69,17 +70,19 @@ public abstract class AbstractSession {
         return timer;
     }
 
-    public final void write(MqttPubRecMessage mqttMessage, Runnable callback) {
-        ackMessageCacheMap.put(mqttMessage.getVariableHeader().getPacketId(), callback);
+    public final void write(MqttPubRecMessage mqttMessage, MqttPublishMessage publishMessage) {
+        ackMessageCacheMap.put(mqttMessage.getVariableHeader().getPacketId(), publishMessage);
         write(mqttMessage, false);
     }
 
     public final void notifyPubComp(int packetId) {
-        Runnable consumer = ackMessageCacheMap.remove(packetId);
+        MqttPublishMessage consumer = ackMessageCacheMap.remove(packetId);
         if (consumer != null) {
-            consumer.run();
+            accepted(consumer);
         }
     }
+
+    public abstract void accepted(MqttPublishMessage mqttMessage);
 
 
     public synchronized void write(MqttMessage mqttMessage, boolean autoFlush) {

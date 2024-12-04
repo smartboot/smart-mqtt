@@ -43,8 +43,8 @@ public class MessageBus {
     /**
      * 订阅消息总线消费者
      *
-     * @param consumer  消费者
-     * @param filter 消费条件
+     * @param consumer 消费者
+     * @param filter   消费条件
      */
     public void consumer(Consumer consumer, Predicate<Message> filter) {
         consumer((session, publishMessage) -> {
