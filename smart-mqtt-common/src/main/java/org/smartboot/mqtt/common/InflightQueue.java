@@ -36,6 +36,8 @@ import java.util.concurrent.TimeUnit;
  * @version V1.0 , 2022/4/26
  */
 public class InflightQueue {
+    public static final Runnable EMPTY_RUNNABLE = () -> {
+    };
     private static final Logger LOGGER = LoggerFactory.getLogger(InflightQueue.class);
     private static final int TIMEOUT = 30;
     private final InflightMessage[] queue;
@@ -65,9 +67,11 @@ public class InflightQueue {
     }
 
     public CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> offer(MqttMessageBuilders.MessageBuilder publishBuilder) {
-        return offer(publishBuilder, () -> {
+        return offer(publishBuilder, EMPTY_RUNNABLE);
+    }
 
-        });
+    public int available() {
+        return queue.length - count;
     }
 
     public synchronized CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> offer(MqttMessageBuilders.MessageBuilder publishBuilder, Runnable runnable) {

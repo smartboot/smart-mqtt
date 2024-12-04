@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class TopicQosConsumerRecord extends TopicConsumerRecord {
 
-    protected final AtomicBoolean semaphore = new AtomicBoolean(false);
+    private final AtomicBoolean semaphore = new AtomicBoolean(false);
 
 
     public TopicQosConsumerRecord(BrokerTopic topic, MqttSession session, TopicSubscriber topicSubscriber, long nextConsumerOffset) {
@@ -55,10 +55,22 @@ public class TopicQosConsumerRecord extends TopicConsumerRecord {
 
     private void push0() {
         Message message = topic.getMessageQueue().get(nextConsumerOffset);
+        //消息队列已消费至最新点位
         if (message == null) {
             if (semaphore.compareAndSet(true, false)) {
                 topic.addSubscriber(this);
                 if (topic.getMessageQueue().get(nextConsumerOffset) != null) {
+                    topic.push();
+                }
+            }
+            return;
+        }
+        int available = mqttSession.getInflightQueue().available();
+        //当前连接的飞行窗口已满
+        if (mqttSession.getInflightQueue().available() == 0) {
+            if (semaphore.compareAndSet(true, false)) {
+                topic.addSubscriber(this);
+                if (mqttSession.getInflightQueue().available() > 0) {
                     topic.push();
                 }
             }
@@ -72,18 +84,11 @@ public class TopicQosConsumerRecord extends TopicConsumerRecord {
         topic.getMessageQueue().commit(message.getOffset());
         nextConsumerOffset = message.getOffset() + 1;
 
-        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = mqttSession.getInflightQueue().offer(publishBuilder, () -> {
-            if (semaphore.compareAndSet(true, false)) {
-                topic.addSubscriber(this);
-            }
-            topic.push();
-        });
-        if (future == null) {
-            return;
+        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = mqttSession.getInflightQueue().offer(publishBuilder);
+        if (available == 1) {
+            future.whenComplete((mqttPacketIdentifierMessage, throwable) -> push0());
+        } else {
+            push0();
         }
-        future.whenComplete((mqttPacketIdentifierMessage, throwable) -> push0());
-
-        push0();
     }
-
 }
