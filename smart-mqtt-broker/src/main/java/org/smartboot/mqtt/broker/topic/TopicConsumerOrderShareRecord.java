@@ -30,6 +30,9 @@ import java.util.concurrent.Semaphore;
  */
 class TopicConsumerOrderShareRecord extends AbstractConsumerRecord {
     private static final Logger LOGGER = LoggerFactory.getLogger(TopicConsumerOrderShareRecord.class);
+    /**
+     * 共享订阅者队列
+     */
     private final ConcurrentLinkedQueue<TopicConsumerRecord> queue = new ConcurrentLinkedQueue<>();
 
     private final Semaphore semaphore = new Semaphore(1);
@@ -90,6 +93,8 @@ class TopicConsumerOrderShareRecord extends AbstractConsumerRecord {
                 continue;
             }
 
+
+            //若future为null，则说明该连接的飞行窗口已满，需要待其释放出空间后再重新投递至共享订阅列表，否则容易造成死循环
             CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = record.getMqttSession().getInflightQueue().offer(publishBuilder, () -> {
                 queue.offer(record);
             });

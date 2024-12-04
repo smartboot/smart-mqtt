@@ -45,7 +45,8 @@ public final class MqttCodecUtil {
         if (num <= 127) {
             buf.writeByte((byte) num);
         } else if (num <= 16383) {
-            buf.writeShort((short) (((num | 0x80) << 8) | (num >>> 7)));
+            buf.writeByte((byte) (num | 0x80));
+            buf.writeByte((byte) (num >>> 7));
         } else if (num <= 268435455) {
             do {
                 int digit = num & 0x7F; // 取低7位
