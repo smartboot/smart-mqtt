@@ -82,16 +82,14 @@ public class TopicQosConsumerRecord extends TopicConsumerRecord {
             publishBuilder.publishProperties(new PublishProperties());
         }
         CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = mqttSession.getInflightQueue().offer(publishBuilder);
-
-        if (future == null) {
-            push0();
-            return;
+        if (future != null) {
+            topic.getMessageQueue().commit(message.getOffset());
+            nextConsumerOffset = message.getOffset() + 1;
+            //如果存在共享订阅，则有可能出现available为1，但future为null的情况
+            if (available == 1) {
+                future.whenComplete((mqttPacketIdentifierMessage, throwable) -> push0());
+            }
         }
-        topic.getMessageQueue().commit(message.getOffset());
-        nextConsumerOffset = message.getOffset() + 1;
-        //如果存在共享订阅，则有可能出现available为1，但future为null的情况
-        if (available == 1) {
-            future.whenComplete((mqttPacketIdentifierMessage, throwable) -> push0());
-        }
+        push0();
     }
 }
