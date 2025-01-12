@@ -10,7 +10,7 @@
 
     <properties>
         <smart.mqtt.version>0.40</smart.mqtt.version>
-        <smart-socket.version>1.5.55</smart-socket.version>
+        <smart-socket.version>1.5.57</smart-socket.version>
         <commons.lang.version>2.6</commons.lang.version>
         <junit.version>4.13.2</junit.version>
     </properties>
