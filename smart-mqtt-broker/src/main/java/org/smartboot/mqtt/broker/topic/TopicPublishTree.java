@@ -78,4 +78,33 @@ public class TopicPublishTree {
         //递归订阅Topic
         treeNode.subNode.values().forEach(subNode -> subscribeChildren(subNode, consumer));
     }
+
+    public void dump() {
+        System.out.println("TopicPublishTree:");
+        subNode.forEach((key, node) -> {
+            System.out.println(key + (node.subNode.isEmpty() ? "" : "/-"));
+            node.subNode.forEach((k, v) -> {
+                System.out.print(" |: ");
+                System.out.println(k + (v.subNode.isEmpty() ? "" : "/-"));
+                v.dump0(1);
+            });
+        });
+    }
+
+    private void dump0(int depth) {
+        if (brokerTopic != null) {
+            System.out.println("Topic " + brokerTopic.getTopic());
+            brokerTopic.dump();
+        }
+        subNode.forEach((key, node) -> {
+            for (int i = 0; i < depth; i++) {
+                System.out.print("  ");
+            }
+            System.out.print(" +|: ");
+            System.out.println(key + (node.subNode.isEmpty() ? "" : "/-"));
+
+
+            node.dump0(depth + 1);
+        });
+    }
 }

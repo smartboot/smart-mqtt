@@ -277,13 +277,7 @@ public class BrokerContextImpl implements BrokerContext {
                 }));
 
         eventBus.subscribe(EventType.TOPIC_CREATE,
-                (eventType, brokerTopic) -> subscribeTopicTree.refreshMatchRelation(brokerTopic, (session,
-                                                                                                  topicFilterSubscriber) -> {
-                    if (!providers.getSubscribeProvider().subscribeTopic(brokerTopic.getTopic(), session)) {
-                        return;
-                    }
-                    session.subscribeSuccess(topicFilterSubscriber, brokerTopic);
-                }));
+                (eventType, brokerTopic) -> subscribeTopicTree.refreshWhenTopicCreated(brokerTopic));
     }
 
     private void updateBrokerConfigure() throws IOException {

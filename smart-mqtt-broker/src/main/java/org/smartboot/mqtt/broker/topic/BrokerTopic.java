@@ -167,4 +167,18 @@ public class BrokerTopic {
     public void disable() {
         this.enabled = false;
     }
+
+    public void dump() {
+        System.out.println("默认订阅：");
+        defaultGroup.subscribers.forEach((session, topicConsumerRecord) -> {
+            System.out.println(" " + session.getClientId());
+        });
+        System.out.println("共享订阅：");
+        shareSubscribers.forEach((s, subscriberGroup) -> {
+            System.out.println(" " + s);
+            subscriberGroup.subscribers.forEach((session, topicConsumerRecord) -> {
+                System.out.println("  " + session.getClientId());
+            });
+        });
+    }
 }

@@ -473,6 +473,7 @@ public class MqttClient extends AbstractSession {
 
     @Override
     public void accepted(MqttPublishMessage mqttPublishMessage) {
+        System.out.println(this + " received a publish message:" + new String(mqttPublishMessage.getPayload().getPayload()));
         MqttPublishVariableHeader header = mqttPublishMessage.getVariableHeader();
         Subscribe subscribe = mapping.get(header.getTopicName());
         if (subscribe == null) {
@@ -530,6 +531,17 @@ public class MqttClient extends AbstractSession {
         if (client != null) {
             client.shutdown();
             client = null;
+        }
+        if (clientConfigure.isAutomaticReconnect()) {
+            System.out.println("重连中...");
+            TIMER.schedule(new Runnable() {
+                @Override
+                public void run() {
+                    connect(asynchronousChannelGroup, reconnectConsumer == null ? connectConsumer : reconnectConsumer);
+                }
+            }, 5, TimeUnit.SECONDS);
+
+
         }
     }
 
