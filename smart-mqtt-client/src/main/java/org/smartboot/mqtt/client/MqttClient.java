@@ -188,8 +188,7 @@ public class MqttClient extends AbstractSession {
             if (clientConfigure.getMqttVersion() == MqttVersion.MQTT_5) {
                 properties = new ConnectProperties();
             }
-            MqttConnectVariableHeader variableHeader = new MqttConnectVariableHeader(clientConfigure.getMqttVersion(), StringUtils.isNotBlank(clientConfigure.getUserName()),
-                    clientConfigure.getPassword() != null, clientConfigure.getWillMessage(), clientConfigure.isCleanSession(), clientConfigure.getKeepAliveInterval(), properties);
+            MqttConnectVariableHeader variableHeader = new MqttConnectVariableHeader(clientConfigure.getMqttVersion(), StringUtils.isNotBlank(clientConfigure.getUserName()), clientConfigure.getPassword() != null, clientConfigure.getWillMessage(), clientConfigure.isCleanSession(), clientConfigure.getKeepAliveInterval(), properties);
             MqttConnectPayload payload = new MqttConnectPayload(clientId, clientConfigure.getWillMessage(), clientConfigure.getUserName(), clientConfigure.getPassword());
 
             MqttConnectMessage connectMessage = new MqttConnectMessage(variableHeader, payload);
@@ -200,7 +199,7 @@ public class MqttClient extends AbstractSession {
                 @Override
                 public void execute() {
                     if (!connected) {
-                        release();
+                        session.close(true);
                     }
                 }
             }, clientConfigure.getConnectAckTimeout(), TimeUnit.SECONDS);
@@ -215,14 +214,7 @@ public class MqttClient extends AbstractSession {
                         // 它应该关闭到服务端的网络连接。
                         if (pingTimeout >= 3) {
                             pingTimeout = 0;
-                            release();
-                        }
-                        if (session == null || session.isInvalid()) {
-                            release();
-                            if (clientConfigure.isAutomaticReconnect()) {
-                                LOGGER.warn("mqtt client:{} is disconnect, try to reconnect...", clientId);
-                                connect(asynchronousChannelGroup, reconnectConsumer == null ? consumer : reconnectConsumer);
-                            }
+                            session.close(true);
                             return;
                         }
                         long delay = System.currentTimeMillis() - latestSendMessageTime - keepAliveInterval;
@@ -532,15 +524,8 @@ public class MqttClient extends AbstractSession {
             client = null;
         }
         if (clientConfigure.isAutomaticReconnect()) {
-            System.out.println("重连中...");
-            TIMER.schedule(new Runnable() {
-                @Override
-                public void run() {
-                    connect(asynchronousChannelGroup, reconnectConsumer == null ? connectConsumer : reconnectConsumer);
-                }
-            }, 5, TimeUnit.SECONDS);
-
-
+            LOGGER.warn("mqtt client:{} is disconnect, try to reconnect...", clientId);
+            TIMER.schedule(() -> connect(asynchronousChannelGroup, reconnectConsumer == null ? connectConsumer : reconnectConsumer), clientConfigure.getMaxReconnectDelay(), TimeUnit.MILLISECONDS);
         }
     }
 

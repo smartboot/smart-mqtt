@@ -64,8 +64,8 @@ public class MqttClientConfigure extends ToString {
     /**
      * 自动重连
      */
-    private boolean automaticReconnect = false;
-    private int maxReconnectDelay = 128000;
+    private boolean automaticReconnect = true;
+    private int maxReconnectDelay = 5000;
     private Properties customWebSocketHeaders = null;
 
     // Client Operation Parameters
