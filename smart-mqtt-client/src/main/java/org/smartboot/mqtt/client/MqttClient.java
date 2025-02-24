@@ -473,7 +473,6 @@ public class MqttClient extends AbstractSession {
 
     @Override
     public void accepted(MqttPublishMessage mqttPublishMessage) {
-        System.out.println(this + " received a publish message:" + new String(mqttPublishMessage.getPayload().getPayload()));
         MqttPublishVariableHeader header = mqttPublishMessage.getVariableHeader();
         Subscribe subscribe = mapping.get(header.getTopicName());
         if (subscribe == null) {
