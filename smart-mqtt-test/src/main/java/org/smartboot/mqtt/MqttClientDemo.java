@@ -50,7 +50,10 @@ public class MqttClientDemo {
         mqttClient3.getClientConfigure().setAutomaticReconnect(true);
         mqttClient3.connect();
         mqttClient3.subscribe("$share/a/a", MqttQoS.AT_MOST_ONCE, (m, mqttPublishMessage) -> {
-            System.out.println("mqttClient3: " + new String(mqttPublishMessage.getPayload().getPayload()));
+            System.out.println("mqttClient3 $share/a/a: " + new String(mqttPublishMessage.getPayload().getPayload()));
+        });
+        mqttClient3.subscribe("$share/b/a", MqttQoS.AT_MOST_ONCE, (m, mqttPublishMessage) -> {
+            System.out.println("mqttClient3 $share/b/a: " + new String(mqttPublishMessage.getPayload().getPayload()));
         });
     }
 }

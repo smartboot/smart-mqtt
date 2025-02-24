@@ -58,6 +58,7 @@ import org.smartboot.socket.transport.AioQuickClient;
 
 import java.io.IOException;
 import java.nio.channels.AsynchronousChannelGroup;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -91,7 +92,7 @@ public class MqttClient extends AbstractSession {
      */
     private final Map<String, Subscribe> subscribes = new ConcurrentHashMap<>();
 
-    private final Map<String, Subscribe> mapping = new ConcurrentHashMap<>();
+    private final Map<String, List<Subscribe>> mapping = new ConcurrentHashMap<>();
 
     private final List<TopicToken> wildcardsToken = new LinkedList<>();
 
@@ -466,22 +467,62 @@ public class MqttClient extends AbstractSession {
     @Override
     public void accepted(MqttPublishMessage mqttPublishMessage) {
         MqttPublishVariableHeader header = mqttPublishMessage.getVariableHeader();
-        Subscribe subscribe = mapping.get(header.getTopicName());
-        if (subscribe == null) {
-            subscribe = subscribes.get(header.getTopicName());
+        List<Subscribe> cacheSubscribes = mapping.get(header.getTopicName());
+        if (cacheSubscribes == null) {
+            cacheSubscribes = new LinkedList<>();
+            Subscribe subscribe = subscribes.get(header.getTopicName());
             //尝试通配符匹配
             if (subscribe == null) {
                 subscribe = matchWildcardsSubscribe(header.getTopicName());
             }
             if (subscribe != null) {
-                mapping.put(header.getTopicName(), subscribe);
+                cacheSubscribes.add(subscribe);
+            }
+            cacheSubscribes.addAll(matchShareSubscribe(header.getTopicName()));
+            if (!cacheSubscribes.isEmpty()) {
+                mapping.put(header.getTopicName(), cacheSubscribes);
             }
         }
 
         // If unsubscribed, maybe null.
-        if (subscribe != null) {
-            subscribe.getConsumer().accept(this, mqttPublishMessage);
+        if (cacheSubscribes.isEmpty()) {
+            return;
         }
+        if (cacheSubscribes.size() == 1) {
+            cacheSubscribes.get(0).getConsumer().accept(this, mqttPublishMessage);
+        } else {
+            Subscribe s = cacheSubscribes.remove(0);
+            s.getConsumer().accept(this, mqttPublishMessage);
+            cacheSubscribes.add(s);
+        }
+    }
+
+    private List<Subscribe> matchShareSubscribe(String topicName) {
+        List<Subscribe> matchedSubscribes = new ArrayList<>();
+
+        // 遍历所有订阅关系
+        for (Map.Entry<String, Subscribe> entry : subscribes.entrySet()) {
+            String topicFilter = entry.getKey();
+            // 识别共享订阅格式
+            if (topicFilter.startsWith("$share/")) {
+                // 解析共享订阅的组名和实际主题
+                String[] parts = topicFilter.split("/", 3);
+                if (parts.length < 3) {
+                    continue; // 无效的共享订阅格式
+                }
+                String actualTopic = parts[2];
+
+                // 创建主题令牌进行通配符匹配
+                TopicToken inputToken = new TopicToken(topicName);
+                TopicToken subscribeToken = new TopicToken(actualTopic);
+
+                // 匹配实际主题且组名相同
+                if (MqttUtil.match(inputToken, subscribeToken)) {
+                    matchedSubscribes.add(entry.getValue());
+                }
+            }
+        }
+        return matchedSubscribes;
     }
 
     private Subscribe matchWildcardsSubscribe(String topicName) {
