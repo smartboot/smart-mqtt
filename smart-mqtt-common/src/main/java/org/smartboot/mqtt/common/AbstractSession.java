@@ -82,7 +82,7 @@ public abstract class AbstractSession {
         }
     }
 
-    public abstract void accepted(MqttPublishMessage mqttMessage);
+    protected abstract void accepted(MqttPublishMessage mqttMessage);
 
 
     public synchronized void write(MqttMessage mqttMessage, boolean autoFlush) {

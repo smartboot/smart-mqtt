@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.BrokerContextImpl;
 import org.smartboot.mqtt.common.enums.MqttQoS;
-import org.smartboot.mqtt.common.util.MqttUtil;
 
 import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.charset.StandardCharsets;
@@ -52,9 +51,9 @@ public class Benchmark {
         CountDownLatch countDownLatch = new CountDownLatch(connectCount);
         long s = System.currentTimeMillis();
         while (connectCount-- > 0) {
-            MqttClient client = new MqttClient(host, port, MqttUtil.createClientId());
+            MqttClient client = new MqttClient(host, port, opt -> opt.setGroup(channelGroup));
             long start = System.currentTimeMillis();
-            client.connect(channelGroup, connAckMessage -> {
+            client.connect(connAckMessage -> {
                 total.addAndGet(System.currentTimeMillis() - start);
                 countDownLatch.countDown();
                 client.disconnect();
@@ -77,7 +76,7 @@ public class Benchmark {
         CountDownLatch countDownLatch = new CountDownLatch(connectCount);
         long s = System.currentTimeMillis();
         while (connectCount-- > 0) {
-            MqttClient client = new MqttClient(host, port, MqttUtil.createClientId());
+            MqttClient client = new MqttClient(host, port, opt -> opt.setGroup(channelGroup));
             long start = System.currentTimeMillis();
             client.subscribe("/topic/" + connectCount, MqttQoS.AT_MOST_ONCE, (mqttClient, publishMessage) -> {
 
@@ -86,7 +85,7 @@ public class Benchmark {
                 countDownLatch.countDown();
                 client.disconnect();
             });
-            client.connect(channelGroup);
+            client.connect();
         }
         countDownLatch.await();
         System.out.println((System.currentTimeMillis() - s) + ":" + total.get());
@@ -94,8 +93,8 @@ public class Benchmark {
 
     @Test(timeout = 3000)
     public void testSubscribe2() throws InterruptedException {
-        MqttClient client = new MqttClient(host, port, MqttUtil.createClientId());
-        client.connect(channelGroup);
+        MqttClient client = new MqttClient(host, port, opt -> opt.setGroup(channelGroup));
+        client.connect();
 
         int connectCount = 10000;
         AtomicLong total = new AtomicLong(0);
@@ -137,15 +136,15 @@ public class Benchmark {
         String topic = "/topic";
         //建立 1W 个订阅
         while (connectCount-- > 0) {
-            MqttClient client = new MqttClient(host, port, MqttUtil.createClientId());
+            MqttClient client = new MqttClient(host, port, opt -> opt.setGroup(channelGroup));
             client.subscribe(topic, MqttQoS.AT_MOST_ONCE, (mqttClient, publishMessage) -> {
 //                System.out.println(publishDownLatch.getCount());
                 publishDownLatch.countDown();
             }, (mqttClient, mqttQoS) -> countDownLatch.countDown());
-            client.connect(channelGroup);
+            client.connect();
         }
         countDownLatch.await();
-        MqttClient client = new MqttClient(host, port, MqttUtil.createClientId());
+        MqttClient client = new MqttClient(host, port);
         client.connect();
 
         System.out.println("start publish message");

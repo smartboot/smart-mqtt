@@ -14,16 +14,21 @@ import com.alibaba.fastjson2.annotation.JSONField;
 import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
+import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.payload.WillMessage;
 import org.smartboot.mqtt.common.message.variable.properties.WillProperties;
+import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.HostnameVerifier;
+import java.nio.channels.AsynchronousChannelGroup;
 import java.util.Properties;
+import java.util.function.Consumer;
 
 public class Options extends ToString {
+    private String clientId;
     /**
      * The default keep alive interval in seconds if one is not specified
      */
@@ -61,6 +66,7 @@ public class Options extends ToString {
 
 
     private int connectAckTimeout = 5;
+
     private String[] serverURIs = null;
     private MqttVersion mqttVersion = MqttVersion.MQTT_3_1_1;
     /**
@@ -75,6 +81,15 @@ public class Options extends ToString {
 
     private String host;
     private int port;
+    /**
+     * 客户端线程组
+     */
+    private AsynchronousChannelGroup group;
+
+    /**
+     * 重连Consumer
+     */
+    private Consumer<MqttConnAckMessage> reconnectConsumer;
 
     private TopicListener topicListener = new TopicListener() {
         @Override
@@ -663,6 +678,33 @@ public class Options extends ToString {
 
     public Options setMaxPacketSize(int maxPacketSize) {
         this.maxPacketSize = maxPacketSize;
+        return this;
+    }
+
+    public AsynchronousChannelGroup group() {
+        return group;
+    }
+
+    public Options setGroup(AsynchronousChannelGroup group) {
+        this.group = group;
+        return this;
+    }
+
+    Consumer<MqttConnAckMessage> reconnectConsumer() {
+        return reconnectConsumer;
+    }
+
+    public Options setReconnectConsumer(Consumer<MqttConnAckMessage> reconnectConsumer) {
+        this.reconnectConsumer = reconnectConsumer;
+        return this;
+    }
+
+    String getClientId() {
+        return clientId == null ? MqttUtil.createClientId() : clientId;
+    }
+
+    public Options setClientId(String clientId) {
+        this.clientId = clientId;
         return this;
     }
 }

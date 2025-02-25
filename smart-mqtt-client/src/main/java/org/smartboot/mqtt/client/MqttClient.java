@@ -48,14 +48,12 @@ import org.smartboot.mqtt.common.message.variable.properties.SubscribeProperties
 import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
-import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.timer.TimerTask;
 import org.smartboot.socket.transport.AioQuickClient;
 
 import java.io.IOException;
-import java.nio.channels.AsynchronousChannelGroup;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -65,7 +63,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -96,7 +93,7 @@ public class MqttClient extends AbstractSession {
 
     private AioQuickClient client;
 
-    private AsynchronousChannelGroup asynchronousChannelGroup;
+
     private boolean connected = false;
 
     /**
@@ -104,21 +101,12 @@ public class MqttClient extends AbstractSession {
      */
     private Consumer<MqttConnAckMessage> connectConsumer;
 
-    /**
-     * 重连Consumer
-     */
-    private Consumer<MqttConnAckMessage> reconnectConsumer;
     int pingTimeout;
 
     private TimerTask connectTimer;
 
     public MqttClient(String uri) {
         this(uri, opt -> {
-        });
-    }
-
-    public MqttClient(String uri, String clientId) {
-        this(uri, clientId, opt -> {
         });
     }
 
@@ -132,10 +120,6 @@ public class MqttClient extends AbstractSession {
     }
 
     public MqttClient(String uri, Consumer<Options> opt) {
-        this(uri, MqttUtil.createClientId(), opt);
-    }
-
-    public MqttClient(String uri, String clientId, Consumer<Options> opt) {
         super(TIMER);
         String[] array = uri.split(":");
         if (array[0].equals("mqtts")) {
@@ -148,32 +132,17 @@ public class MqttClient extends AbstractSession {
         }
         options.setPort(NumberUtils.toInt(array[2]));
         opt.accept(options);
-        this.clientId = clientId;
+        this.clientId = options.getClientId();
     }
 
 
     public void connect() {
-        try {
-            asynchronousChannelGroup = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(2, new ThreadFactory() {
-                private int i = 0;
-
-                @Override
-                public Thread newThread(Runnable r) {
-                    return new Thread(r, "mqtt-client-" + MqttClient.this.hashCode() + "-" + (i++));
-                }
-            });
-        } catch (IOException e) {
-            LOGGER.error(e.getMessage(), e);
-        }
-        connect(asynchronousChannelGroup);
-    }
-
-    public void connect(AsynchronousChannelGroup asynchronousChannelGroup) {
-        connect(asynchronousChannelGroup, connAckMessage -> {
+        connect(connAckMessage -> {
         });
     }
 
-    public void connect(AsynchronousChannelGroup asynchronousChannelGroup, Consumer<MqttConnAckMessage> consumer) {
+
+    public void connect(Consumer<MqttConnAckMessage> consumer) {
         //设置 connect ack 回调事件
         this.connectConsumer = consumer;
         MqttUtil.updateConfig(options, "mqtt.client");
@@ -183,7 +152,11 @@ public class MqttClient extends AbstractSession {
         client = new AioQuickClient(options.getHost(), options.getPort(), new MqttProtocol(options.getMaxPacketSize()), messageProcessor);
         try {
             client.setReadBufferSize(options.getBufferSize()).setWriteBuffer(options.getBufferSize(), 8).connectTimeout(options.getConnectionTimeout());
-            session = client.start(asynchronousChannelGroup);
+            if (options.group() != null) {
+                session = client.start(options.group());
+            } else {
+                session = client.start();
+            }
             session.setAttachment(this);
             mqttWriter = new DefaultMqttWriter(session.writeBuffer());
 
@@ -552,11 +525,8 @@ public class MqttClient extends AbstractSession {
         }
         if (options.isAutomaticReconnect()) {
             LOGGER.warn("mqtt client:{} is disconnect, try to reconnect...", clientId);
-            TIMER.schedule(() -> connect(asynchronousChannelGroup, reconnectConsumer == null ? connectConsumer : reconnectConsumer), options.getMaxReconnectDelay(), TimeUnit.MILLISECONDS);
+            TIMER.schedule(() -> connect(options.reconnectConsumer() == null ? connectConsumer : options.reconnectConsumer()), options.getMaxReconnectDelay(), TimeUnit.MILLISECONDS);
         }
     }
 
-    public void setReconnectConsumer(Consumer<MqttConnAckMessage> reconnectConsumer) {
-        this.reconnectConsumer = reconnectConsumer;
-    }
 }
