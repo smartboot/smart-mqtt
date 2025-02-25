@@ -11,7 +11,6 @@ import org.smartboot.mqtt.broker.processor.MqttProcessor;
 import org.smartboot.mqtt.common.MqttProtocol;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.plugin.dao.mapper.SystemConfigMapper;
-import org.smartboot.socket.util.AttachKey;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
@@ -34,10 +33,6 @@ import java.nio.ByteBuffer;
 public class WebSocketPlugin {
     private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketPlugin.class);
     private HttpServer httpBootstrap;
-
-    private static final AttachKey<ProxySession> proxySessionKey = AttachKey.valueOf("proxySession");
-    private static final AttachKey<ByteBuffer> bufferAttachKey = AttachKey.valueOf("buffer");
-    private static final AttachKey<MqttSession> mqttSessionAttachKey = AttachKey.valueOf("mqttSession");
 
     @Autowired
     private BrokerContext brokerContext;
