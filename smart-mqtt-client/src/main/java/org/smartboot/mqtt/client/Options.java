@@ -21,7 +21,7 @@ import javax.net.SocketFactory;
 import javax.net.ssl.HostnameVerifier;
 import java.util.Properties;
 
-public class MqttClientConfigure extends ToString {
+public class Options extends ToString {
     /**
      * The default keep alive interval in seconds if one is not specified
      */
@@ -102,7 +102,7 @@ public class MqttClientConfigure extends ToString {
      * </ul>
      * More information about these values can be found in the setter methods.
      */
-    public MqttClientConfigure() {
+    public Options() {
         // Initialise Base MqttConnectOptions Object
     }
 
@@ -110,7 +110,7 @@ public class MqttClientConfigure extends ToString {
         return password;
     }
 
-    public MqttClientConfigure setPassword(byte[] password) {
+    public Options setPassword(byte[] password) {
         this.password = password;
         return this;
     }
@@ -129,7 +129,7 @@ public class MqttClientConfigure extends ToString {
      *
      * @param userName The Username as a String
      */
-    public MqttClientConfigure setUserName(String userName) {
+    public Options setUserName(String userName) {
         this.userName = userName;
         return this;
     }
@@ -230,7 +230,7 @@ public class MqttClientConfigure extends ToString {
      * @param keepAliveInterval the interval, measured in seconds, must be &gt;= 0.
      * @throws IllegalArgumentException if the keepAliveInterval was invalid
      */
-    public MqttClientConfigure setKeepAliveInterval(int keepAliveInterval) throws IllegalArgumentException {
+    public Options setKeepAliveInterval(int keepAliveInterval) throws IllegalArgumentException {
         if (keepAliveInterval < 0) {
             throw new IllegalArgumentException();
         }
@@ -247,8 +247,9 @@ public class MqttClientConfigure extends ToString {
         return mqttVersion;
     }
 
-    public void setMqttVersion(MqttVersion mqttVersion) throws IllegalArgumentException {
+    public Options setMqttVersion(MqttVersion mqttVersion) {
         this.mqttVersion = mqttVersion;
+        return this;
     }
 
     /**
@@ -648,7 +649,7 @@ public class MqttClientConfigure extends ToString {
         return maxPacketSize;
     }
 
-    public MqttClientConfigure setMaxPacketSize(int maxPacketSize) {
+    public Options setMaxPacketSize(int maxPacketSize) {
         this.maxPacketSize = maxPacketSize;
         return this;
     }

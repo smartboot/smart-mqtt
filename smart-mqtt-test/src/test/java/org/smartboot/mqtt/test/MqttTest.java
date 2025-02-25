@@ -63,8 +63,7 @@ public class MqttTest {
 
     @Test
     public void testA() throws Throwable {
-        MqttClient mqttClient = new MqttClient("mqtt://127.0.0.1:1883");
-        mqttClient.getClientConfigure().setMaxPacketSize(Integer.MAX_VALUE);
+        MqttClient mqttClient = new MqttClient("mqtt://127.0.0.1:1883", opt -> opt.setMaxPacketSize(Integer.MAX_VALUE));
         System.out.println(mqttClient.getClientId());
         mqttClient.connect();
         for (int i = 0; i <= 128; i++) {
@@ -97,9 +96,7 @@ public class MqttTest {
         brokerContext.destroy();
         brokerContext = new BrokerContextImpl();
         brokerContext.init();
-        MqttClient mqttClient = new MqttClient("mqtt://127.0.0.1:1883");
-        mqttClient.getClientConfigure().setMaxPacketSize(Integer.MAX_VALUE);
-        mqttClient.getClientConfigure().setBufferSize(16 * 1024 * 1024);
+        MqttClient mqttClient = new MqttClient("mqtt://127.0.0.1:1883", opt -> opt.setMaxPacketSize(Integer.MAX_VALUE).setBufferSize(1024 * 1024 * 16));
         System.out.println(mqttClient.getClientId());
         mqttClient.connect();
         for (int i = 268435441; i <= 268435451; i++) {

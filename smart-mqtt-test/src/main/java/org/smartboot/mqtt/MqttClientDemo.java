@@ -17,19 +17,16 @@ public class MqttClientDemo {
     public static void main(String[] args) throws InterruptedException {
         MqttClient mqttClient = new MqttClient("mqtt://127.0.0.1:1883");
         System.out.println(mqttClient.getClientId());
-        mqttClient.getClientConfigure().setAutomaticReconnect(true);
         mqttClient.connect();
 
 
         MqttClient mqttClient2 = new MqttClient("mqtt://127.0.0.1:1883");
-        mqttClient2.getClientConfigure().setAutomaticReconnect(true);
         mqttClient2.connect();
         mqttClient2.subscribe("$share/a/a", MqttQoS.AT_MOST_ONCE, (m, mqttPublishMessage) -> {
             System.out.println("mqttClient2: " + new String(mqttPublishMessage.getPayload().getPayload()));
         });
 
         MqttClient mqttClient3 = new MqttClient("mqtt://127.0.0.1:1883");
-        mqttClient3.getClientConfigure().setAutomaticReconnect(true);
         mqttClient3.connect();
         mqttClient3.subscribe("$share/a/a", MqttQoS.AT_MOST_ONCE, (m, mqttPublishMessage) -> {
             System.out.println("mqttClient3 $share/a/a: " + new String(mqttPublishMessage.getPayload().getPayload()));
