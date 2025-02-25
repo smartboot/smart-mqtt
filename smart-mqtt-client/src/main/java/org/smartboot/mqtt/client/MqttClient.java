@@ -234,6 +234,7 @@ public class MqttClient extends AbstractSession {
             }
         } catch (IOException e) {
             LOGGER.error(e.getMessage(), e);
+            release();
         }
     }
 

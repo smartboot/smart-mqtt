@@ -76,7 +76,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -127,7 +126,6 @@ public class BrokerContextImpl implements BrokerContext {
     //配置文件内容
     private String configJson;
 
-    private final Map<String, Object> resources = new Hashtable<>();
     private final Map<Class<? extends MqttMessage>, MqttProcessor<?>> processors;
     private final BufferPagePool bufferPagePool = new BufferPagePool(1, true);
 
@@ -402,16 +400,6 @@ public class BrokerContextImpl implements BrokerContext {
     @Override
     public TopicSubscribeTree getTopicSubscribeTree() {
         return subscribeTopicTree;
-    }
-
-    @Override
-    public <T> void bundle(String key, T resource) {
-        resources.put(key, resource);
-    }
-
-    @Override
-    public <T> T getBundle(String key) {
-        return (T) resources.get(key);
     }
 
     private void loadYamlConfig() throws IOException {
