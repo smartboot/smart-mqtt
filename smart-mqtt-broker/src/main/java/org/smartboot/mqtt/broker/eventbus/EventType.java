@@ -10,9 +10,9 @@
 
 package org.smartboot.mqtt.broker.eventbus;
 
-import org.smartboot.mqtt.broker.BrokerConfigure;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
+import org.smartboot.mqtt.broker.Options;
 import org.smartboot.mqtt.broker.topic.AbstractConsumerRecord;
 import org.smartboot.mqtt.broker.topic.BrokerTopic;
 import org.smartboot.mqtt.broker.topic.TopicConsumerRecord;
@@ -52,7 +52,7 @@ public class EventType<T> {
      */
     public static final EventType<BrokerContext> BROKER_STARTED = new EventType<>("brokerStarted", true);
 
-    public static final EventType<BrokerConfigure> BROKER_CONFIGURE_LOADED = new EventType<>("brokerConfigureLoaded", true);
+    public static final EventType<Options> BROKER_CONFIGURE_LOADED = new EventType<>("brokerConfigureLoaded", true);
 
     /**
      * 停止Broker服务

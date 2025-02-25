@@ -24,7 +24,7 @@ import java.util.List;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/30
  */
-public class BrokerConfigure extends ToString {
+public class Options extends ToString {
     /**
      * http://patorjk.com/software/taag/
      * Font Name: Puffy
@@ -196,7 +196,7 @@ public class BrokerConfigure extends ToString {
         this.nodeId = nodeId;
     }
 
-    public BrokerConfigure addPlugin(Plugin<MqttMessage> plugin) {
+    public Options addPlugin(Plugin<MqttMessage> plugin) {
         plugins.add(plugin);
         return this;
     }

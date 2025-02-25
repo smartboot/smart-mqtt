@@ -100,7 +100,7 @@ public class BrokerContextImpl implements BrokerContext {
      *
      */
     private final ConcurrentMap<String, BrokerTopic> topicMap = new ConcurrentHashMap<>();
-    private BrokerConfigure brokerConfigure;
+    private Options options;
     private final TopicPublishTree topicPublishTree = new TopicPublishTree();
 
     private final TopicSubscribeTree subscribeTopicTree = new TopicSubscribeTree();
@@ -159,14 +159,14 @@ public class BrokerContextImpl implements BrokerContext {
 
 
         try {
-            brokerConfigure.getPlugins().forEach(processor::addPlugin);
-            server = new AioQuickServer(brokerConfigure.getHost(), brokerConfigure.getPort(),
-                    new MqttProtocol(brokerConfigure.getMaxPacketSize()), processor);
-            server.setBannerEnabled(false).setReadBufferSize(brokerConfigure.getBufferSize()).setWriteBuffer(brokerConfigure.getBufferSize(), Math.min(brokerConfigure.getMaxInflight(), 16)).setBufferPagePool(bufferPagePool).setThreadNum(Math.max(2, brokerConfigure.getThreadNum()));
-            if (!brokerConfigure.isLowMemory()) {
+            options.getPlugins().forEach(processor::addPlugin);
+            server = new AioQuickServer(options.getHost(), options.getPort(),
+                    new MqttProtocol(options.getMaxPacketSize()), processor);
+            server.setBannerEnabled(false).setReadBufferSize(options.getBufferSize()).setWriteBuffer(options.getBufferSize(), Math.min(options.getMaxInflight(), 16)).setBufferPagePool(bufferPagePool).setThreadNum(Math.max(2, options.getThreadNum()));
+            if (!options.isLowMemory()) {
                 server.disableLowMemory();
             }
-            server.start(brokerConfigure.getChannelGroup());
+            server.start(options.getChannelGroup());
         } catch (Exception e) {
             destroy();
             throw e;
@@ -176,21 +176,21 @@ public class BrokerContextImpl implements BrokerContext {
         eventBus.publish(EventType.BROKER_STARTED, this);
         //释放内存
         configJson = null;
-        System.out.println(BrokerConfigure.BANNER + "\r\n ::smart-mqtt broker" + "::\t(" + BrokerConfigure.VERSION + ")");
+        System.out.println(Options.BANNER + "\r\n ::smart-mqtt broker" + "::\t(" + Options.VERSION + ")");
         System.out.println("Gitee: https://gitee.com/smartboot/smart-mqtt");
         System.out.println("Github: https://github.com/smartboot/smart-mqtt");
         System.out.println("Document: https://smartboot.tech/smart-mqtt");
         System.out.println("Support: zhengjunweimail@163.com");
-        if (StringUtils.isBlank(brokerConfigure.getHost())) {
-            System.out.println("\uD83C\uDF89start smart-mqtt success! [port:" + brokerConfigure.getPort() + "]");
+        if (StringUtils.isBlank(options.getHost())) {
+            System.out.println("\uD83C\uDF89start smart-mqtt success! [port:" + options.getPort() + "]");
         } else {
-            System.out.println("\uD83C\uDF89start smart-mqtt success! [host:" + brokerConfigure.getHost() + " port:" + brokerConfigure.getPort() + "]");
+            System.out.println("\uD83C\uDF89start smart-mqtt success! [host:" + options.getHost() + " port:" + options.getPort() + "]");
         }
     }
 
     private void initPushThread() {
-        if (brokerConfigure.getTopicLimit() <= 0) {
-            brokerConfigure.setTopicLimit(10);
+        if (options.getTopicLimit() <= 0) {
+            options.setTopicLimit(10);
         }
         retainPushThreadPool = Executors.newFixedThreadPool(getBrokerConfigure().getPushThreadNum());
         pushThreadPool = Executors.newFixedThreadPool(getBrokerConfigure().getPushThreadNum(), new ThreadFactory() {
@@ -281,9 +281,9 @@ public class BrokerContextImpl implements BrokerContext {
     private void updateBrokerConfigure() throws IOException {
         //加载自定义配置文件
         loadYamlConfig();
-        brokerConfigure = parseConfig("$.broker", BrokerConfigure.class);
-        MqttUtil.updateConfig(brokerConfigure, "broker");
-        brokerConfigure.setChannelGroup(new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
+        options = parseConfig("$.broker", Options.class);
+        MqttUtil.updateConfig(options, "broker");
+        options.setChannelGroup(new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
             int i;
 
             @Override
@@ -291,7 +291,7 @@ public class BrokerContextImpl implements BrokerContext {
                 return new Thread(r, "smart-mqtt-broker-" + (++i));
             }
         }));
-        eventBus.publish(EventType.BROKER_CONFIGURE_LOADED, brokerConfigure);
+        eventBus.publish(EventType.BROKER_CONFIGURE_LOADED, options);
 //        System.out.println("brokerConfigure: " + brokerConfigure);
     }
 
@@ -312,8 +312,8 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     @Override
-    public BrokerConfigure getBrokerConfigure() {
-        return brokerConfigure;
+    public Options getBrokerConfigure() {
+        return options;
     }
 
     @Override
@@ -330,7 +330,7 @@ public class BrokerContextImpl implements BrokerContext {
                 if (brokerTopic == null) {
                     ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topic), "invalid topicName: " + topic);
                     brokerTopic = new BrokerTopic(topic,
-                            new MemoryMessageStoreQueue(brokerConfigure.getMaxMessageQueueLength()), pushThreadPool);
+                            new MemoryMessageStoreQueue(options.getMaxMessageQueueLength()), pushThreadPool);
                     LOGGER.info("create topic: {} capacity is {}", topic, brokerTopic.getMessageQueue().capacity());
                     topicPublishTree.addTopic(brokerTopic);
                     eventBus.publish(EventType.TOPIC_CREATE, brokerTopic);
@@ -404,8 +404,8 @@ public class BrokerContextImpl implements BrokerContext {
 
     private void loadYamlConfig() throws IOException {
         String brokerConfig =
-                StringUtils.defaultString(System.getProperty(BrokerConfigure.SystemProperty.BrokerConfig),
-                        System.getenv(BrokerConfigure.SystemProperty.BrokerConfig));
+                StringUtils.defaultString(System.getProperty(Options.SystemProperty.BrokerConfig),
+                        System.getenv(Options.SystemProperty.BrokerConfig));
 
         InputStream inputStream;
 
@@ -440,7 +440,7 @@ public class BrokerContextImpl implements BrokerContext {
         if (server != null) {
             server.shutdown();
         }
-        brokerConfigure.getChannelGroup().shutdown();
+        options.getChannelGroup().shutdown();
         timer.shutdown();
 
         bufferPagePool.release();
