@@ -299,5 +299,6 @@
 <!--        <module>smart-mqtt-protocol-gateway</module>-->
         <module>smart-mqtt-test</module>
         <module>smart-mqtt-plugin-enterprise</module>
+        <module>smart-mqtt-bench</module>
     </modules>
 </project>
