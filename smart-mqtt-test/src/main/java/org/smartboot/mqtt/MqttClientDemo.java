@@ -14,29 +14,11 @@ import org.smartboot.mqtt.client.MqttClient;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 
 public class MqttClientDemo {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         MqttClient mqttClient = new MqttClient("mqtt://127.0.0.1:1883");
         System.out.println(mqttClient.getClientId());
         mqttClient.getClientConfigure().setAutomaticReconnect(true);
         mqttClient.connect();
-        String payload = "hello";
-        new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-                while (true) {
-                    System.out.println("publish...");
-
-                    try {
-                        Thread.sleep(1000);
-                        mqttClient.publish("a", MqttQoS.AT_MOST_ONCE, payload.getBytes());
-                    } catch (Exception e) {
-//                      throw new RuntimeException(e);
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }).start();
 
 
         MqttClient mqttClient2 = new MqttClient("mqtt://127.0.0.1:1883");
@@ -55,5 +37,26 @@ public class MqttClientDemo {
         mqttClient3.subscribe("$share/b/a", MqttQoS.AT_MOST_ONCE, (m, mqttPublishMessage) -> {
             System.out.println("mqttClient3 $share/b/a: " + new String(mqttPublishMessage.getPayload().getPayload()));
         });
+
+
+        String payload = "hello";
+        Thread.sleep(3000);
+        new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                while (true) {
+                    System.out.println("publish...");
+
+                    try {
+                        Thread.sleep(1000);
+                        mqttClient.publish("a", MqttQoS.AT_MOST_ONCE, payload.getBytes());
+                    } catch (Exception e) {
+//                      throw new RuntimeException(e);
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
     }
 }

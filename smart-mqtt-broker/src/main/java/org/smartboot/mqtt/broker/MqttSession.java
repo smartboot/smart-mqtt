@@ -178,7 +178,14 @@ public class MqttSession extends AbstractSession {
         TopicToken topicToken = new TopicToken(topicFilter);
         //非通配符匹配需创建BrokerTopic
         if (!topicToken.isWildcards()) {
-            mqttContext.getOrCreateTopic(topicFilter);
+            if (topicToken.isShared()) {
+                String[] array = topicFilter.split("/", 3);
+                if (array.length >= 3) {
+                    mqttContext.getOrCreateTopic(array[2]);
+                }
+            } else {
+                mqttContext.getOrCreateTopic(topicFilter);
+            }
         }
         TopicSubscriber newSubscriber = new TopicSubscriber(topicToken, mqttQoS);
         ValidateUtils.isTrue(subscribers.put(topicFilter, newSubscriber) == null, "duplicate topic filter");
