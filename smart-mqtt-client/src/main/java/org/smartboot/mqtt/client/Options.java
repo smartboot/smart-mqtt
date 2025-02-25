@@ -16,6 +16,8 @@ import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.payload.WillMessage;
+import org.smartboot.mqtt.common.message.variable.properties.WillProperties;
+import org.smartboot.mqtt.common.util.ValidateUtils;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.HostnameVerifier;
@@ -324,6 +326,16 @@ public class Options extends ToString {
     }
 
     public void setWillMessage(WillMessage willMessage) {
+        if (willMessage == null) {
+            this.willMessage = null;
+            return;
+        }
+        ValidateUtils.notNull(willMessage, "willMessage can't be null");
+        if (mqttVersion != MqttVersion.MQTT_5 && willMessage.getProperties() != null) {
+            ValidateUtils.throwException("will properties only support on mqtt5");
+        } else if (mqttVersion == MqttVersion.MQTT_5 && willMessage.getProperties() == null) {
+            willMessage.setProperties(new WillProperties());
+        }
         this.willMessage = willMessage;
     }
 

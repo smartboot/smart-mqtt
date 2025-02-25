@@ -36,7 +36,6 @@ import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import org.smartboot.mqtt.common.message.MqttTopicSubscription;
 import org.smartboot.mqtt.common.message.MqttUnsubAckMessage;
 import org.smartboot.mqtt.common.message.payload.MqttConnectPayload;
-import org.smartboot.mqtt.common.message.payload.WillMessage;
 import org.smartboot.mqtt.common.message.variable.MqttConnectVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttDisconnectVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
@@ -46,7 +45,6 @@ import org.smartboot.mqtt.common.message.variable.properties.DisConnectPropertie
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 import org.smartboot.mqtt.common.message.variable.properties.SubscribeProperties;
-import org.smartboot.mqtt.common.message.variable.properties.WillProperties;
 import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
@@ -400,20 +398,6 @@ public class MqttClient extends AbstractSession {
         connectConsumer.accept(connAckMessage);
     }
 
-
-    /**
-     * 设置遗嘱消息，必须在connect之前调用
-     */
-    public MqttClient willMessage(WillMessage willMessage) {
-        ValidateUtils.notNull(willMessage, "willMessage can't be null");
-        if (options.getMqttVersion() != MqttVersion.MQTT_5 && willMessage.getProperties() != null) {
-            ValidateUtils.throwException("will properties only support on mqtt5");
-        } else if (options.getMqttVersion() == MqttVersion.MQTT_5 && willMessage.getProperties() == null) {
-            willMessage.setProperties(new WillProperties());
-        }
-        options.setWillMessage(willMessage);
-        return this;
-    }
 
     public void publish(String topic, MqttQoS qos, byte[] payload) {
         publish(topic, qos, payload, false, true);

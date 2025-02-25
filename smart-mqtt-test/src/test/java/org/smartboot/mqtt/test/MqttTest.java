@@ -178,12 +178,14 @@ public class MqttTest {
 
     @Test
     public void testWillMessage() throws InterruptedException, ExecutionException {
-        MqttClient mqttClient = new MqttClient("mqtt://127.0.0.1:1883");
-        WillMessage willMessage = new WillMessage();
-        willMessage.setTopic("/will");
-        willMessage.setWillQos(MqttQoS.AT_MOST_ONCE);
-        willMessage.setPayload("willPayload".getBytes());
-        mqttClient.willMessage(willMessage);
+        MqttClient mqttClient = new MqttClient("mqtt://127.0.0.1:1883", opt -> {
+            WillMessage willMessage = new WillMessage();
+            willMessage.setTopic("/will");
+            willMessage.setWillQos(MqttQoS.AT_MOST_ONCE);
+            willMessage.setPayload("willPayload".getBytes());
+            opt.setWillMessage(willMessage);
+        });
+
         mqttClient.connect();
 
         CompletableFuture<String> completableFuture = new CompletableFuture<>();

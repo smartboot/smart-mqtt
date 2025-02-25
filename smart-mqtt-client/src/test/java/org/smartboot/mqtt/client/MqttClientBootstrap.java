@@ -13,19 +13,20 @@ import java.nio.charset.StandardCharsets;
 public class MqttClientBootstrap {
 
     public static void main(String[] args) {
+
         MqttClient client = new MqttClient("localhost", 1883, opt -> {
             opt.setMqttVersion(MqttVersion.MQTT_5)
                     .setKeepAliveInterval(2)
                     .setAutomaticReconnect(true);
+            //遗嘱消息
+            WillMessage willMessage = new WillMessage();
+            willMessage.setTopic("willTopic");
+            willMessage.setRetained(true);
+            willMessage.setPayload("helloWorld".getBytes(StandardCharsets.UTF_8));
+            willMessage.setWillQos(MqttQoS.AT_MOST_ONCE);
+            opt.setWillMessage(willMessage);
         });
 
-        //遗嘱消息
-        WillMessage willMessage = new WillMessage();
-        willMessage.setTopic("willTopic");
-        willMessage.setRetained(true);
-        willMessage.setPayload("helloWorld".getBytes(StandardCharsets.UTF_8));
-        willMessage.setWillQos(MqttQoS.AT_MOST_ONCE);
-        client.willMessage(willMessage);
 
         //连接broker
         client.connect();
