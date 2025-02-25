@@ -192,8 +192,8 @@ public class BrokerContextImpl implements BrokerContext {
         if (options.getTopicLimit() <= 0) {
             options.setTopicLimit(10);
         }
-        retainPushThreadPool = Executors.newFixedThreadPool(getBrokerConfigure().getPushThreadNum());
-        pushThreadPool = Executors.newFixedThreadPool(getBrokerConfigure().getPushThreadNum(), new ThreadFactory() {
+        retainPushThreadPool = Executors.newFixedThreadPool(Options().getPushThreadNum());
+        pushThreadPool = Executors.newFixedThreadPool(Options().getPushThreadNum(), new ThreadFactory() {
             int index = 0;
 
             @Override
@@ -312,7 +312,7 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     @Override
-    public Options getBrokerConfigure() {
+    public Options Options() {
         return options;
     }
 

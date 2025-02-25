@@ -87,9 +87,9 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         int receiveMaximum;
         if (session.getMqttVersion() == MqttVersion.MQTT_5) {
             //客户端使用此值限制客户端愿意同时处理的QoS等级1和QoS等级2的发布消息最大数量。
-            receiveMaximum = Math.min(mqttConnectMessage.getVariableHeader().getProperties().getReceiveMaximum(), context.getBrokerConfigure().getMaxInflight());
+            receiveMaximum = Math.min(mqttConnectMessage.getVariableHeader().getProperties().getReceiveMaximum(), context.Options().getMaxInflight());
         } else {
-            receiveMaximum = context.getBrokerConfigure().getMaxInflight();
+            receiveMaximum = context.Options().getMaxInflight();
         }
         session.setInflightQueue(new InflightQueue(session, receiveMaximum));
 

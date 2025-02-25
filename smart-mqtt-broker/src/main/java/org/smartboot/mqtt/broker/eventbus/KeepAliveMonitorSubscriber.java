@@ -40,7 +40,7 @@ public class KeepAliveMonitorSubscriber implements EventBusSubscriber<EventObjec
             timeout += timeout >> 1;
         }
         MqttSession session = object.getSession();
-        final long finalTimeout = (timeout == 0 || timeout > context.getBrokerConfigure().getMaxKeepAliveTime()) ? context.getBrokerConfigure().getMaxKeepAliveTime() : timeout;
+        final long finalTimeout = (timeout == 0 || timeout > context.Options().getMaxKeepAliveTime()) ? context.Options().getMaxKeepAliveTime() : timeout;
         context.getTimer().schedule(new AsyncTask() {
             @Override
             public void execute() {

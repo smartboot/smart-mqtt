@@ -85,7 +85,7 @@ public class MqttSession extends AbstractSession {
                     disconnect();
                 }
             }
-        }, mqttContext.getBrokerConfigure().getNoConnectIdleTimeout(), TimeUnit.MILLISECONDS);
+        }, mqttContext.Options().getNoConnectIdleTimeout(), TimeUnit.MILLISECONDS);
         mqttContext.getEventBus().publish(EventType.SESSION_CREATE, this);
     }
 

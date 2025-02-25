@@ -34,7 +34,7 @@ public interface BrokerContext {
      */
     void init() throws Throwable;
 
-    Options getBrokerConfigure();
+    Options Options();
 
     void addSession(MqttSession session);
 
