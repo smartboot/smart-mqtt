@@ -67,17 +67,12 @@ public class Options extends ToString {
 
     private int connectAckTimeout = 5;
 
-    private String[] serverURIs = null;
     private MqttVersion mqttVersion = MqttVersion.MQTT_3_1_1;
     /**
      * 自动重连
      */
     private boolean automaticReconnect = true;
     private int maxReconnectDelay = 5000;
-    private Properties customWebSocketHeaders = null;
-
-    // Client Operation Parameters
-    private int executorServiceTimeout = 1; // How long to wait in seconds when terminating the executor service.
 
     private String host;
     private int port;
@@ -119,7 +114,7 @@ public class Options extends ToString {
      * </ul>
      * More information about these values can be found in the setter methods.
      */
-    public Options() {
+    Options() {
         // Initialise Base MqttConnectOptions Object
     }
 
@@ -565,15 +560,6 @@ public class Options extends ToString {
 //    }
 
     /**
-     * Return a list of serverURIs the client may connect to
-     *
-     * @return the serverURIs or null if not set
-     */
-    public String[] getServerURIs() {
-        return serverURIs;
-    }
-
-    /**
      * Returns whether the client will automatically attempt to reconnect to the
      * server if the connection is lost
      *
@@ -601,36 +587,6 @@ public class Options extends ToString {
     public Options setAutomaticReconnect(boolean automaticReconnect) {
         this.automaticReconnect = automaticReconnect;
         return this;
-    }
-
-    public int getExecutorServiceTimeout() {
-        return executorServiceTimeout;
-    }
-
-    /**
-     * Set the time in seconds that the executor service should wait when
-     * terminating before forcefully terminating. It is not recommended to change
-     * this value unless you are absolutely sure that you need to.
-     *
-     * @param executorServiceTimeout the time in seconds to wait when shutting down.Ï
-     */
-    public void setExecutorServiceTimeout(int executorServiceTimeout) {
-        this.executorServiceTimeout = executorServiceTimeout;
-    }
-
-
-    public Properties getCustomWebSocketHeaders() {
-        return customWebSocketHeaders;
-    }
-
-    /**
-     * Sets the Custom WebSocket Headers for the WebSocket Connection.
-     *
-     * @param props The custom websocket headers {@link Properties}
-     */
-
-    public void setCustomWebSocketHeaders(Properties props) {
-        this.customWebSocketHeaders = props;
     }
 
     public String getHost() {
