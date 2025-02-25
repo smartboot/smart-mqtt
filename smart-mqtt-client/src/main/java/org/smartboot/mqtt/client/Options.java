@@ -15,7 +15,6 @@ import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
-import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.payload.WillMessage;
 import org.smartboot.mqtt.common.message.variable.properties.WillProperties;
 import org.smartboot.mqtt.common.util.MqttUtil;
@@ -165,58 +164,6 @@ public class Options extends ToString {
     }
 
     /**
-     * Sets the "Last Will and Testament" (LWT) for the connection. In the event
-     * that this client unexpectedly loses its connection to the server, the server
-     * will publish a message to itself using the supplied details.
-     *
-     * @param topic
-     *            the topic to publish to.
-     * @param payload
-     *            the byte payload for the message.
-     * @param qos
-     *            the quality of service to publish the message at (0, 1 or 2).
-     * @param retained
-     *            whether or not the message should be retained.
-     */
-//    public void setWill(String topic, byte[] payload, int qos, boolean retained) {
-//        validateWill(topic, payload);
-//        new MqttPublishMessage();
-//        this.setWill(topic, new MqttMessage(payload), qos, retained);
-//    }
-
-    /**
-     * Validates the will fields.
-     */
-//    private void validateWill(String dest, Object payload) {
-//        if ((dest == null) || (payload == null)) {
-//            throw new IllegalArgumentException();
-//        }
-//
-//        MqttTopic.validate(dest, false/* wildcards NOT allowed */);
-//    }
-
-    /**
-     * Sets up the will information, based on the supplied parameters.
-     *
-     * @param topic
-     *            the topic to send the LWT message to
-     * @param msg
-     *            the {@link MqttMessage} to send
-     * @param qos
-     *            the QoS Level to send the message at
-     * @param retained
-     *            whether the message should be retained or not
-     */
-//    protected void setWill(String topic, MqttMessage msg, int qos, boolean retained) {
-//        willDestination = topic;
-//        willMessage = msg;
-//        willMessage.setQos(qos);
-//        willMessage.setRetained(retained);
-//        // Prevent any more changes to the will message
-//        willMessage.setMutable(false);
-//    }
-
-    /**
      * Returns the "keep alive" interval.
      *
      * @return the keep alive interval.
@@ -331,7 +278,7 @@ public class Options extends ToString {
     }
 
 
-    public WillMessage getWillMessage() {
+    WillMessage getWillMessage() {
         return willMessage;
     }
 
