@@ -598,8 +598,9 @@ public class Options extends ToString {
      *
      * @param automaticReconnect If set to True, Automatic Reconnect will be enabled
      */
-    public void setAutomaticReconnect(boolean automaticReconnect) {
+    public Options setAutomaticReconnect(boolean automaticReconnect) {
         this.automaticReconnect = automaticReconnect;
+        return this;
     }
 
     public int getExecutorServiceTimeout() {
