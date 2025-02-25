@@ -1,0 +1,83 @@
+package org.smartboot.mqtt.plugin.openapi.controller;
+
+import com.alibaba.fastjson2.JSONArray;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.common.AsyncTask;
+import org.smartboot.mqtt.plugin.openapi.OpenApi;
+import org.smartboot.mqtt.plugin.openapi.to.VersionTO;
+import org.smartboot.socket.timer.HashedWheelTimer;
+import tech.smartboot.feat.cloud.RestResult;
+import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.PostConstruct;
+import tech.smartboot.feat.cloud.annotation.RequestMapping;
+import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.core.client.HttpResponse;
+
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+
+@Controller(async = true)
+public class VersionController {
+    private static final Logger LOGGER = LoggerFactory.getLogger(VersionController.class);
+    private VersionTO version;
+
+    @PostConstruct
+    public void init() throws ExecutionException, InterruptedException {
+        getVersion();
+        HashedWheelTimer.DEFAULT_TIMER.schedule(new AsyncTask() {
+            @Override
+            public void execute() {
+                try {
+                    getVersion();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }, 1, TimeUnit.HOURS);
+
+    }
+
+    private void getVersion() {
+        try {
+            HttpClient client = new HttpClient("https://gitee.com/api/v5/repos/smartboot/smart-mqtt/releases");
+            HttpResponse response = client.get().
+                    addQueryParam("access_token", "be94a321e12d6be8a7e655d9ca2bbf85")
+                    .addQueryParam("per_page", "1")
+                    .addQueryParam("direction", "desc")
+                    .onFailure(Throwable::printStackTrace).submit().get();
+            LOGGER.info("response:{}", response.body());
+            JSONArray array = JSONArray.parseArray(response.body());
+            version = array.getJSONObject(0).to(VersionTO.class);
+        } catch (Throwable throwable) {
+            LOGGER.warn("get latest version fail:{}", throwable.getMessage());
+        }
+    }
+
+    @RequestMapping(OpenApi.SYSTEM_VERSION)
+    public RestResult<VersionTO> getLatestVersion() {
+        if (version == null) {
+            version = new VersionTO();
+            version.setTagName(version.getCurrent());
+        }
+        return RestResult.ok(version);
+    }
+
+    public static void main(String[] args) {
+        HttpClient client = new HttpClient("https://gitee.com/api/v5/repos/smartboot/smart-mqtt/releases");
+        client.get().addQueryParam("access_token", "be94a321e12d6be8a7e655d9ca2bbf85").addQueryParam("per_page", "1").addQueryParam("direction", "desc").onSuccess(new Consumer<HttpResponse>() {
+            @Override
+            public void accept(HttpResponse httpResponse) {
+                JSONArray array = JSONArray.parseArray(httpResponse.body());
+                VersionTO versionTO = array.getJSONObject(0).to(VersionTO.class);
+                System.out.println(versionTO);
+            }
+        }).onFailure(new Consumer<Throwable>() {
+            @Override
+            public void accept(Throwable throwable) {
+                throwable.printStackTrace();
+            }
+        }).submit();
+    }
+}

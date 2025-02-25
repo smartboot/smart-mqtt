@@ -1,0 +1,1 @@
+import{d as e,Y as t,l as o,q as s,s as n}from"./vue.fad201d8.js";const a={class:"content"},c=n("div",null,"notfound",-1),_=[c],u=e({__name:"index",setup(d){return t(),(r,i)=>(o(),s("div",a,_))}});export{u as default};

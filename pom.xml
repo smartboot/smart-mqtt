@@ -36,6 +36,11 @@
                 <artifactId>smart-mqtt-client</artifactId>
                 <version>${smart.mqtt.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.github.smartboot.mqtt</groupId>
+                <artifactId>smart-mqtt-plugin-enterprise</artifactId>
+                <version>${smart.mqtt.version}</version>
+            </dependency>
 <!--            <dependency>-->
 <!--                <groupId>io.github.smartboot.mqtt</groupId>-->
 <!--                <artifactId>plugins</artifactId>-->
@@ -293,5 +298,6 @@
 <!--        <module>plugins</module>-->
 <!--        <module>smart-mqtt-protocol-gateway</module>-->
         <module>smart-mqtt-test</module>
+        <module>smart-mqtt-plugin-enterprise</module>
     </modules>
 </project>
