@@ -93,14 +93,14 @@ services:
       options:
         max-size: "100m"
         max-file: "1"
-    command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=2000 -Dqos=0 -Dpublisher=1 -Dcount=10 -Dpayload=128 org.smartboot.bench.mqtt.Subscribe
-#    command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=2000 -Dqos=1 -Dpublisher=1 -Dcount=10 -Dpayload=128 org.smartboot.bench.mqtt.Subscribe
-#    command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=2000 -Dqos=2 -Dpublisher=1 -Dcount=10 -Dpayload=128 org.smartboot.bench.mqtt.Subscribe
-#    command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=2000 -Dqos=0 -Dcount=10 -Dpayload=128 org.smartboot.bench.mqtt.Publish
-#    command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=2000 -Dqos=1 -Dcount=10 -Dpayload=128 org.smartboot.bench.mqtt.Publish
-#    command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=2000 -Dqos=2 -Dcount=10 -Dpayload=128 org.smartboot.bench.mqtt.Publish
-#    command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=10000 -Dqos=0 -Dpublisher=1 -Dcount=1 -Dtopic=10 -Dpayload=4096 -Dperiod=10000 org.smartboot.bench.mqtt.Subscribe
+    command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=2000 -Dqos=0 -Dpublisher=1 -Dcount=10 -Dpayload=128 tech.smartboot.mqtt.bench.Subscribe
+#    command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=2000 -Dqos=1 -Dpublisher=1 -Dcount=10 -Dpayload=128 tech.smartboot.mqtt.bench.Subscribe
+#    command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=2000 -Dqos=2 -Dpublisher=1 -Dcount=10 -Dpayload=128 tech.smartboot.mqtt.bench.Subscribe
+#    command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=2000 -Dqos=0 -Dcount=10 -Dpayload=128 tech.smartboot.mqtt.bench.Publish
+#    command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=2000 -Dqos=1 -Dcount=10 -Dpayload=128 tech.smartboot.mqtt.bench.Publish
+#    command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=2000 -Dqos=2 -Dcount=10 -Dpayload=128 tech.smartboot.mqtt.bench.Publish
+#    command: java -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=10000 -Dqos=0 -Dpublisher=1 -Dcount=1 -Dtopic=10 -Dpayload=4096 -Dperiod=10000 tech.smartboot.mqtt.bench.Subscribe
 
     ## 百万连接
-#    command: java -Xmx300M -Xmn250M -XX:PretenureSizeThreshold=0 -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=25000 -Dqos=0 -Dpublisher=0 -Dtopic=2 -Dperiod=10000 org.smartboot.bench.mqtt.Subscribe
+#    command: java -Xmx300M -Xmn250M -XX:PretenureSizeThreshold=0 -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=25000 -Dqos=0 -Dpublisher=0 -Dtopic=2 -Dperiod=10000 tech.smartboot.mqtt.bench.Subscribe
 version: '3.7'
