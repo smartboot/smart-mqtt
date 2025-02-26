@@ -33,8 +33,6 @@ jobs:
       - name: Build smart-mqtt
         run: mvn -B install --file pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Build smart-mqtt-enterprise
-        run: mvn -B -f smart-mqtt-enterprise/plugins/pom.xml clean install -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
-      - name: Build smart-mqtt-enterprise
         run: mvn -B -f smart-mqtt-enterprise/poms/enterprise.xml clean package -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Build smart-mqtt-enterprise
         run: cp smart-mqtt-enterprise/poms/target/smart-mqtt-broker-*.jar  smart-mqtt-enterprise/smart-mqtt.jar
