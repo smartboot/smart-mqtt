@@ -21,6 +21,11 @@ jobs:
       - uses: actions/checkout@v4
         name: Checkout
       - uses: actions/checkout@v4
+        name: 下载 smart-socket
+        with:
+          repository: smartboot/smart-socket
+          path: smart-socket
+      - uses: actions/checkout@v4
         name: 下载 feat
         with:
           repository: smartboot/feat
@@ -35,6 +40,8 @@ jobs:
         uses: stCarolas/setup-maven@v5
         with:
           maven-version: '3.9.0'
+      - name: Build smart-socket
+        run: mvn -B install --file smart-socket/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Build Feat
         run: mvn -B install --file feat/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Build smart-mqtt
