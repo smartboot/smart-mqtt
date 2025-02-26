@@ -21,6 +21,11 @@ jobs:
       - uses: actions/checkout@v4
         name: Checkout
       - uses: actions/checkout@v4
+        name: 下载 feat
+        with:
+          repository: smartboot/feat
+          path: feat
+      - uses: actions/checkout@v4
         name: 下载 smart-mqtt
         with:
           repository: smartboot/smart-mqtt-enterprise
@@ -29,7 +34,9 @@ jobs:
       - name: Set up Maven 3.9
         uses: stCarolas/setup-maven@v5
         with:
-          maven-version: '3.8.2'
+          maven-version: '3.9.0'
+      - name: Build Feat
+        run: mvn -B install --file feat/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Build smart-mqtt
         run: mvn -B install --file pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Build smart-mqtt-enterprise
