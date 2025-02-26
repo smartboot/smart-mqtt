@@ -38,8 +38,8 @@ jobs:
           path: smart-mqtt-enterprise
       - name: Set up Maven 3.9
         uses: stCarolas/setup-maven@v5
-        with:
-          maven-version: '3.9.0'
+#        with:
+#          maven-version: '3.9.0'
       - name: Build smart-socket
         run: mvn -B install --file smart-socket/smart-socket-parent/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Build Feat
