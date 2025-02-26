@@ -11,6 +11,8 @@ name: 发布至 Docker Hub
 on:
   push:
     branches: [ "master" ]
+    tags:
+      - v**
   pull_request:
     branches: [ "master" ]
 
