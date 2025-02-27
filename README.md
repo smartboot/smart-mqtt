@@ -21,12 +21,6 @@ smart-mqtt 底层通信采用了异步非阻塞通信框架 smart-socket，现�
 - 极致轻量：极少的外部依赖，发行包不足 3MB。
 
 
-## 推荐阅读
-- [加入企业支持计划](https://smartboot.gitee.io/smart-mqtt/)
-- [快速上手](https://smartboot.gitee.io/smart-mqtt/quickstart.html)
-- [在线服务](https://smartboot.gitee.io/smart-mqtt/service.html)
-- [关于企业版](https://smartboot.gitee.io/smart-mqtt/enterprise.html)
-
 
 ## 参考资料
 1. 《MQTT协议3.1.1中文版》
