@@ -281,14 +281,7 @@ public class BrokerContextImpl implements BrokerContext {
     private void updateBrokerConfigure() throws IOException {
         //加载自定义配置文件
         loadYamlConfig();
-        JSONPath jsonPath = JSONPath.of("$.broker");
-        JSONReader parser = JSONReader.of(configJson);
-        Object result = jsonPath.extract(parser);
-        if (result instanceof JSONObject) {
-            options = ((JSONObject) result).to(Options.class);
-        } else {
-            options = null;
-        }
+        options = parseConfig("$.broker", Options.class);
         MqttUtil.updateConfig(options, "broker");
         options.setChannelGroup(new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
             int i;
