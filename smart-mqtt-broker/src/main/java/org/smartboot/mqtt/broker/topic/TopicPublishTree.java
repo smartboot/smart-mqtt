@@ -16,13 +16,54 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
+ * MQTT主题发布树，用于管理和匹配MQTT主题的发布关系。
+ * <p>
+ * 该类实现了一个树形数据结构来高效地管理MQTT主题的发布关系。每个节点代表主题层级中的一个部分，
+ * 支持MQTT协议中定义的三种主题匹配模式：
+ * <ul>
+ *   <li>精确匹配 - 如 "sensor/temperature"</li>
+ *   <li>单层通配符(+) - 如 "sensor/+/temperature"，匹配单个层级</li>
+ *   <li>多层通配符(#) - 如 "sensor/#"，匹配多个层级</li>
+ * </ul>
+ * </p>
+ * <p>
+ * 树的每个节点包含：
+ * <ul>
+ *   <li>当前节点的主题对象（brokerTopic）- 存储该主题的相关信息和消息队列</li>
+ *   <li>子节点映射（subNode）- 存储下一层主题层级的发布树节点</li>
+ * </ul>
+ * </p>
+ * <p>
+ * 该实现还支持MQTT 5.0中的共享订阅功能，通过特殊的"$share"前缀来识别和处理共享订阅。
+ * </p>
+ *
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 5/28/23
  */
 public class TopicPublishTree {
+    /**
+     * 存储当前节点的主题对象，包含主题的详细信息和消息队列
+     */
     private BrokerTopic brokerTopic;
+
+    /**
+     * 存储子节点的发布树映射。
+     * <p>
+     * Key为主题层级字符串，Value为对应的发布树节点。
+     * 使用ConcurrentHashMap保证在多线程环境下的线程安全性。
+     * </p>
+     */
     private final ConcurrentHashMap<String, TopicPublishTree> subNode = new ConcurrentHashMap<>();
 
+    /**
+     * 将一个主题添加到发布树中。
+     * <p>
+     * 该方法会根据主题的层级结构，在发布树中创建或更新相应的节点。
+     * 主题的每一层级都对应树中的一个节点，最终的叶子节点存储主题对象。
+     * </p>
+     *
+     * @param brokerTopic 要添加的主题对象，包含主题字符串和相关配置信息
+     */
     public void addTopic(BrokerTopic brokerTopic) {
         TopicToken topicToken = brokerTopic.getTopicToken();
         TopicPublishTree treeNode = this;
@@ -37,6 +78,21 @@ public class TopicPublishTree {
         treeNode.brokerTopic = brokerTopic;
     }
 
+    /**
+     * 在发布树中匹配指定的主题，并对匹配的主题执行指定操作。
+     * <p>
+     * 该方法支持三种匹配模式：
+     * <ul>
+     *   <li>精确匹配 - 完全匹配主题字符串</li>
+     *   <li>单层通配符(+) - 匹配任意单个层级</li>
+     *   <li>多层通配符(#) - 匹配任意多个层级</li>
+     * </ul>
+     * 同时也支持共享订阅的匹配处理。
+     * </p>
+     *
+     * @param topicToken 要匹配的主题标记
+     * @param consumer 对匹配到的主题执行的操作
+     */
     public void match(TopicToken topicToken, Consumer<BrokerTopic> consumer) {
         if (topicToken.isShared()) {
             match(this, topicToken.getNextNode().getNextNode(), consumer);
@@ -45,6 +101,21 @@ public class TopicPublishTree {
         }
     }
 
+    /**
+     * 在指定节点开始匹配主题，实现主题匹配的核心逻辑。
+     * <p>
+     * 该方法通过递归遍历实现主题的多层级匹配，支持：
+     * <ul>
+     *   <li>精确匹配 - 直接匹配主题层级</li>
+     *   <li>单层通配符(+) - 匹配任意单个层级</li>
+     *   <li>多层通配符(#) - 匹配任意多个层级</li>
+     * </ul>
+     * </p>
+     *
+     * @param treeNode 当前匹配的树节点
+     * @param topicToken 要匹配的主题标记
+     * @param consumer 对匹配到的主题执行的操作
+     */
     private void match(TopicPublishTree treeNode, TopicToken topicToken, Consumer<BrokerTopic> consumer) {
         //匹配结束
         if (topicToken == null) {
@@ -70,6 +141,16 @@ public class TopicPublishTree {
         }
     }
 
+    /**
+     * 递归订阅指定节点及其所有子节点的主题。
+     * <p>
+     * 该方法用于处理多层通配符(#)的匹配，会遍历指定节点下的所有子节点，
+     * 并对每个找到的主题执行指定的操作。
+     * </p>
+     *
+     * @param treeNode 要遍历的树节点
+     * @param consumer 对找到的主题执行的操作
+     */
     private void subscribeChildren(TopicPublishTree treeNode, Consumer<BrokerTopic> consumer) {
         BrokerTopic brokerTopic = treeNode.brokerTopic;
         if (brokerTopic != null) {
@@ -79,6 +160,17 @@ public class TopicPublishTree {
         treeNode.subNode.values().forEach(subNode -> subscribeChildren(subNode, consumer));
     }
 
+    /**
+     * 打印发布树的结构，用于调试和监控。
+     * <p>
+     * 以可视化的方式展示整个发布树的结构，包括：
+     * <ul>
+     *   <li>每个节点的主题层级</li>
+     *   <li>节点之间的层级关系</li>
+     *   <li>主题的完整路径</li>
+     * </ul>
+     * </p>
+     */
     public void dump() {
         System.out.println("TopicPublishTree:");
         subNode.forEach((key, node) -> {

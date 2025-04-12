@@ -20,22 +20,64 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
 /**
- * topic订阅关系树
+ * MQTT主题订阅树，用于管理客户端的主题订阅关系。
+ * <p>
+ * 该类实现了一个树形数据结构来高效地管理MQTT主题的订阅关系。每个节点代表主题层级中的一个部分，
+ * 支持MQTT协议中定义的三种订阅模式：
+ * <ul>
+ *   <li>精确匹配 - 如 "sensor/temperature"</li>
+ *   <li>单层通配符(+) - 如 "sensor/+/temperature"，匹配单个层级</li>
+ *   <li>多层通配符(#) - 如 "sensor/#"，匹配多个层级</li>
+ * </ul>
+ * </p>
+ * <p>
+ * 树的每个节点包含：
+ * <ul>
+ *   <li>当前节点的订阅者集合（subscribers）- 存储订阅到当前主题层级的会话</li>
+ *   <li>子节点映射（subNode）- 存储下一层主题层级的订阅树节点</li>
+ * </ul>
+ * </p>
+ * <p>
+ * 该实现还支持MQTT 5.0中的共享订阅功能，通过特殊的"$share"前缀来识别和处理共享订阅。
+ * </p>
+ *
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 5/28/23
  */
 public class TopicSubscribeTree {
     /**
-     * 当前节点的订阅关系
+     * 存储当前节点的订阅关系映射。
+     * <p>
+     * Key为MQTT客户端会话（MqttSession），Value为该会话的主题订阅信息（TopicSubscriber）。
+     * 使用ConcurrentHashMap保证在多线程环境下的线程安全性。
+     * </p>
      */
     private final Map<MqttSession, TopicSubscriber> subscribers = new ConcurrentHashMap<>();
+
     /**
-     * 子节点订阅关系
+     * 存储子节点的订阅树映射。
+     * <p>
+     * Key为主题层级字符串，Value为对应的订阅树节点。
+     * 例如，对于主题"sensor/temperature"，第一层"sensor"和第二层"temperature"分别对应一个子节点。
+     * 特殊节点：
+     * <ul>
+     *   <li>'+' - 单层通配符节点</li>
+     *   <li>'#' - 多层通配符节点</li>
+     *   <li>'$share' - 共享订阅节点</li>
+     * </ul>
+     * </p>
      */
     private final ConcurrentHashMap<String, TopicSubscribeTree> subNode = new ConcurrentHashMap<>();
 
     /**
-     * 将此订阅注册到关系树
+     * 将客户端的主题订阅注册到订阅树中。
+     * <p>
+     * 该方法会根据主题过滤器（Topic Filter）的层级结构，在订阅树中创建或更新相应的节点，
+     * 并在最终的叶子节点上保存会话的订阅关系。支持通配符（+和#）和共享订阅。
+     * </p>
+     *
+     * @param session 要注册订阅的MQTT客户端会话
+     * @param subscriber 包含主题过滤器和QoS等订阅信息的对象
      */
     public void subscribeTopic(MqttSession session, TopicSubscriber subscriber) {
         TopicSubscribeTree treeNode = this;
@@ -47,7 +89,14 @@ public class TopicSubscribeTree {
     }
 
     /**
-     * 取消订阅
+     * 取消客户端对指定主题的订阅。
+     * <p>
+     * 该方法会遍历订阅树，找到对应的主题节点，并移除该会话的订阅关系。
+     * 注意：该方法只移除订阅关系，不会删除空的节点。
+     * </p>
+     *
+     * @param session 要取消订阅的MQTT客户端会话
+     * @param subscriber 包含要取消订阅的主题过滤器信息的对象
      */
     public void unsubscribe(MqttSession session, TopicSubscriber subscriber) {
         TopicSubscribeTree subscribeTree = this;
@@ -63,7 +112,13 @@ public class TopicSubscribeTree {
     }
 
     /**
-     * 新增的Topic触发与订阅树匹配关系的刷新
+     * 当新的主题被创建时，刷新该主题与现有订阅关系的匹配。
+     * <p>
+     * 该方法会遍历订阅树，找到所有匹配新主题的订阅关系（包括精确匹配、通配符匹配和共享订阅），
+     * 并触发相应的订阅成功回调。这个过程确保了新主题的消息能够正确地推送给所有匹配的订阅者。
+     * </p>
+     *
+     * @param topicToken 新创建的主题对象
      */
     public void refreshWhenTopicCreated(BrokerTopic topicToken) {
         BiConsumer<MqttSession, TopicSubscriber> consumer = (session, topicSubscriber) -> {
@@ -78,6 +133,20 @@ public class TopicSubscribeTree {
         match0(topicToken.getTopicToken(), consumer);
     }
 
+    /**
+     * 在订阅树中匹配指定主题，并对匹配的订阅者执行指定操作。
+     * <p>
+     * 该方法实现了MQTT主题匹配的核心逻辑，包括：
+     * <ul>
+     *   <li>精确匹配 - 直接匹配主题层级</li>
+     *   <li>单层通配符(+)匹配 - 匹配任意单个层级</li>
+     *   <li>多层通配符(#)匹配 - 匹配任意多个层级</li>
+     * </ul>
+     * </p>
+     *
+     * @param topicToken 要匹配的主题标记
+     * @param consumer 对匹配的订阅者执行的操作
+     */
     private void match0(TopicToken topicToken, BiConsumer<MqttSession, TopicSubscriber> consumer) {
         //精确匹配
         TopicSubscribeTree subscribeTree = subNode.get(topicToken.getNode());
@@ -104,6 +173,17 @@ public class TopicSubscribeTree {
         }
     }
 
+    /**
+     * 打印订阅树的结构，用于调试和监控。
+     * <p>
+     * 以可视化的方式展示整个订阅树的结构，包括：
+     * <ul>
+     *   <li>每个节点的主题层级</li>
+     *   <li>订阅者数量</li>
+     *   <li>订阅者的客户端标识</li>
+     * </ul>
+     * </p>
+     */
     public void dump() {
         System.out.println("订阅拓扑:");
         dump0(0);
