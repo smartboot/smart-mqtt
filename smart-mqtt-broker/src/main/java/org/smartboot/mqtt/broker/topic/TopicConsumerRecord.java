@@ -12,7 +12,7 @@ package org.smartboot.mqtt.broker.topic;
 
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.PublishBuilder;
-import org.smartboot.mqtt.broker.TopicSubscriber;
+import org.smartboot.mqtt.broker.TopicSubscription;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
@@ -65,10 +65,10 @@ public class TopicConsumerRecord extends AbstractConsumerRecord {
      */
     protected final MqttQoS mqttQoS;
 
-    public TopicConsumerRecord(BrokerTopic topic, MqttSession session, TopicSubscriber topicSubscriber, long nextConsumerOffset) {
-        super(topic, topicSubscriber.getTopicFilterToken(), nextConsumerOffset);
+    public TopicConsumerRecord(BrokerTopic topic, MqttSession session, TopicSubscription topicSubscription, long nextConsumerOffset) {
+        super(topic, topicSubscription.getTopicFilterToken(), nextConsumerOffset);
         this.mqttSession = session;
-        this.mqttQoS = topicSubscriber.getMqttQoS();
+        this.mqttQoS = topicSubscription.getMqttQoS();
     }
 
     /**

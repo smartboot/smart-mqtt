@@ -12,7 +12,7 @@ package org.smartboot.mqtt.broker.topic;
 
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.PublishBuilder;
-import org.smartboot.mqtt.broker.TopicSubscriber;
+import org.smartboot.mqtt.broker.TopicSubscription;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
@@ -35,9 +35,9 @@ public class TopicQosConsumerRecord extends TopicConsumerRecord {
     private final AtomicBoolean semaphore = new AtomicBoolean(false);
 
 
-    public TopicQosConsumerRecord(BrokerTopic topic, MqttSession session, TopicSubscriber topicSubscriber, long nextConsumerOffset) {
-        super(topic, session, topicSubscriber, nextConsumerOffset);
-        ValidateUtils.isTrue(topicSubscriber.getMqttQoS() != MqttQoS.AT_MOST_ONCE, "invalid qos");
+    public TopicQosConsumerRecord(BrokerTopic topic, MqttSession session, TopicSubscription topicSubscription, long nextConsumerOffset) {
+        super(topic, session, topicSubscription, nextConsumerOffset);
+        ValidateUtils.isTrue(topicSubscription.getMqttQoS() != MqttQoS.AT_MOST_ONCE, "invalid qos");
     }
 
     /**

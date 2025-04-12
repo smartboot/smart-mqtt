@@ -11,7 +11,7 @@
 package org.smartboot.mqtt.broker.topic;
 
 import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.broker.TopicSubscriber;
+import org.smartboot.mqtt.broker.TopicSubscription;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 
@@ -52,7 +52,7 @@ public class TopicSubscribeTree {
      * 使用ConcurrentHashMap保证在多线程环境下的线程安全性。
      * </p>
      */
-    private final Map<MqttSession, TopicSubscriber> subscribers = new ConcurrentHashMap<>();
+    private final Map<MqttSession, TopicSubscription> subscribers = new ConcurrentHashMap<>();
 
     /**
      * 存储子节点的订阅树映射。
@@ -79,7 +79,7 @@ public class TopicSubscribeTree {
      * @param session 要注册订阅的MQTT客户端会话
      * @param subscriber 包含主题过滤器和QoS等订阅信息的对象
      */
-    public void subscribeTopic(MqttSession session, TopicSubscriber subscriber) {
+    public void subscribeTopic(MqttSession session, TopicSubscription subscriber) {
         TopicSubscribeTree treeNode = this;
         TopicToken token = subscriber.getTopicFilterToken();
         do {
@@ -98,7 +98,7 @@ public class TopicSubscribeTree {
      * @param session 要取消订阅的MQTT客户端会话
      * @param subscriber 包含要取消订阅的主题过滤器信息的对象
      */
-    public void unsubscribe(MqttSession session, TopicSubscriber subscriber) {
+    public void unsubscribe(MqttSession session, TopicSubscription subscriber) {
         TopicSubscribeTree subscribeTree = this;
         TopicToken topicToken = subscriber.getTopicFilterToken();
         while (true) {
@@ -121,8 +121,8 @@ public class TopicSubscribeTree {
      * @param topicToken 新创建的主题对象
      */
     public void refreshWhenTopicCreated(BrokerTopic topicToken) {
-        BiConsumer<MqttSession, TopicSubscriber> consumer = (session, topicSubscriber) -> {
-            session.subscribeSuccess(topicSubscriber, topicToken);
+        BiConsumer<MqttSession, TopicSubscription> consumer = (session, topicSubscription) -> {
+            session.subscribeSuccess(topicSubscription, topicToken);
         };
         //遍历共享订阅
         TopicSubscribeTree shareTree = subNode.get("$share");
@@ -147,7 +147,7 @@ public class TopicSubscribeTree {
      * @param topicToken 要匹配的主题标记
      * @param consumer 对匹配的订阅者执行的操作
      */
-    private void match0(TopicToken topicToken, BiConsumer<MqttSession, TopicSubscriber> consumer) {
+    private void match0(TopicToken topicToken, BiConsumer<MqttSession, TopicSubscription> consumer) {
         //精确匹配
         TopicSubscribeTree subscribeTree = subNode.get(topicToken.getNode());
         if (subscribeTree != null) {
