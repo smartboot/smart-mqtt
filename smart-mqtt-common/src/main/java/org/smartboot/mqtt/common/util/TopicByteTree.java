@@ -11,6 +11,7 @@
 package org.smartboot.mqtt.common.util;
 
 import org.smartboot.mqtt.common.message.MqttCodecUtil;
+import org.smartboot.socket.DecoderException;
 
 import java.nio.ByteBuffer;
 
@@ -46,12 +47,6 @@ public class TopicByteTree {
     protected String topicName;
 
     /**
-     * 标识当前主题是否包含通配符（+或#）
-     * 用于优化主题匹配过程
-     */
-    private boolean wildcards;
-
-    /**
      * 字节偏移量，用于优化节点数组的空间利用
      * -1表示尚未初始化
      */
@@ -80,9 +75,10 @@ public class TopicByteTree {
      *
      * @return 匹配到的主题节点，如果未找到则返回虚拟节点
      */
-    public TopicByteTree search(ByteBuffer buffer) {
+    public String search(ByteBuffer buffer) {
         final int size = MqttCodecUtil.decodeMsbLsb(buffer);
-        return search(buffer, 0, size, true);
+        TopicByteTree topic = search(buffer, 0, size, true);
+        return topic.getTopicName();
     }
 
     /**
@@ -222,13 +218,12 @@ public class TopicByteTree {
         return topicName;
     }
 
-    public boolean isWildcards() {
-        return wildcards;
-    }
-
     void setTopicName(String topicName) {
         this.topicName = topicName;
-        wildcards = MqttUtil.containsTopicWildcards(topicName);
+        //PUBLISH 报文中的主题名不能包含通配符
+        if (MqttUtil.containsTopicWildcards(topicName)) {
+            throw new DecoderException("invalid publish topic name: " + topicName + " (contains wildcards)");
+        }
     }
 
     /**

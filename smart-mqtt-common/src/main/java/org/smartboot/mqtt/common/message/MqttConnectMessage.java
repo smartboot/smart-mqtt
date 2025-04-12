@@ -95,7 +95,7 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
                 willProperties.decode(buffer);
                 willMessage.setProperties(willProperties);
             }
-            willMessage.setTopic(TopicByteTree.DEFAULT_INSTANCE.search(buffer).getTopicName());
+            willMessage.setTopic(TopicByteTree.DEFAULT_INSTANCE.search(buffer));
             willMessage.setPayload(MqttCodecUtil.decodeByteArray(buffer));
         }
         String decodedUserName = null;
