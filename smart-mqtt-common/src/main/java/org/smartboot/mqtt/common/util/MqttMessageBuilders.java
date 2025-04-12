@@ -69,11 +69,6 @@ public final class MqttMessageBuilders {
         PublishBuilder() {
         }
 
-        public PublishBuilder topic(byte[] topic) {
-            this.topic = topic;
-            return this;
-        }
-
         public PublishBuilder topicName(String topic) {
             this.topic = MqttUtil.encodeCache(topic);
             return this;
@@ -114,7 +109,7 @@ public final class MqttMessageBuilders {
         }
 
         public MqttPublishMessage build() {
-            MqttPublishVariableHeader mqttVariableHeader = new MqttPublishVariableHeader(packetId, null, topic, publishProperties);
+            MqttPublishVariableHeader mqttVariableHeader = new MqttPublishVariableHeader(packetId, topic, publishProperties);
             return new MqttPublishMessage(MqttFixedHeader.getInstance(MqttMessageType.PUBLISH, false, qos.value(), retained), mqttVariableHeader, payload);
         }
     }

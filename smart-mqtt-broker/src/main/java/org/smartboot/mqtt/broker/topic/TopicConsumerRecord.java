@@ -11,12 +11,12 @@
 package org.smartboot.mqtt.broker.topic;
 
 import org.smartboot.mqtt.broker.MqttSession;
+import org.smartboot.mqtt.broker.PublishBuilder;
 import org.smartboot.mqtt.broker.TopicSubscriber;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
-import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 
 /**
  * MQTT主题消费者记录类，负责管理单个订阅者的消息消费状态和推送逻辑。
@@ -119,7 +119,7 @@ public class TopicConsumerRecord extends AbstractConsumerRecord {
             return false;
         }
 
-        MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(message.getPayload()).qos(mqttQoS).topic(message.getTopicBytes());
+        PublishBuilder publishBuilder = PublishBuilder.builder().payload(message.getPayload()).qos(mqttQoS).topic(message.getTopic());
         if (mqttSession.getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());
         }

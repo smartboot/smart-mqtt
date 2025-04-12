@@ -13,6 +13,7 @@ package org.smartboot.mqtt.broker.eventbus.messagebus;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.annotation.JSONField;
+import org.smartboot.mqtt.broker.topic.BrokerTopic;
 import org.smartboot.mqtt.common.ToString;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.PayloadEncodeEnum;
@@ -35,12 +36,7 @@ public class Message extends ToString {
     /**
      * 主题
      */
-    private final String topic;
-
-    /**
-     * 主题
-     */
-    private final byte[] topicBytes;
+    private final BrokerTopic topic;
 
     private final boolean retained;
     /**
@@ -59,11 +55,10 @@ public class Message extends ToString {
      */
     private AtomicInteger pushSemaphore;
 
-    Message(MqttPublishMessage message) {
+    Message(MqttPublishMessage message, BrokerTopic topic) {
         this.payload = message.getPayload().getPayload();
         this.retained = message.getFixedHeader().isRetain();
-        this.topic = message.getVariableHeader().getTopicName();
-        this.topicBytes = message.getVariableHeader().getEncodedTopic();
+        this.topic = topic;
         this.qos = message.getFixedHeader().getQosLevel();
     }
 
@@ -71,12 +66,8 @@ public class Message extends ToString {
         return payload;
     }
 
-    public String getTopic() {
+    public BrokerTopic getTopic() {
         return topic;
-    }
-
-    public byte[] getTopicBytes() {
-        return topicBytes;
     }
 
     public boolean isRetained() {

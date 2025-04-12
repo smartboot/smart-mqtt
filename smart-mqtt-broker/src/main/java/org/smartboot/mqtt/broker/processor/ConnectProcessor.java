@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
+import org.smartboot.mqtt.broker.PublishBuilder;
 import org.smartboot.mqtt.broker.eventbus.EventObject;
 import org.smartboot.mqtt.broker.eventbus.EventType;
 import org.smartboot.mqtt.broker.provider.SessionStateProvider;
@@ -34,7 +35,6 @@ import org.smartboot.mqtt.common.message.variable.MqttConnAckVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttConnectVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectAckProperties;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
-import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 
@@ -80,7 +80,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         refreshSession(context, session, mqttConnectMessage);
 
         //存储遗嘱消息
-        storeWillMessage(session, mqttConnectMessage);
+        storeWillMessage(context, session, mqttConnectMessage);
 
         //存储连接属性
         session.setProperties(mqttConnectMessage.getVariableHeader().getProperties());
@@ -184,7 +184,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         LOGGER.debug("add session for client:{}", session);
     }
 
-    private void storeWillMessage(MqttSession session, MqttConnectMessage msg) {
+    private void storeWillMessage(BrokerContext context, MqttSession session, MqttConnectMessage msg) {
         // 遗嘱标志（Will Flag）被设置为 1，表示如果连接请求被接受了，
         // 遗嘱（Will Message）消息必须被存储在服务端并且与这个网络连接关联。
         // 之后网络连接关闭时，服务端必须发布这个遗嘱消息，
@@ -193,7 +193,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
             return;
         }
         WillMessage willMessage = msg.getPayload().getWillMessage();
-        MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().topicName(willMessage.getTopic()).qos(MqttQoS.valueOf(msg.getVariableHeader().willQos())).payload(willMessage.getPayload()).retained(msg.getFixedHeader().isRetain());
+        PublishBuilder publishBuilder = PublishBuilder.builder().topic(context.getOrCreateTopic(willMessage.getTopic())).qos(MqttQoS.valueOf(msg.getVariableHeader().willQos())).payload(willMessage.getPayload()).retained(msg.getFixedHeader().isRetain());
         //todo
         if (session.getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());

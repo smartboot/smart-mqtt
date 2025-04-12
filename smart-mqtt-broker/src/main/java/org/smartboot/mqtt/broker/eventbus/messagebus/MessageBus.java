@@ -12,6 +12,7 @@ package org.smartboot.mqtt.broker.eventbus.messagebus;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.eventbus.messagebus.consumer.Consumer;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
@@ -32,6 +33,11 @@ public class MessageBus {
      * 消息总线消费者
      */
     private final List<Consumer> messageBuses = new ArrayList<>();
+    private final BrokerContext brokerContext;
+
+    public MessageBus(BrokerContext brokerContext) {
+        this.brokerContext = brokerContext;
+    }
 
     /**
      * 订阅消息总线消费者
@@ -58,7 +64,7 @@ public class MessageBus {
      * 发布消息至总线触发消费
      */
     public void publish(MqttSession mqttSession, MqttPublishMessage publishMessage) {
-        Message message = new Message(publishMessage);
+        Message message = new Message(publishMessage, brokerContext.getOrCreateTopic(publishMessage.getVariableHeader().getTopicName()));
         boolean remove = false;
         for (Consumer messageConsumer : messageBuses) {
             try {

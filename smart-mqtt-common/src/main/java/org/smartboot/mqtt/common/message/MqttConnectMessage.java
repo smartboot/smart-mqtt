@@ -17,6 +17,7 @@ import org.smartboot.mqtt.common.message.payload.WillMessage;
 import org.smartboot.mqtt.common.message.variable.MqttConnectVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
 import org.smartboot.mqtt.common.message.variable.properties.WillProperties;
+import org.smartboot.mqtt.common.util.TopicByteTree;
 
 import java.nio.ByteBuffer;
 
@@ -94,7 +95,7 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
                 willProperties.decode(buffer);
                 willMessage.setProperties(willProperties);
             }
-            willMessage.setTopic(MqttCodecUtil.scanTopicTree(buffer, MqttCodecUtil.cache).getTopicName());
+            willMessage.setTopic(TopicByteTree.DEFAULT_INSTANCE.search(buffer).getTopicName());
             willMessage.setPayload(MqttCodecUtil.decodeByteArray(buffer));
         }
         String decodedUserName = null;

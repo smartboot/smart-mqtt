@@ -39,7 +39,7 @@ public class MqttPublishMessage extends MqttPacketIdentifierMessage<MqttPublishV
 
     @Override
     public void decodeVariableHeader0(ByteBuffer buffer) {
-        final TopicByteTree topic = MqttCodecUtil.scanTopicTree(buffer, MqttCodecUtil.cache);
+        final TopicByteTree topic = TopicByteTree.DEFAULT_INSTANCE.search(buffer);
         //PUBLISH 报文中的主题名不能包含通配符
         if (topic.isWildcards()) {
             throw new DecoderException("invalid publish topic name: " + topic + " (contains wildcards)");
@@ -53,9 +53,9 @@ public class MqttPublishMessage extends MqttPacketIdentifierMessage<MqttPublishV
         if (version == MqttVersion.MQTT_5) {
             PublishProperties properties = new PublishProperties();
             properties.decode(buffer);
-            variableHeader = new MqttPublishVariableHeader(packetId, topic.getTopicName(), topic.getBytes(), properties);
+            variableHeader = new MqttPublishVariableHeader(packetId, topic.getTopicName(), properties);
         } else {
-            variableHeader = new MqttPublishVariableHeader(packetId, topic.getTopicName(), topic.getBytes(), null);
+            variableHeader = new MqttPublishVariableHeader(packetId, topic.getTopicName(), null);
         }
 
         setVariableHeader(variableHeader);

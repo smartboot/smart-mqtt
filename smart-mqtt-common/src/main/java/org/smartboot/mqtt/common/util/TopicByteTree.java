@@ -10,12 +10,10 @@
 
 package org.smartboot.mqtt.common.util;
 
+import org.smartboot.mqtt.common.message.MqttCodecUtil;
+
 import java.nio.ByteBuffer;
 
-/**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2022/1/2
- */
 /**
  * 基于字节数组的MQTT主题树实现，用于高效存储和匹配主题。
  * <p>
@@ -37,34 +35,29 @@ import java.nio.ByteBuffer;
  * </p>
  */
 public class TopicByteTree {
+    public static final TopicByteTree DEFAULT_INSTANCE = new TopicByteTree();
     /** 主题树的最大深度限制，防止无限递归 */
     private static final int MAX_DEPTH = 128;
 
     /** 当前节点在树中的深度 */
     private final int depth;
 
-    /** 父节点引用，用于树的遍历 */
-    private final TopicByteTree parent;
-
     /** 当前节点对应的主题名称 */
     protected String topicName;
 
-    /** 
+    /**
      * 标识当前主题是否包含通配符（+或#）
      * 用于优化主题匹配过程
      */
     private boolean wildcards;
 
-    /** 存储主题对应的原始字节数组 */
-    private byte[] bytes;
-
-    /** 
+    /**
      * 字节偏移量，用于优化节点数组的空间利用
      * -1表示尚未初始化
      */
     private int shift = -1;
 
-    /** 
+    /**
      * 子节点数组，采用数组而非Map以优化性能
      * 数组索引 = 字节值 - shift
      */
@@ -75,28 +68,21 @@ public class TopicByteTree {
         this(null);
     }
 
-    public TopicByteTree(TopicByteTree parent) {
-        this.parent = parent;
+    private TopicByteTree(TopicByteTree parent) {
         this.depth = parent == null ? 0 : parent.depth + 1;
         if (depth > MAX_DEPTH) {
             throw new IllegalStateException("maxDepth is " + MAX_DEPTH + " , current is " + depth);
         }
     }
 
-    public byte[] getBytes() {
-        return bytes;
-    }
-
     /**
      * 在主题树中搜索匹配的主题节点
      *
-     * @param bytes 待匹配的主题字节缓冲区
-     * @param length 主题的字节长度
-     * @param cache 是否缓存新建的节点
      * @return 匹配到的主题节点，如果未找到则返回虚拟节点
      */
-    public TopicByteTree search(ByteBuffer bytes, int length, boolean cache) {
-        return search(bytes, 0, length, cache);
+    public TopicByteTree search(ByteBuffer buffer) {
+        final int size = MqttCodecUtil.decodeMsbLsb(buffer);
+        return search(buffer, 0, size, true);
     }
 
     /**
@@ -117,7 +103,7 @@ public class TopicByteTree {
      * @param cache 是否缓存新建的节点
      * @return 匹配到的主题节点，如果未找到则返回虚拟节点
      */
-    public TopicByteTree search(ByteBuffer bytes, int offset, int len, boolean cache) {
+    private TopicByteTree search(ByteBuffer bytes, int offset, int len, boolean cache) {
         TopicByteTree topicByteTree = this;
         while (offset < len) {
             int i = bytes.get() - topicByteTree.shift;
@@ -138,7 +124,6 @@ public class TopicByteTree {
                 byte[] b = new byte[len + 2];
                 bytes.position(bytes.position() - offset - 2);
                 bytes.get(b);
-                topicByteTree.bytes = b;
                 topicByteTree.setTopicName(new String(b, 2, len));
             }
             return topicByteTree;
@@ -156,7 +141,7 @@ public class TopicByteTree {
             byte[] b = new byte[len + 2];
             bytes.position(bytes.position() - offset - 3);
             bytes.get(b);
-            return new VirtualTopicByteTree(b, new String(b, 2, len));
+            return new VirtualTopicByteTree(new String(b, 2, len));
         }
     }
 
@@ -182,7 +167,6 @@ public class TopicByteTree {
             b[0] = (byte) ((len >>> 8) & 0xFF);
             b[1] = (byte) (len & 0xFF);
             System.arraycopy(value, 0, b, 2, len);
-            bytes = b;
             setTopicName(new String(b, 2, len));
             return this;
         }
@@ -258,10 +242,9 @@ public class TopicByteTree {
      * </p>
      */
     private static class VirtualTopicByteTree extends TopicByteTree {
-        public VirtualTopicByteTree(byte[] b, String s) {
+        public VirtualTopicByteTree(String s) {
             super();
             super.setTopicName(s);
-            super.bytes = b;
         }
     }
 }

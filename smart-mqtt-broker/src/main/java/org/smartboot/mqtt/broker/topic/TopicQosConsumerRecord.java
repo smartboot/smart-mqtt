@@ -11,6 +11,7 @@
 package org.smartboot.mqtt.broker.topic;
 
 import org.smartboot.mqtt.broker.MqttSession;
+import org.smartboot.mqtt.broker.PublishBuilder;
 import org.smartboot.mqtt.broker.TopicSubscriber;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.common.enums.MqttQoS;
@@ -18,7 +19,6 @@ import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
-import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 
 import java.util.concurrent.CompletableFuture;
@@ -77,7 +77,7 @@ public class TopicQosConsumerRecord extends TopicConsumerRecord {
             return;
         }
 
-        MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(message.getPayload()).qos(mqttQoS).topic(message.getTopicBytes());
+        PublishBuilder publishBuilder = PublishBuilder.builder().payload(message.getPayload()).qos(mqttQoS).topic(message.getTopic());
         if (mqttSession.getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());
         }

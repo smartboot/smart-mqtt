@@ -261,7 +261,7 @@ public class ClusterFeature {
             ValidateUtils.isTrue(connectedNodes.size() <= 1, "invalid connections");
             connectedNodes.forEach((nodeId, session) -> {
                 LOGGER.info("dispatch message to coreNode:{}", nodeId);
-                session.publish(message.getTopic(), message.getQos(), message.getPayload(), message.isRetained(), new Consumer<Integer>() {
+                session.publish(message.getTopic().getTopic(), message.getQos(), message.getPayload(), message.isRetained(), new Consumer<Integer>() {
                     @Override
                     public void accept(Integer integer) {
 //                        System.out.println("messageId:" + integer);
@@ -319,7 +319,7 @@ public class ClusterFeature {
                 LOGGER.info("receive message from coreNode:{}", coreSessions.get(mqttSession));
                 workerSessions.values().forEach(nodeId -> {
                     LOGGER.info("分发消息至Worker节点:{}", nodeId);
-                    connectedNodes.get(nodeId).publish(message.getTopic(), message.getQos(), message.getPayload(), message.isRetained(), new Consumer<Integer>() {
+                    connectedNodes.get(nodeId).publish(message.getTopic().getTopic(), message.getQos(), message.getPayload(), message.isRetained(), new Consumer<Integer>() {
                         @Override
                         public void accept(Integer integer) {
 //                            System.out.println("messageId:" + integer);
@@ -334,7 +334,7 @@ public class ClusterFeature {
                         return;
                     }
                     LOGGER.info("分发消息至集群节点:{}", nodeId);
-                    connectedNodes.get(nodeId).publish(message.getTopic(), message.getQos(), message.getPayload(), message.isRetained(), new Consumer<Integer>() {
+                    connectedNodes.get(nodeId).publish(message.getTopic().getTopic(), message.getQos(), message.getPayload(), message.isRetained(), new Consumer<Integer>() {
                         @Override
                         public void accept(Integer integer) {
 //                            System.out.println("messageId:" + integer);

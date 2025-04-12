@@ -12,6 +12,7 @@ package org.smartboot.mqtt.broker.topic;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.broker.PublishBuilder;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
@@ -19,7 +20,6 @@ import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
-import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -79,7 +79,7 @@ class TopicConsumerOrderShareRecord extends AbstractConsumerRecord {
                 continue;
             }
 
-            MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().payload(message.getPayload()).qos(record.getMqttQoS()).topic(message.getTopicBytes());
+            PublishBuilder publishBuilder = PublishBuilder.builder().payload(message.getPayload()).qos(record.getMqttQoS()).topic(message.getTopic());
             if (record.getMqttSession().getMqttVersion() == MqttVersion.MQTT_5) {
                 publishBuilder.publishProperties(new PublishProperties());
             }

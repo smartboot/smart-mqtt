@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.TopicToken;
+import org.smartboot.mqtt.common.util.MqttUtil;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -81,6 +82,7 @@ public class BrokerTopic {
     private boolean enabled = true;
 
     private int version = 0;
+    private final byte[] encodedTopic;
 
     private final AsyncTask asyncTask = new AsyncTask() {
         @Override
@@ -143,6 +145,7 @@ public class BrokerTopic {
         this.topicToken = new TopicToken(topic);
         this.executorService = executorService;
         this.messageQueue = messageQueue;
+        this.encodedTopic = MqttUtil.encodeCache(topic);
     }
 
 
@@ -181,6 +184,10 @@ public class BrokerTopic {
 
     public String getTopic() {
         return topicToken.getTopicFilter();
+    }
+
+    public byte[] getEncodedTopic() {
+        return encodedTopic;
     }
 
     public Message getRetainMessage() {

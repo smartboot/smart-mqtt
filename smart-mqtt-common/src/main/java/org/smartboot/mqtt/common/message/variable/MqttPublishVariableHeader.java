@@ -28,18 +28,20 @@ public class MqttPublishVariableHeader extends MqttPacketIdVariableHeader<Publis
     private final String topicName;
     private final byte[] encodedTopic;
 
-    public MqttPublishVariableHeader(int packetId, String topicName, byte[] encodedTopic, PublishProperties properties) {
+    public MqttPublishVariableHeader(int packetId, String topicName, PublishProperties properties) {
         super(packetId, properties);
         this.topicName = topicName;
+        this.encodedTopic = null;
+    }
+
+    public MqttPublishVariableHeader(int packetId, byte[] encodedTopic, PublishProperties properties) {
+        super(packetId, properties);
         this.encodedTopic = encodedTopic;
+        this.topicName = null;
     }
 
     public String getTopicName() {
         return topicName;
-    }
-
-    public byte[] getEncodedTopic() {
-        return encodedTopic;
     }
 
     @Override

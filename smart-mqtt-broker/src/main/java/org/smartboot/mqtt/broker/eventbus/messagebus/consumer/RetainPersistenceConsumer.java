@@ -12,7 +12,6 @@ package org.smartboot.mqtt.broker.eventbus.messagebus.consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.broker.topic.BrokerTopic;
@@ -26,22 +25,17 @@ import org.smartboot.mqtt.common.enums.MqttQoS;
  */
 public class RetainPersistenceConsumer implements Consumer {
     private static final Logger LOGGER = LoggerFactory.getLogger(RetainPersistenceConsumer.class);
-    private final BrokerContext brokerContext;
-
-    public RetainPersistenceConsumer(BrokerContext brokerContext) {
-        this.brokerContext = brokerContext;
-    }
 
     @Override
     public void consume(MqttSession session, Message message) {
         if (!message.isRetained()) {
             return;
         }
-        BrokerTopic topic = brokerContext.getOrCreateTopic(message.getTopic());
+        BrokerTopic topic = message.getTopic();
         //保留标志为 1 且有效载荷为零字节的 PUBLISH 报文会被服务端当作正常消息处理，它会被发送给订阅主题匹配的客户端。
         // 此外，同一个主题下任何现存的保留消息必须被移除，因此这个主题之后的任何订阅者都不会收到一个保留消息。
         if (message.getPayload().length == 0) {
-            LOGGER.info("clear topic:{} retained messages, because of current retained message's payload length is 0", message.getTopic());
+            LOGGER.info("clear topic:{} retained messages, because of current retained message's payload length is 0", topic.getTopic());
             topic.setRetainMessage(null);
             return;
         }
@@ -51,7 +45,7 @@ public class RetainPersistenceConsumer implements Consumer {
          * 如果这种情况发生了，那个主题将没有保留消息
          */
         if (message.getQos() == MqttQoS.AT_MOST_ONCE) {
-            LOGGER.info("receive Qos0 retain message,clear topic:{} retained messages", message.getTopic());
+            LOGGER.info("receive Qos0 retain message,clear topic:{} retained messages", topic.getTopic());
             topic.setRetainMessage(null);
         }
         topic.setRetainMessage(message);

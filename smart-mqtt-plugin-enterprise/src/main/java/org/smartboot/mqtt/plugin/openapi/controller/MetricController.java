@@ -238,7 +238,7 @@ public class MetricController {
             @Override
             public void consume(MqttSession session, Message publishMessage) {
                 publishReceived.increment();
-                expectPublishSent.add(brokerContext.getOrCreateTopic(publishMessage.getTopic()).subscribeCount());
+                expectPublishSent.add(publishMessage.getTopic().subscribeCount());
                 switch (publishMessage.getQos()) {
                     case AT_MOST_ONCE:
                         qos0Received.increment();
