@@ -12,6 +12,7 @@ package org.smartboot.mqtt.broker.topic;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.broker.MessageQueue;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 
 import java.util.concurrent.atomic.AtomicLong;
@@ -20,7 +21,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author 三刀
  * @version V1.0 , 2018/5/3
  */
-public class MemoryMessageStoreQueue implements MessageQueue {
+class MemoryMessageStoreQueue implements MessageQueue {
     private static final Logger LOGGER = LoggerFactory.getLogger(MemoryMessageStoreQueue.class);
     private final int capacity;
     private Message[] store;

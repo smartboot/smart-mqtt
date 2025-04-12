@@ -13,6 +13,8 @@ package org.smartboot.mqtt.broker.topic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.MqttSession;
+import org.smartboot.mqtt.broker.topic.deliver.AbstractMessageDeliver;
+import org.smartboot.mqtt.broker.topic.deliver.Qos0MessageDeliver;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,8 +47,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author 三刀（zhengjunweimail@163.com）
  */
-public class SubscriberGroup {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SubscriberGroup.class);
+public class DeliverGroup {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeliverGroup.class);
 
     /**
      * 订阅者映射表，存储会话与消费者记录的对应关系。
@@ -58,40 +60,40 @@ public class SubscriberGroup {
      * </ul>
      * </p>
      */
-    protected final Map<MqttSession, TopicConsumerRecord> subscribers = new ConcurrentHashMap<>();
+    protected final Map<MqttSession, AbstractMessageDeliver> subscribers = new ConcurrentHashMap<>();
 
     /**
      * 获取指定会话的订阅者记录。
-     * 
+     *
      * @param session MQTT客户端会话
      * @return 返回该会话对应的消费者记录，如果不存在则返回null
      */
-    public AbstractConsumerRecord getSubscriber(MqttSession session) {
+    public AbstractMessageDeliver getSubscriber(MqttSession session) {
         return subscribers.get(session);
     }
 
     /**
      * 移除指定会话的订阅关系。
-     * 
+     *
      * @param session 要移除订阅的MQTT客户端会话
      * @return 返回被移除的消费者记录，如果不存在则返回null
      */
-    public AbstractConsumerRecord removeSubscriber(MqttSession session) {
+    public AbstractMessageDeliver removeSubscriber(MqttSession session) {
         return subscribers.remove(session);
     }
 
     /**
      * 添加新的订阅关系。
-     * 
+     *
      * @param subscriber 要添加的主题消费者记录，包含会话信息和订阅配置
      */
-    public void addSubscriber(TopicConsumerRecord subscriber) {
+    public void addSubscriber(Qos0MessageDeliver subscriber) {
         subscribers.put(subscriber.getMqttSession(), subscriber);
     }
 
     /**
      * 获取当前订阅组中的订阅者数量。
-     * 
+     *
      * @return 返回当前活跃的订阅者数量
      */
     public int count() {

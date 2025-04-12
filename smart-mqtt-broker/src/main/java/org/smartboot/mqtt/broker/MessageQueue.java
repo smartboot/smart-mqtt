@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package org.smartboot.mqtt.broker.topic;
+package org.smartboot.mqtt.broker;
 
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 

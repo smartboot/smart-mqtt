@@ -8,13 +8,13 @@
  *  without special permission from the smartboot organization.
  */
 
-package org.smartboot.mqtt.broker.topic;
+package org.smartboot.mqtt.broker.topic.deliver;
 
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.PublishBuilder;
 import org.smartboot.mqtt.broker.TopicSubscription;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
-import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.broker.topic.BrokerTopic;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 
@@ -48,27 +48,16 @@ import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/25
  */
-public class TopicConsumerRecord extends AbstractConsumerRecord {
+public class Qos0MessageDeliver extends AbstractMessageDeliver {
     /**
      * MQTT客户端会话对象，维护与订阅客户端的连接状态和通信通道。
      * 用于消息推送和会话状态检查。
      */
     protected final MqttSession mqttSession;
 
-    /**
-     * 订阅者的QoS级别，决定消息推送的可靠性保证机制。
-     * <ul>
-     *   <li>QoS 0：最多一次投递，可能丢失</li>
-     *   <li>QoS 1：至少一次投递，可能重复</li>
-     *   <li>QoS 2：精确一次投递</li>
-     * </ul>
-     */
-    protected final MqttQoS mqttQoS;
-
-    public TopicConsumerRecord(BrokerTopic topic, MqttSession session, TopicSubscription topicSubscription, long nextConsumerOffset) {
-        super(topic, topicSubscription.getTopicFilterToken(), nextConsumerOffset);
+    public Qos0MessageDeliver(BrokerTopic topic, MqttSession session, TopicSubscription topicSubscription, long nextConsumerOffset) {
+        super(topic, topicSubscription, nextConsumerOffset);
         this.mqttSession = session;
-        this.mqttQoS = topicSubscription.getMqttQoS();
     }
 
     /**
@@ -119,7 +108,7 @@ public class TopicConsumerRecord extends AbstractConsumerRecord {
             return false;
         }
 
-        PublishBuilder publishBuilder = PublishBuilder.builder().payload(message.getPayload()).qos(mqttQoS).topic(message.getTopic());
+        PublishBuilder publishBuilder = PublishBuilder.builder().payload(message.getPayload()).qos(getTopicFilterToken().getMqttQoS()).topic(message.getTopic());
         if (mqttSession.getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());
         }
@@ -132,9 +121,5 @@ public class TopicConsumerRecord extends AbstractConsumerRecord {
 
     public final MqttSession getMqttSession() {
         return mqttSession;
-    }
-
-    public final MqttQoS getMqttQoS() {
-        return mqttQoS;
     }
 }

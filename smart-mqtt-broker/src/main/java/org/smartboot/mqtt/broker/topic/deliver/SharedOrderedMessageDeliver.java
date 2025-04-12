@@ -8,13 +8,14 @@
  *  without special permission from the smartboot organization.
  */
 
-package org.smartboot.mqtt.broker.topic;
+package org.smartboot.mqtt.broker.topic.deliver;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.PublishBuilder;
+import org.smartboot.mqtt.broker.TopicSubscription;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
-import org.smartboot.mqtt.common.TopicToken;
+import org.smartboot.mqtt.broker.topic.BrokerTopic;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
@@ -28,21 +29,22 @@ import java.util.concurrent.Semaphore;
 /**
  * 顺序共享订阅
  */
-class TopicConsumerOrderShareRecord extends AbstractConsumerRecord {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TopicConsumerOrderShareRecord.class);
+public class SharedOrderedMessageDeliver extends AbstractMessageDeliver {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SharedOrderedMessageDeliver.class);
     /**
      * 共享订阅者队列
      */
-    private final ConcurrentLinkedQueue<TopicConsumerRecord> queue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Qos0MessageDeliver> queue = new ConcurrentLinkedQueue<>();
 
     private final Semaphore semaphore = new Semaphore(1);
 
-    public TopicConsumerOrderShareRecord(BrokerTopic topic, TopicToken topicFilterToken) {
-        super(topic, topicFilterToken, topic.getMessageQueue().getLatestOffset() + 1);
+    public SharedOrderedMessageDeliver(BrokerTopic topic) {
+        super(topic, null, topic.getMessageQueue().getLatestOffset() + 1);
+        //将共享订阅者加入 BrokerTopic 的推送列表中
         topic.addSubscriber(this);
     }
 
-    public ConcurrentLinkedQueue<TopicConsumerRecord> getQueue() {
+    public ConcurrentLinkedQueue<Qos0MessageDeliver> getQueue() {
         return queue;
     }
 
@@ -69,7 +71,7 @@ class TopicConsumerOrderShareRecord extends AbstractConsumerRecord {
             if (message == null) {
                 return;
             }
-            TopicConsumerRecord record = queue.poll();
+            Qos0MessageDeliver record = queue.poll();
             //共享订阅列表无可用通道
             if (record == null) {
                 return;
@@ -78,18 +80,18 @@ class TopicConsumerOrderShareRecord extends AbstractConsumerRecord {
             if (!record.enable || record.getMqttSession().isDisconnect()) {
                 continue;
             }
-
-            PublishBuilder publishBuilder = PublishBuilder.builder().payload(message.getPayload()).qos(record.getMqttQoS()).topic(message.getTopic());
+            TopicSubscription subscription = record.getTopicFilterToken();
+            PublishBuilder publishBuilder = PublishBuilder.builder().payload(message.getPayload()).qos(subscription.getMqttQoS()).topic(message.getTopic());
             if (record.getMqttSession().getMqttVersion() == MqttVersion.MQTT_5) {
                 publishBuilder.publishProperties(new PublishProperties());
             }
 
             //Qos0直接发送
-            if (record.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
+            if (subscription.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
                 topic.getMessageQueue().commit(nextConsumerOffset++);
                 record.getMqttSession().write(publishBuilder.build());
                 queue.offer(record);
-                LOGGER.debug("publish share subscribe:{} to {}", topicFilterToken.getTopicFilter(), record.getMqttSession().getClientId());
+                LOGGER.debug("publish share subscribe:{} to {}", subscription.getTopicFilterToken().getTopicFilter(), record.getMqttSession().getClientId());
                 continue;
             }
 

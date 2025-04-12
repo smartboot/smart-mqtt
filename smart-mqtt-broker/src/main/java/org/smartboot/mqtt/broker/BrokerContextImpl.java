@@ -34,10 +34,9 @@ import org.smartboot.mqtt.broker.processor.SubscribeProcessor;
 import org.smartboot.mqtt.broker.processor.UnSubscribeProcessor;
 import org.smartboot.mqtt.broker.provider.Providers;
 import org.smartboot.mqtt.broker.topic.BrokerTopic;
-import org.smartboot.mqtt.broker.topic.MemoryMessageStoreQueue;
-import org.smartboot.mqtt.broker.topic.TopicConsumerRecord;
 import org.smartboot.mqtt.broker.topic.TopicPublishTree;
 import org.smartboot.mqtt.broker.topic.TopicSubscribeTree;
+import org.smartboot.mqtt.broker.topic.deliver.Qos0MessageDeliver;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.MqttProtocol;
@@ -463,7 +462,7 @@ public class BrokerContextImpl implements BrokerContext {
         eventBus.subscribe(EventType.SUBSCRIBE_TOPIC, (eventType, eventObject) -> retainPushThreadPool.execute(new AsyncTask() {
             @Override
             public void execute() {
-                TopicConsumerRecord consumerRecord = eventObject.getObject();
+                Qos0MessageDeliver consumerRecord = eventObject.getObject();
                 BrokerTopic topic = consumerRecord.getTopic();
                 Message retainMessage = topic.getRetainMessage();
                 if (retainMessage == null || retainMessage.getCreateTime() > consumerRecord.getLatestSubscribeTime()) {
@@ -472,12 +471,12 @@ public class BrokerContextImpl implements BrokerContext {
                 }
                 MqttSession session = eventObject.getSession();
 
-                PublishBuilder publishBuilder = PublishBuilder.builder().payload(retainMessage.getPayload()).qos(consumerRecord.getMqttQoS()).topic(retainMessage.getTopic());
+                PublishBuilder publishBuilder = PublishBuilder.builder().payload(retainMessage.getPayload()).qos(consumerRecord.getTopicFilterToken().getMqttQoS()).topic(retainMessage.getTopic());
                 if (session.getMqttVersion() == MqttVersion.MQTT_5) {
                     publishBuilder.publishProperties(new PublishProperties());
                 }
                 // Qos0不走飞行窗口
-                if (consumerRecord.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
+                if (consumerRecord.getTopicFilterToken().getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
                     session.write(publishBuilder.build());
                     topic.addSubscriber(consumerRecord);
                     return;
@@ -591,7 +590,7 @@ public class BrokerContextImpl implements BrokerContext {
                 brokerTopic = topicMap.get(topic);
                 if (brokerTopic == null) {
                     ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topic), "invalid topicName: " + topic);
-                    brokerTopic = new BrokerTopic(topic, new MemoryMessageStoreQueue(options.getMaxMessageQueueLength()), pushThreadPool);
+                    brokerTopic = new BrokerTopic(topic, options.getMaxMessageQueueLength(), pushThreadPool);
                     LOGGER.info("create topic: {} capacity is {}", topic, brokerTopic.getMessageQueue().capacity());
                     topicPublishTree.addTopic(brokerTopic);
                     eventBus.publish(EventType.TOPIC_CREATE, brokerTopic);

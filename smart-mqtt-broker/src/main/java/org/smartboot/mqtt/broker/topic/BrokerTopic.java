@@ -12,7 +12,10 @@ package org.smartboot.mqtt.broker.topic;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.broker.MessageQueue;
+import org.smartboot.mqtt.broker.TopicSubscription;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
+import org.smartboot.mqtt.broker.topic.deliver.AbstractMessageDeliver;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.message.MqttCodecUtil;
@@ -59,7 +62,7 @@ public class BrokerTopic {
      * 每个订阅者都会收到发布到该主题的所有消息。
      * </p>
      */
-    private final SubscriberGroup defaultGroup = new SubscriberGroup();
+    private final DeliverGroup defaultGroup = new DeliverGroup();
     /**
      * 共享订阅组映射，用于支持MQTT 5.0的共享订阅特性。
      * <p>
@@ -67,7 +70,7 @@ public class BrokerTopic {
      * 共享订阅允许多个订阅者以负载均衡的方式接收消息，适用于集群环境。
      * </p>
      */
-    private final Map<String, SubscriberGroup> shareSubscribers = new ConcurrentHashMap<>();
+    private final Map<String, DeliverGroup> shareSubscribers = new ConcurrentHashMap<>();
     /**
      * 消息推送控制信号量，用于确保消息推送的并发控制。
      * <p>
@@ -87,7 +90,7 @@ public class BrokerTopic {
     private final AsyncTask asyncTask = new AsyncTask() {
         @Override
         public void execute() {
-            AbstractConsumerRecord subscriber;
+            AbstractMessageDeliver subscriber;
             queue.offer(BREAK);
             int mark = version;
             while ((subscriber = queue.poll()) != BREAK) {
@@ -128,9 +131,9 @@ public class BrokerTopic {
      * 在多线程环境下的安全访问。订阅者按照FIFO顺序处理。
      * </p>
      */
-    private final ConcurrentLinkedQueue<AbstractConsumerRecord> queue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<AbstractMessageDeliver> queue = new ConcurrentLinkedQueue<>();
 
-    private static final AbstractConsumerRecord BREAK = new AbstractConsumerRecord(null, null, -1) {
+    private static final AbstractMessageDeliver BREAK = new AbstractMessageDeliver(null, null, -1) {
         @Override
         public void pushToClient() {
             throw new UnsupportedOperationException();
@@ -138,26 +141,27 @@ public class BrokerTopic {
     };
 
     public BrokerTopic(String topic) {
-        this(topic, new MemoryMessageStoreQueue(), null);
+        this(topic, 64, null);
     }
 
-    public BrokerTopic(String topic, MessageQueue messageQueue, ExecutorService executorService) {
+    public BrokerTopic(String topic, int queueLength, ExecutorService executorService) {
         this.topicToken = new TopicToken(topic);
         this.executorService = executorService;
-        this.messageQueue = messageQueue;
+        this.messageQueue = new MemoryMessageStoreQueue(queueLength);
         this.encodedTopic = MqttCodecUtil.encodeUTF8(topic);
     }
 
 
-    public SubscriberGroup getSubscriberGroup(TopicToken topicToken) {
+    public DeliverGroup getSubscriberGroup(TopicSubscription topicSubscription) {
+        final TopicToken topicToken = topicSubscription.getTopicFilterToken();
         if (topicToken.isShared()) {
-            return shareSubscribers.computeIfAbsent(topicToken.getTopicFilter(), s -> new SubscriberSharedGroup(topicToken, BrokerTopic.this));
+            return shareSubscribers.computeIfAbsent(topicToken.getTopicFilter(), s -> new SharedDeliverGroup(BrokerTopic.this));
         } else {
             return defaultGroup;
         }
     }
 
-    void removeShareGroup(String topicFilter) {
+    public void removeShareGroup(String topicFilter) {
         shareSubscribers.remove(topicFilter);
     }
 
@@ -174,7 +178,7 @@ public class BrokerTopic {
         return shareSubscribers.size() + defaultGroup.count();
     }
 
-    public void addSubscriber(AbstractConsumerRecord subscriber) {
+    public void addSubscriber(AbstractMessageDeliver subscriber) {
         queue.offer(subscriber);
     }
 
@@ -235,16 +239,16 @@ public class BrokerTopic {
     }
 
     public void dump() {
-        System.out.println("默认订阅：");
-        defaultGroup.subscribers.forEach((session, topicConsumerRecord) -> {
-            System.out.println(" " + session.getClientId());
-        });
-        System.out.println("共享订阅：");
-        shareSubscribers.forEach((s, subscriberGroup) -> {
-            System.out.println(" " + s);
-            subscriberGroup.subscribers.forEach((session, topicConsumerRecord) -> {
-                System.out.println("  " + session.getClientId());
-            });
-        });
+//        System.out.println("默认订阅：");
+//        defaultGroup.subscribers.forEach((session, topicConsumerRecord) -> {
+//            System.out.println(" " + session.getClientId());
+//        });
+//        System.out.println("共享订阅：");
+//        shareSubscribers.forEach((s, subscriberGroup) -> {
+//            System.out.println(" " + s);
+//            subscriberGroup.subscribers.forEach((session, topicConsumerRecord) -> {
+//                System.out.println("  " + session.getClientId());
+//            });
+//        });
     }
 }

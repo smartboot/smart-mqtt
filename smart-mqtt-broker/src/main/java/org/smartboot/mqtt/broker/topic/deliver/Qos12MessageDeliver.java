@@ -8,12 +8,13 @@
  *  without special permission from the smartboot organization.
  */
 
-package org.smartboot.mqtt.broker.topic;
+package org.smartboot.mqtt.broker.topic.deliver;
 
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.PublishBuilder;
 import org.smartboot.mqtt.broker.TopicSubscription;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
+import org.smartboot.mqtt.broker.topic.BrokerTopic;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
@@ -30,12 +31,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/25
  */
-public class TopicQosConsumerRecord extends TopicConsumerRecord {
+public class Qos12MessageDeliver extends Qos0MessageDeliver {
 
     private final AtomicBoolean semaphore = new AtomicBoolean(false);
 
 
-    public TopicQosConsumerRecord(BrokerTopic topic, MqttSession session, TopicSubscription topicSubscription, long nextConsumerOffset) {
+    public Qos12MessageDeliver(BrokerTopic topic, MqttSession session, TopicSubscription topicSubscription, long nextConsumerOffset) {
         super(topic, session, topicSubscription, nextConsumerOffset);
         ValidateUtils.isTrue(topicSubscription.getMqttQoS() != MqttQoS.AT_MOST_ONCE, "invalid qos");
     }
@@ -77,7 +78,7 @@ public class TopicQosConsumerRecord extends TopicConsumerRecord {
             return;
         }
 
-        PublishBuilder publishBuilder = PublishBuilder.builder().payload(message.getPayload()).qos(mqttQoS).topic(message.getTopic());
+        PublishBuilder publishBuilder = PublishBuilder.builder().payload(message.getPayload()).qos(getTopicFilterToken().getMqttQoS()).topic(message.getTopic());
         if (mqttSession.getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());
         }

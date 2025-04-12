@@ -11,7 +11,7 @@
 package org.smartboot.mqtt.broker;
 
 import org.smartboot.mqtt.broker.topic.BrokerTopic;
-import org.smartboot.mqtt.broker.topic.TopicConsumerRecord;
+import org.smartboot.mqtt.broker.topic.deliver.Qos0MessageDeliver;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 
@@ -71,7 +71,7 @@ public class TopicSubscription {
      * 此Map在主题匹配时动态维护，随着主题的发布和取消订阅而更新。
      * </p>
      */
-    private final Map<BrokerTopic, TopicConsumerRecord> topicSubscribers = new HashMap<>();
+    private final Map<BrokerTopic, Qos0MessageDeliver> topicSubscribers = new HashMap<>();
 
     /**
      * 创建主题订阅关系实例。
@@ -123,7 +123,7 @@ public class TopicSubscription {
      *
      * @return 主题与消费记录的映射关系
      */
-    Map<BrokerTopic, TopicConsumerRecord> getTopicSubscribers() {
+    Map<BrokerTopic, Qos0MessageDeliver> getTopicSubscribers() {
         return topicSubscribers;
     }
 }

@@ -13,9 +13,9 @@ package org.smartboot.mqtt.broker.eventbus;
 import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.Options;
-import org.smartboot.mqtt.broker.topic.AbstractConsumerRecord;
 import org.smartboot.mqtt.broker.topic.BrokerTopic;
-import org.smartboot.mqtt.broker.topic.TopicConsumerRecord;
+import org.smartboot.mqtt.broker.topic.deliver.AbstractMessageDeliver;
+import org.smartboot.mqtt.broker.topic.deliver.Qos0MessageDeliver;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
@@ -80,17 +80,17 @@ public class EventType<T> {
     /**
      * 客户端订阅Topic
      */
-    public static final EventType<EventObject<TopicConsumerRecord>> SUBSCRIBE_TOPIC = new EventType<>("subscribeTopic");
+    public static final EventType<EventObject<Qos0MessageDeliver>> SUBSCRIBE_TOPIC = new EventType<>("subscribeTopic");
 
     /**
      * 客户端取消订阅Topic
      */
-    public static final EventType<AbstractConsumerRecord> UNSUBSCRIBE_TOPIC = new EventType<>("unsubscribe_topic");
+    public static final EventType<AbstractMessageDeliver> UNSUBSCRIBE_TOPIC = new EventType<>("unsubscribe_topic");
 
     /**
      * 客户端订阅Topic
      */
-    public static final EventType<TopicConsumerRecord> SUBSCRIBE_REFRESH_TOPIC = new EventType<>("subscribe_refresh_topic");
+    public static final EventType<Qos0MessageDeliver> SUBSCRIBE_REFRESH_TOPIC = new EventType<>("subscribe_refresh_topic");
 
     /**
      * 客户端连接请求
