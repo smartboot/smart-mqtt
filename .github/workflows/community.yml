@@ -1,0 +1,63 @@
+# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: 构建社区版
+
+on:
+  push:
+    branches: [ "master" ]
+    tags:
+      - v**
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout
+      - uses: actions/checkout@v4
+        name: 下载 smart-socket
+        with:
+          repository: smartboot/smart-socket
+          path: smart-socket
+      - uses: actions/checkout@v4
+        name: 下载 feat
+        with:
+          repository: smartboot/feat
+          path: feat
+      - uses: actions/checkout@v4
+        name: 下载 smart-mqtt
+        with:
+          repository: smartboot/smart-mqtt-enterprise
+          token: ${{ secrets.GH_PAT }}
+          path: smart-mqtt-enterprise
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '8'
+      - name: Set up Maven 3.9
+        uses: stCarolas/setup-maven@v5
+      - name: Build smart-socket
+        run: mvn -B install --file smart-socket/smart-socket-parent/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+      - name: Build Feat
+        run: mvn -B install --file feat/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+      - name: Build smart-mqtt
+        run: mvn -B install --file pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+      - name: Build smart-mqtt-community
+        run: mvn -B -f smart-mqtt-enterprise/poms/community.xml clean package -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+      - name: Build smart-mqtt-community
+        run: cp smart-mqtt-enterprise/poms/target/smart-mqtt-broker-*.jar  smart-mqtt-enterprise/smart-mqtt.jar
+      - name: 上传 smart-mqtt 制品
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-mqtt-${{ github.ref_name }}
+          compression-level: 0
+          path: smart-mqtt-enterprise/smart-mqtt.jar

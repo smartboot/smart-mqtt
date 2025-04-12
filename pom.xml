@@ -262,11 +262,6 @@
         </pluginManagement>
     </build>
     <repositories>
-<!--        <repository>-->
-<!--            <id>alimaven</id>-->
-<!--            <name>aliyun maven</name>-->
-<!--            <url>https://maven.aliyun.com/repository/public</url>-->
-<!--        </repository>-->
         <repository>
             <id>sonatype-nexus-snapshots</id>
             <name>Sonatype Nexus Snapshots</name>
@@ -274,11 +269,6 @@
         </repository>
     </repositories>
     <pluginRepositories>
-<!--        <pluginRepository>-->
-<!--            <id>alimaven</id>-->
-<!--            <name>aliyun maven</name>-->
-<!--            <url>https://maven.aliyun.com/repository/public</url>-->
-<!--        </pluginRepository>-->
         <pluginRepository>
             <id>sonatype-nexus-snapshots</id>
             <name>Sonatype Nexus Snapshots</name>
@@ -295,8 +285,6 @@
         <module>smart-mqtt-broker</module>
         <module>smart-mqtt-common</module>
         <module>smart-mqtt-client</module>
-<!--        <module>plugins</module>-->
-<!--        <module>smart-mqtt-protocol-gateway</module>-->
         <module>smart-mqtt-test</module>
         <module>smart-mqtt-plugin-enterprise</module>
         <module>smart-mqtt-bench</module>
