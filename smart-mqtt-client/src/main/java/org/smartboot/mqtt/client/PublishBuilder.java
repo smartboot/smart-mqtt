@@ -12,14 +12,14 @@ package org.smartboot.mqtt.client;
 
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.common.message.MessageBuilder;
 import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPublishVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
-import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 
-public final class PublishBuilder implements MqttMessageBuilders.MessageBuilder<MqttPublishMessage> {
+final class PublishBuilder implements MessageBuilder<MqttPublishMessage> {
     public static PublishBuilder builder() {
         return new PublishBuilder();
     }

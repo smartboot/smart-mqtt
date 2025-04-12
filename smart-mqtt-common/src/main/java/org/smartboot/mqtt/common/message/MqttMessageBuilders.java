@@ -8,17 +8,11 @@
  *  without special permission from the smartboot organization.
  */
 
-package org.smartboot.mqtt.common.util;
+package org.smartboot.mqtt.common.message;
 
 import org.smartboot.mqtt.common.enums.MqttQoS;
-import org.smartboot.mqtt.common.message.MqttFixedHeader;
-import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
-import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
-import org.smartboot.mqtt.common.message.MqttTopicSubscription;
-import org.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import org.smartboot.mqtt.common.message.payload.MqttSubscribePayload;
 import org.smartboot.mqtt.common.message.payload.MqttUnsubscribePayload;
-import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttReasonVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttSubscribeVariableHeader;
@@ -30,13 +24,7 @@ import java.util.List;
 
 public final class MqttMessageBuilders {
 
-    public interface MessageBuilder<T extends MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> {
-        MessageBuilder packetId(int packetId);
 
-        MqttQoS qos();
-
-        T build();
-    }
 
     private MqttMessageBuilders() {
     }

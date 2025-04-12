@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.enums.MqttMessageType;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.exception.MqttException;
+import org.smartboot.mqtt.common.message.MessageBuilder;
 import org.smartboot.mqtt.common.message.MqttFixedHeader;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.MqttPubRelMessage;
@@ -24,7 +25,6 @@ import org.smartboot.mqtt.common.message.MqttVariableMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
-import org.smartboot.mqtt.common.util.MqttMessageBuilders;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 
@@ -55,7 +55,7 @@ public class InflightQueue {
         this.session = session;
     }
 
-    public synchronized CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> put(MqttMessageBuilders.MessageBuilder publishBuilder) {
+    public synchronized CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> put(MessageBuilder publishBuilder) {
         try {
             while (count == queue.length) {
                 this.wait();
@@ -66,7 +66,7 @@ public class InflightQueue {
         }
     }
 
-    public CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> offer(MqttMessageBuilders.MessageBuilder publishBuilder) {
+    public CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> offer(MessageBuilder publishBuilder) {
         return offer(publishBuilder, EMPTY_RUNNABLE);
     }
 
@@ -74,7 +74,7 @@ public class InflightQueue {
         return queue.length - count;
     }
 
-    public synchronized CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> offer(MqttMessageBuilders.MessageBuilder publishBuilder, Runnable runnable) {
+    public synchronized CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> offer(MessageBuilder publishBuilder, Runnable runnable) {
         if (count == queue.length) {
             int i = putIndex - 1;
             if (i < 0) {
@@ -88,7 +88,7 @@ public class InflightQueue {
     }
 
 
-    private CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> enqueue(MqttMessageBuilders.MessageBuilder publishBuilder) {
+    private CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> enqueue(MessageBuilder publishBuilder) {
         int id = ++packetId;
         // 16位无符号最大值65535
         if (id > 65535) {
