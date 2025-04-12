@@ -1,6 +1,7 @@
 package org.smartboot.mqtt.plugin.acl.to;
 
-import tech.smartboot.feat.cloud.annotation.JSONField;
+
+import com.alibaba.fastjson2.annotation.JSONField;
 
 public class AclConfigTO {
     private String type;

@@ -10,8 +10,8 @@
 
 package org.smartboot.mqtt.plugin.openapi.to;
 
+import com.alibaba.fastjson2.annotation.JSONField;
 import org.smartboot.mqtt.plugin.openapi.enums.MqttMetricEnum;
-import tech.smartboot.feat.cloud.annotation.JSONField;
 
 import java.util.Date;
 import java.util.concurrent.atomic.LongAdder;

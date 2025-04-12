@@ -1,6 +1,7 @@
 package org.smartboot.mqtt.plugin.dao;
 
-import tech.smartboot.feat.cloud.annotation.JSONField;
+
+import com.alibaba.fastjson2.annotation.JSONField;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
