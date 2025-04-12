@@ -16,13 +16,10 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.exception.MqttException;
-import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.socket.timer.HashedWheelTimer;
 
 import java.lang.reflect.Field;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -35,9 +32,6 @@ public class MqttUtil {
      * Topic 通配符
      */
     private static final char[] TOPIC_WILDCARDS = {'#', '+'};
-
-    private static final Map<String, byte[]> cache = new ConcurrentHashMap<>();
-
 
     /**
      * 当前时间
@@ -72,15 +66,6 @@ public class MqttUtil {
             LOGGER.error("getRemoteAddress exception", e);
             return "";
         }
-    }
-
-    public static byte[] encodeCache(String topicName) {
-        byte[] bytes = cache.get(topicName);
-        if (bytes == null) {
-            bytes = MqttCodecUtil.encodeUTF8(topicName);
-            cache.put(topicName, bytes);
-        }
-        return bytes;
     }
 
     public static boolean match(TopicToken pubTopicToken, TopicToken subTopicToken) {

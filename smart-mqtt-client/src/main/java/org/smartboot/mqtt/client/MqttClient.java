@@ -393,7 +393,7 @@ public class MqttClient extends AbstractSession {
     }
 
     public void publish(String topic, MqttQoS qos, byte[] payload, boolean retain, Consumer<Integer> consumer, boolean autoFlush) {
-        MqttMessageBuilders.PublishBuilder publishBuilder = MqttMessageBuilders.publish().topicName(topic).qos(qos).payload(payload).retained(retain);
+        PublishBuilder publishBuilder = PublishBuilder.builder().topicName(topic).qos(qos).payload(payload).retained(retain);
         //todo
         if (options.getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());
@@ -405,7 +405,7 @@ public class MqttClient extends AbstractSession {
         }
     }
 
-    private void publish(MqttMessageBuilders.PublishBuilder publishBuilder, Consumer<Integer> consumer, boolean autoFlush) {
+    private void publish(PublishBuilder publishBuilder, Consumer<Integer> consumer, boolean autoFlush) {
         if (publishBuilder.qos() == MqttQoS.AT_MOST_ONCE) {
             write(publishBuilder.build(), autoFlush);
             consumer.accept(0);

@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.TopicToken;
-import org.smartboot.mqtt.common.util.MqttUtil;
+import org.smartboot.mqtt.common.message.MqttCodecUtil;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -145,7 +145,7 @@ public class BrokerTopic {
         this.topicToken = new TopicToken(topic);
         this.executorService = executorService;
         this.messageQueue = messageQueue;
-        this.encodedTopic = MqttUtil.encodeCache(topic);
+        this.encodedTopic = MqttCodecUtil.encodeUTF8(topic);
     }
 
 
