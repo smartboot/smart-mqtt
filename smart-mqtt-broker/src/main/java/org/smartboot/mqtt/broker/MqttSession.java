@@ -198,14 +198,14 @@ public class MqttSession extends AbstractSession {
         if (!mqttContext.getProviders().getSubscribeProvider().matchTopic(topic, this)) {
             return;
         }
-        DeliverGroup subscriberGroup = topic.getSubscriberGroup(topicSubscription);
-        AbstractMessageDeliver consumerRecord = subscriberGroup.getSubscriber(this);
+        DeliverGroup group = topic.getSubscriberGroup(topicSubscription);
+        AbstractMessageDeliver consumerRecord = group.getSubscriber(this);
         //共享订阅不会为null
         if (consumerRecord == null) {
-            Qos0MessageDeliver record = newConsumerRecord(topic, topicSubscription, topic.getMessageQueue().getLatestOffset() + 1);
-            mqttContext.getEventBus().publish(EventType.SUBSCRIBE_TOPIC, EventObject.newEventObject(this, record));
-            subscriberGroup.addSubscriber(record);
-            subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, record);
+            Qos0MessageDeliver deliver = newConsumerRecord(topic, topicSubscription, topic.getMessageQueue().getLatestOffset() + 1);
+            mqttContext.getEventBus().publish(EventType.SUBSCRIBE_TOPIC, EventObject.newEventObject(this, deliver));
+            group.addSubscriber(deliver);
+            subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, deliver);
             return;
         }
         //此前的订阅关系
@@ -219,7 +219,7 @@ public class MqttSession extends AbstractSession {
                     throw new IllegalStateException();
                 }
             };
-            subscriberGroup.addSubscriber(record);
+            group.addSubscriber(record);
             subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, record);
         } else if (preToken.isWildcards()) {
             if (!topicToken.isWildcards() || topicToken.getTopicFilter().length() > preToken.getTopicFilter().length()) {

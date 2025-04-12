@@ -161,7 +161,7 @@ public class BrokerTopic {
         }
     }
 
-    public void removeShareGroup(String topicFilter) {
+    void removeShareGroup(String topicFilter) {
         shareSubscribers.remove(topicFilter);
     }
 
