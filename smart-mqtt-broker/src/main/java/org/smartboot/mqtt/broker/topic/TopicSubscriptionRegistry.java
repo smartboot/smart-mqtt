@@ -44,7 +44,7 @@ import java.util.function.BiConsumer;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 5/28/23
  */
-public class TopicSubscribeTree {
+public class TopicSubscriptionRegistry {
     /**
      * 存储当前节点的订阅关系映射。
      * <p>
@@ -67,7 +67,7 @@ public class TopicSubscribeTree {
      * </ul>
      * </p>
      */
-    private final ConcurrentHashMap<String, TopicSubscribeTree> subNode = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, TopicSubscriptionRegistry> subNode = new ConcurrentHashMap<>();
 
     /**
      * 将客户端的主题订阅注册到订阅树中。
@@ -80,10 +80,10 @@ public class TopicSubscribeTree {
      * @param subscriber 包含主题过滤器和QoS等订阅信息的对象
      */
     public void subscribeTopic(MqttSession session, TopicSubscription subscriber) {
-        TopicSubscribeTree treeNode = this;
+        TopicSubscriptionRegistry treeNode = this;
         TopicToken token = subscriber.getTopicFilterToken();
         do {
-            treeNode = treeNode.subNode.computeIfAbsent(token.getNode(), n -> new TopicSubscribeTree());
+            treeNode = treeNode.subNode.computeIfAbsent(token.getNode(), n -> new TopicSubscriptionRegistry());
         } while ((token = token.getNextNode()) != null);
         treeNode.subscribers.put(session, subscriber);
     }
@@ -99,7 +99,7 @@ public class TopicSubscribeTree {
      * @param subscriber 包含要取消订阅的主题过滤器信息的对象
      */
     public void unsubscribe(MqttSession session, TopicSubscription subscriber) {
-        TopicSubscribeTree subscribeTree = this;
+        TopicSubscriptionRegistry subscribeTree = this;
         TopicToken topicToken = subscriber.getTopicFilterToken();
         while (true) {
             subscribeTree = subscribeTree.subNode.get(topicToken.getNode());
@@ -125,7 +125,7 @@ public class TopicSubscribeTree {
             session.subscribeSuccess(topicSubscription, topicToken);
         };
         //遍历共享订阅
-        TopicSubscribeTree shareTree = subNode.get("$share");
+        TopicSubscriptionRegistry shareTree = subNode.get("$share");
         if (shareTree != null) {
             shareTree.subNode.values().forEach(tree -> tree.match0(topicToken.getTopicToken(), consumer));
         }
@@ -149,7 +149,7 @@ public class TopicSubscribeTree {
      */
     private void match0(TopicToken topicToken, BiConsumer<MqttSession, TopicSubscription> consumer) {
         //精确匹配
-        TopicSubscribeTree subscribeTree = subNode.get(topicToken.getNode());
+        TopicSubscriptionRegistry subscribeTree = subNode.get(topicToken.getNode());
         if (subscribeTree != null) {
             if (topicToken.getNextNode() == null) {
                 subscribeTree.subscribers.forEach(consumer);

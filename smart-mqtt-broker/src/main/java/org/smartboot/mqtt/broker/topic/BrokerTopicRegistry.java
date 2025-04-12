@@ -40,7 +40,7 @@ import java.util.function.Consumer;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 5/28/23
  */
-public class TopicPublishTree {
+public class BrokerTopicRegistry {
     /**
      * 存储当前节点的主题对象，包含主题的详细信息和消息队列
      */
@@ -53,7 +53,7 @@ public class TopicPublishTree {
      * 使用ConcurrentHashMap保证在多线程环境下的线程安全性。
      * </p>
      */
-    private final ConcurrentHashMap<String, TopicPublishTree> subNode = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, BrokerTopicRegistry> subNode = new ConcurrentHashMap<>();
 
     /**
      * 将一个主题添加到发布树中。
@@ -66,9 +66,9 @@ public class TopicPublishTree {
      */
     public void addTopic(BrokerTopic brokerTopic) {
         TopicToken topicToken = brokerTopic.getTopicToken();
-        TopicPublishTree treeNode = this;
+        BrokerTopicRegistry treeNode = this;
         while (true) {
-            treeNode = treeNode.subNode.computeIfAbsent(topicToken.getNode(), n -> new TopicPublishTree());
+            treeNode = treeNode.subNode.computeIfAbsent(topicToken.getNode(), n -> new BrokerTopicRegistry());
             if (topicToken.getNextNode() == null) {
                 break;
             } else {
@@ -116,7 +116,7 @@ public class TopicPublishTree {
      * @param topicToken 要匹配的主题标记
      * @param consumer 对匹配到的主题执行的操作
      */
-    private void match(TopicPublishTree treeNode, TopicToken topicToken, Consumer<BrokerTopic> consumer) {
+    private void match(BrokerTopicRegistry treeNode, TopicToken topicToken, Consumer<BrokerTopic> consumer) {
         //匹配结束
         if (topicToken == null) {
             if (treeNode.brokerTopic != null) {
@@ -134,7 +134,7 @@ public class TopicPublishTree {
                 match(node, topicToken.getNextNode(), consumer);
             });
         } else {
-            TopicPublishTree node = treeNode.subNode.get(topicToken.getNode());
+            BrokerTopicRegistry node = treeNode.subNode.get(topicToken.getNode());
             if (node != null) {
                 match(node, topicToken.getNextNode(), consumer);
             }
@@ -151,7 +151,7 @@ public class TopicPublishTree {
      * @param treeNode 要遍历的树节点
      * @param consumer 对找到的主题执行的操作
      */
-    private void subscribeChildren(TopicPublishTree treeNode, Consumer<BrokerTopic> consumer) {
+    private void subscribeChildren(BrokerTopicRegistry treeNode, Consumer<BrokerTopic> consumer) {
         BrokerTopic brokerTopic = treeNode.brokerTopic;
         if (brokerTopic != null) {
             consumer.accept(brokerTopic);

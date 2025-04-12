@@ -34,8 +34,8 @@ import org.smartboot.mqtt.broker.processor.SubscribeProcessor;
 import org.smartboot.mqtt.broker.processor.UnSubscribeProcessor;
 import org.smartboot.mqtt.broker.provider.Providers;
 import org.smartboot.mqtt.broker.topic.BrokerTopic;
-import org.smartboot.mqtt.broker.topic.TopicPublishTree;
-import org.smartboot.mqtt.broker.topic.TopicSubscribeTree;
+import org.smartboot.mqtt.broker.topic.BrokerTopicRegistry;
+import org.smartboot.mqtt.broker.topic.TopicSubscriptionRegistry;
 import org.smartboot.mqtt.broker.topic.deliver.Qos0MessageDeliver;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
@@ -152,7 +152,7 @@ public class BrokerContextImpl implements BrokerContext {
      * 用于在消息发布时快速找到匹配的订阅者。
      * </p>
      */
-    private final TopicPublishTree topicPublishTree = new TopicPublishTree();
+    private final BrokerTopicRegistry topicRegistry = new BrokerTopicRegistry();
 
     /**
      * 主题订阅树，用于管理客户端的订阅关系。
@@ -165,7 +165,7 @@ public class BrokerContextImpl implements BrokerContext {
      * </ul>
      * </p>
      */
-    private final TopicSubscribeTree subscribeTopicTree = new TopicSubscribeTree();
+    private final TopicSubscriptionRegistry subscribeTopicTree = new TopicSubscriptionRegistry();
 
     /**
      * Keep-Alive定时器，用于监控客户端连接状态。
@@ -592,7 +592,7 @@ public class BrokerContextImpl implements BrokerContext {
                     ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topic), "invalid topicName: " + topic);
                     brokerTopic = new BrokerTopic(topic, options.getMaxMessageQueueLength(), pushThreadPool);
                     LOGGER.info("create topic: {} capacity is {}", topic, brokerTopic.getMessageQueue().capacity());
-                    topicPublishTree.addTopic(brokerTopic);
+                    topicRegistry.addTopic(brokerTopic);
                     eventBus.publish(EventType.TOPIC_CREATE, brokerTopic);
                     topicMap.put(topic, brokerTopic);
                 }
@@ -653,12 +653,12 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     @Override
-    public TopicPublishTree getPublishTopicTree() {
-        return topicPublishTree;
+    public BrokerTopicRegistry getPublishTopicTree() {
+        return topicRegistry;
     }
 
     @Override
-    public TopicSubscribeTree getTopicSubscribeTree() {
+    public TopicSubscriptionRegistry getTopicSubscribeTree() {
         return subscribeTopicTree;
     }
 

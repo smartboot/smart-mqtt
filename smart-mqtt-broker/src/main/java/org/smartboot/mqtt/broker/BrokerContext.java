@@ -15,8 +15,8 @@ import org.smartboot.mqtt.broker.eventbus.messagebus.MessageBus;
 import org.smartboot.mqtt.broker.processor.MqttProcessor;
 import org.smartboot.mqtt.broker.provider.Providers;
 import org.smartboot.mqtt.broker.topic.BrokerTopic;
-import org.smartboot.mqtt.broker.topic.TopicPublishTree;
-import org.smartboot.mqtt.broker.topic.TopicSubscribeTree;
+import org.smartboot.mqtt.broker.topic.BrokerTopicRegistry;
+import org.smartboot.mqtt.broker.topic.TopicSubscriptionRegistry;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.socket.timer.Timer;
 
@@ -82,7 +82,7 @@ public interface BrokerContext {
 
     <T extends MqttMessage> Map<Class<? extends MqttMessage>, MqttProcessor<?>> getMessageProcessors();
 
-    TopicPublishTree getPublishTopicTree();
+    BrokerTopicRegistry getPublishTopicTree();
 
-    TopicSubscribeTree getTopicSubscribeTree();
+    TopicSubscriptionRegistry getTopicSubscribeTree();
 }
