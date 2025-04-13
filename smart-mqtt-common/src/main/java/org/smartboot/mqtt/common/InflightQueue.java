@@ -27,6 +27,7 @@ import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
+import org.smartboot.socket.timer.Timer;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -48,11 +49,13 @@ public class InflightQueue {
     private int packetId = 0;
 
     private final AbstractSession session;
+    private final Timer timer;
 
-    public InflightQueue(AbstractSession session, int size) {
+    public InflightQueue(AbstractSession session, int size, Timer timer) {
         ValidateUtils.isTrue(size > 0, "inflight must >0");
         this.queue = new InflightMessage[size];
         this.session = session;
+        this.timer = timer;
     }
 
     public synchronized CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> put(MessageBuilder publishBuilder) {
@@ -118,7 +121,7 @@ public class InflightQueue {
         if (inflightMessage.isCommit() || session.isDisconnect()) {
             return;
         }
-        session.getTimer().schedule(new AsyncTask() {
+        timer.schedule(new AsyncTask() {
             @Override
             public void execute() {
                 if (inflightMessage.isCommit()) {
@@ -132,7 +135,7 @@ public class InflightQueue {
                 long delay = TimeUnit.SECONDS.toMillis(TIMEOUT) - MqttUtil.currentTimeMillis() + inflightMessage.getLatestTime();
                 if (delay > 0) {
                     LOGGER.info("the time is not up, try again in {} milliseconds ", delay);
-                    session.getTimer().schedule(this, delay, TimeUnit.MILLISECONDS);
+                    timer.schedule(this, delay, TimeUnit.MILLISECONDS);
                     return;
                 }
                 inflightMessage.setLatestTime(MqttUtil.currentTimeMillis());
@@ -166,7 +169,7 @@ public class InflightQueue {
                 }
                 inflightMessage.setRetryCount(inflightMessage.getRetryCount() + 1);
                 //不断重试直至完成
-                session.getTimer().schedule(this, TIMEOUT, TimeUnit.SECONDS);
+                timer.schedule(this, TIMEOUT, TimeUnit.SECONDS);
             }
         }, TimeUnit.SECONDS.toMillis(TIMEOUT) - (MqttUtil.currentTimeMillis() - inflightMessage.getLatestTime()), TimeUnit.MILLISECONDS);
     }

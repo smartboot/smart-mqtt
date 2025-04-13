@@ -16,7 +16,6 @@ import org.smartboot.mqtt.common.message.MqttPubRecMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
-import org.smartboot.socket.timer.Timer;
 import org.smartboot.socket.transport.AioSession;
 
 import java.io.IOException;
@@ -49,8 +48,6 @@ public abstract class AbstractSession {
     protected InflightQueue inflightQueue;
     private final Hashtable<Integer, MqttPublishMessage> ackMessageCacheMap = new Hashtable<>();
 
-    protected final Timer timer;
-
     //消息超时重发任务
     Runnable retryRunnable;
     /**
@@ -61,14 +58,6 @@ public abstract class AbstractSession {
     MqttMessage mqttMessage;
     // 当前正在解码的消息
     ByteBuffer disposableBuffer;
-
-    public AbstractSession(Timer timer) {
-        this.timer = timer;
-    }
-
-    Timer getTimer() {
-        return timer;
-    }
 
     public final void write(MqttPubRecMessage mqttMessage, MqttPublishMessage publishMessage) {
         ackMessageCacheMap.put(mqttMessage.getVariableHeader().getPacketId(), publishMessage);

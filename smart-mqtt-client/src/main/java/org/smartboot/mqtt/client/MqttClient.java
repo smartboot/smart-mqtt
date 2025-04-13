@@ -120,7 +120,6 @@ public class MqttClient extends AbstractSession {
     }
 
     public MqttClient(String uri, Consumer<Options> opt) {
-        super(TIMER);
         String[] array = uri.split(":");
         if (array[0].equals("mqtts")) {
             options.setHost(array[1].substring(2));
@@ -172,7 +171,7 @@ public class MqttClient extends AbstractSession {
 
             //如果客户端在合理的时间内没有收到服务端的 CONNACK 报文，客户端应该关闭网络连接。
             // 合理的时间取决于应用的类型和通信基础设施。
-            connectTimer = timer.schedule(new AsyncTask() {
+            connectTimer = TIMER.schedule(new AsyncTask() {
                 @Override
                 public void execute() {
                     if (!connected) {
@@ -184,7 +183,7 @@ public class MqttClient extends AbstractSession {
             //启动心跳插件
             long keepAliveInterval = TimeUnit.SECONDS.toMillis(options.getKeepAliveInterval());
             if (keepAliveInterval > 0) {
-                timer.schedule(new AsyncTask() {
+                TIMER.schedule(new AsyncTask() {
                     @Override
                     public void execute() {
                         //客户端发送了 PINGREQ 报文之后，如果在合理的时间内仍没有收到 PINGRESP 报文，
@@ -200,10 +199,10 @@ public class MqttClient extends AbstractSession {
                             MqttPingReqMessage pingReqMessage = new MqttPingReqMessage();
                             write(pingReqMessage);
                             pingTimeout++;
-                            timer.schedule(this, keepAliveInterval, TimeUnit.MILLISECONDS);
+                            TIMER.schedule(this, keepAliveInterval, TimeUnit.MILLISECONDS);
                         } else {
 //                        LOGGER.info("client:{} ping listening was triggered early {}ms", clientId, -delay);
-                            timer.schedule(this, -delay, TimeUnit.MILLISECONDS);
+                            TIMER.schedule(this, -delay, TimeUnit.MILLISECONDS);
                         }
                     }
                 }, keepAliveInterval, TimeUnit.MILLISECONDS);
@@ -354,7 +353,7 @@ public class MqttClient extends AbstractSession {
 
         //连接成功,注册订阅消息
         if (connAckMessage.getVariableHeader().connectReturnCode() == MqttConnectReturnCode.CONNECTION_ACCEPTED) {
-            setInflightQueue(new InflightQueue(this, options.getMaxInflight()));
+            setInflightQueue(new InflightQueue(this, options.getMaxInflight(), TIMER));
             //重连情况下重新触发订阅逻辑
             subscribes.forEach((k, v) -> {
                 subscribe(k, v.getQoS(), v.getConsumer());
