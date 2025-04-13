@@ -29,7 +29,7 @@ import org.smartboot.socket.transport.AioSession;
  * @author 三刀
  * @version V1.0 , 2018/4/24
  */
-public class MqttBrokerMessageProcessor extends MqttMessageProcessor {
+final class MqttBrokerMessageProcessor extends MqttMessageProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttBrokerMessageProcessor.class);
     /**
      * Mqtt服务全局Context

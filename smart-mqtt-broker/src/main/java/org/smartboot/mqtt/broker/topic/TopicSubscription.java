@@ -8,9 +8,8 @@
  *  without special permission from the smartboot organization.
  */
 
-package org.smartboot.mqtt.broker;
+package org.smartboot.mqtt.broker.topic;
 
-import org.smartboot.mqtt.broker.topic.BrokerTopic;
 import org.smartboot.mqtt.broker.topic.deliver.Qos0MessageDeliver;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
@@ -79,7 +78,7 @@ public class TopicSubscription {
      * @param topicFilterToken 主题过滤器的Token解析结果
      * @param mqttQoS 订阅的QoS级别
      */
-    TopicSubscription(TopicToken topicFilterToken, MqttQoS mqttQoS) {
+    public TopicSubscription(TopicToken topicFilterToken, MqttQoS mqttQoS) {
         this.topicFilterToken = topicFilterToken;
         this.mqttQoS = mqttQoS;
     }
@@ -123,7 +122,7 @@ public class TopicSubscription {
      *
      * @return 主题与消费记录的映射关系
      */
-    Map<BrokerTopic, Qos0MessageDeliver> getTopicSubscribers() {
+    public Map<BrokerTopic, Qos0MessageDeliver> getTopicSubscribers() {
         return topicSubscribers;
     }
 }

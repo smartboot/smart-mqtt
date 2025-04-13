@@ -10,8 +10,8 @@
 
 package org.smartboot.mqtt.broker.topic.deliver;
 
-import org.smartboot.mqtt.broker.TopicSubscription;
 import org.smartboot.mqtt.broker.topic.BrokerTopic;
+import org.smartboot.mqtt.broker.topic.TopicSubscription;
 
 /**
  * MQTT消息消费的抽象基类，负责管理消息的消费状态和推送机制。

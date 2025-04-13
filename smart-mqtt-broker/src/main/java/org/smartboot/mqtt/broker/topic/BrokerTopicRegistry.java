@@ -10,7 +10,6 @@
 
 package org.smartboot.mqtt.broker.topic;
 
-import org.smartboot.mqtt.broker.TopicSubscription;
 import org.smartboot.mqtt.common.TopicToken;
 
 import java.util.concurrent.ConcurrentHashMap;
