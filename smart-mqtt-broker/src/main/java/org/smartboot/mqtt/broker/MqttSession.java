@@ -74,7 +74,6 @@ public class MqttSession extends AbstractSession {
 
 
     public MqttSession(BrokerContext mqttContext, AioSession session, MqttWriter mqttWriter) {
-        super(mqttContext.getTimer());
         this.mqttContext = mqttContext;
         this.session = session;
         this.mqttWriter = mqttWriter;
