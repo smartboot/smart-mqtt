@@ -190,7 +190,7 @@ public class MqttSession extends AbstractSession {
         TopicSubscription newSubscriber = new TopicSubscription(topicToken, mqttQoS);
         ValidateUtils.isTrue(subscribers.put(topicFilter, newSubscriber) == null, "duplicate topic filter");
         mqttContext.getTopicSubscribeTree().subscribeTopic(this, newSubscriber);
-        mqttContext.getPublishTopicTree().match(topicToken, topic -> subscribeSuccess(newSubscriber, topic));
+        mqttContext.getPublishTopicTree().matchSubscriptionToTopics(newSubscriber, topic -> subscribeSuccess(newSubscriber, topic));
     }
 
     public void subscribeSuccess(TopicSubscription topicSubscription, BrokerTopic topic) {
@@ -246,7 +246,7 @@ public class MqttSession extends AbstractSession {
     }
 
     public void resubscribe() {
-        subscribers.values().stream().filter(subscriber -> subscriber.getTopicFilterToken().isWildcards()).forEach(subscriber -> mqttContext.getPublishTopicTree().match(subscriber.getTopicFilterToken(), topic -> subscribeSuccess(subscriber, topic)));
+        subscribers.values().stream().filter(subscriber -> subscriber.getTopicFilterToken().isWildcards()).forEach(subscriber -> mqttContext.getPublishTopicTree().matchSubscriptionToTopics(subscriber, topic -> subscribeSuccess(subscriber, topic)));
     }
 
     public void unsubscribe(String topicFilter) {
