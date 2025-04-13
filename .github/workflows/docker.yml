@@ -76,4 +76,5 @@ jobs:
           context: smart-mqtt-enterprise
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: smartboot/smart-mqtt:latest
+          tags: |
+            smartboot/smart-mqtt:${{ github.ref_type == 'tag' && github.ref_name || 'latest' }}
