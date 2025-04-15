@@ -110,7 +110,7 @@ public class EventType<T> {
         this(name, false);
     }
 
-    boolean isOnce() {
+    public boolean isOnce() {
         return once;
     }
 

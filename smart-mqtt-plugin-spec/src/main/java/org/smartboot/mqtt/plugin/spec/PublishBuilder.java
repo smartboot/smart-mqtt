@@ -69,7 +69,7 @@ public final class PublishBuilder implements MessageBuilder<MqttPublishMessage> 
     }
 
     public MqttPublishMessage build() {
-        MqttPublishVariableHeader mqttVariableHeader = new MqttPublishVariableHeader(packetId, topic.getEncodedTopic(), publishProperties);
+        MqttPublishVariableHeader mqttVariableHeader = new MqttPublishVariableHeader(packetId, topic.encodedTopicBytes(), publishProperties);
         return new MqttPublishMessage(MqttFixedHeader.getInstance(MqttMessageType.PUBLISH, false, qos.value(), retained), mqttVariableHeader, payload);
     }
 }

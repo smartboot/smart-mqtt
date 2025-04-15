@@ -55,7 +55,7 @@ public final class Message extends ToString {
      */
     private AtomicInteger pushSemaphore;
 
-    Message(MqttPublishMessage message, BrokerTopic topic) {
+    public Message(MqttPublishMessage message, BrokerTopic topic) {
         this.payload = message.getPayload().getPayload();
         this.retained = message.getFixedHeader().isRetain();
         this.topic = topic;

@@ -24,14 +24,8 @@ import java.util.Map;
  */
 public interface BrokerContext {
 
-    /**
-     * 初始化Broker上下文
-     */
-    void init() throws Throwable;
 
     Options Options();
-
-    void addSession(MqttSession session);
 
     MqttSession getSession(String clientId);
 
@@ -59,8 +53,6 @@ public interface BrokerContext {
 
     Timer getTimer();
 
-    void destroy();
-
     Providers getProviders();
 
     /**
@@ -68,6 +60,6 @@ public interface BrokerContext {
      */
     <T> T parseConfig(String path, Class<T> clazz);
 
-    <T extends MqttMessage> Map<Class<? extends MqttMessage>, MqttProcessor<?>> getMessageProcessors();
+    Map<Class<? extends MqttMessage>, MqttProcessor<?>> getMessageProcessors();
 
 }

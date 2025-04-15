@@ -52,17 +52,14 @@ import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.mqtt.plugin.spec.BrokerContext;
-import org.smartboot.mqtt.plugin.spec.BrokerTopic;
 import org.smartboot.mqtt.plugin.spec.MessageDeliver;
 import org.smartboot.mqtt.plugin.spec.MqttProcessor;
 import org.smartboot.mqtt.plugin.spec.MqttSession;
 import org.smartboot.mqtt.plugin.spec.Options;
 import org.smartboot.mqtt.plugin.spec.Plugin;
 import org.smartboot.mqtt.plugin.spec.PublishBuilder;
-import org.smartboot.mqtt.plugin.spec.bus.EventBus;
 import org.smartboot.mqtt.plugin.spec.bus.EventType;
 import org.smartboot.mqtt.plugin.spec.bus.Message;
-import org.smartboot.mqtt.plugin.spec.bus.MessageBus;
 import org.smartboot.mqtt.plugin.spec.provider.Providers;
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
@@ -196,7 +193,7 @@ public class BrokerContextImpl implements BrokerContext {
      * </ul>
      * </p>
      */
-    private final MessageBus messageBusSubscriber = new MessageBus(this);
+    private final MessageBusImpl messageBusSubscriber = new MessageBusImpl(this);
 
     /**
      * 事件总线，用于处理Broker内部的事件通知。
@@ -210,7 +207,7 @@ public class BrokerContextImpl implements BrokerContext {
      * </ul>
      * </p>
      */
-    private final EventBus eventBus = new EventBus();
+    private final EventBusImpl eventBus = new EventBusImpl();
 
     /**
      * 已加载的插件列表。
@@ -313,7 +310,6 @@ public class BrokerContextImpl implements BrokerContext {
      *
      * @throws Throwable 如果初始化过程中发生任何错误
      */
-    @Override
     public void init() throws Throwable {
         providers.setSessionStateProvider(new MemorySessionStateProvider());
         updateBrokerConfigure();
@@ -412,7 +408,7 @@ public class BrokerContextImpl implements BrokerContext {
     private void subscribeMessageBus() {
         //持久化消息
         messageBusSubscriber.consumer((session, publishMessage) -> {
-            BrokerTopic brokerTopic = publishMessage.getTopic();
+            BrokerTopicImpl brokerTopic = (BrokerTopicImpl) publishMessage.getTopic();
             int count = brokerTopic.subscribeCount();
             if (count == 0) {
                 LOGGER.debug("none subscriber,ignore message");
@@ -583,7 +579,6 @@ public class BrokerContextImpl implements BrokerContext {
         return options;
     }
 
-    @Override
     public void addSession(MqttSession session) {
         grantSessions.putIfAbsent(session.getClientId(), session);
     }
@@ -613,12 +608,12 @@ public class BrokerContextImpl implements BrokerContext {
 //    }
 
     @Override
-    public MessageBus getMessageBus() {
+    public MessageBusImpl getMessageBus() {
         return messageBusSubscriber;
     }
 
     @Override
-    public EventBus getEventBus() {
+    public EventBusImpl getEventBus() {
         return eventBus;
     }
 
@@ -692,11 +687,10 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
 
-    @Override
     public void destroy() {
         LOGGER.info("destroy broker...");
         eventBus.publish(EventType.BROKER_DESTROY, this);
-        topicMap.values().forEach(BrokerTopic::disable);
+        topicMap.values().forEach(BrokerTopicImpl::disable);
         pushThreadPool.shutdown();
         if (server != null) {
             server.shutdown();

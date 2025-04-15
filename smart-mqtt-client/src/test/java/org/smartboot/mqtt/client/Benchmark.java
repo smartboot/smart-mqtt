@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContextImpl;
 import org.smartboot.mqtt.common.enums.MqttQoS;
-import org.smartboot.mqtt.plugin.spec.BrokerContext;
 
 import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.charset.StandardCharsets;
@@ -26,7 +25,7 @@ public class Benchmark {
     private final int port = 1883;
     private AsynchronousChannelGroup channelGroup;
 
-    private BrokerContext context;
+    private BrokerContextImpl context;
 
     @Before
     public void init() throws Throwable {

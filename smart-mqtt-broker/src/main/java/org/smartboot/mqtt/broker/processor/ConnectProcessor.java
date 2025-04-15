@@ -13,6 +13,7 @@ package org.smartboot.mqtt.broker.processor;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.broker.BrokerContextImpl;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttProtocolEnum;
@@ -178,7 +179,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
             }
         }
 
-        context.addSession(session);
+        ((BrokerContextImpl) context).addSession(session);
         LOGGER.debug("add session for client:{}", session);
     }
 

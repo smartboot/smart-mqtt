@@ -10,30 +10,15 @@
 
 package org.smartboot.mqtt.plugin.spec;
 
-import org.smartboot.mqtt.plugin.spec.bus.Message;
-
 /**
  * @author 三刀
  * @version v1.0 4/14/25
  */
 public interface BrokerTopic {
-    MessageQueue getMessageQueue();
 
-    Message getRetainMessage();
-
-    byte[] getEncodedTopic();
+    byte[] encodedTopicBytes();
 
     int subscribeCount();
 
-    void setRetainMessage(Message retainMessage);
-
     String getTopic();
-
-    void dump();
-
-    void addVersion();
-
-    void push();
-
-    void disable();
 }

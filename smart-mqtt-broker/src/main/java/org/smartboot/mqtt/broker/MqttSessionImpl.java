@@ -26,7 +26,6 @@ import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.mqtt.plugin.spec.MessageDeliver;
 import org.smartboot.mqtt.plugin.spec.MqttSession;
-import org.smartboot.mqtt.plugin.spec.bus.EventBus;
 import org.smartboot.mqtt.plugin.spec.bus.EventObject;
 import org.smartboot.mqtt.plugin.spec.bus.EventType;
 import org.smartboot.mqtt.plugin.spec.provider.SessionState;
@@ -112,8 +111,8 @@ public class MqttSessionImpl extends MqttSession {
     @Override
     public void write(MqttMessage mqttMessage, boolean autoFlush) {
         super.write(mqttMessage, autoFlush);
-        if (!EventBus.WRITE_MESSAGE_SUBSCRIBER_LIST.isEmpty()) {
-            mqttContext.getEventBus().publish(EventType.WRITE_MESSAGE, EventObject.newEventObject(this, mqttMessage), EventBus.WRITE_MESSAGE_SUBSCRIBER_LIST);
+        if (!EventBusImpl.WRITE_MESSAGE_SUBSCRIBER_LIST.isEmpty()) {
+            mqttContext.getEventBus().publish(EventType.WRITE_MESSAGE, EventObject.newEventObject(this, mqttMessage), EventBusImpl.WRITE_MESSAGE_SUBSCRIBER_LIST);
         }
     }
 

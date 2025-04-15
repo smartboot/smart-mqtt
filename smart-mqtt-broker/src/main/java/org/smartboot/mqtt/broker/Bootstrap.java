@@ -10,15 +10,13 @@
 
 package org.smartboot.mqtt.broker;
 
-import org.smartboot.mqtt.plugin.spec.BrokerContext;
-
 /**
  * @author 三刀
  * @version V1.0 , 2018/4/24
  */
 public class Bootstrap {
     public static void main(String[] args) throws Throwable {
-        BrokerContext context = new BrokerContextImpl();
+        BrokerContextImpl context = new BrokerContextImpl();
         context.init();
 
         Runtime.getRuntime().addShutdownHook(new Thread(context::destroy));

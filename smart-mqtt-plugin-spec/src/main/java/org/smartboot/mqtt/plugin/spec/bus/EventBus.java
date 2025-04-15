@@ -10,43 +10,17 @@
 
 package org.smartboot.mqtt.plugin.spec.bus;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/6/29
  */
-public class EventBus {
-    private static final Logger LOGGER = LoggerFactory.getLogger(EventBus.class);
+public interface EventBus {
 
-    private final Map<EventType, List<EventBusSubscriber>> map = new ConcurrentHashMap<>();
+    <T> void subscribe(EventType<T> type, EventBusSubscriber<T> subscriber);
 
-    public static List<EventBusSubscriber> WRITE_MESSAGE_SUBSCRIBER_LIST = new CopyOnWriteArrayList<>();
-
-    public static List<EventBusSubscriber> RECEIVE_MESSAGE_SUBSCRIBER_LIST = new CopyOnWriteArrayList<>();
-
-
-    public <T> void subscribe(EventType<T> type, EventBusSubscriber<T> subscriber) {
-        LOGGER.debug("subscribe eventbus, type: {} ,subscriber: {}", type, subscriber);
-        if (type.isOnce() && !(subscriber instanceof DisposableEventBusSubscriber)) {
-            getSubscribers(type).add(new DisposableEventBusSubscriber<T>() {
-                @Override
-                public void subscribe(EventType<T> eventType, T object) {
-                    subscriber.subscribe(eventType, object);
-                }
-            });
-        } else {
-            getSubscribers(type).add(subscriber);
-        }
-    }
-
-    public <T> void subscribe(List<EventType<T>> types, EventBusSubscriber<T> subscriber) {
+    default <T> void subscribe(List<EventType<T>> types, EventBusSubscriber<T> subscriber) {
         for (EventType<T> eventType : types) {
             subscribe(eventType, subscriber);
         }
@@ -55,15 +29,12 @@ public class EventBus {
     /**
      * 发布消息至总线
      */
-    public <T> void publish(EventType<T> eventType, T object) {
-        List<EventBusSubscriber> list = getSubscribers(eventType);
-        publish(eventType, object, list);
-    }
+    <T> void publish(EventType<T> eventType, T object);
 
     /**
      * 发布消息至总线
      */
-    public <T> void publish(EventType<T> eventType, T object, List<EventBusSubscriber> subscribers) {
+    default <T> void publish(EventType<T> eventType, T object, List<EventBusSubscriber> subscribers) {
         boolean remove = false;
         for (EventBusSubscriber subscriber : subscribers) {
             try {
@@ -73,7 +44,7 @@ public class EventBus {
                     remove = true;
                 }
             } catch (Throwable throwable) {
-                LOGGER.error("publish event error", throwable);
+                throwable.printStackTrace();
             }
         }
         if (remove) {
@@ -81,15 +52,4 @@ public class EventBus {
         }
     }
 
-    private List<EventBusSubscriber> getSubscribers(EventType eventType) {
-        return map.computeIfAbsent(eventType, type -> {
-            if (type == EventType.WRITE_MESSAGE) {
-                return WRITE_MESSAGE_SUBSCRIBER_LIST;
-            }
-            if (type == EventType.RECEIVE_MESSAGE) {
-                return RECEIVE_MESSAGE_SUBSCRIBER_LIST;
-            }
-            return new CopyOnWriteArrayList<>();
-        });
-    }
 }

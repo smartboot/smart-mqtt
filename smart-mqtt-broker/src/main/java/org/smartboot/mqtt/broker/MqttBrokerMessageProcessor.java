@@ -19,7 +19,6 @@ import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.mqtt.plugin.spec.MqttProcessor;
-import org.smartboot.mqtt.plugin.spec.bus.EventBus;
 import org.smartboot.mqtt.plugin.spec.bus.EventObject;
 import org.smartboot.mqtt.plugin.spec.bus.EventType;
 import org.smartboot.socket.StateMachineEnum;
@@ -46,8 +45,8 @@ final class MqttBrokerMessageProcessor extends MqttMessageProcessor {
         MqttProcessor processor = mqttContext.getMessageProcessors().get(msg.getClass());
         ValidateUtils.notNull(processor, "unSupport message");
         MqttSessionImpl mqttSession = session.getAttachment();
-        if (!EventBus.RECEIVE_MESSAGE_SUBSCRIBER_LIST.isEmpty()) {
-            mqttContext.getEventBus().publish(EventType.RECEIVE_MESSAGE, EventObject.newEventObject(mqttSession, msg), EventBus.RECEIVE_MESSAGE_SUBSCRIBER_LIST);
+        if (!EventBusImpl.RECEIVE_MESSAGE_SUBSCRIBER_LIST.isEmpty()) {
+            mqttContext.getEventBus().publish(EventType.RECEIVE_MESSAGE, EventObject.newEventObject(mqttSession, msg), EventBusImpl.RECEIVE_MESSAGE_SUBSCRIBER_LIST);
         }
         mqttSession.setLatestReceiveMessageTime(MqttUtil.currentTimeMillis());
         processor.process(mqttContext, mqttSession, msg);

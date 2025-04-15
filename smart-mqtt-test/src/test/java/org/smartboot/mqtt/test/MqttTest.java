@@ -20,7 +20,6 @@ import org.smartboot.mqtt.broker.BrokerContextImpl;
 import org.smartboot.mqtt.client.MqttClient;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.message.payload.WillMessage;
-import org.smartboot.mqtt.plugin.spec.BrokerContext;
 
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
@@ -30,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 public class MqttTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttTest.class);
-    private BrokerContext brokerContext;
+    private BrokerContextImpl brokerContext;
 
     @Before
     public void init() throws Throwable {
