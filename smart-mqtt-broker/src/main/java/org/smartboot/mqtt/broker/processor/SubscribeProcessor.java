@@ -12,6 +12,8 @@ package org.smartboot.mqtt.broker.processor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.broker.BrokerContextImpl;
+import org.smartboot.mqtt.broker.MqttSessionImpl;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttSubAckMessage;
 import org.smartboot.mqtt.common.message.MqttSubscribeMessage;
@@ -19,8 +21,6 @@ import org.smartboot.mqtt.common.message.MqttTopicSubscription;
 import org.smartboot.mqtt.common.message.payload.MqttSubAckPayload;
 import org.smartboot.mqtt.common.message.variable.MqttReasonVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
-import org.smartboot.mqtt.plugin.spec.BrokerContext;
-import org.smartboot.mqtt.plugin.spec.MqttSession;
 import org.smartboot.mqtt.plugin.spec.bus.EventObject;
 import org.smartboot.mqtt.plugin.spec.bus.EventType;
 
@@ -34,7 +34,7 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
     private static final Logger LOGGER = LoggerFactory.getLogger(SubscribeProcessor.class);
 
     @Override
-    public void process0(BrokerContext context, MqttSession session, MqttSubscribeMessage mqttSubscribeMessage) {
+    public void process0(BrokerContextImpl context, MqttSessionImpl session, MqttSubscribeMessage mqttSubscribeMessage) {
         //有效载荷包含一个返回码清单。每个返回码对应等待确认的 SUBSCRIBE 报文中的一个主题过滤器。
         // 返回码的顺序必须和 SUBSCRIBE 报文中主题过滤器的顺序相同
         int[] qosArray = new int[mqttSubscribeMessage.getPayload().getTopicSubscriptions().size()];

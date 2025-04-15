@@ -16,7 +16,7 @@ import org.smartboot.mqtt.common.message.MqttMessage;
  * @author 三刀
  * @version V1.0 , 2018/4/25
  */
-public interface MqttProcessor<T extends MqttMessage> {
+public interface MqttProcessor<B extends BrokerContext, T extends MqttMessage, M extends MqttSession> {
 
     /**
      * 处理Mqtt消息
@@ -25,5 +25,5 @@ public interface MqttProcessor<T extends MqttMessage> {
      * @param session
      * @param t
      */
-    void process(BrokerContext context, MqttSession session, T t);
+    void process(B context, M session, T t);
 }

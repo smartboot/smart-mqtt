@@ -60,6 +60,6 @@ public interface BrokerContext {
      */
     <T> T parseConfig(String path, Class<T> clazz);
 
-    Map<Class<? extends MqttMessage>, MqttProcessor<?>> getMessageProcessors();
+    Map<Class<? extends MqttMessage>, MqttProcessor<?, ?, ?>> getMessageProcessors();
 
 }

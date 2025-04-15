@@ -14,6 +14,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContextImpl;
+import org.smartboot.mqtt.broker.MqttSessionImpl;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttProtocolEnum;
@@ -48,12 +49,12 @@ import static org.smartboot.mqtt.common.enums.MqttConnectReturnCode.UNSUPPORTED_
  * @author 三刀
  * @version V1.0 , 2018/4/25
  */
-public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
+public class ConnectProcessor implements MqttProcessor<BrokerContextImpl, MqttConnectMessage, MqttSessionImpl> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectProcessor.class);
     private static final int MAX_CLIENT_ID_LENGTH = 23;
 
     @Override
-    public void process(BrokerContext context, MqttSession session, MqttConnectMessage mqttConnectMessage) {
+    public void process(BrokerContextImpl context, MqttSessionImpl session, MqttConnectMessage mqttConnectMessage) {
 //        LOGGER.info("receive connect message:{}", mqttConnectMessage);
         String clientId = mqttConnectMessage.getPayload().clientId();
         //服务端可以允许客户端提供一个零字节的客户端标识符 (ClientId) ，如果这样做了，服务端必须将这看作特
@@ -154,7 +155,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         });
     }
 
-    private void refreshSession(BrokerContext context, MqttSession session, MqttConnectMessage mqttConnectMessage) {
+    private void refreshSession(BrokerContextImpl context, MqttSession session, MqttConnectMessage mqttConnectMessage) {
         session.setCleanSession(mqttConnectMessage.getVariableHeader().isCleanSession());
         MqttSession mqttSession = context.getSession(session.getClientId());
         if (mqttSession != null) {
@@ -179,7 +180,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
             }
         }
 
-        ((BrokerContextImpl) context).addSession(session);
+        context.addSession(session);
         LOGGER.debug("add session for client:{}", session);
     }
 

@@ -10,12 +10,12 @@
 
 package org.smartboot.mqtt.broker.processor;
 
+import org.smartboot.mqtt.broker.BrokerContextImpl;
+import org.smartboot.mqtt.broker.MqttSessionImpl;
 import org.smartboot.mqtt.common.message.MqttPubCompMessage;
 import org.smartboot.mqtt.common.message.MqttPubRelMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
-import org.smartboot.mqtt.plugin.spec.BrokerContext;
-import org.smartboot.mqtt.plugin.spec.MqttSession;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -23,7 +23,7 @@ import org.smartboot.mqtt.plugin.spec.MqttSession;
  */
 public class PubRelProcessor extends AuthorizedMqttProcessor<MqttPubRelMessage> {
     @Override
-    public void process0(BrokerContext context, MqttSession session, MqttPubRelMessage message) {
+    public void process0(BrokerContextImpl context, MqttSessionImpl session, MqttPubRelMessage message) {
         //发送pubRel消息。
         //todo
         MqttPubQosVariableHeader qosVariableHeader;

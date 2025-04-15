@@ -10,9 +10,9 @@
 
 package org.smartboot.mqtt.broker.processor;
 
+import org.smartboot.mqtt.broker.BrokerContextImpl;
+import org.smartboot.mqtt.broker.MqttSessionImpl;
 import org.smartboot.mqtt.common.message.MqttPubQosMessage;
-import org.smartboot.mqtt.plugin.spec.BrokerContext;
-import org.smartboot.mqtt.plugin.spec.MqttSession;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -20,7 +20,7 @@ import org.smartboot.mqtt.plugin.spec.MqttSession;
  */
 public class MqttAckProcessor<T extends MqttPubQosMessage> extends AuthorizedMqttProcessor<T> {
     @Override
-    public void process0(BrokerContext context, MqttSession session, T t) {
+    public void process0(BrokerContextImpl context, MqttSessionImpl session, T t) {
         session.getInflightQueue().notify(t);
     }
 }

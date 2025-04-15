@@ -269,11 +269,11 @@ public class BrokerContextImpl implements BrokerContext {
      * </ul>
      * </p>
      */
-    private final Map<Class<? extends MqttMessage>, MqttProcessor<?>> processors;
+    private final Map<Class<? extends MqttMessage>, MqttProcessor<?, ?, ?>> processors;
     private final BufferPagePool bufferPagePool = new BufferPagePool(1, true);
 
     {
-        Map<Class<? extends MqttMessage>, MqttProcessor<?>> mqttProcessors = new HashMap<>();
+        Map<Class<? extends MqttMessage>, MqttProcessor<?, ?, ?>> mqttProcessors = new HashMap<>();
         mqttProcessors.put(MqttPingReqMessage.class, new PingReqProcessor());
         mqttProcessors.put(MqttConnectMessage.class, new ConnectProcessor());
         mqttProcessors.put(MqttPublishMessage.class, new PublishProcessor());
@@ -682,7 +682,7 @@ public class BrokerContextImpl implements BrokerContext {
 
 
     @Override
-    public Map<Class<? extends MqttMessage>, MqttProcessor<?>> getMessageProcessors() {
+    public Map<Class<? extends MqttMessage>, MqttProcessor<?, ?, ?>> getMessageProcessors() {
         return processors;
     }
 

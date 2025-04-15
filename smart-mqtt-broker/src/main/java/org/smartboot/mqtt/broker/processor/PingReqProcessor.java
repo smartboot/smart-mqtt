@@ -10,10 +10,10 @@
 
 package org.smartboot.mqtt.broker.processor;
 
+import org.smartboot.mqtt.broker.BrokerContextImpl;
+import org.smartboot.mqtt.broker.MqttSessionImpl;
 import org.smartboot.mqtt.common.message.MqttPingReqMessage;
 import org.smartboot.mqtt.common.message.MqttPingRespMessage;
-import org.smartboot.mqtt.plugin.spec.BrokerContext;
-import org.smartboot.mqtt.plugin.spec.MqttSession;
 
 /**
  * 心跳请求处理
@@ -25,7 +25,7 @@ public class PingReqProcessor extends AuthorizedMqttProcessor<MqttPingReqMessage
     private static final MqttPingRespMessage RESP_MESSAGE = new MqttPingRespMessage();
 
     @Override
-    public void process0(BrokerContext context, MqttSession session, MqttPingReqMessage msg) {
+    public void process0(BrokerContextImpl context, MqttSessionImpl session, MqttPingReqMessage msg) {
         session.write(RESP_MESSAGE);
     }
 }

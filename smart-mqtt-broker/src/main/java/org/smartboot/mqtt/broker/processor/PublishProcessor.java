@@ -12,6 +12,8 @@ package org.smartboot.mqtt.broker.processor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.broker.BrokerContextImpl;
+import org.smartboot.mqtt.broker.MqttSessionImpl;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttReasonCode;
 import org.smartboot.mqtt.common.enums.MqttVersion;
@@ -34,7 +36,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
 
 
     @Override
-    public void process0(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
+    public void process0(BrokerContextImpl context, MqttSessionImpl session, MqttPublishMessage mqttPublishMessage) {
 //        LOGGER.info("receive publish message:{}", mqttPublishMessage);
 
         MqttQoS mqttQoS = mqttPublishMessage.getFixedHeader().getQosLevel();
