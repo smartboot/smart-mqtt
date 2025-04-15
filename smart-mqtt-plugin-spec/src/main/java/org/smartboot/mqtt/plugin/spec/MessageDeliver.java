@@ -10,7 +10,6 @@
 
 package org.smartboot.mqtt.plugin.spec;
 
-import org.smartboot.mqtt.common.MqttSession;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 

@@ -10,8 +10,8 @@
 
 package org.smartboot.mqtt.plugin.spec.provider;
 
-import org.smartboot.mqtt.common.MqttSession;
 import org.smartboot.mqtt.plugin.spec.BrokerTopic;
+import org.smartboot.mqtt.plugin.spec.MqttSession;
 
 /**
  * MQTT主题订阅提供者接口，用于处理客户端的主题订阅请求和主题匹配逻辑。

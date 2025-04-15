@@ -10,7 +10,6 @@
 
 package org.smartboot.mqtt.plugin.spec;
 
-import org.smartboot.mqtt.common.MqttSession;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.plugin.spec.bus.EventBus;
 import org.smartboot.mqtt.plugin.spec.bus.MessageBus;

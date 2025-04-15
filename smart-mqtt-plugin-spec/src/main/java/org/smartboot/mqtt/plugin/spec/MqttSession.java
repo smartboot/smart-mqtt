@@ -8,8 +8,9 @@
  *  without special permission from the smartboot organization.
  */
 
-package org.smartboot.mqtt.common;
+package org.smartboot.mqtt.plugin.spec;
 
+import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;

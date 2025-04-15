@@ -10,7 +10,7 @@
 
 package org.smartboot.mqtt.plugin.spec.bus;
 
-import org.smartboot.mqtt.common.MqttSession;
+import org.smartboot.mqtt.plugin.spec.MqttSession;
 
 /**
  * 通用事件模型

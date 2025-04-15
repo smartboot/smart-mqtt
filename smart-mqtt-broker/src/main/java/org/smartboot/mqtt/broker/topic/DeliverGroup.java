@@ -12,8 +12,8 @@ package org.smartboot.mqtt.broker.topic;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.common.MqttSession;
 import org.smartboot.mqtt.plugin.spec.MessageDeliver;
+import org.smartboot.mqtt.plugin.spec.MqttSession;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

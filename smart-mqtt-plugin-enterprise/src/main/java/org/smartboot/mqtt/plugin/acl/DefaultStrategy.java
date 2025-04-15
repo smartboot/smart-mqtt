@@ -2,11 +2,11 @@ package org.smartboot.mqtt.plugin.acl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.common.MqttSession;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.plugin.acl.to.AclPasswordConfigTO;
 import org.smartboot.mqtt.plugin.openapi.enums.SaltTypeEnum;
+import org.smartboot.mqtt.plugin.spec.MqttSession;
 import org.smartboot.mqtt.plugin.utils.SecureUtil;
 
 import java.util.Arrays;
