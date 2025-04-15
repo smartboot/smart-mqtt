@@ -12,16 +12,16 @@ package org.smartboot.mqtt.broker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.eventbus.EventBus;
-import org.smartboot.mqtt.broker.eventbus.EventObject;
-import org.smartboot.mqtt.broker.eventbus.EventType;
-import org.smartboot.mqtt.broker.processor.MqttProcessor;
 import org.smartboot.mqtt.common.DefaultMqttWriter;
 import org.smartboot.mqtt.common.MqttMessageProcessor;
 import org.smartboot.mqtt.common.exception.MqttException;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
+import org.smartboot.mqtt.plugin.spec.MqttProcessor;
+import org.smartboot.mqtt.plugin.spec.bus.EventBus;
+import org.smartboot.mqtt.plugin.spec.bus.EventObject;
+import org.smartboot.mqtt.plugin.spec.bus.EventType;
 import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.transport.AioSession;
 
@@ -34,10 +34,10 @@ final class MqttBrokerMessageProcessor extends MqttMessageProcessor {
     /**
      * Mqtt服务全局Context
      */
-    private final BrokerContext mqttContext;
+    private final BrokerContextImpl mqttContext;
 
 
-    public MqttBrokerMessageProcessor(BrokerContext mqttContext) {
+    public MqttBrokerMessageProcessor(BrokerContextImpl mqttContext) {
         this.mqttContext = mqttContext;
     }
 
@@ -45,7 +45,7 @@ final class MqttBrokerMessageProcessor extends MqttMessageProcessor {
     public void process0(AioSession session, MqttMessage msg) {
         MqttProcessor processor = mqttContext.getMessageProcessors().get(msg.getClass());
         ValidateUtils.notNull(processor, "unSupport message");
-        MqttSession mqttSession = session.getAttachment();
+        MqttSessionImpl mqttSession = session.getAttachment();
         if (!EventBus.RECEIVE_MESSAGE_SUBSCRIBER_LIST.isEmpty()) {
             mqttContext.getEventBus().publish(EventType.RECEIVE_MESSAGE, EventObject.newEventObject(mqttSession, msg), EventBus.RECEIVE_MESSAGE_SUBSCRIBER_LIST);
         }
@@ -60,11 +60,11 @@ final class MqttBrokerMessageProcessor extends MqttMessageProcessor {
                 LOGGER.error("decode exception", throwable);
                 break;
             case NEW_SESSION: {
-                session.setAttachment(new MqttSession(mqttContext, session, new DefaultMqttWriter(session.writeBuffer())));
+                session.setAttachment(new MqttSessionImpl(mqttContext, session, new DefaultMqttWriter(session.writeBuffer())));
                 break;
             }
             case SESSION_CLOSED:
-                MqttSession mqttSession = session.getAttachment();
+                MqttSessionImpl mqttSession = session.getAttachment();
                 mqttSession.disconnect();
                 break;
             case PROCESS_EXCEPTION:

@@ -10,7 +10,7 @@
 
 package org.smartboot.mqtt.plugin;
 
-import org.smartboot.mqtt.broker.BrokerContext;
+import org.smartboot.mqtt.plugin.spec.BrokerContext;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）

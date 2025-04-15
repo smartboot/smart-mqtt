@@ -23,45 +23,45 @@ public class TopicMatcherTest {
 
     @Test
     public void testMatcher() {
-        BrokerTopic topic = new BrokerTopic("/a");
+        BrokerTopicImpl topic = new BrokerTopicImpl("/a");
         TopicToken topicToken = new TopicToken("#");
-        Assert.assertTrue(MqttUtil.match(topic.getTopicToken(), topicToken));
+        Assert.assertTrue(MqttUtil.match(topic, topicToken));
 
-        topic = new BrokerTopic("/a");
+        topic = new BrokerTopicImpl("/a");
         topicToken = new TopicToken("/#");
-        Assert.assertTrue(MqttUtil.match(topic.getTopicToken(), topicToken));
+        Assert.assertTrue(MqttUtil.match(topic, topicToken));
 
-        topic = new BrokerTopic("/a");
+        topic = new BrokerTopicImpl("/a");
         topicToken = new TopicToken("+/#");
-        Assert.assertTrue(MqttUtil.match(topic.getTopicToken(), topicToken));
+        Assert.assertTrue(MqttUtil.match(topic, topicToken));
 
-        topic = new BrokerTopic("/a/b/c");
+        topic = new BrokerTopicImpl("/a/b/c");
         topicToken = new TopicToken("/#");
-        Assert.assertTrue(MqttUtil.match(topic.getTopicToken(), topicToken));
+        Assert.assertTrue(MqttUtil.match(topic, topicToken));
 
-        topic = new BrokerTopic("/a/b/c");
+        topic = new BrokerTopicImpl("/a/b/c");
         topicToken = new TopicToken("#");
-        Assert.assertTrue(MqttUtil.match(topic.getTopicToken(), topicToken));
+        Assert.assertTrue(MqttUtil.match(topic, topicToken));
 
-        topic = new BrokerTopic("/a/b/c");
+        topic = new BrokerTopicImpl("/a/b/c");
         topicToken = new TopicToken("/a/b/c");
-        Assert.assertTrue(MqttUtil.match(topic.getTopicToken(), topicToken));
+        Assert.assertTrue(MqttUtil.match(topic, topicToken));
 
-        topic = new BrokerTopic("/a/b/c");
+        topic = new BrokerTopicImpl("/a/b/c");
         topicToken = new TopicToken("a/b/c");
-        Assert.assertFalse(MqttUtil.match(topic.getTopicToken(), topicToken));
+        Assert.assertFalse(MqttUtil.match(topic, topicToken));
 
-        topic = new BrokerTopic("/a/b/c");
+        topic = new BrokerTopicImpl("/a/b/c");
         topicToken = new TopicToken("/+/b/+");
-        Assert.assertTrue(MqttUtil.match(topic.getTopicToken(), topicToken));
+        Assert.assertTrue(MqttUtil.match(topic, topicToken));
 
-        topic = new BrokerTopic("/a");
+        topic = new BrokerTopicImpl("/a");
         topicToken = new TopicToken("/+");
-        Assert.assertTrue(MqttUtil.match(topic.getTopicToken(), topicToken));
+        Assert.assertTrue(MqttUtil.match(topic, topicToken));
 
-        topic = new BrokerTopic("/a");
+        topic = new BrokerTopicImpl("/a");
         topicToken = new TopicToken("+/+");
-        Assert.assertTrue(MqttUtil.match(topic.getTopicToken(), topicToken));
+        Assert.assertTrue(MqttUtil.match(topic, topicToken));
     }
 
 }

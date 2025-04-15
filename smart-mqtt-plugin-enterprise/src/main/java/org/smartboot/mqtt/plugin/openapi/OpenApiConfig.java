@@ -1,6 +1,7 @@
 package org.smartboot.mqtt.plugin.openapi;
 
-import org.smartboot.mqtt.broker.plugin.Config;
+
+import org.smartboot.mqtt.plugin.spec.Config;
 
 public class OpenApiConfig extends Config {
     /**

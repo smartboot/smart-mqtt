@@ -12,11 +12,11 @@ package org.smartboot.mqtt.broker.eventbus.subscriber;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.eventbus.EventBusSubscriber;
-import org.smartboot.mqtt.broker.eventbus.EventObject;
-import org.smartboot.mqtt.broker.eventbus.EventType;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPingReqMessage;
+import org.smartboot.mqtt.plugin.spec.bus.EventBusSubscriber;
+import org.smartboot.mqtt.plugin.spec.bus.EventObject;
+import org.smartboot.mqtt.plugin.spec.bus.EventType;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）

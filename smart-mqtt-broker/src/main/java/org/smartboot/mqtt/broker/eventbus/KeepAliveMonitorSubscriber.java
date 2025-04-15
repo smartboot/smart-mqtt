@@ -12,10 +12,13 @@ package org.smartboot.mqtt.broker.eventbus;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.BrokerContext;
-import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
+import org.smartboot.mqtt.plugin.spec.BrokerContext;
+import org.smartboot.mqtt.plugin.spec.MqttSession;
+import org.smartboot.mqtt.plugin.spec.bus.EventBusSubscriber;
+import org.smartboot.mqtt.plugin.spec.bus.EventObject;
+import org.smartboot.mqtt.plugin.spec.bus.EventType;
 
 import java.util.concurrent.TimeUnit;
 

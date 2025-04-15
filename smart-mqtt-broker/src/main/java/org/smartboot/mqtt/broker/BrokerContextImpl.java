@@ -16,27 +16,20 @@ import com.alibaba.fastjson2.JSONReader;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.eventbus.EventBus;
-import org.smartboot.mqtt.broker.eventbus.EventType;
 import org.smartboot.mqtt.broker.eventbus.KeepAliveMonitorSubscriber;
-import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
-import org.smartboot.mqtt.broker.eventbus.messagebus.MessageBus;
 import org.smartboot.mqtt.broker.eventbus.messagebus.consumer.RetainPersistenceConsumer;
-import org.smartboot.mqtt.broker.plugin.Plugin;
 import org.smartboot.mqtt.broker.processor.ConnectProcessor;
 import org.smartboot.mqtt.broker.processor.DisConnectProcessor;
 import org.smartboot.mqtt.broker.processor.MqttAckProcessor;
-import org.smartboot.mqtt.broker.processor.MqttProcessor;
 import org.smartboot.mqtt.broker.processor.PingReqProcessor;
 import org.smartboot.mqtt.broker.processor.PubRelProcessor;
 import org.smartboot.mqtt.broker.processor.PublishProcessor;
 import org.smartboot.mqtt.broker.processor.SubscribeProcessor;
 import org.smartboot.mqtt.broker.processor.UnSubscribeProcessor;
-import org.smartboot.mqtt.broker.provider.Providers;
-import org.smartboot.mqtt.broker.topic.BrokerTopic;
+import org.smartboot.mqtt.broker.provider.impl.session.MemorySessionStateProvider;
+import org.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import org.smartboot.mqtt.broker.topic.BrokerTopicRegistry;
 import org.smartboot.mqtt.broker.topic.TopicSubscriptionRegistry;
-import org.smartboot.mqtt.broker.topic.deliver.Qos0MessageDeliver;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.MqttProtocol;
@@ -58,6 +51,19 @@ import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
+import org.smartboot.mqtt.plugin.spec.BrokerContext;
+import org.smartboot.mqtt.plugin.spec.BrokerTopic;
+import org.smartboot.mqtt.plugin.spec.MessageDeliver;
+import org.smartboot.mqtt.plugin.spec.MqttProcessor;
+import org.smartboot.mqtt.plugin.spec.MqttSession;
+import org.smartboot.mqtt.plugin.spec.Options;
+import org.smartboot.mqtt.plugin.spec.Plugin;
+import org.smartboot.mqtt.plugin.spec.PublishBuilder;
+import org.smartboot.mqtt.plugin.spec.bus.EventBus;
+import org.smartboot.mqtt.plugin.spec.bus.EventType;
+import org.smartboot.mqtt.plugin.spec.bus.Message;
+import org.smartboot.mqtt.plugin.spec.bus.MessageBus;
+import org.smartboot.mqtt.plugin.spec.provider.Providers;
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import org.smartboot.socket.timer.HashedWheelTimer;
@@ -70,7 +76,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -138,7 +143,7 @@ public class BrokerContextImpl implements BrokerContext {
      * 主题对象包含该主题的订阅者信息、消息队列和保留消息等。
      * </p>
      */
-    private final ConcurrentMap<String, BrokerTopic> topicMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, BrokerTopicImpl> topicMap = new ConcurrentHashMap<>();
 
     /**
      * Broker配置选项，包含服务器端口、最大连接数等配置参数。
@@ -165,7 +170,7 @@ public class BrokerContextImpl implements BrokerContext {
      * </ul>
      * </p>
      */
-    private final TopicSubscriptionRegistry subscribeTopicTree = new TopicSubscriptionRegistry();
+    private final TopicSubscriptionRegistry subscribeTopicTree = new TopicSubscriptionRegistry(this);
 
     /**
      * Keep-Alive定时器，用于监控客户端连接状态。
@@ -310,6 +315,7 @@ public class BrokerContextImpl implements BrokerContext {
      */
     @Override
     public void init() throws Throwable {
+        providers.setSessionStateProvider(new MemorySessionStateProvider());
         updateBrokerConfigure();
 
         subscribeEventBus();
@@ -453,7 +459,7 @@ public class BrokerContextImpl implements BrokerContext {
         eventBus.subscribe(EventType.CONNECT, new KeepAliveMonitorSubscriber(this));
         //完成连接认证，移除监听器
         eventBus.subscribe(EventType.CONNECT, (eventType, object) -> {
-            MqttSession session = object.getSession();
+            MqttSessionImpl session = (MqttSessionImpl) object.getSession();
             session.idleConnectTimer.cancel();
             session.idleConnectTimer = null;
         });
@@ -462,8 +468,8 @@ public class BrokerContextImpl implements BrokerContext {
         eventBus.subscribe(EventType.SUBSCRIBE_TOPIC, (eventType, eventObject) -> retainPushThreadPool.execute(new AsyncTask() {
             @Override
             public void execute() {
-                Qos0MessageDeliver consumerRecord = eventObject.getObject();
-                BrokerTopic topic = consumerRecord.getTopic();
+                MessageDeliver consumerRecord = eventObject.getObject();
+                BrokerTopicImpl topic = getOrCreateTopic(consumerRecord.getTopic().getTopic());
                 Message retainMessage = topic.getRetainMessage();
                 if (retainMessage == null || retainMessage.getCreateTime() > consumerRecord.getLatestSubscribeTime()) {
                     topic.addSubscriber(consumerRecord);
@@ -471,12 +477,12 @@ public class BrokerContextImpl implements BrokerContext {
                 }
                 MqttSession session = eventObject.getSession();
 
-                PublishBuilder publishBuilder = PublishBuilder.builder().payload(retainMessage.getPayload()).qos(consumerRecord.getTopicFilterToken().getMqttQoS()).topic(retainMessage.getTopic());
+                PublishBuilder publishBuilder = PublishBuilder.builder().payload(retainMessage.getPayload()).qos(consumerRecord.getMqttQoS()).topic(retainMessage.getTopic());
                 if (session.getMqttVersion() == MqttVersion.MQTT_5) {
                     publishBuilder.publishProperties(new PublishProperties());
                 }
                 // Qos0不走飞行窗口
-                if (consumerRecord.getTopicFilterToken().getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
+                if (consumerRecord.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
                     session.write(publishBuilder.build());
                     topic.addSubscriber(consumerRecord);
                     return;
@@ -583,28 +589,28 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     @Override
-    public BrokerTopic getOrCreateTopic(String topic) {
-        BrokerTopic brokerTopic = topicMap.get(topic);
+    public BrokerTopicImpl getOrCreateTopic(String topic) {
+        BrokerTopicImpl brokerTopic = topicMap.get(topic);
         if (brokerTopic == null) {
             synchronized (this) {
                 brokerTopic = topicMap.get(topic);
                 if (brokerTopic == null) {
                     ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topic), "invalid topicName: " + topic);
-                    brokerTopic = new BrokerTopic(topic, options.getMaxMessageQueueLength(), pushThreadPool);
+                    brokerTopic = new BrokerTopicImpl(topic, options.getMaxMessageQueueLength(), pushThreadPool);
                     LOGGER.info("create topic: {} capacity is {}", topic, brokerTopic.getMessageQueue().capacity());
                     topicRegistry.registerTopic(brokerTopic);
-                    eventBus.publish(EventType.TOPIC_CREATE, brokerTopic);
                     topicMap.put(topic, brokerTopic);
+                    eventBus.publish(EventType.TOPIC_CREATE, topic);
                 }
             }
         }
         return brokerTopic;
     }
 
-    @Override
-    public Collection<BrokerTopic> getTopics() {
-        return topicMap.values();
-    }
+//    @Override
+//    public Collection<BrokerTopic> getTopics() {
+//        return topicMap.values();
+//    }
 
     @Override
     public MessageBus getMessageBus() {
@@ -616,7 +622,6 @@ public class BrokerContextImpl implements BrokerContext {
         return eventBus;
     }
 
-    @Override
     public MqttSession removeSession(String clientId) {
         if (StringUtils.isBlank(clientId)) {
             LOGGER.warn("clientId is blank, ignore remove grantSession");
@@ -652,12 +657,10 @@ public class BrokerContextImpl implements BrokerContext {
         }
     }
 
-    @Override
     public BrokerTopicRegistry getPublishTopicTree() {
         return topicRegistry;
     }
 
-    @Override
     public TopicSubscriptionRegistry getTopicSubscribeTree() {
         return subscribeTopicTree;
     }

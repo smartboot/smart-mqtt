@@ -4,10 +4,6 @@ import com.alibaba.fastjson2.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.license.client.License;
-import org.smartboot.mqtt.broker.BrokerContext;
-import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.broker.eventbus.EventType;
-import org.smartboot.mqtt.broker.processor.ConnectProcessor;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.plugin.acl.to.AclConfigTO;
 import org.smartboot.mqtt.plugin.dao.mapper.BrokerNodeMapper;
@@ -15,6 +11,9 @@ import org.smartboot.mqtt.plugin.dao.mapper.SystemConfigMapper;
 import org.smartboot.mqtt.plugin.dao.model.BrokerNodeDO;
 import org.smartboot.mqtt.plugin.openapi.enums.AclTypeEnum;
 import org.smartboot.mqtt.plugin.openapi.enums.SystemConfigEnum;
+import org.smartboot.mqtt.plugin.spec.BrokerContext;
+import org.smartboot.mqtt.plugin.spec.MqttSession;
+import org.smartboot.mqtt.plugin.spec.bus.EventType;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
@@ -65,7 +64,7 @@ public class AclFeature {
             //License过期，无法建立新链接
             if (license == null || license.getEntity() == null || license.getEntity().getExpireTime() < System.currentTimeMillis()) {
                 LOGGER.error("reject connect because of license has expired.");
-                ConnectProcessor.connFailAck(MqttConnectReturnCode.SERVER_UNAVAILABLE_5, session);
+                MqttSession.connFailAck(MqttConnectReturnCode.SERVER_UNAVAILABLE_5, session);
                 return;
             }
             if (aclConfig == null) {
@@ -123,13 +122,13 @@ public class AclFeature {
                     if (response.statusCode() == HttpStatus.OK.value()) {
                         session.setAuthorized(true);
                     } else if (response.statusCode() == HttpStatus.UNAUTHORIZED.value()) {
-                        ConnectProcessor.connFailAck(MqttConnectReturnCode.NOT_AUTHORIZED, session);
+                        MqttSession.connFailAck(MqttConnectReturnCode.NOT_AUTHORIZED, session);
                     } else {
                         LOGGER.error("unexpected response, status:{} body:{}", response.statusCode(), response.body());
                     }
                 } catch (Throwable throwable) {
                     LOGGER.error("exception", throwable);
-                    ConnectProcessor.connFailAck(MqttConnectReturnCode.SERVER_UNAVAILABLE_5, session);
+                    MqttSession.connFailAck(MqttConnectReturnCode.SERVER_UNAVAILABLE_5, session);
                 } finally {
                     if (client != null) {
                         client.close();

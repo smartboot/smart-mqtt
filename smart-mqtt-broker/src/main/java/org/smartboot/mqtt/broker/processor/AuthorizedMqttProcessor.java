@@ -12,9 +12,10 @@ package org.smartboot.mqtt.broker.processor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.BrokerContext;
-import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.common.message.MqttMessage;
+import org.smartboot.mqtt.plugin.spec.BrokerContext;
+import org.smartboot.mqtt.plugin.spec.MqttProcessor;
+import org.smartboot.mqtt.plugin.spec.MqttSession;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）

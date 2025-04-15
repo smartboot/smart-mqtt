@@ -10,15 +10,15 @@
 
 package org.smartboot.mqtt.broker.topic;
 
-import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.broker.topic.deliver.AbstractMessageDeliver;
-import org.smartboot.mqtt.broker.topic.deliver.Qos0MessageDeliver;
 import org.smartboot.mqtt.broker.topic.deliver.SharedOrderedMessageDeliver;
+import org.smartboot.mqtt.plugin.spec.MessageDeliver;
+import org.smartboot.mqtt.plugin.spec.MqttSession;
 
 class SharedDeliverGroup extends DeliverGroup {
     private final SharedOrderedMessageDeliver record;
 
-    public SharedDeliverGroup(BrokerTopic brokerTopic) {
+    public SharedDeliverGroup(BrokerTopicImpl brokerTopic) {
         record = new SharedOrderedMessageDeliver(brokerTopic);
     }
 
@@ -28,17 +28,17 @@ class SharedDeliverGroup extends DeliverGroup {
     }
 
     @Override
-    public void addSubscriber(Qos0MessageDeliver subscriber) {
+    public void addSubscriber(MessageDeliver subscriber) {
         super.addSubscriber(subscriber);
         record.getQueue().offer(subscriber);
     }
 
     @Override
-    public AbstractMessageDeliver removeSubscriber(MqttSession session) {
-        AbstractMessageDeliver consumerRecord = super.removeSubscriber(session);
+    public MessageDeliver removeSubscriber(MqttSession session) {
+        MessageDeliver consumerRecord = super.removeSubscriber(session);
         if (subscribers.isEmpty()) {
             record.disable();
-            record.getTopic().removeShareGroup(consumerRecord.getTopicFilterToken().getTopicFilterToken().getTopicFilter());
+            record.getTopic().removeShareGroup(consumerRecord.getTopicFilterToken().getTopicFilter());
         }
         return consumerRecord;
     }

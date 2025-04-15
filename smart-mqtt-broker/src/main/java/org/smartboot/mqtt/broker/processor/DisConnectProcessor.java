@@ -10,9 +10,9 @@
 
 package org.smartboot.mqtt.broker.processor;
 
-import org.smartboot.mqtt.broker.BrokerContext;
-import org.smartboot.mqtt.broker.MqttSession;
 import org.smartboot.mqtt.common.message.MqttDisconnectMessage;
+import org.smartboot.mqtt.plugin.spec.BrokerContext;
+import org.smartboot.mqtt.plugin.spec.MqttSession;
 
 /**
  * DISCONNECT 报文是客户端发给服务端的最后一个控制报文。表示客户端正常断开连接。

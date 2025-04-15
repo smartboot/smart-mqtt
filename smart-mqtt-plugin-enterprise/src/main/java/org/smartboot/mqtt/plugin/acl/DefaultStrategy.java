@@ -2,12 +2,11 @@ package org.smartboot.mqtt.plugin.acl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.broker.processor.ConnectProcessor;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.plugin.acl.to.AclPasswordConfigTO;
 import org.smartboot.mqtt.plugin.openapi.enums.SaltTypeEnum;
+import org.smartboot.mqtt.plugin.spec.MqttSession;
 import org.smartboot.mqtt.plugin.utils.SecureUtil;
 
 import java.util.Arrays;
@@ -38,7 +37,7 @@ public class DefaultStrategy implements AclStrategy {
             if (Arrays.equals(config.getPassword().getBytes(), message.getPayload().passwordInBytes())) {
                 session.setAuthorized(true);
             } else {
-                ConnectProcessor.connFailAck(MqttConnectReturnCode.BAD_USERNAME_OR_PASSWORD, session);
+                MqttSession.connFailAck(MqttConnectReturnCode.BAD_USERNAME_OR_PASSWORD, session);
             }
             return;
         }
@@ -54,9 +53,9 @@ public class DefaultStrategy implements AclStrategy {
                 break;
         }
         if ("md5".equals(config.getAlg()) && !SecureUtil.md5(pwd).equals(config.getPassword())) {
-            ConnectProcessor.connFailAck(MqttConnectReturnCode.BAD_USERNAME_OR_PASSWORD, session);
+            MqttSession.connFailAck(MqttConnectReturnCode.BAD_USERNAME_OR_PASSWORD, session);
         } else if ("sha256".equals(config.getAlg()) && !SecureUtil.shaEncrypt(pwd).equals(config.getPassword())) {
-            ConnectProcessor.connFailAck(MqttConnectReturnCode.BAD_USERNAME_OR_PASSWORD, session);
+            MqttSession.connFailAck(MqttConnectReturnCode.BAD_USERNAME_OR_PASSWORD, session);
         } else {
             session.setAuthorized(true);
         }

@@ -23,6 +23,11 @@
             </dependency>
             <dependency>
                 <groupId>io.github.smartboot.mqtt</groupId>
+                <artifactId>smart-mqtt-plugin-spec</artifactId>
+                <version>${smart.mqtt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.smartboot.mqtt</groupId>
                 <artifactId>smart-mqtt-common</artifactId>
                 <version>${smart.mqtt.version}</version>
             </dependency>
@@ -288,5 +293,6 @@
         <module>smart-mqtt-test</module>
         <module>smart-mqtt-plugin-enterprise</module>
         <module>smart-mqtt-bench</module>
+        <module>smart-mqtt-plugin-spec</module>
     </modules>
 </project>

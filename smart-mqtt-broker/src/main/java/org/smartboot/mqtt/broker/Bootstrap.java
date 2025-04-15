@@ -10,6 +10,8 @@
 
 package org.smartboot.mqtt.broker;
 
+import org.smartboot.mqtt.plugin.spec.BrokerContext;
+
 /**
  * @author 三刀
  * @version V1.0 , 2018/4/24

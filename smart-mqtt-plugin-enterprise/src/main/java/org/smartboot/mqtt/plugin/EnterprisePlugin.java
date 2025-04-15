@@ -12,19 +12,17 @@ package org.smartboot.mqtt.plugin;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.BrokerContext;
-import org.smartboot.mqtt.broker.BrokerContextImpl;
-import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.broker.eventbus.DisposableEventBusSubscriber;
-import org.smartboot.mqtt.broker.eventbus.EventBusSubscriber;
-import org.smartboot.mqtt.broker.eventbus.EventObject;
-import org.smartboot.mqtt.broker.eventbus.EventType;
-import org.smartboot.mqtt.broker.plugin.Plugin;
-import org.smartboot.mqtt.broker.processor.ConnectProcessor;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.plugin.dao.DatabasePlugin;
 import org.smartboot.mqtt.plugin.openapi.OpenApiFeature;
+import org.smartboot.mqtt.plugin.spec.BrokerContext;
+import org.smartboot.mqtt.plugin.spec.MqttSession;
+import org.smartboot.mqtt.plugin.spec.Plugin;
+import org.smartboot.mqtt.plugin.spec.bus.DisposableEventBusSubscriber;
+import org.smartboot.mqtt.plugin.spec.bus.EventBusSubscriber;
+import org.smartboot.mqtt.plugin.spec.bus.EventObject;
+import org.smartboot.mqtt.plugin.spec.bus.EventType;
 import org.smartboot.socket.extension.plugins.MonitorPlugin;
 
 import java.util.ArrayList;
@@ -40,23 +38,15 @@ public class EnterprisePlugin extends Plugin {
     private final List<Feature> features = new ArrayList<>();
 
     public static void main(String[] args) throws Throwable {
-        BrokerContext context = new BrokerContextImpl();
-        try {
-            context.init();
-        } catch (Throwable throwable) {
-            throwable.printStackTrace();
-            context.destroy();
-        }
-
-//        System.setProperty("brokerConfig", "/Users/zhengjw22mac123/IdeaProjects/smart-mqtt-enterprise/docker/smart-mqtt-enterprise-2.yaml");
-//        BrokerContext context2 = new BrokerContextImpl();
-//        context2.init();
+//        BrokerContext context = new BrokerContextImpl();
+//        try {
+//            context.init();
+//        } catch (Throwable throwable) {
+//            throwable.printStackTrace();
+//            context.destroy();
+//        }
 //
-//        System.setProperty("brokerConfig", "/Users/zhengjw22mac123/IdeaProjects/smart-mqtt-enterprise/docker/smart-mqtt-enterprise-3.yaml");
-//        BrokerContext context3 = new BrokerContextImpl();
-//        context3.init();
-
-        Runtime.getRuntime().addShutdownHook(new Thread(context::destroy));
+//        Runtime.getRuntime().addShutdownHook(new Thread(context::destroy));
     }
 
     @Override
@@ -86,7 +76,7 @@ public class EnterprisePlugin extends Plugin {
                         MqttSession session = object.getSession();
                         if (!session.isAuthorized() && !session.isDisconnect()) {
                             LOGGER.warn("NOT_AUTHORIZED ,connection fail");
-                            ConnectProcessor.connFailAck(MqttConnectReturnCode.NOT_AUTHORIZED, session);
+                            MqttSession.connFailAck(MqttConnectReturnCode.NOT_AUTHORIZED, session);
                         }
                     }
                 });

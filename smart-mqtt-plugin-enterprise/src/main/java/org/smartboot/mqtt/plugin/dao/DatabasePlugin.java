@@ -4,10 +4,10 @@ import com.alibaba.fastjson2.JSON;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.common.exception.MqttException;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.plugin.AbstractFeature;
+import org.smartboot.mqtt.plugin.spec.BrokerContext;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）

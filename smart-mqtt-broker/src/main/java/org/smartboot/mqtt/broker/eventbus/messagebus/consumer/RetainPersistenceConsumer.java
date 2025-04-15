@@ -12,10 +12,11 @@ package org.smartboot.mqtt.broker.eventbus.messagebus.consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
-import org.smartboot.mqtt.broker.topic.BrokerTopic;
 import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.plugin.spec.BrokerTopic;
+import org.smartboot.mqtt.plugin.spec.MqttSession;
+import org.smartboot.mqtt.plugin.spec.bus.Consumer;
+import org.smartboot.mqtt.plugin.spec.bus.Message;
 
 /**
  * Retain消息持久化

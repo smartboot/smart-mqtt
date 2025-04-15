@@ -13,14 +13,6 @@ package org.smartboot.mqtt.broker.processor;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.BrokerContext;
-import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.broker.PublishBuilder;
-import org.smartboot.mqtt.broker.eventbus.EventObject;
-import org.smartboot.mqtt.broker.eventbus.EventType;
-import org.smartboot.mqtt.broker.provider.SessionStateProvider;
-import org.smartboot.mqtt.broker.provider.impl.session.SessionState;
-import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttProtocolEnum;
@@ -31,14 +23,20 @@ import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.payload.MqttConnectPayload;
 import org.smartboot.mqtt.common.message.payload.WillMessage;
-import org.smartboot.mqtt.common.message.variable.MqttConnAckVariableHeader;
 import org.smartboot.mqtt.common.message.variable.MqttConnectVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectAckProperties;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
+import org.smartboot.mqtt.plugin.spec.BrokerContext;
+import org.smartboot.mqtt.plugin.spec.MqttProcessor;
+import org.smartboot.mqtt.plugin.spec.MqttSession;
+import org.smartboot.mqtt.plugin.spec.PublishBuilder;
+import org.smartboot.mqtt.plugin.spec.bus.EventObject;
+import org.smartboot.mqtt.plugin.spec.bus.EventType;
+import org.smartboot.mqtt.plugin.spec.provider.SessionState;
+import org.smartboot.mqtt.plugin.spec.provider.SessionStateProvider;
 
-import static org.smartboot.mqtt.common.enums.MqttConnectReturnCode.CONNECTION_ACCEPTED;
 import static org.smartboot.mqtt.common.enums.MqttConnectReturnCode.CONNECTION_REFUSED_IDENTIFIER_REJECTED;
 import static org.smartboot.mqtt.common.enums.MqttConnectReturnCode.CONNECTION_REFUSED_UNACCEPTABLE_PROTOCOL_VERSION;
 import static org.smartboot.mqtt.common.enums.MqttConnectReturnCode.UNSUPPORTED_PROTOCOL_VERSION;
@@ -103,7 +101,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
             properties = new ConnectAckProperties();
             properties.setReceiveMaximum(receiveMaximum);
         }
-        MqttConnAckMessage mqttConnAckMessage = connAck(MqttConnectReturnCode.CONNECTION_ACCEPTED, !mqttConnectMessage.getVariableHeader().isCleanSession(), properties);
+        MqttConnAckMessage mqttConnAckMessage = MqttSession.connAck(MqttConnectReturnCode.CONNECTION_ACCEPTED, !mqttConnectMessage.getVariableHeader().isCleanSession(), properties);
 
         session.write(mqttConnAckMessage);
 
@@ -122,7 +120,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
             //MQTT5.0规范：如果服务端不愿意接受CONNECT但希望表明其MQTT服务端身份，
             // 可以发送包含原因码为0x84（不支持的协议版本）的CONNACK报文，然后必须关闭网络连接。
             if (session.getMqttVersion() == MqttVersion.MQTT_5) {
-                connFailAck(UNSUPPORTED_PROTOCOL_VERSION, session);
+                MqttSession.connFailAck(UNSUPPORTED_PROTOCOL_VERSION, session);
             }
             session.disconnect();
         });
@@ -134,7 +132,7 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         // 如果发现不支持的协议级别，服务端必须给发送一个返回码为 0x01（不支持的协议级别）的 CONNACK 报文响应
         //CONNECT 报文，然后断开客户端的连接
         final MqttVersion mqttVersion = MqttVersion.getByProtocolWithVersion(protocol, connectVariableHeader.getProtocolLevel());
-        ValidateUtils.notNull(mqttVersion, "invalid version", () -> connFailAck(CONNECTION_REFUSED_UNACCEPTABLE_PROTOCOL_VERSION, session));
+        ValidateUtils.notNull(mqttVersion, "invalid version", () -> MqttSession.connFailAck(CONNECTION_REFUSED_UNACCEPTABLE_PROTOCOL_VERSION, session));
 
         //服务端必须验证 CONNECT 控制报文的保留标志位（第 0 位）是否为 0，如果不为 0 必须断开客户端连接。
         ValidateUtils.isTrue(connectVariableHeader.getReserved() == 0, "", session::disconnect);
@@ -144,13 +142,13 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         //“0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ”（大写字母，小写字母和数字）
         boolean invalidClient = StringUtils.isNotBlank(clientId) && (mqttVersion == MqttVersion.MQTT_3_1 && clientId.length() > MAX_CLIENT_ID_LENGTH);
         ValidateUtils.isTrue(!invalidClient, "", () -> {
-            connFailAck(CONNECTION_REFUSED_IDENTIFIER_REJECTED, session);
+            MqttSession.connFailAck(CONNECTION_REFUSED_IDENTIFIER_REJECTED, session);
             LOGGER.error("The MQTT client ID cannot be empty. Username={}", payload.userName());
         });
         //如果客户端提供的 ClientId 为零字节且清理会话标志为 0，
         // 服务端必须发送返回码为 0x02（表示标识符不合格）的 CONNACK 报文响应客户端的 CONNECT 报文，然后关闭网络连接
         ValidateUtils.isTrue(connectVariableHeader.isCleanSession() || !StringUtils.isBlank(clientId), "", () -> {
-            connFailAck(CONNECTION_REFUSED_IDENTIFIER_REJECTED, session);
+            MqttSession.connFailAck(CONNECTION_REFUSED_IDENTIFIER_REJECTED, session);
             LOGGER.error("The MQTT client ID cannot be empty. Username={}", payload.userName());
         });
     }
@@ -200,23 +198,5 @@ public class ConnectProcessor implements MqttProcessor<MqttConnectMessage> {
         }
         MqttPublishMessage publishMessage = publishBuilder.build();
         session.setWillMessage(publishMessage);
-    }
-
-    public static void connFailAck(MqttConnectReturnCode returnCode, AbstractSession session) {
-        //如果服务端发送了一个包含非零返回码的 CONNACK 报文，它必须将当前会话标志设置为 0
-        ValidateUtils.isTrue(returnCode != CONNECTION_ACCEPTED, "");
-        ConnectAckProperties properties = null;
-        //todo
-        if (session.getMqttVersion() == MqttVersion.MQTT_5) {
-            properties = new ConnectAckProperties();
-        }
-        MqttConnAckMessage badProto = connAck(returnCode, false, properties);
-        session.write(badProto);
-        session.disconnect();
-    }
-
-    private static MqttConnAckMessage connAck(MqttConnectReturnCode returnCode, boolean sessionPresent, ConnectAckProperties properties) {
-        MqttConnAckVariableHeader mqttConnAckVariableHeader = new MqttConnAckVariableHeader(returnCode, sessionPresent, properties);
-        return new MqttConnAckMessage(mqttConnAckVariableHeader);
     }
 }

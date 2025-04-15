@@ -10,6 +10,7 @@
 
 package org.smartboot.mqtt.broker.topic;
 
+import org.smartboot.mqtt.broker.TopicSubscription;
 import org.smartboot.mqtt.common.TopicToken;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -59,7 +60,7 @@ public class BrokerTopicRegistry {
      * 叶子节点必须包含有效的BrokerTopic对象。
      * </p>
      */
-    private BrokerTopic brokerTopic;
+    private BrokerTopicImpl brokerTopic;
 
     /**
      * 存储子节点的发布树映射。
@@ -91,8 +92,8 @@ public class BrokerTopicRegistry {
      * @throws NullPointerException 如果brokerTopic为null
      * @see TopicToken 用于解析主题层级结构
      */
-    public void registerTopic(BrokerTopic brokerTopic) {
-        TopicToken topicToken = brokerTopic.getTopicToken();
+    public void registerTopic(BrokerTopicImpl brokerTopic) {
+        TopicToken topicToken = brokerTopic;
         BrokerTopicRegistry treeNode = this;
         while (true) {
             treeNode = treeNode.subNode.computeIfAbsent(topicToken.getNode(), n -> new BrokerTopicRegistry());
@@ -133,7 +134,7 @@ public class BrokerTopicRegistry {
      * @param consumer 对匹配到的主题执行的操作
      * @see #match 实际执行匹配的核心方法
      */
-    public void matchSubscriptionToTopics(TopicSubscription subscription, Consumer<BrokerTopic> consumer) {
+    public void matchSubscriptionToTopics(TopicSubscription subscription, Consumer<BrokerTopicImpl> consumer) {
         if (subscription.getTopicFilterToken().isShared()) {
             match(this, subscription.getTopicFilterToken().getNextNode().getNextNode(), consumer);
         } else {
@@ -170,7 +171,7 @@ public class BrokerTopicRegistry {
      * @param consumer 对匹配到的主题执行的操作
      * @see #subscribeChildren 处理#通配符的递归匹配
      */
-    private void match(BrokerTopicRegistry treeNode, TopicToken topicToken, Consumer<BrokerTopic> consumer) {
+    private void match(BrokerTopicRegistry treeNode, TopicToken topicToken, Consumer<BrokerTopicImpl> consumer) {
         //匹配结束
         if (topicToken == null) {
             if (treeNode.brokerTopic != null) {
@@ -205,8 +206,8 @@ public class BrokerTopicRegistry {
      * @param treeNode 要遍历的树节点
      * @param consumer 对找到的主题执行的操作
      */
-    private void subscribeChildren(BrokerTopicRegistry treeNode, Consumer<BrokerTopic> consumer) {
-        BrokerTopic brokerTopic = treeNode.brokerTopic;
+    private void subscribeChildren(BrokerTopicRegistry treeNode, Consumer<BrokerTopicImpl> consumer) {
+        BrokerTopicImpl brokerTopic = treeNode.brokerTopic;
         if (brokerTopic != null) {
             consumer.accept(brokerTopic);
         }

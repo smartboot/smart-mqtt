@@ -1,7 +1,7 @@
 package org.smartboot.mqtt.plugin.openapi.controller;
 
-import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.plugin.dao.mapper.BrokerNodeMapper;
+import org.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
 

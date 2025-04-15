@@ -10,8 +10,12 @@
 
 package org.smartboot.mqtt.broker.topic.deliver;
 
-import org.smartboot.mqtt.broker.topic.BrokerTopic;
-import org.smartboot.mqtt.broker.topic.TopicSubscription;
+
+import org.smartboot.mqtt.broker.TopicSubscription;
+import org.smartboot.mqtt.broker.topic.BrokerTopicImpl;
+import org.smartboot.mqtt.common.TopicToken;
+import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.plugin.spec.MessageDeliver;
 
 /**
  * MQTT消息消费的抽象基类，负责管理消息的消费状态和推送机制。
@@ -35,7 +39,7 @@ import org.smartboot.mqtt.broker.topic.TopicSubscription;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/25
  */
-public abstract class AbstractMessageDeliver {
+public abstract class AbstractMessageDeliver implements MessageDeliver {
     /**
      * 消息主题对象，维护主题的订阅关系和消息存储。
      * <p>
@@ -43,7 +47,7 @@ public abstract class AbstractMessageDeliver {
      * 用于消息的存储和分发。
      * </p>
      */
-    protected final BrokerTopic topic;
+    protected final BrokerTopicImpl topic;
 
     /**
      * 下一条待消费消息的位置标识。
@@ -85,7 +89,7 @@ public abstract class AbstractMessageDeliver {
      */
     protected boolean enable = true;
 
-    public AbstractMessageDeliver(BrokerTopic topic, TopicSubscription topicFilterToken, long nextConsumerOffset) {
+    public AbstractMessageDeliver(BrokerTopicImpl topic, TopicSubscription topicFilterToken, long nextConsumerOffset) {
         this.topic = topic;
         this.topicFilterToken = topicFilterToken;
         this.nextConsumerOffset = nextConsumerOffset;
@@ -105,7 +109,7 @@ public abstract class AbstractMessageDeliver {
      */
     public abstract void pushToClient();
 
-    public final BrokerTopic getTopic() {
+    public final BrokerTopicImpl getTopic() {
         return topic;
     }
 
@@ -113,10 +117,14 @@ public abstract class AbstractMessageDeliver {
         return latestSubscribeTime;
     }
 
-    public final TopicSubscription getTopicFilterToken() {
-        return topicFilterToken;
+    public final TopicToken getTopicFilterToken() {
+        return topicFilterToken.getTopicFilterToken();
     }
 
+    @Override
+    public MqttQoS getMqttQoS() {
+        return topicFilterToken.getMqttQoS();
+    }
 
     public final long getNextConsumerOffset() {
         return nextConsumerOffset;
@@ -126,4 +134,7 @@ public abstract class AbstractMessageDeliver {
         this.enable = false;
     }
 
+    public boolean isEnable() {
+        return enable;
+    }
 }

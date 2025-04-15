@@ -12,15 +12,16 @@ package org.smartboot.mqtt.broker.topic.deliver;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.PublishBuilder;
-import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
-import org.smartboot.mqtt.broker.topic.BrokerTopic;
-import org.smartboot.mqtt.broker.topic.TopicSubscription;
+import org.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
+import org.smartboot.mqtt.plugin.spec.MessageDeliver;
+import org.smartboot.mqtt.plugin.spec.MqttSession;
+import org.smartboot.mqtt.plugin.spec.PublishBuilder;
+import org.smartboot.mqtt.plugin.spec.bus.Message;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -34,18 +35,23 @@ public class SharedOrderedMessageDeliver extends AbstractMessageDeliver {
     /**
      * 共享订阅者队列
      */
-    private final ConcurrentLinkedQueue<Qos0MessageDeliver> queue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<MessageDeliver> queue = new ConcurrentLinkedQueue<>();
 
     private final Semaphore semaphore = new Semaphore(1);
 
-    public SharedOrderedMessageDeliver(BrokerTopic topic) {
+    public SharedOrderedMessageDeliver(BrokerTopicImpl topic) {
         super(topic, null, topic.getMessageQueue().getLatestOffset() + 1);
         //将共享订阅者加入 BrokerTopic 的推送列表中
         topic.addSubscriber(this);
     }
 
-    public ConcurrentLinkedQueue<Qos0MessageDeliver> getQueue() {
+    public ConcurrentLinkedQueue<MessageDeliver> getQueue() {
         return queue;
+    }
+
+    @Override
+    public MqttSession getMqttSession() {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -71,27 +77,26 @@ public class SharedOrderedMessageDeliver extends AbstractMessageDeliver {
             if (message == null) {
                 return;
             }
-            Qos0MessageDeliver record = queue.poll();
+            MessageDeliver record = queue.poll();
             //共享订阅列表无可用通道
             if (record == null) {
                 return;
             }
 
-            if (!record.enable || record.getMqttSession().isDisconnect()) {
+            if (!record.isEnable() || record.getMqttSession().isDisconnect()) {
                 continue;
             }
-            TopicSubscription subscription = record.getTopicFilterToken();
-            PublishBuilder publishBuilder = PublishBuilder.builder().payload(message.getPayload()).qos(subscription.getMqttQoS()).topic(message.getTopic());
+            PublishBuilder publishBuilder = PublishBuilder.builder().payload(message.getPayload()).qos(record.getMqttQoS()).topic(message.getTopic());
             if (record.getMqttSession().getMqttVersion() == MqttVersion.MQTT_5) {
                 publishBuilder.publishProperties(new PublishProperties());
             }
 
             //Qos0直接发送
-            if (subscription.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
+            if (record.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
                 topic.getMessageQueue().commit(nextConsumerOffset++);
                 record.getMqttSession().write(publishBuilder.build());
                 queue.offer(record);
-                LOGGER.debug("publish share subscribe:{} to {}", subscription.getTopicFilterToken().getTopicFilter(), record.getMqttSession().getClientId());
+                LOGGER.debug("publish share subscribe:{} to {}", record.getTopicFilterToken().getTopicFilter(), record.getMqttSession().getClientId());
                 continue;
             }
 

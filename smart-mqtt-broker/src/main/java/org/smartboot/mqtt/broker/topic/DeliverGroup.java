@@ -12,9 +12,8 @@ package org.smartboot.mqtt.broker.topic;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.broker.topic.deliver.AbstractMessageDeliver;
-import org.smartboot.mqtt.broker.topic.deliver.Qos0MessageDeliver;
+import org.smartboot.mqtt.plugin.spec.MessageDeliver;
+import org.smartboot.mqtt.plugin.spec.MqttSession;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -60,7 +59,7 @@ public class DeliverGroup {
      * </ul>
      * </p>
      */
-    protected final Map<MqttSession, AbstractMessageDeliver> subscribers = new ConcurrentHashMap<>();
+    protected final Map<MqttSession, MessageDeliver> subscribers = new ConcurrentHashMap<>();
 
     /**
      * 获取指定会话的订阅者记录。
@@ -68,7 +67,7 @@ public class DeliverGroup {
      * @param session MQTT客户端会话
      * @return 返回该会话对应的消费者记录，如果不存在则返回null
      */
-    public AbstractMessageDeliver getSubscriber(MqttSession session) {
+    public MessageDeliver getSubscriber(MqttSession session) {
         return subscribers.get(session);
     }
 
@@ -78,7 +77,7 @@ public class DeliverGroup {
      * @param session 要移除订阅的MQTT客户端会话
      * @return 返回被移除的消费者记录，如果不存在则返回null
      */
-    public AbstractMessageDeliver removeSubscriber(MqttSession session) {
+    public MessageDeliver removeSubscriber(MqttSession session) {
         return subscribers.remove(session);
     }
 
@@ -87,7 +86,7 @@ public class DeliverGroup {
      *
      * @param subscriber 要添加的主题消费者记录，包含会话信息和订阅配置
      */
-    public void addSubscriber(Qos0MessageDeliver subscriber) {
+    public void addSubscriber(MessageDeliver subscriber) {
         subscribers.put(subscriber.getMqttSession(), subscriber);
     }
 

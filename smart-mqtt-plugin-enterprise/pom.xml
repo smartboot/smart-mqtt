@@ -29,7 +29,7 @@
     <dependencies>
         <dependency>
             <groupId>io.github.smartboot.mqtt</groupId>
-            <artifactId>smart-mqtt-broker</artifactId>
+            <artifactId>smart-mqtt-plugin-spec</artifactId>
         </dependency>
         <dependency>
             <groupId>tech.smartboot.feat</groupId>

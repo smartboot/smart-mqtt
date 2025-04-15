@@ -10,9 +10,12 @@
 
 package org.smartboot.mqtt.broker.topic;
 
-import org.smartboot.mqtt.broker.MqttSession;
+import org.smartboot.mqtt.broker.BrokerContextImpl;
+import org.smartboot.mqtt.broker.MqttSessionImpl;
+import org.smartboot.mqtt.broker.TopicSubscription;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.util.ValidateUtils;
+import org.smartboot.mqtt.plugin.spec.MqttSession;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,7 +54,7 @@ public class TopicSubscriptionRegistry {
      * 使用ConcurrentHashMap保证在多线程环境下的线程安全性。
      * </p>
      */
-    private final Map<MqttSession, TopicSubscription> subscribers = new ConcurrentHashMap<>();
+    private final Map<MqttSessionImpl, TopicSubscription> subscribers = new ConcurrentHashMap<>();
 
     /**
      * 存储子节点的订阅树映射。
@@ -67,6 +70,11 @@ public class TopicSubscriptionRegistry {
      * </p>
      */
     private final ConcurrentHashMap<String, TopicSubscriptionRegistry> subNode = new ConcurrentHashMap<>();
+    private BrokerContextImpl brokerContext;
+
+    public TopicSubscriptionRegistry(BrokerContextImpl brokerContext) {
+        this.brokerContext = brokerContext;
+    }
 
     /**
      * 将客户端的主题订阅注册到订阅树中。
@@ -78,11 +86,11 @@ public class TopicSubscriptionRegistry {
      * @param session 要注册订阅的MQTT客户端会话
      * @param subscriber 包含主题过滤器和QoS等订阅信息的对象
      */
-    public void subscribeTopic(MqttSession session, TopicSubscription subscriber) {
+    public void subscribeTopic(MqttSessionImpl session, TopicSubscription subscriber) {
         TopicSubscriptionRegistry treeNode = this;
         TopicToken token = subscriber.getTopicFilterToken();
         do {
-            treeNode = treeNode.subNode.computeIfAbsent(token.getNode(), n -> new TopicSubscriptionRegistry());
+            treeNode = treeNode.subNode.computeIfAbsent(token.getNode(), n -> new TopicSubscriptionRegistry(brokerContext));
         } while ((token = token.getNextNode()) != null);
         treeNode.subscribers.put(session, subscriber);
     }
@@ -119,17 +127,18 @@ public class TopicSubscriptionRegistry {
      *
      * @param topicToken 新创建的主题对象
      */
-    public void refreshWhenTopicCreated(BrokerTopic topicToken) {
-        BiConsumer<MqttSession, TopicSubscription> consumer = (session, topicSubscription) -> {
-            session.subscribeSuccess(topicSubscription, topicToken);
+    public void refreshWhenTopicCreated(String topicToken) {
+        BrokerTopicImpl brokerTopic = brokerContext.getOrCreateTopic(topicToken);
+        BiConsumer<MqttSessionImpl, TopicSubscription> consumer = (session, topicSubscription) -> {
+            session.subscribeSuccess(topicSubscription, brokerTopic);
         };
         //遍历共享订阅
         TopicSubscriptionRegistry shareTree = subNode.get("$share");
         if (shareTree != null) {
-            shareTree.subNode.values().forEach(tree -> tree.match0(topicToken.getTopicToken(), consumer));
+            shareTree.subNode.values().forEach(tree -> tree.match0(brokerTopic, consumer));
         }
         //遍历普通订阅
-        match0(topicToken.getTopicToken(), consumer);
+        match0(brokerTopic, consumer);
     }
 
     /**
@@ -146,7 +155,7 @@ public class TopicSubscriptionRegistry {
      * @param topicToken 要匹配的主题标记
      * @param consumer 对匹配的订阅者执行的操作
      */
-    private void match0(TopicToken topicToken, BiConsumer<MqttSession, TopicSubscription> consumer) {
+    private void match0(TopicToken topicToken, BiConsumer<MqttSessionImpl, TopicSubscription> consumer) {
         //精确匹配
         TopicSubscriptionRegistry subscribeTree = subNode.get(topicToken.getNode());
         if (subscribeTree != null) {

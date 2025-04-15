@@ -1,11 +1,11 @@
 package org.smartboot.mqtt.plugin.openapi.controller;
 
-import org.smartboot.mqtt.broker.BrokerContext;
 import org.smartboot.mqtt.plugin.convert.NodeConvert;
 import org.smartboot.mqtt.plugin.dao.mapper.BrokerNodeMapper;
 import org.smartboot.mqtt.plugin.dao.model.BrokerNodeDO;
 import org.smartboot.mqtt.plugin.openapi.OpenApi;
 import org.smartboot.mqtt.plugin.openapi.to.BrokerNodeTO;
+import org.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;

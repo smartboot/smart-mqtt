@@ -95,7 +95,7 @@ public abstract class AbstractSession {
         write(mqttMessage, true);
     }
 
-    public synchronized void flush() {
+    public final synchronized void flush() {
         if (!disconnect) {
             mqttWriter.flush();
         }
@@ -114,23 +114,23 @@ public abstract class AbstractSession {
      */
     public abstract void disconnect();
 
-    public boolean isDisconnect() {
+    public final boolean isDisconnect() {
         return disconnect;
     }
 
-    public MqttVersion getMqttVersion() {
+    public final MqttVersion getMqttVersion() {
         return mqttVersion;
     }
 
-    public void setMqttVersion(MqttVersion mqttVersion) {
+    public final void setMqttVersion(MqttVersion mqttVersion) {
         this.mqttVersion = mqttVersion;
     }
 
-    public void setInflightQueue(InflightQueue inflightQueue) {
+    public final void setInflightQueue(InflightQueue inflightQueue) {
         this.inflightQueue = inflightQueue;
     }
 
-    public InflightQueue getInflightQueue() {
+    public final InflightQueue getInflightQueue() {
         return inflightQueue;
     }
 

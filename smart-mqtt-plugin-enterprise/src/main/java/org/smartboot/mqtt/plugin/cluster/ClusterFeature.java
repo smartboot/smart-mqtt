@@ -5,12 +5,6 @@ import com.sun.management.OperatingSystemMXBean;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.BrokerContext;
-import org.smartboot.mqtt.broker.MqttSession;
-import org.smartboot.mqtt.broker.Options;
-import org.smartboot.mqtt.broker.eventbus.EventBus;
-import org.smartboot.mqtt.broker.eventbus.EventType;
-import org.smartboot.mqtt.broker.processor.ConnectProcessor;
 import org.smartboot.mqtt.client.MqttClient;
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
@@ -21,6 +15,11 @@ import org.smartboot.mqtt.plugin.dao.mapper.BrokerNodeMapper;
 import org.smartboot.mqtt.plugin.dao.model.BrokerNodeDO;
 import org.smartboot.mqtt.plugin.openapi.enums.BrokerNodeTypeEnum;
 import org.smartboot.mqtt.plugin.openapi.enums.BrokerStatueEnum;
+import org.smartboot.mqtt.plugin.spec.BrokerContext;
+import org.smartboot.mqtt.plugin.spec.MqttSession;
+import org.smartboot.mqtt.plugin.spec.Options;
+import org.smartboot.mqtt.plugin.spec.bus.EventBus;
+import org.smartboot.mqtt.plugin.spec.bus.EventType;
 import org.smartboot.mqtt.plugin.utils.SecureUtil;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
@@ -227,13 +226,13 @@ public class ClusterFeature {
             //来源非core节点
             if (!StringUtils.equals(BrokerNodeTypeEnum.CORE_NODE.getCode(), nodeDO.getNodeType())) {
                 LOGGER.error("invalid node connection!");
-                ConnectProcessor.connFailAck(MqttConnectReturnCode.IMPLEMENTATION_SPECIFIC_ERROR, session);
+                MqttSession.connFailAck(MqttConnectReturnCode.IMPLEMENTATION_SPECIFIC_ERROR, session);
                 return;
             }
             //工作节点
             if (currentNode.getNodeId().equals(payload.userName())) {
                 LOGGER.error("invalid connection");
-                ConnectProcessor.connFailAck(MqttConnectReturnCode.BANNED, session);
+                MqttSession.connFailAck(MqttConnectReturnCode.BANNED, session);
                 return;
             }
 //            System.out.println("aa:" + new String(payload.passwordInBytes()));
@@ -241,7 +240,7 @@ public class ClusterFeature {
 //            System.out.println("cc:" + new String(getPassword(currentNode, nodeDO)));
             if (!Arrays.equals(payload.passwordInBytes(), getPassword(nodeDO, currentNode))) {
                 LOGGER.error("invalid password");
-                ConnectProcessor.connFailAck(MqttConnectReturnCode.BAD_USERNAME_OR_PASSWORD, session);
+                MqttSession.connFailAck(MqttConnectReturnCode.BAD_USERNAME_OR_PASSWORD, session);
                 return;
             }
             coreSessions.put(object.getSession(), nodeDO.getNodeId());
@@ -288,12 +287,12 @@ public class ClusterFeature {
 //            System.out.println("bb mqttClient:" + object.getSession().getClientId());
             if (currentNode.getNodeId().equals(payload.userName())) {
                 LOGGER.error("invalid connection, expect:{} actual:{}", currentNode.getNodeId(), payload.userName());
-                ConnectProcessor.connFailAck(MqttConnectReturnCode.BAD_USERNAME_OR_PASSWORD, session);
+                MqttSession.connFailAck(MqttConnectReturnCode.BAD_USERNAME_OR_PASSWORD, session);
                 return;
             }
             if (!Arrays.equals(payload.passwordInBytes(), getPassword(nodeDO, currentNode))) {
                 LOGGER.error("invalid password");
-                ConnectProcessor.connFailAck(MqttConnectReturnCode.BAD_USERNAME_OR_PASSWORD, session);
+                MqttSession.connFailAck(MqttConnectReturnCode.BAD_USERNAME_OR_PASSWORD, session);
                 return;
             }
 
