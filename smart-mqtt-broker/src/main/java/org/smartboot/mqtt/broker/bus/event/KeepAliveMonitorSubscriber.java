@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package org.smartboot.mqtt.broker.eventbus;
+package org.smartboot.mqtt.broker.bus.event;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +16,7 @@ import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.message.MqttConnectMessage;
 import org.smartboot.mqtt.plugin.spec.BrokerContext;
 import org.smartboot.mqtt.plugin.spec.MqttSession;
-import org.smartboot.mqtt.plugin.spec.bus.EventBusSubscriber;
+import org.smartboot.mqtt.plugin.spec.bus.EventBusConsumer;
 import org.smartboot.mqtt.plugin.spec.bus.EventObject;
 import org.smartboot.mqtt.plugin.spec.bus.EventType;
 
@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/7/5
  */
-public class KeepAliveMonitorSubscriber implements EventBusSubscriber<EventObject<MqttConnectMessage>> {
+public class KeepAliveMonitorSubscriber implements EventBusConsumer<EventObject<MqttConnectMessage>> {
     private static final Logger LOGGER = LoggerFactory.getLogger(KeepAliveMonitorSubscriber.class);
     private final BrokerContext context;
 
@@ -35,7 +35,7 @@ public class KeepAliveMonitorSubscriber implements EventBusSubscriber<EventObjec
     }
 
     @Override
-    public void subscribe(EventType<EventObject<MqttConnectMessage>> eventType, EventObject<MqttConnectMessage> object) {
+    public void consumer(EventType<EventObject<MqttConnectMessage>> eventType, EventObject<MqttConnectMessage> object) {
         //如果保持连接的值非零，并且服务端在一点五倍的保持连接时间内没有收到客户端的控制报文，
         // 它必须断开客户端的网络连接，认为网络连接已断开.
         int timeout = object.getObject().getVariableHeader().keepAliveTimeSeconds() * 1000;

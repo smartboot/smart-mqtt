@@ -1,7 +1,7 @@
 package org.smartboot.mqtt.data.persistence.nodeinfo;
 
 import com.alibaba.fastjson2.JSONObject;
-import org.smartboot.mqtt.broker.eventbus.messagebus.Message;
+import org.smartboot.mqtt.broker.bus.messagebus.Message;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 
 import java.io.Serializable;

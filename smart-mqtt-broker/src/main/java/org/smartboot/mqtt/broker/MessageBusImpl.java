@@ -14,10 +14,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.plugin.spec.BrokerContext;
+import org.smartboot.mqtt.plugin.spec.Message;
 import org.smartboot.mqtt.plugin.spec.MqttSession;
-import org.smartboot.mqtt.plugin.spec.bus.Consumer;
-import org.smartboot.mqtt.plugin.spec.bus.Message;
 import org.smartboot.mqtt.plugin.spec.bus.MessageBus;
+import org.smartboot.mqtt.plugin.spec.bus.MessageBusConsumer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +33,7 @@ public class MessageBusImpl implements MessageBus {
     /**
      * 消息总线消费者
      */
-    private final List<Consumer> messageBuses = new ArrayList<>();
+    private final List<MessageBusConsumer> messageBuses = new ArrayList<>();
     private final BrokerContext brokerContext;
 
     public MessageBusImpl(BrokerContext brokerContext) {
@@ -43,7 +43,7 @@ public class MessageBusImpl implements MessageBus {
     /**
      * 订阅消息总线消费者
      */
-    public void consumer(Consumer consumer) {
+    public void consumer(MessageBusConsumer consumer) {
         messageBuses.add(consumer);
     }
 
@@ -54,7 +54,7 @@ public class MessageBusImpl implements MessageBus {
     public void publish(MqttSession mqttSession, MqttPublishMessage publishMessage) {
         Message message = new Message(publishMessage, brokerContext.getOrCreateTopic(publishMessage.getVariableHeader().getTopicName()));
         boolean remove = false;
-        for (Consumer messageConsumer : messageBuses) {
+        for (MessageBusConsumer messageConsumer : messageBuses) {
             try {
                 if (messageConsumer.enable()) {
                     messageConsumer.consume(mqttSession, message);

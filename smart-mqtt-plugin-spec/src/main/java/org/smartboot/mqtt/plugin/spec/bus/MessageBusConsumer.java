@@ -11,13 +11,14 @@
 package org.smartboot.mqtt.plugin.spec.bus;
 
 
+import org.smartboot.mqtt.plugin.spec.Message;
 import org.smartboot.mqtt.plugin.spec.MqttSession;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/6/25
  */
-public interface Consumer {
+public interface MessageBusConsumer {
     /**
      * 消息消费
      * @param session   消息来源

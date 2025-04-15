@@ -20,7 +20,7 @@ import org.smartboot.mqtt.plugin.spec.BrokerContext;
 import org.smartboot.mqtt.plugin.spec.MqttSession;
 import org.smartboot.mqtt.plugin.spec.Plugin;
 import org.smartboot.mqtt.plugin.spec.bus.DisposableEventBusSubscriber;
-import org.smartboot.mqtt.plugin.spec.bus.EventBusSubscriber;
+import org.smartboot.mqtt.plugin.spec.bus.EventBusConsumer;
 import org.smartboot.mqtt.plugin.spec.bus.EventObject;
 import org.smartboot.mqtt.plugin.spec.bus.EventType;
 import org.smartboot.socket.extension.plugins.MonitorPlugin;
@@ -69,10 +69,10 @@ public class EnterprisePlugin extends Plugin {
 
         brokerContext.getEventBus().subscribe(EventType.BROKER_STARTED, new DisposableEventBusSubscriber<BrokerContext>() {
             @Override
-            public void subscribe(EventType<BrokerContext> eventType, BrokerContext object) {
-                brokerContext.getEventBus().subscribe(EventType.CONNECT, new EventBusSubscriber<EventObject<MqttConnectMessage>>() {
+            public void consumer(EventType<BrokerContext> eventType, BrokerContext object) {
+                brokerContext.getEventBus().subscribe(EventType.CONNECT, new EventBusConsumer<EventObject<MqttConnectMessage>>() {
                     @Override
-                    public void subscribe(EventType<EventObject<MqttConnectMessage>> eventType, EventObject<MqttConnectMessage> object) {
+                    public void consumer(EventType<EventObject<MqttConnectMessage>> eventType, EventObject<MqttConnectMessage> object) {
                         MqttSession session = object.getSession();
                         if (!session.isAuthorized() && !session.isDisconnect()) {
                             LOGGER.warn("NOT_AUTHORIZED ,connection fail");

@@ -17,10 +17,10 @@ import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.plugin.spec.BrokerTopic;
+import org.smartboot.mqtt.plugin.spec.Message;
 import org.smartboot.mqtt.plugin.spec.MessageDeliver;
 import org.smartboot.mqtt.plugin.spec.MessageQueue;
 import org.smartboot.mqtt.plugin.spec.MqttSession;
-import org.smartboot.mqtt.plugin.spec.bus.Message;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

@@ -7,7 +7,7 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.BrokerContext;
-import org.smartboot.mqtt.broker.eventbus.messagebus.MessageBus;
+import org.smartboot.mqtt.broker.bus.messagebus.MessageBus;
 import org.smartboot.mqtt.broker.plugin.PluginException;
 import org.smartboot.mqtt.data.persistence.DataPersistPlugin;
 import org.smartboot.mqtt.data.persistence.config.imp.KafkaPluginConfig;

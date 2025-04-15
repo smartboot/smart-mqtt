@@ -11,8 +11,8 @@
 package org.smartboot.mqtt.protocol;
 
 import org.smartboot.mqtt.broker.BrokerContext;
-import org.smartboot.mqtt.broker.eventbus.DisposableEventBusSubscriber;
-import org.smartboot.mqtt.broker.eventbus.EventType;
+import org.smartboot.mqtt.broker.bus.DisposableEventBusSubscriber;
+import org.smartboot.mqtt.broker.bus.EventType;
 import org.smartboot.mqtt.broker.plugin.Plugin;
 
 public abstract class ProtocolGatewayPlugin extends Plugin {

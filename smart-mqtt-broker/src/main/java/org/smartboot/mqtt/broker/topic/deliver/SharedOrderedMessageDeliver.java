@@ -18,10 +18,10 @@ import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
+import org.smartboot.mqtt.plugin.spec.Message;
 import org.smartboot.mqtt.plugin.spec.MessageDeliver;
 import org.smartboot.mqtt.plugin.spec.MqttSession;
 import org.smartboot.mqtt.plugin.spec.PublishBuilder;
-import org.smartboot.mqtt.plugin.spec.bus.Message;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;

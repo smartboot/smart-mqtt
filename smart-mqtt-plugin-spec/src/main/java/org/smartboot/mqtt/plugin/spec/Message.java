@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package org.smartboot.mqtt.plugin.spec.bus;
+package org.smartboot.mqtt.plugin.spec;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
@@ -18,7 +18,6 @@ import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.PayloadEncodeEnum;
 import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.util.MqttUtil;
-import org.smartboot.mqtt.plugin.spec.BrokerTopic;
 
 import java.util.Base64;
 import java.util.concurrent.atomic.AtomicInteger;

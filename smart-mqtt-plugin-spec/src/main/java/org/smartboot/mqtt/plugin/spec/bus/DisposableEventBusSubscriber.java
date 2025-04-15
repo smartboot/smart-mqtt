@@ -14,7 +14,7 @@ package org.smartboot.mqtt.plugin.spec.bus;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/7/17
  */
-public abstract class DisposableEventBusSubscriber<T> implements EventBusSubscriber<T> {
+public abstract class DisposableEventBusSubscriber<T> implements EventBusConsumer<T> {
     private boolean enabled = true;
 
     @Override

@@ -10,8 +10,6 @@
 
 package org.smartboot.mqtt.plugin.spec;
 
-import org.smartboot.mqtt.plugin.spec.bus.Message;
-
 public interface MessageQueue {
     void put(Message message);
 

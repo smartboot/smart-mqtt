@@ -16,8 +16,8 @@ import com.alibaba.fastjson2.JSONReader;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.eventbus.KeepAliveMonitorSubscriber;
-import org.smartboot.mqtt.broker.eventbus.messagebus.consumer.RetainPersistenceConsumer;
+import org.smartboot.mqtt.broker.bus.event.KeepAliveMonitorSubscriber;
+import org.smartboot.mqtt.broker.bus.message.RetainPersistenceConsumer;
 import org.smartboot.mqtt.broker.processor.ConnectProcessor;
 import org.smartboot.mqtt.broker.processor.DisConnectProcessor;
 import org.smartboot.mqtt.broker.processor.MqttAckProcessor;
@@ -52,6 +52,7 @@ import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.mqtt.plugin.spec.BrokerContext;
+import org.smartboot.mqtt.plugin.spec.Message;
 import org.smartboot.mqtt.plugin.spec.MessageDeliver;
 import org.smartboot.mqtt.plugin.spec.MqttProcessor;
 import org.smartboot.mqtt.plugin.spec.MqttSession;
@@ -59,7 +60,6 @@ import org.smartboot.mqtt.plugin.spec.Options;
 import org.smartboot.mqtt.plugin.spec.Plugin;
 import org.smartboot.mqtt.plugin.spec.PublishBuilder;
 import org.smartboot.mqtt.plugin.spec.bus.EventType;
-import org.smartboot.mqtt.plugin.spec.bus.Message;
 import org.smartboot.mqtt.plugin.spec.provider.Providers;
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
@@ -131,7 +131,7 @@ public class BrokerContextImpl implements BrokerContext {
      * 当客户端连接并完成认证后，其会话将被存储在此映射中。
      * </p>
      */
-    private final ConcurrentMap<String, MqttSession> grantSessions = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, MqttSessionImpl> grantSessions = new ConcurrentHashMap<>();
 
     /**
      * 主题映射表，存储所有已创建的主题。
@@ -193,7 +193,7 @@ public class BrokerContextImpl implements BrokerContext {
      * </ul>
      * </p>
      */
-    private final MessageBusImpl messageBusSubscriber = new MessageBusImpl(this);
+    private final MessageBusImpl messageBus = new MessageBusImpl(this);
 
     /**
      * 事件总线，用于处理Broker内部的事件通知。
@@ -407,7 +407,7 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private void subscribeMessageBus() {
         //持久化消息
-        messageBusSubscriber.consumer((session, publishMessage) -> {
+        messageBus.consumer((session, publishMessage) -> {
             BrokerTopicImpl brokerTopic = (BrokerTopicImpl) publishMessage.getTopic();
             int count = brokerTopic.subscribeCount();
             if (count == 0) {
@@ -420,7 +420,7 @@ public class BrokerContextImpl implements BrokerContext {
             }
         });
         //消费retain消息
-        messageBusSubscriber.consumer(new RetainPersistenceConsumer(), Message::isRetained);
+        messageBus.consumer(new RetainPersistenceConsumer(), Message::isRetained);
     }
 
     /**
@@ -579,7 +579,7 @@ public class BrokerContextImpl implements BrokerContext {
         return options;
     }
 
-    public void addSession(MqttSession session) {
+    public void addSession(MqttSessionImpl session) {
         grantSessions.putIfAbsent(session.getClientId(), session);
     }
 
@@ -609,7 +609,7 @@ public class BrokerContextImpl implements BrokerContext {
 
     @Override
     public MessageBusImpl getMessageBus() {
-        return messageBusSubscriber;
+        return messageBus;
     }
 
     @Override
@@ -626,7 +626,7 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     @Override
-    public MqttSession getSession(String clientId) {
+    public MqttSessionImpl getSession(String clientId) {
         return grantSessions.get(clientId);
     }
 

@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.plugin.spec.bus.DisposableEventBusSubscriber;
 import org.smartboot.mqtt.plugin.spec.bus.EventBus;
-import org.smartboot.mqtt.plugin.spec.bus.EventBusSubscriber;
+import org.smartboot.mqtt.plugin.spec.bus.EventBusConsumer;
 import org.smartboot.mqtt.plugin.spec.bus.EventType;
 
 import java.util.List;
@@ -29,20 +29,20 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class EventBusImpl implements EventBus {
     private static final Logger LOGGER = LoggerFactory.getLogger(EventBusImpl.class);
 
-    private final Map<EventType, List<EventBusSubscriber>> map = new ConcurrentHashMap<>();
+    private final Map<EventType, List<EventBusConsumer>> map = new ConcurrentHashMap<>();
 
-    public static List<EventBusSubscriber> WRITE_MESSAGE_SUBSCRIBER_LIST = new CopyOnWriteArrayList<>();
+    public static List<EventBusConsumer> WRITE_MESSAGE_SUBSCRIBER_LIST = new CopyOnWriteArrayList<>();
 
-    public static List<EventBusSubscriber> RECEIVE_MESSAGE_SUBSCRIBER_LIST = new CopyOnWriteArrayList<>();
+    public static List<EventBusConsumer> RECEIVE_MESSAGE_SUBSCRIBER_LIST = new CopyOnWriteArrayList<>();
 
 
-    public <T> void subscribe(EventType<T> type, EventBusSubscriber<T> subscriber) {
+    public <T> void subscribe(EventType<T> type, EventBusConsumer<T> subscriber) {
         LOGGER.debug("subscribe eventbus, type: {} ,subscriber: {}", type, subscriber);
         if (type.isOnce() && !(subscriber instanceof DisposableEventBusSubscriber)) {
             getSubscribers(type).add(new DisposableEventBusSubscriber<T>() {
                 @Override
-                public void subscribe(EventType<T> eventType, T object) {
-                    subscriber.subscribe(eventType, object);
+                public void consumer(EventType<T> eventType, T object) {
+                    subscriber.consumer(eventType, object);
                 }
             });
         } else {
@@ -55,11 +55,11 @@ public class EventBusImpl implements EventBus {
      * 发布消息至总线
      */
     public <T> void publish(EventType<T> eventType, T object) {
-        List<EventBusSubscriber> list = getSubscribers(eventType);
+        List<EventBusConsumer> list = getSubscribers(eventType);
         publish(eventType, object, list);
     }
 
-    private List<EventBusSubscriber> getSubscribers(EventType eventType) {
+    private List<EventBusConsumer> getSubscribers(EventType eventType) {
         return map.computeIfAbsent(eventType, type -> {
             if (type == EventType.WRITE_MESSAGE) {
                 return WRITE_MESSAGE_SUBSCRIBER_LIST;

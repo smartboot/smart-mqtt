@@ -155,9 +155,9 @@ public class ConnectProcessor implements MqttProcessor<BrokerContextImpl, MqttCo
         });
     }
 
-    private void refreshSession(BrokerContextImpl context, MqttSession session, MqttConnectMessage mqttConnectMessage) {
+    private void refreshSession(BrokerContextImpl context, MqttSessionImpl session, MqttConnectMessage mqttConnectMessage) {
         session.setCleanSession(mqttConnectMessage.getVariableHeader().isCleanSession());
-        MqttSession mqttSession = context.getSession(session.getClientId());
+        MqttSessionImpl mqttSession = context.getSession(session.getClientId());
         if (mqttSession != null) {
             if (session.isCleanSession()) {
                 //如果清理会话（CleanSession）标志被设置为 1，客户端和服务端必须丢弃之前的任何会话并开始一个新的会话。
@@ -184,7 +184,7 @@ public class ConnectProcessor implements MqttProcessor<BrokerContextImpl, MqttCo
         LOGGER.debug("add session for client:{}", session);
     }
 
-    private void storeWillMessage(BrokerContext context, MqttSession session, MqttConnectMessage msg) {
+    private void storeWillMessage(BrokerContext context, MqttSessionImpl session, MqttConnectMessage msg) {
         // 遗嘱标志（Will Flag）被设置为 1，表示如果连接请求被接受了，
         // 遗嘱（Will Message）消息必须被存储在服务端并且与这个网络连接关联。
         // 之后网络连接关闭时，服务端必须发布这个遗嘱消息，

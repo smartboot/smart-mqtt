@@ -49,7 +49,7 @@ public class BridgeController {
 //        client.configuration().debug(true);
         brokerContext.getEventBus().subscribe(EventType.BROKER_STARTED, new DisposableEventBusSubscriber<BrokerContext>() {
             @Override
-            public void subscribe(EventType<BrokerContext> eventType, BrokerContext object) {
+            public void consumer(EventType<BrokerContext> eventType, BrokerContext object) {
                 List<PluginConfigDO> list = pluginConfigMapper.selectAll();
                 list.stream().filter(configDO -> configDO.getStatus() == 1).forEach(configDO -> {
                     try {

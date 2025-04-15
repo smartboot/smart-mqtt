@@ -14,9 +14,9 @@ import org.smartboot.mqtt.broker.TopicSubscription;
 import org.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
+import org.smartboot.mqtt.plugin.spec.Message;
 import org.smartboot.mqtt.plugin.spec.MqttSession;
 import org.smartboot.mqtt.plugin.spec.PublishBuilder;
-import org.smartboot.mqtt.plugin.spec.bus.Message;
 
 /**
  * MQTT主题消费者记录类，负责管理单个订阅者的消息消费状态和推送逻辑。

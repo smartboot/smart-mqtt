@@ -18,9 +18,9 @@ import java.util.List;
  */
 public interface EventBus {
 
-    <T> void subscribe(EventType<T> type, EventBusSubscriber<T> subscriber);
+    <T> void subscribe(EventType<T> type, EventBusConsumer<T> subscriber);
 
-    default <T> void subscribe(List<EventType<T>> types, EventBusSubscriber<T> subscriber) {
+    default <T> void subscribe(List<EventType<T>> types, EventBusConsumer<T> subscriber) {
         for (EventType<T> eventType : types) {
             subscribe(eventType, subscriber);
         }
@@ -34,12 +34,12 @@ public interface EventBus {
     /**
      * 发布消息至总线
      */
-    default <T> void publish(EventType<T> eventType, T object, List<EventBusSubscriber> subscribers) {
+    default <T> void publish(EventType<T> eventType, T object, List<EventBusConsumer> subscribers) {
         boolean remove = false;
-        for (EventBusSubscriber subscriber : subscribers) {
+        for (EventBusConsumer subscriber : subscribers) {
             try {
                 if (subscriber.enable()) {
-                    subscriber.subscribe(eventType, object);
+                    subscriber.consumer(eventType, object);
                 } else {
                     remove = true;
                 }

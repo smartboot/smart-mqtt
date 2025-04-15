@@ -8,15 +8,15 @@
  *  without special permission from the smartboot organization.
  */
 
-package org.smartboot.mqtt.broker.eventbus.messagebus.consumer;
+package org.smartboot.mqtt.broker.bus.message;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import org.smartboot.mqtt.common.enums.MqttQoS;
+import org.smartboot.mqtt.plugin.spec.Message;
 import org.smartboot.mqtt.plugin.spec.MqttSession;
-import org.smartboot.mqtt.plugin.spec.bus.Consumer;
-import org.smartboot.mqtt.plugin.spec.bus.Message;
+import org.smartboot.mqtt.plugin.spec.bus.MessageBusConsumer;
 
 /**
  * Retain消息持久化
@@ -24,7 +24,7 @@ import org.smartboot.mqtt.plugin.spec.bus.Message;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/6/25
  */
-public class RetainPersistenceConsumer implements Consumer {
+public class RetainPersistenceConsumer implements MessageBusConsumer {
     private static final Logger LOGGER = LoggerFactory.getLogger(RetainPersistenceConsumer.class);
 
     @Override

@@ -10,6 +10,8 @@
 
 package org.smartboot.mqtt.plugin.spec.bus;
 
+import org.smartboot.mqtt.plugin.spec.Message;
+
 import java.util.function.Predicate;
 
 /**
@@ -23,7 +25,7 @@ public interface MessageBus {
     /**
      * 订阅消息总线消费者
      */
-    void consumer(Consumer consumer);
+    void consumer(MessageBusConsumer consumer);
 
     /**
      * 订阅消息总线消费者
@@ -31,7 +33,7 @@ public interface MessageBus {
      * @param consumer 消费者
      * @param filter   消费条件
      */
-    default void consumer(Consumer consumer, Predicate<Message> filter) {
+    default void consumer(MessageBusConsumer consumer, Predicate<Message> filter) {
         consumer((session, publishMessage) -> {
             if (filter.test(publishMessage)) {
                 consumer.consume(session, publishMessage);

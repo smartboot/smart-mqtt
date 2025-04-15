@@ -25,13 +25,13 @@ import org.smartboot.mqtt.plugin.openapi.enums.SystemConfigEnum;
 import org.smartboot.mqtt.plugin.openapi.to.BrokerNodeTO;
 import org.smartboot.mqtt.plugin.openapi.to.MetricItemTO;
 import org.smartboot.mqtt.plugin.spec.BrokerContext;
+import org.smartboot.mqtt.plugin.spec.Message;
 import org.smartboot.mqtt.plugin.spec.MqttSession;
-import org.smartboot.mqtt.plugin.spec.bus.Consumer;
 import org.smartboot.mqtt.plugin.spec.bus.EventBus;
-import org.smartboot.mqtt.plugin.spec.bus.EventBusSubscriber;
+import org.smartboot.mqtt.plugin.spec.bus.EventBusConsumer;
 import org.smartboot.mqtt.plugin.spec.bus.EventObject;
 import org.smartboot.mqtt.plugin.spec.bus.EventType;
-import org.smartboot.mqtt.plugin.spec.bus.Message;
+import org.smartboot.mqtt.plugin.spec.bus.MessageBusConsumer;
 import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.extension.plugins.AbstractPlugin;
 import org.smartboot.socket.transport.AioSession;
@@ -183,19 +183,19 @@ public class MetricController {
         eventBus.subscribe(EventType.UNSUBSCRIBE_ACCEPT, (eventType, object) -> metrics.get(MqttMetricEnum.CLIENT_UNSUBSCRIBE).getMetric().increment());
         eventBus.subscribe(EventType.SUBSCRIBE_TOPIC, (eventType, object) -> metrics.get(MqttMetricEnum.SUBSCRIBE_RELATION).getMetric().increment());
         eventBus.subscribe(EventType.UNSUBSCRIBE_TOPIC, (eventType, object) -> metrics.get(MqttMetricEnum.SUBSCRIBE_RELATION).getMetric().decrement());
-        eventBus.subscribe(EventType.RECEIVE_MESSAGE, new EventBusSubscriber<EventObject<MqttMessage>>() {
+        eventBus.subscribe(EventType.RECEIVE_MESSAGE, new EventBusConsumer<EventObject<MqttMessage>>() {
             final LongAdder packetsReceived = metrics.get(MqttMetricEnum.PACKETS_RECEIVED).getMetric();
             final LongAdder connectReceived = metrics.get(MqttMetricEnum.PACKETS_CONNECT_RECEIVED).getMetric();
 
             @Override
-            public void subscribe(EventType<EventObject<MqttMessage>> eventType, EventObject<MqttMessage> object) {
+            public void consumer(EventType<EventObject<MqttMessage>> eventType, EventObject<MqttMessage> object) {
                 packetsReceived.increment();
                 if (object.getObject() instanceof MqttConnectMessage) {
                     connectReceived.increment();
                 }
             }
         });
-        eventBus.subscribe(EventType.WRITE_MESSAGE, new EventBusSubscriber<EventObject<MqttMessage>>() {
+        eventBus.subscribe(EventType.WRITE_MESSAGE, new EventBusConsumer<EventObject<MqttMessage>>() {
             final LongAdder packetsSent = metrics.get(MqttMetricEnum.PACKETS_SENT).getMetric();
             final LongAdder connAckSent = metrics.get(MqttMetricEnum.PACKETS_CONNACK_SENT).getMetric();
             final LongAdder publishSent = metrics.get(MqttMetricEnum.PACKETS_PUBLISH_SENT).getMetric();
@@ -205,7 +205,7 @@ public class MetricController {
             final LongAdder qos2Sent = metrics.get(MqttMetricEnum.MESSAGE_QOS2_SENT).getMetric();
 
             @Override
-            public void subscribe(EventType<EventObject<MqttMessage>> eventType, EventObject<MqttMessage> object) {
+            public void consumer(EventType<EventObject<MqttMessage>> eventType, EventObject<MqttMessage> object) {
                 packetsSent.increment();
                 if (object.getObject() instanceof MqttConnAckMessage) {
                     connAckSent.increment();
@@ -228,7 +228,7 @@ public class MetricController {
             }
         });
         eventBus.subscribe(EventType.TOPIC_CREATE, (eventType, object) -> metrics.get(MqttMetricEnum.TOPIC_COUNT).getMetric().increment());
-        context.getMessageBus().consumer(new Consumer() {
+        context.getMessageBus().consumer(new MessageBusConsumer() {
             final LongAdder publishReceived = metrics.get(MqttMetricEnum.PACKETS_PUBLISH_RECEIVED).getMetric();
             final LongAdder expectPublishSent = metrics.get(MqttMetricEnum.PACKETS_EXPECT_PUBLISH_SENT).getMetric();
             final LongAdder qos0Received = metrics.get(MqttMetricEnum.MESSAGE_QOS0_RECEIVED).getMetric();

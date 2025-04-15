@@ -8,13 +8,13 @@
  *  without special permission from the smartboot organization.
  */
 
-package org.smartboot.mqtt.broker.eventbus.subscriber;
+package org.smartboot.mqtt.broker.bus.event;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.common.message.MqttMessage;
 import org.smartboot.mqtt.common.message.MqttPingReqMessage;
-import org.smartboot.mqtt.plugin.spec.bus.EventBusSubscriber;
+import org.smartboot.mqtt.plugin.spec.bus.EventBusConsumer;
 import org.smartboot.mqtt.plugin.spec.bus.EventObject;
 import org.smartboot.mqtt.plugin.spec.bus.EventType;
 
@@ -22,11 +22,11 @@ import org.smartboot.mqtt.plugin.spec.bus.EventType;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/6/29
  */
-public class MessageLoggerSubscriber implements EventBusSubscriber<EventObject<MqttMessage>> {
+public class MessageLoggerSubscriber implements EventBusConsumer<EventObject<MqttMessage>> {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageLoggerSubscriber.class);
 
     @Override
-    public void subscribe(EventType<EventObject<MqttMessage>> eventType, EventObject<MqttMessage> object) {
+    public void consumer(EventType<EventObject<MqttMessage>> eventType, EventObject<MqttMessage> object) {
         if (eventType == EventType.RECEIVE_MESSAGE) {
             if (object.getObject() instanceof MqttPingReqMessage) {
                 LOGGER.info("receive ping message from client:{}", object.getSession().getClientId());

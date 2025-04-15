@@ -12,13 +12,10 @@ package org.smartboot.mqtt.plugin.spec;
 
 import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
-import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
-import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.variable.MqttConnAckVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectAckProperties;
-import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 
 import static org.smartboot.mqtt.common.enums.MqttConnectReturnCode.CONNECTION_ACCEPTED;
@@ -28,25 +25,9 @@ import static org.smartboot.mqtt.common.enums.MqttConnectReturnCode.CONNECTION_A
  * @version v1.0 4/14/25
  */
 public abstract class MqttSession extends AbstractSession {
-    public abstract void setClientId(String clientId);
-
-    public abstract void setCleanSession(boolean cleanSession);
-
     public abstract void setAuthorized(boolean authorized);
 
-    public abstract void setProperties(ConnectProperties properties);
-
-    public abstract boolean isCleanSession();
-
-    public abstract MqttQoS subscribe(String topicFilter, MqttQoS mqttQoS);
-
-    public abstract void setWillMessage(MqttPublishMessage willMessage);
-
     public abstract boolean isAuthorized();
-
-    public abstract void accepted(MqttPublishMessage mqttMessage);
-
-    public abstract void resubscribe();
 
     public abstract void unsubscribe(String topicFilter);
 

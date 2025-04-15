@@ -14,8 +14,8 @@ package org.smartboot.mqtt.plugin.spec.bus;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/6/29
  */
-public interface EventBusSubscriber<T> {
-    void subscribe(EventType<T> eventType, T object);
+public interface EventBusConsumer<T> {
+    void consumer(EventType<T> eventType, T object);
 
     default boolean enable() {
         return true;

@@ -57,7 +57,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
 
     }
 
-    private void processQos1(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
+    private void processQos1(BrokerContext context, MqttSessionImpl session, MqttPublishMessage mqttPublishMessage) {
         final int messageId = mqttPublishMessage.getVariableHeader().getPacketId();
         //给 publisher 回响应
         MqttPubQosVariableHeader variableHeader;
