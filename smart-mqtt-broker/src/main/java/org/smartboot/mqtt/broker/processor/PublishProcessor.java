@@ -23,7 +23,6 @@ import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPubQosVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 import org.smartboot.mqtt.plugin.spec.BrokerContext;
-import org.smartboot.mqtt.plugin.spec.MqttSession;
 
 /**
  * 发布Topic
@@ -82,7 +81,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
         session.accepted(mqttPublishMessage);
     }
 
-    private void processQos2(BrokerContext context, MqttSession session, MqttPublishMessage mqttPublishMessage) {
+    private void processQos2(BrokerContext context, MqttSessionImpl session, MqttPublishMessage mqttPublishMessage) {
         MqttPubQosVariableHeader variableHeader;
         //todo
         byte reasonCode = 0;

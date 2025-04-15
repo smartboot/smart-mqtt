@@ -6,7 +6,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.client.MqttClient;
-import org.smartboot.mqtt.common.AbstractSession;
+import org.smartboot.mqtt.common.MqttSession;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.message.payload.MqttConnectPayload;
 import org.smartboot.mqtt.common.util.MqttUtil;
@@ -16,7 +16,6 @@ import org.smartboot.mqtt.plugin.dao.model.BrokerNodeDO;
 import org.smartboot.mqtt.plugin.openapi.enums.BrokerNodeTypeEnum;
 import org.smartboot.mqtt.plugin.openapi.enums.BrokerStatueEnum;
 import org.smartboot.mqtt.plugin.spec.BrokerContext;
-import org.smartboot.mqtt.plugin.spec.MqttSession;
 import org.smartboot.mqtt.plugin.spec.Options;
 import org.smartboot.mqtt.plugin.spec.bus.EventBus;
 import org.smartboot.mqtt.plugin.spec.bus.EventType;
@@ -48,9 +47,9 @@ public class ClusterFeature {
     /**
      * 集群内其他协调节点建立的连接
      */
-    private final Map<AbstractSession, String> coreSessions = new ConcurrentHashMap<>();
+    private final Map<MqttSession, String> coreSessions = new ConcurrentHashMap<>();
 
-    private final Map<AbstractSession, String> workerSessions = new ConcurrentHashMap<>();
+    private final Map<MqttSession, String> workerSessions = new ConcurrentHashMap<>();
 
     /**
      * 与当前节点直连的节点

@@ -16,7 +16,9 @@ import org.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import org.smartboot.mqtt.broker.topic.DeliverGroup;
 import org.smartboot.mqtt.broker.topic.deliver.Qos0MessageDeliver;
 import org.smartboot.mqtt.broker.topic.deliver.Qos12MessageDeliver;
+import org.smartboot.mqtt.common.AbstractSession;
 import org.smartboot.mqtt.common.AsyncTask;
+import org.smartboot.mqtt.common.MqttSession;
 import org.smartboot.mqtt.common.MqttWriter;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.enums.MqttQoS;
@@ -25,7 +27,6 @@ import org.smartboot.mqtt.common.message.MqttPublishMessage;
 import org.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.mqtt.plugin.spec.MessageDeliver;
-import org.smartboot.mqtt.plugin.spec.MqttSession;
 import org.smartboot.mqtt.plugin.spec.bus.EventObject;
 import org.smartboot.mqtt.plugin.spec.bus.EventType;
 import org.smartboot.mqtt.plugin.spec.provider.SessionState;
@@ -43,7 +44,7 @@ import java.util.concurrent.TimeUnit;
  * @author 三刀
  * @version V1.0 , 2018/4/26
  */
-public class MqttSessionImpl extends MqttSession {
+public class MqttSessionImpl extends AbstractSession implements MqttSession {
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttSessionImpl.class);
 
     /**

@@ -11,8 +11,8 @@
 package org.smartboot.mqtt.plugin.spec.bus;
 
 
+import org.smartboot.mqtt.common.MqttSession;
 import org.smartboot.mqtt.plugin.spec.Message;
-import org.smartboot.mqtt.plugin.spec.MqttSession;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）

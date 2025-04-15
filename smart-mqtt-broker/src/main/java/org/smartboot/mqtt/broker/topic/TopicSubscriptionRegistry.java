@@ -13,9 +13,9 @@ package org.smartboot.mqtt.broker.topic;
 import org.smartboot.mqtt.broker.BrokerContextImpl;
 import org.smartboot.mqtt.broker.MqttSessionImpl;
 import org.smartboot.mqtt.broker.TopicSubscription;
+import org.smartboot.mqtt.common.MqttSession;
 import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.util.ValidateUtils;
-import org.smartboot.mqtt.plugin.spec.MqttSession;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

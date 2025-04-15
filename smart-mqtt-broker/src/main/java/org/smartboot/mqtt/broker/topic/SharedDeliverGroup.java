@@ -12,8 +12,8 @@ package org.smartboot.mqtt.broker.topic;
 
 import org.smartboot.mqtt.broker.topic.deliver.AbstractMessageDeliver;
 import org.smartboot.mqtt.broker.topic.deliver.SharedOrderedMessageDeliver;
+import org.smartboot.mqtt.common.MqttSession;
 import org.smartboot.mqtt.plugin.spec.MessageDeliver;
-import org.smartboot.mqtt.plugin.spec.MqttSession;
 
 class SharedDeliverGroup extends DeliverGroup {
     private final SharedOrderedMessageDeliver record;

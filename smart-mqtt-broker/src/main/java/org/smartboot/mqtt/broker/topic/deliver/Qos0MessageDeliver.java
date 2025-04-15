@@ -12,10 +12,10 @@ package org.smartboot.mqtt.broker.topic.deliver;
 
 import org.smartboot.mqtt.broker.TopicSubscription;
 import org.smartboot.mqtt.broker.topic.BrokerTopicImpl;
+import org.smartboot.mqtt.common.MqttSession;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.plugin.spec.Message;
-import org.smartboot.mqtt.plugin.spec.MqttSession;
 import org.smartboot.mqtt.plugin.spec.PublishBuilder;
 
 /**

@@ -227,8 +227,8 @@ public class MqttClient extends AbstractSession {
         options.setWillMessage(null);
     }
 
-    public MqttClient unsubscribe(String topic) {
-        return unsubscribe(new String[]{topic});
+    public void unsubscribe(String topic) {
+        unsubscribe(new String[]{topic});
     }
 
     public MqttClient unsubscribe(String[] topics) {

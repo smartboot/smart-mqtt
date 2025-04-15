@@ -13,9 +13,9 @@ package org.smartboot.mqtt.broker.bus.message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.topic.BrokerTopicImpl;
+import org.smartboot.mqtt.common.MqttSession;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.plugin.spec.Message;
-import org.smartboot.mqtt.plugin.spec.MqttSession;
 import org.smartboot.mqtt.plugin.spec.bus.MessageBusConsumer;
 
 /**
