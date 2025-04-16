@@ -184,6 +184,11 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
         return getTopicFilter();
     }
 
+    @Override
+    public TopicToken toTopicToken() {
+        return this;
+    }
+
     public byte[] encodedTopicBytes() {
         return encodedTopic;
     }

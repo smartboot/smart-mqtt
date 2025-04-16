@@ -28,7 +28,6 @@ import java.util.Objects;
  */
 public class RegistryPlugin extends Plugin {
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistryPlugin.class);
-    private File baseDir;
     private final List<PluginContainer> plugins = new ArrayList<>();
 
     @Override
@@ -41,7 +40,7 @@ public class RegistryPlugin extends Plugin {
             LOGGER.warn("SMART_MQTT_PLUGINS is not set,plugin will not be loaded!");
             return;
         }
-        baseDir = new File(baseDirPath);
+        File baseDir = new File(baseDirPath);
         if (!baseDir.isDirectory()) {
             LOGGER.warn("SMART_MQTT_PLUGINS is not a directory,plugin will not be loaded!");
             return;

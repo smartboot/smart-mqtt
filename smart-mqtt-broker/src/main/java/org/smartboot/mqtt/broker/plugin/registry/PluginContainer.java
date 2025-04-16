@@ -23,8 +23,10 @@ import java.util.ServiceLoader;
  */
 public class PluginContainer extends Plugin {
     private final List<Plugin> plugins = new ArrayList<>();
+    private final ClassLoader classLoader;
 
     public PluginContainer(ClassLoader classLoader) {
+        this.classLoader = classLoader;
         ServiceLoader<Plugin> serviceLoader = ServiceLoader.load(Plugin.class, classLoader);
         for (Plugin plugin : serviceLoader) {
             plugins.add(plugin);
@@ -33,15 +35,22 @@ public class PluginContainer extends Plugin {
 
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
+        ClassLoader preClassLoader = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(classLoader);
         for (Plugin plugin : plugins) {
             plugin.install(brokerContext);
         }
+        Thread.currentThread().setContextClassLoader(preClassLoader);
     }
 
     @Override
     protected void destroyPlugin() {
+        ClassLoader preClassLoader = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(classLoader);
         for (Plugin plugin : plugins) {
+
             plugin.uninstall();
         }
+        Thread.currentThread().setContextClassLoader(preClassLoader);
     }
 }

@@ -10,6 +10,8 @@
 
 package org.smartboot.mqtt.plugin.spec;
 
+import org.smartboot.mqtt.common.TopicToken;
+
 /**
  * @author 三刀
  * @version v1.0 4/14/25
@@ -21,4 +23,6 @@ public interface BrokerTopic {
     int subscribeCount();
 
     String getTopic();
+
+    TopicToken toTopicToken();
 }
