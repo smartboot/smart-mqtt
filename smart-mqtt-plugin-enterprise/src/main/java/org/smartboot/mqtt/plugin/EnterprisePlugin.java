@@ -37,18 +37,6 @@ public class EnterprisePlugin extends Plugin {
 
     private final List<Feature> features = new ArrayList<>();
 
-    public static void main(String[] args) throws Throwable {
-//        BrokerContext context = new BrokerContextImpl();
-//        try {
-//            context.init();
-//        } catch (Throwable throwable) {
-//            throwable.printStackTrace();
-//            context.destroy();
-//        }
-//
-//        Runtime.getRuntime().addShutdownHook(new Thread(context::destroy));
-    }
-
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Exception {
         if ("false".equals(System.getenv("ENTERPRISE_ENABLE"))) {
