@@ -12,6 +12,7 @@ package org.smartboot.mqtt.broker.topic;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.broker.topic.deliver.AbstractMessageDeliver;
 import org.smartboot.mqtt.plugin.spec.MessageDeliver;
 import org.smartboot.mqtt.plugin.spec.MqttSession;
 
@@ -86,7 +87,7 @@ public class DeliverGroup {
      *
      * @param subscriber 要添加的主题消费者记录，包含会话信息和订阅配置
      */
-    public void addSubscriber(MessageDeliver subscriber) {
+    public void addSubscriber(AbstractMessageDeliver subscriber) {
         subscribers.put(subscriber.getMqttSession(), subscriber);
     }
 

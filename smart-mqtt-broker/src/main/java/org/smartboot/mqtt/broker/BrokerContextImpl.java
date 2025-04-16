@@ -471,7 +471,7 @@ public class BrokerContextImpl implements BrokerContext {
                     topic.addSubscriber(consumerRecord);
                     return;
                 }
-                MqttSession session = eventObject.getSession();
+                MqttSessionImpl session = (MqttSessionImpl) (eventObject.getSession());
 
                 PublishBuilder publishBuilder = PublishBuilder.builder().payload(retainMessage.getPayload()).qos(consumerRecord.getMqttQoS()).topic(retainMessage.getTopic());
                 if (session.getMqttVersion() == MqttVersion.MQTT_5) {

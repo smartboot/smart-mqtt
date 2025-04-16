@@ -20,7 +20,6 @@ import org.smartboot.mqtt.plugin.spec.BrokerTopic;
 import org.smartboot.mqtt.plugin.spec.Message;
 import org.smartboot.mqtt.plugin.spec.MessageDeliver;
 import org.smartboot.mqtt.plugin.spec.MessageQueue;
-import org.smartboot.mqtt.plugin.spec.MqttSession;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -134,11 +133,7 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
      */
     private final ConcurrentLinkedQueue<MessageDeliver> queue = new ConcurrentLinkedQueue<>();
 
-    private static final AbstractMessageDeliver BREAK = new AbstractMessageDeliver(null, null, -1) {
-        @Override
-        public MqttSession getMqttSession() {
-            return null;
-        }
+    private static final AbstractMessageDeliver BREAK = new AbstractMessageDeliver(null, null, null, -1) {
 
         @Override
         public void pushToClient() {

@@ -10,7 +10,6 @@
 
 package org.smartboot.mqtt.plugin.spec;
 
-import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.MqttConnAckMessage;
@@ -29,7 +28,6 @@ import static org.smartboot.mqtt.common.enums.MqttConnectReturnCode.CONNECTION_A
  * @version v1.0 4/14/25
  */
 public interface MqttSession {
-    InflightQueue getInflightQueue();
 
     InetSocketAddress getRemoteAddress() throws IOException;
 

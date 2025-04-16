@@ -10,12 +10,12 @@
 
 package org.smartboot.mqtt.broker.topic.deliver;
 
+import org.smartboot.mqtt.broker.MqttSessionImpl;
 import org.smartboot.mqtt.broker.TopicSubscription;
 import org.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import org.smartboot.mqtt.common.enums.MqttVersion;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.plugin.spec.Message;
-import org.smartboot.mqtt.plugin.spec.MqttSession;
 import org.smartboot.mqtt.plugin.spec.PublishBuilder;
 
 /**
@@ -49,15 +49,10 @@ import org.smartboot.mqtt.plugin.spec.PublishBuilder;
  * @version V1.0 , 2022/3/25
  */
 public class Qos0MessageDeliver extends AbstractMessageDeliver {
-    /**
-     * MQTT客户端会话对象，维护与订阅客户端的连接状态和通信通道。
-     * 用于消息推送和会话状态检查。
-     */
-    protected final MqttSession mqttSession;
 
-    public Qos0MessageDeliver(BrokerTopicImpl topic, MqttSession session, TopicSubscription topicSubscription, long nextConsumerOffset) {
-        super(topic, topicSubscription, nextConsumerOffset);
-        this.mqttSession = session;
+
+    public Qos0MessageDeliver(BrokerTopicImpl topic, MqttSessionImpl session, TopicSubscription topicSubscription, long nextConsumerOffset) {
+        super(topic, session, topicSubscription, nextConsumerOffset);
     }
 
     /**
@@ -73,7 +68,7 @@ public class Qos0MessageDeliver extends AbstractMessageDeliver {
      * </p>
      */
     public void pushToClient() {
-        if (mqttSession.isDisconnect() || !enable) {
+        if (getMqttSession().isDisconnect() || !enable) {
             return;
         }
         int i = 0;
@@ -84,7 +79,7 @@ public class Qos0MessageDeliver extends AbstractMessageDeliver {
                 break;
             }
         }
-        mqttSession.flush();
+        getMqttSession().flush();
     }
 
     /**
@@ -109,17 +104,13 @@ public class Qos0MessageDeliver extends AbstractMessageDeliver {
         }
 
         PublishBuilder publishBuilder = PublishBuilder.builder().payload(message.getPayload()).qos(getMqttQoS()).topic(message.getTopic());
-        if (mqttSession.getMqttVersion() == MqttVersion.MQTT_5) {
+        if (getMqttSession().getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());
         }
 
         nextConsumerOffset = message.getOffset() + 1;
         topic.getMessageQueue().commit(message.getOffset());
-        mqttSession.write(publishBuilder.build(), false);
+        getMqttSession().write(publishBuilder.build(), false);
         return true;
-    }
-
-    public final MqttSession getMqttSession() {
-        return mqttSession;
     }
 }

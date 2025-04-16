@@ -12,6 +12,7 @@ package org.smartboot.mqtt.broker.topic.deliver;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.mqtt.broker.MqttSessionImpl;
 import org.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import org.smartboot.mqtt.common.enums.MqttQoS;
 import org.smartboot.mqtt.common.enums.MqttVersion;
@@ -19,8 +20,6 @@ import org.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import org.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import org.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import org.smartboot.mqtt.plugin.spec.Message;
-import org.smartboot.mqtt.plugin.spec.MessageDeliver;
-import org.smartboot.mqtt.plugin.spec.MqttSession;
 import org.smartboot.mqtt.plugin.spec.PublishBuilder;
 
 import java.util.concurrent.CompletableFuture;
@@ -35,22 +34,22 @@ public class SharedOrderedMessageDeliver extends AbstractMessageDeliver {
     /**
      * 共享订阅者队列
      */
-    private final ConcurrentLinkedQueue<MessageDeliver> queue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<AbstractMessageDeliver> queue = new ConcurrentLinkedQueue<>();
 
     private final Semaphore semaphore = new Semaphore(1);
 
     public SharedOrderedMessageDeliver(BrokerTopicImpl topic) {
-        super(topic, null, topic.getMessageQueue().getLatestOffset() + 1);
+        super(topic, null, null, topic.getMessageQueue().getLatestOffset() + 1);
         //将共享订阅者加入 BrokerTopic 的推送列表中
         topic.addSubscriber(this);
     }
 
-    public ConcurrentLinkedQueue<MessageDeliver> getQueue() {
+    public ConcurrentLinkedQueue<AbstractMessageDeliver> getQueue() {
         return queue;
     }
 
     @Override
-    public MqttSession getMqttSession() {
+    public MqttSessionImpl getMqttSession() {
         throw new UnsupportedOperationException();
     }
 
@@ -77,7 +76,7 @@ public class SharedOrderedMessageDeliver extends AbstractMessageDeliver {
             if (message == null) {
                 return;
             }
-            MessageDeliver record = queue.poll();
+            AbstractMessageDeliver record = queue.poll();
             //共享订阅列表无可用通道
             if (record == null) {
                 return;

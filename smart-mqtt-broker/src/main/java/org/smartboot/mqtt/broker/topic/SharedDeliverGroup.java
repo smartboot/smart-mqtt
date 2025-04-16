@@ -28,7 +28,7 @@ class SharedDeliverGroup extends DeliverGroup {
     }
 
     @Override
-    public void addSubscriber(MessageDeliver subscriber) {
+    public void addSubscriber(AbstractMessageDeliver subscriber) {
         super.addSubscriber(subscriber);
         record.getQueue().offer(subscriber);
     }

@@ -11,6 +11,7 @@
 package org.smartboot.mqtt.broker.topic.deliver;
 
 
+import org.smartboot.mqtt.broker.MqttSessionImpl;
 import org.smartboot.mqtt.broker.TopicSubscription;
 import org.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import org.smartboot.mqtt.common.TopicToken;
@@ -79,7 +80,11 @@ public abstract class AbstractMessageDeliver implements MessageDeliver {
      * </p>
      */
     private final TopicSubscription topicFilterToken;
-
+    /**
+     * MQTT客户端会话对象，维护与订阅客户端的连接状态和通信通道。
+     * 用于消息推送和会话状态检查。
+     */
+    private final MqttSessionImpl mqttSession;
     /**
      * 消费者状态标志。
      * <p>
@@ -89,8 +94,10 @@ public abstract class AbstractMessageDeliver implements MessageDeliver {
      */
     protected boolean enable = true;
 
-    public AbstractMessageDeliver(BrokerTopicImpl topic, TopicSubscription topicFilterToken, long nextConsumerOffset) {
+
+    public AbstractMessageDeliver(BrokerTopicImpl topic, MqttSessionImpl session, TopicSubscription topicFilterToken, long nextConsumerOffset) {
         this.topic = topic;
+        this.mqttSession = session;
         this.topicFilterToken = topicFilterToken;
         this.nextConsumerOffset = nextConsumerOffset;
     }
@@ -111,6 +118,11 @@ public abstract class AbstractMessageDeliver implements MessageDeliver {
 
     public final BrokerTopicImpl getTopic() {
         return topic;
+    }
+
+    @Override
+    public MqttSessionImpl getMqttSession() {
+        return mqttSession;
     }
 
     public final long getLatestSubscribeTime() {
