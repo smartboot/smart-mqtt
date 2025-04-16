@@ -18,7 +18,6 @@ import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.plugin.spec.BrokerTopic;
 import org.smartboot.mqtt.plugin.spec.Message;
-import org.smartboot.mqtt.plugin.spec.MessageDeliver;
 import org.smartboot.mqtt.plugin.spec.MessageQueue;
 
 import java.util.Map;
@@ -90,7 +89,7 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
     private final AsyncTask asyncTask = new AsyncTask() {
         @Override
         public void execute() {
-            MessageDeliver subscriber;
+            AbstractMessageDeliver subscriber;
             queue.offer(BREAK);
             int mark = version;
             while ((subscriber = queue.poll()) != BREAK) {
@@ -131,7 +130,7 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
      * 在多线程环境下的安全访问。订阅者按照FIFO顺序处理。
      * </p>
      */
-    private final ConcurrentLinkedQueue<MessageDeliver> queue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<AbstractMessageDeliver> queue = new ConcurrentLinkedQueue<>();
 
     private static final AbstractMessageDeliver BREAK = new AbstractMessageDeliver(null, null, null, -1) {
 
@@ -178,7 +177,7 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
         return shareSubscribers.size() + defaultGroup.count();
     }
 
-    public void addSubscriber(MessageDeliver subscriber) {
+    public void addSubscriber(AbstractMessageDeliver subscriber) {
         queue.offer(subscriber);
     }
 

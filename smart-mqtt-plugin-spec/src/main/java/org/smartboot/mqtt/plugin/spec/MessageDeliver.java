@@ -27,13 +27,4 @@ public interface MessageDeliver {
 
     MqttQoS getMqttQoS();
 
-    void disable();
-
-    long getNextConsumerOffset();
-
-    boolean isEnable();
-
-    void pushToClient();
-
-    long getLatestSubscribeTime();
 }

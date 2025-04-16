@@ -10,7 +10,7 @@
 
 package org.smartboot.mqtt.plugin.spec;
 
-public class Config {
+public class PluginConfig {
     private boolean enable;
 
     public boolean isEnable() {

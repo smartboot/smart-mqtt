@@ -31,8 +31,6 @@ public interface MqttSession {
 
     InetSocketAddress getRemoteAddress() throws IOException;
 
-    void flush();
-
     String getClientId();
 
     boolean isDisconnect();
@@ -44,8 +42,6 @@ public interface MqttSession {
     void setAuthorized(boolean authorized);
 
     boolean isAuthorized();
-
-    void unsubscribe(String topicFilter);
 
     long getLatestReceiveMessageTime();
 

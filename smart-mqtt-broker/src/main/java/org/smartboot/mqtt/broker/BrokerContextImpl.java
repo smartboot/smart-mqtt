@@ -30,6 +30,7 @@ import org.smartboot.mqtt.broker.provider.impl.session.MemorySessionStateProvide
 import org.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import org.smartboot.mqtt.broker.topic.BrokerTopicRegistry;
 import org.smartboot.mqtt.broker.topic.TopicSubscriptionRegistry;
+import org.smartboot.mqtt.broker.topic.deliver.AbstractMessageDeliver;
 import org.smartboot.mqtt.common.AsyncTask;
 import org.smartboot.mqtt.common.InflightQueue;
 import org.smartboot.mqtt.common.MqttProtocol;
@@ -53,7 +54,6 @@ import org.smartboot.mqtt.common.util.MqttUtil;
 import org.smartboot.mqtt.common.util.ValidateUtils;
 import org.smartboot.mqtt.plugin.spec.BrokerContext;
 import org.smartboot.mqtt.plugin.spec.Message;
-import org.smartboot.mqtt.plugin.spec.MessageDeliver;
 import org.smartboot.mqtt.plugin.spec.MqttProcessor;
 import org.smartboot.mqtt.plugin.spec.MqttSession;
 import org.smartboot.mqtt.plugin.spec.Options;
@@ -464,7 +464,7 @@ public class BrokerContextImpl implements BrokerContext {
         eventBus.subscribe(EventType.SUBSCRIBE_TOPIC, (eventType, eventObject) -> retainPushThreadPool.execute(new AsyncTask() {
             @Override
             public void execute() {
-                MessageDeliver consumerRecord = eventObject.getObject();
+                AbstractMessageDeliver consumerRecord = (AbstractMessageDeliver) eventObject.getObject();
                 BrokerTopicImpl topic = getOrCreateTopic(consumerRecord.getTopic().getTopic());
                 Message retainMessage = topic.getRetainMessage();
                 if (retainMessage == null || retainMessage.getCreateTime() > consumerRecord.getLatestSubscribeTime()) {

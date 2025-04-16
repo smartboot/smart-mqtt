@@ -12,7 +12,6 @@ package org.smartboot.mqtt.broker.topic;
 
 import org.smartboot.mqtt.broker.topic.deliver.AbstractMessageDeliver;
 import org.smartboot.mqtt.broker.topic.deliver.SharedOrderedMessageDeliver;
-import org.smartboot.mqtt.plugin.spec.MessageDeliver;
 import org.smartboot.mqtt.plugin.spec.MqttSession;
 
 class SharedDeliverGroup extends DeliverGroup {
@@ -34,8 +33,8 @@ class SharedDeliverGroup extends DeliverGroup {
     }
 
     @Override
-    public MessageDeliver removeSubscriber(MqttSession session) {
-        MessageDeliver consumerRecord = super.removeSubscriber(session);
+    public AbstractMessageDeliver removeSubscriber(MqttSession session) {
+        AbstractMessageDeliver consumerRecord = super.removeSubscriber(session);
         if (subscribers.isEmpty()) {
             record.disable();
             record.getTopic().removeShareGroup(consumerRecord.getTopicFilterToken().getTopicFilter());

@@ -60,7 +60,7 @@ public class DeliverGroup {
      * </ul>
      * </p>
      */
-    protected final Map<MqttSession, MessageDeliver> subscribers = new ConcurrentHashMap<>();
+    protected final Map<MqttSession, AbstractMessageDeliver> subscribers = new ConcurrentHashMap<>();
 
     /**
      * 获取指定会话的订阅者记录。
@@ -78,7 +78,7 @@ public class DeliverGroup {
      * @param session 要移除订阅的MQTT客户端会话
      * @return 返回被移除的消费者记录，如果不存在则返回null
      */
-    public MessageDeliver removeSubscriber(MqttSession session) {
+    public AbstractMessageDeliver removeSubscriber(MqttSession session) {
         return subscribers.remove(session);
     }
 

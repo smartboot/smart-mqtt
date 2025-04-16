@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import org.smartboot.mqtt.broker.topic.DeliverGroup;
+import org.smartboot.mqtt.broker.topic.deliver.AbstractMessageDeliver;
 import org.smartboot.mqtt.broker.topic.deliver.Qos0MessageDeliver;
 import org.smartboot.mqtt.broker.topic.deliver.Qos12MessageDeliver;
 import org.smartboot.mqtt.common.AbstractSession;
@@ -223,7 +224,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
         } else if (preToken.isWildcards()) {
             if (!topicToken.isWildcards() || topicToken.getTopicFilter().length() > preToken.getTopicFilter().length()) {
                 //解除旧的订阅关系
-                MessageDeliver preRecord = subscribers.get(preToken.getTopicFilter()).getTopicSubscribers().remove(topic);
+                AbstractMessageDeliver preRecord = subscribers.get(preToken.getTopicFilter()).getTopicSubscribers().remove(topic);
                 ValidateUtils.isTrue(preRecord == consumerRecord, "invalid consumerRecord");
                 preRecord.disable();
 
@@ -258,7 +259,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
         //移除关联Broker中的映射关系
         filterSubscriber.getTopicSubscribers().forEach((brokerTopic, subscriber) -> {
             DeliverGroup subscriberGroup = brokerTopic.getSubscriberGroup(filterSubscriber.getTopicFilterToken());
-            MessageDeliver consumerRecord = subscriberGroup.removeSubscriber(this);
+            AbstractMessageDeliver consumerRecord = subscriberGroup.removeSubscriber(this);
             //移除后，如果BrokerTopic没有订阅者，则清除消息队列
             if (brokerTopic.subscribeCount() == 0) {
                 LOGGER.info("clear topic: {} message queue", brokerTopic.getTopicFilter());

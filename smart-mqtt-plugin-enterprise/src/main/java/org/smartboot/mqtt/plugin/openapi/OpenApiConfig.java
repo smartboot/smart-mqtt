@@ -1,9 +1,9 @@
 package org.smartboot.mqtt.plugin.openapi;
 
 
-import org.smartboot.mqtt.plugin.spec.Config;
+import org.smartboot.mqtt.plugin.spec.PluginConfig;
 
-public class OpenApiConfig extends Config {
+public class OpenApiConfig extends PluginConfig {
     /**
      * 端口号
      */
