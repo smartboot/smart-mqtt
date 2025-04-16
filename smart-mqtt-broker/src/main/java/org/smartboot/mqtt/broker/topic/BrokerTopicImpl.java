@@ -18,7 +18,6 @@ import org.smartboot.mqtt.common.TopicToken;
 import org.smartboot.mqtt.common.message.MqttCodecUtil;
 import org.smartboot.mqtt.plugin.spec.BrokerTopic;
 import org.smartboot.mqtt.plugin.spec.Message;
-import org.smartboot.mqtt.plugin.spec.MessageQueue;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -122,7 +121,7 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
      * 用于临时存储待推送的消息，确保消息的可靠传递。
      * </p>
      */
-    private final MessageQueue messageQueue;
+    private final MemoryMessageStoreQueue messageQueue;
     /**
      * 当前主题的活跃订阅者队列。
      * <p>
@@ -197,7 +196,7 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
         this.retainMessage = retainMessage;
     }
 
-    public MessageQueue getMessageQueue() {
+    public MemoryMessageStoreQueue getMessageQueue() {
         return messageQueue;
     }
 

@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author 三刀
  * @version V1.0 , 2018/5/3
  */
-class MemoryMessageStoreQueue implements MessageQueue {
+public class MemoryMessageStoreQueue implements MessageQueue {
     private static final Logger LOGGER = LoggerFactory.getLogger(MemoryMessageStoreQueue.class);
     private final int capacity;
     private Message[] store;
@@ -62,7 +62,6 @@ class MemoryMessageStoreQueue implements MessageQueue {
         }
     }
 
-    @Override
     public void commit(long offset) {
         Message message = get(offset);
         if (message != null && message.getOffset() == offset && message.decrementAndGet() == 0) {
@@ -79,7 +78,6 @@ class MemoryMessageStoreQueue implements MessageQueue {
         return putOffset.get();
     }
 
-    @Override
     public void clear() {
         store = new Message[capacity];
     }

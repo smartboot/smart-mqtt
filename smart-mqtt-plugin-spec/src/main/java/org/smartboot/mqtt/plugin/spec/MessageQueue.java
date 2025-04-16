@@ -11,19 +11,8 @@
 package org.smartboot.mqtt.plugin.spec;
 
 public interface MessageQueue {
-    void put(Message message);
-
-    Message get(long offset);
-
-    //提交指定offset的消息
-    void commit(long offset);
 
     long getLatestOffset();
-
-    /**
-     * 清空消息队列
-     */
-    void clear();
 
     //消息队列容量
     int capacity();
