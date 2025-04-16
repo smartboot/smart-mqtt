@@ -45,12 +45,10 @@ jobs:
           java-version: '8'
       - name: Set up Maven 3.9
         uses: stCarolas/setup-maven@v5
-#        with:
-#          maven-version: '3.9.0'
-      - name: Build smart-socket
-        run: mvn -B install --file smart-socket/smart-socket-parent/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
-      - name: Build Feat
-        run: mvn -B install --file feat/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+#      - name: Build smart-socket
+#        run: mvn -B install --file smart-socket/smart-socket-parent/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+#      - name: Build Feat
+#        run: mvn -B install --file feat/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Build smart-mqtt
         run: mvn -B install --file pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
         ##构建smart-mqtt broker基线版本

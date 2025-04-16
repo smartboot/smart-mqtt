@@ -39,6 +39,8 @@ jobs:
         run: mvn -B install --file feat/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Build smart-mqtt-bench
         run: mvn -B clean install -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+      - name: Build smart-mqtt-bench
+        run: mvn -f smart-mqtt-bench -B clean install -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v3
