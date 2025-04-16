@@ -53,10 +53,20 @@ jobs:
         run: mvn -B install --file feat/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Build smart-mqtt
         run: mvn -B install --file pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
-      - name: Build smart-mqtt-enterprise
-        run: mvn -B -f smart-mqtt-enterprise/poms/enterprise.xml clean package -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+        ##构建smart-mqtt broker基线版本
+      - name: Build smart-mqtt-broker
+        run: mvn -B -f smart-mqtt-enterprise/poms/community.xml clean package -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Build smart-mqtt-enterprise
         run: cp smart-mqtt-enterprise/poms/target/smart-mqtt-broker-*.jar  smart-mqtt-enterprise/smart-mqtt.jar
+
+      ## 构建企业版插件
+      - name: Build smart-mqtt-enterprise
+        run: mvn -B -f smart-mqtt-plugin-enterprise/pom.xml clean package -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+      - name: Create plugins directory
+        run: mkdir -p smart-mqtt-enterprise/plugins
+      - name: Copy smart-mqtt-enterprise
+        run: cp smart-mqtt-plugin-enterprise/target/smart-mqtt-plugin-enterprise-*.jar  smart-mqtt-enterprise/plugins
+
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v3
