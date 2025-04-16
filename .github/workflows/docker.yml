@@ -55,6 +55,8 @@ jobs:
         run: mvn -B install --file pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
         ##构建smart-mqtt broker基线版本
       - name: Build smart-mqtt-broker
+        run: mvn -B -f smart-mqtt-broker/pom.xml clean install -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+      - name: Build smart-mqtt-broker
         run: mvn -B -f smart-mqtt-enterprise/poms/community.xml clean package -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Build smart-mqtt-enterprise
         run: cp smart-mqtt-enterprise/poms/target/smart-mqtt-broker-*.jar  smart-mqtt-enterprise/smart-mqtt.jar
