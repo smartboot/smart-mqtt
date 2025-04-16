@@ -27,19 +27,22 @@ public class PluginContainer extends Plugin {
 
     public PluginContainer(ClassLoader classLoader) {
         this.classLoader = classLoader;
-        ServiceLoader<Plugin> serviceLoader = ServiceLoader.load(Plugin.class, classLoader);
-        for (Plugin plugin : serviceLoader) {
-            plugins.add(plugin);
-        }
     }
 
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
         ClassLoader preClassLoader = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(classLoader);
-        for (Plugin plugin : plugins) {
-            plugin.install(brokerContext);
+        ServiceLoader<Plugin> serviceLoader = ServiceLoader.load(Plugin.class, classLoader);
+        System.out.println("Plugin container loaded!" + serviceLoader);
+        for (Plugin plugin : serviceLoader) {
+            if (plugin.getClass().getClassLoader() == classLoader) {
+                plugins.add(plugin);
+                plugin.install(brokerContext);
+            }
+
         }
+
         Thread.currentThread().setContextClassLoader(preClassLoader);
     }
 

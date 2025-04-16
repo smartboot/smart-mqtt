@@ -28,7 +28,7 @@ import java.util.Objects;
  */
 public class RegistryPlugin extends Plugin {
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistryPlugin.class);
-    private final List<PluginContainer> plugins = new ArrayList<>();
+    private final List<Plugin> plugins = new ArrayList<>();
 
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
@@ -51,15 +51,15 @@ public class RegistryPlugin extends Plugin {
                 plugins.add(new PluginContainer(classLoader));
             }
         }
-        for (PluginContainer plugin : plugins) {
-            plugin.initPlugin(brokerContext);
+        for (Plugin plugin : plugins) {
+            plugin.install(brokerContext);
         }
     }
 
     @Override
     protected void destroyPlugin() {
-        for (PluginContainer plugin : plugins) {
-            plugin.destroyPlugin();
+        for (Plugin plugin : plugins) {
+            plugin.uninstall();
         }
     }
 }
