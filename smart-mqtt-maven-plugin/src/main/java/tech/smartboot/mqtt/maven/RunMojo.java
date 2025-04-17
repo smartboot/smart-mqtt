@@ -32,7 +32,7 @@ import java.util.List;
  * @version V1.0 , 2020/11/4
  */
 @Mojo(name = "run", requiresDependencyResolution = ResolutionScope.TEST, threadSafe = true)
-@Execute(phase = LifecyclePhase.PROCESS_CLASSES)
+@Execute(phase = LifecyclePhase.PACKAGE)
 public class RunMojo extends AbstractMojo {
     /**
      * @since 1.0
