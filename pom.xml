@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <packaging>pom</packaging>
-    <groupId>io.github.smartboot.mqtt</groupId>
+    <groupId>tech.smartboot.mqtt</groupId>
     <artifactId>smart-mqtt</artifactId>
     <name>smart-mqtt</name>
     <version>0.42</version>
@@ -22,25 +22,20 @@
                 <version>${smart-socket.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.github.smartboot.mqtt</groupId>
+                <groupId>tech.smartboot.mqtt</groupId>
                 <artifactId>smart-mqtt-plugin-spec</artifactId>
                 <version>${smart.mqtt.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.github.smartboot.mqtt</groupId>
+                <groupId>tech.smartboot.mqtt</groupId>
                 <artifactId>smart-mqtt-common</artifactId>
                 <version>${smart.mqtt.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.github.smartboot.mqtt</groupId>
+                <groupId>tech.smartboot.mqtt</groupId>
                 <artifactId>smart-mqtt-client</artifactId>
                 <version>${smart.mqtt.version}</version>
             </dependency>
-<!--            <dependency>-->
-<!--                <groupId>io.github.smartboot.mqtt</groupId>-->
-<!--                <artifactId>plugins</artifactId>-->
-<!--                <version>${smart.mqtt.version}</version>-->
-<!--            </dependency>-->
             <dependency>
                 <groupId>commons-lang</groupId>
                 <artifactId>commons-lang</artifactId>
@@ -146,16 +141,6 @@
                     <autoPublish>true</autoPublish>
                 </configuration>
             </plugin>
-<!--            <plugin>-->
-<!--                <groupId>org.sonatype.plugins</groupId>-->
-<!--                <artifactId>nexus-staging-maven-plugin</artifactId>-->
-<!--                <extensions>true</extensions>-->
-<!--                <configuration>-->
-<!--                    <serverId>ossrh</serverId>-->
-<!--                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>-->
-<!--                    <autoReleaseAfterClose>true</autoReleaseAfterClose>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
