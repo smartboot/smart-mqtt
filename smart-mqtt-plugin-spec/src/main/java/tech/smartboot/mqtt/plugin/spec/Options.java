@@ -58,7 +58,7 @@ public class Options extends ToString {
     /**
      * 当前smart-mqtt
      */
-    public static final String VERSION = "v0.42";
+    public static final String VERSION = "v1.0.0";
 
     /**
      * 节点ID，用于在MQTT集群中唯一标识当前broker节点。
