@@ -52,6 +52,7 @@ public class RegistryPlugin extends Plugin {
             }
         }
         for (Plugin plugin : plugins) {
+            LOGGER.info("load plugin:{}", plugin.pluginName());
             plugin.install(brokerContext);
         }
     }

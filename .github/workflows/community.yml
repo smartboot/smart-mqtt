@@ -49,8 +49,10 @@ jobs:
 #        run: mvn -B install --file smart-socket/smart-socket-parent/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
 #      - name: Build Feat
 #        run: mvn -B install --file feat/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
-      - name: Build smart-mqtt
+      - name: 构建基础组件
         run: mvn -B install --file pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+      - name: 构建 mqtt broker
+        run: mvn -B -f smart-mqtt-broker/pom.xml clean install -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Build smart-mqtt-community
         run: mvn -B -f smart-mqtt-enterprise/poms/community.xml clean package -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Build smart-mqtt-community
