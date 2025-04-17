@@ -36,6 +36,6 @@
         </environment>
     </environments>
     <mappers>
-        <package name="org.smartboot.mqtt.plugin.dao.mapper"/>
+        <package name="tech.smartboot.mqtt.plugin.dao.mapper"/>
     </mappers>
 </configuration>
