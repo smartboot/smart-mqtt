@@ -6,7 +6,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: 构建社区版
+name: 构建&发布
 
 on:
   push:
