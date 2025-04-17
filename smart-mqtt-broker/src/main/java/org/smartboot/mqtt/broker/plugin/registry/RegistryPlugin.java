@@ -10,10 +10,10 @@
 
 package org.smartboot.mqtt.broker.plugin.registry;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartboot.mqtt.plugin.spec.BrokerContext;
 import org.smartboot.mqtt.plugin.spec.Plugin;
+import tech.smartboot.feat.core.common.logging.Logger;
+import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
 import java.io.File;
 import java.net.URL;
