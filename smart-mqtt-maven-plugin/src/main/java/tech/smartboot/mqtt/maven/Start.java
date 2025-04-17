@@ -10,7 +10,7 @@
 
 package tech.smartboot.mqtt.maven;
 
-import org.smartboot.mqtt.broker.Bootstrap;
+import tech.smartboot.mqtt.broker.Bootstrap;
 
 /**
  * @author 三刀

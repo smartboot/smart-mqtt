@@ -11,8 +11,8 @@
 package tech.smartboot.mqtt.bench;
 
 import org.apache.commons.lang.math.NumberUtils;
-import org.smartboot.mqtt.client.MqttClient;
-import org.smartboot.mqtt.common.enums.MqttQoS;
+import tech.smartboot.mqtt.client.MqttClient;
+import tech.smartboot.mqtt.common.enums.MqttQoS;
 
 import java.io.IOException;
 import java.util.Arrays;

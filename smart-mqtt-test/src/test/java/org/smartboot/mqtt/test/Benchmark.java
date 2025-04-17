@@ -16,9 +16,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.mqtt.broker.BrokerContextImpl;
-import org.smartboot.mqtt.client.MqttClient;
-import org.smartboot.mqtt.common.enums.MqttQoS;
+import tech.smartboot.mqtt.broker.BrokerContextImpl;
+import tech.smartboot.mqtt.client.MqttClient;
+import tech.smartboot.mqtt.common.enums.MqttQoS;
 
 import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.charset.StandardCharsets;

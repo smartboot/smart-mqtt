@@ -10,10 +10,10 @@
 
 package org.smartboot.mqtt.test;
 
-import org.smartboot.mqtt.client.MqttClient;
-import org.smartboot.mqtt.common.enums.MqttQoS;
-import org.smartboot.mqtt.common.enums.MqttVersion;
-import org.smartboot.mqtt.common.message.payload.WillMessage;
+import tech.smartboot.mqtt.client.MqttClient;
+import tech.smartboot.mqtt.common.enums.MqttQoS;
+import tech.smartboot.mqtt.common.enums.MqttVersion;
+import tech.smartboot.mqtt.common.message.payload.WillMessage;
 
 import java.nio.charset.StandardCharsets;
 

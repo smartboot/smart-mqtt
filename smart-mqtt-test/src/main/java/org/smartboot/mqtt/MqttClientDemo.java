@@ -10,8 +10,8 @@
 
 package org.smartboot.mqtt;
 
-import org.smartboot.mqtt.client.MqttClient;
-import org.smartboot.mqtt.common.enums.MqttQoS;
+import tech.smartboot.mqtt.client.MqttClient;
+import tech.smartboot.mqtt.common.enums.MqttQoS;
 
 public class MqttClientDemo {
     public static void main(String[] args) throws InterruptedException {
