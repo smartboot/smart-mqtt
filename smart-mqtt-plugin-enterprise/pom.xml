@@ -95,7 +95,7 @@
                                 <!-- 采用追加的方式 -->
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                    <resource>META-INF/services/org.smartboot.mqtt.broker.plugin.Plugin</resource>
+                                    <resource>META-INF/services/tech.smartboot.mqtt.broker.plugin.Plugin</resource>
                                 </transformer>
                             </transformers>
                         </configuration>
