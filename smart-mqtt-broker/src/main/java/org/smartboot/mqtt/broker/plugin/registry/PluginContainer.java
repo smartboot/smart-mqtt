@@ -40,7 +40,6 @@ public class PluginContainer extends Plugin {
                 plugins.add(plugin);
                 plugin.install(brokerContext);
             }
-
         }
 
         Thread.currentThread().setContextClassLoader(preClassLoader);
