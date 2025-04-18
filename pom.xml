@@ -103,7 +103,7 @@
     <distributionManagement>
         <snapshotRepository>
             <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <url>https://central.sonatype.com/repository/maven-snapshots</url>
         </snapshotRepository>
         <repository>
             <id>ossrh</id>
@@ -133,11 +133,10 @@
             <plugin>
                 <groupId>org.sonatype.central</groupId>
                 <artifactId>central-publishing-maven-plugin</artifactId>
-                <version>0.4.0</version>
+                <version>0.7.0</version>
                 <extensions>true</extensions>
                 <configuration>
                     <publishingServerId>ossrh</publishingServerId>
-                    <tokenAuth>true</tokenAuth>
                     <autoPublish>true</autoPublish>
                 </configuration>
             </plugin>
@@ -177,8 +176,8 @@
                 <executions>
                     <execution>
                         <id>sign-artifacts</id>
-<!--                                                                        <phase>verify</phase>-->
-                        <phase>deploy</phase>
+                                                                        <phase>verify</phase>
+<!--                        <phase>deploy</phase>-->
                         <goals>
                             <goal>sign</goal>
                         </goals>
@@ -233,9 +232,15 @@
     </build>
     <repositories>
         <repository>
-            <id>sonatype-nexus-snapshots</id>
-            <name>Sonatype Nexus Snapshots</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <name>Central Portal Snapshots</name>
+            <id>central-portal-snapshots</id>
+            <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
         </repository>
     </repositories>
     <pluginRepositories>
