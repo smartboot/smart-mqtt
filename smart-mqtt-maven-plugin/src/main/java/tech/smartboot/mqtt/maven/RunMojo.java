@@ -74,6 +74,7 @@ public class RunMojo extends AbstractMojo {
                     e.printStackTrace();
                 }
             });
+            urlList.add(new File(configurationDir, artifactId + "-" + version + ".jar").toURI().toURL());
             urlList.add(new File(configurationDir, "classes").toURI().toURL());
             URL[] urls = new URL[urlList.size()];
             urlList.toArray(urls);

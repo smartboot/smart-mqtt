@@ -666,7 +666,7 @@ public class BrokerContextImpl implements BrokerContext {
         InputStream inputStream;
 
         if (StringUtils.isBlank(brokerConfig)) {
-            inputStream = BrokerContext.class.getClassLoader().getResourceAsStream("smart-mqtt.yaml");
+            inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("smart-mqtt.yaml");
             LOGGER.debug("load smart-mqtt.yaml from classpath.");
         } else {
             inputStream = Files.newInputStream(Paths.get(brokerConfig));
