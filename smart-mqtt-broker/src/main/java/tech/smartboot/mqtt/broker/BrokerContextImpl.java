@@ -14,14 +14,14 @@ import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.JSONPath;
 import com.alibaba.fastjson2.JSONReader;
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.timer.Timer;
 import org.smartboot.socket.transport.AioQuickServer;
 import org.yaml.snakeyaml.Yaml;
+import tech.smartboot.feat.core.common.logging.Logger;
+import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.broker.bus.event.KeepAliveMonitorSubscriber;
 import tech.smartboot.mqtt.broker.bus.message.RetainPersistenceConsumer;
 import tech.smartboot.mqtt.broker.processor.ConnectProcessor;
@@ -667,10 +667,10 @@ public class BrokerContextImpl implements BrokerContext {
 
         if (StringUtils.isBlank(brokerConfig)) {
             inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("smart-mqtt.yaml");
-            LOGGER.debug("load smart-mqtt.yaml from classpath.");
+            LOGGER.info("load smart-mqtt.yaml from classpath.");
         } else {
             inputStream = Files.newInputStream(Paths.get(brokerConfig));
-            LOGGER.debug("load external yaml config.");
+            LOGGER.info("load external yaml config.");
         }
         Yaml yaml = new Yaml();
         Object object = yaml.load(inputStream);
