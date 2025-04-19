@@ -74,12 +74,12 @@ public class RunMojo extends AbstractMojo {
                     e.printStackTrace();
                 }
             });
-            urlList.add(new File(configurationDir, artifactId + "-" + version + ".jar").toURI().toURL());
+            urlList.add(new File(configurationDir, "classes").toURI().toURL());
             URL[] urls = new URL[urlList.size()];
             urlList.toArray(urls);
             URLClassLoader classLoader = new URLClassLoader(urls, ClassLoader.getSystemClassLoader());
-            File webFile = new File(configurationDir, artifactId + "-" + version);
-            System.out.println("webFile: " + webFile.getAbsolutePath());
+//            File webFile = new File(configurationDir, artifactId + "-" + version);
+//            System.out.println("webFile: " + webFile.getAbsolutePath());
             Thread.currentThread().setContextClassLoader(classLoader);
             Class<?> clazz = classLoader.loadClass("tech.smartboot.mqtt.maven.Start");
             clazz.getConstructor().newInstance();
