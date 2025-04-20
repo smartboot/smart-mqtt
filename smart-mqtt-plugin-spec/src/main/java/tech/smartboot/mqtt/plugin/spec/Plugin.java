@@ -22,7 +22,7 @@ import java.io.File;
 public abstract class Plugin {
     private static final Logger LOGGER = LoggerFactory.getLogger(Plugin.class);
 
-    private File storeDirectory;
+    private File storage;
     /**
      * 是否已安装
      */
@@ -88,14 +88,14 @@ public abstract class Plugin {
         return 0;
     }
 
-    public File storeDirectory() {
-        if (storeDirectory == null) {
+    public File storage() {
+        if (storage == null) {
             throw new IllegalStateException("plugin [ " + pluginName() + " ] has no store directory!");
         }
-        return storeDirectory;
+        return storage;
     }
 
-    public void setStoreDirectory(File storeDirectory) {
-        this.storeDirectory = storeDirectory;
+    public void setStorage(File storage) {
+        this.storage = storage;
     }
 }

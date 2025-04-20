@@ -55,7 +55,7 @@ public class RegistryPlugin extends Plugin {
         }
         for (File file : Objects.requireNonNull(baseDir.listFiles())) {
             if (file.getName().endsWith(".jar")) {
-                File storage = new File(baseDir, file.getName().replace(".jar", ""));
+                File storage = new File(baseStorage, file.getName().replace(".jar", ""));
                 if (!storage.isDirectory()) {
                     storage.mkdirs();
                 }

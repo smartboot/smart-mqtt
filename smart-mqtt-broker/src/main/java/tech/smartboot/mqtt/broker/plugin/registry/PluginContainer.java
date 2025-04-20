@@ -41,7 +41,7 @@ public class PluginContainer extends Plugin {
         for (Plugin plugin : serviceLoader) {
             if (plugin.getClass().getClassLoader() == classLoader) {
                 plugins.add(plugin);
-                plugin.setStoreDirectory(storage);
+                plugin.setStorage(storage);
                 plugin.install(brokerContext);
             }
         }
