@@ -14,6 +14,7 @@ import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
+import tech.smartboot.mqtt.plugin.spec.PluginException;
 
 import java.io.File;
 import java.net.URL;
@@ -45,10 +46,21 @@ public class RegistryPlugin extends Plugin {
             LOGGER.warn("SMART_MQTT_PLUGINS is not a directory,plugin will not be loaded!");
             return;
         }
+        File baseStorage = new File(baseDir, "_storage");
+        if (baseStorage.isFile()) {
+            throw new PluginException("storage is a file,plugin will not be loaded!");
+        }
+        if (!baseStorage.isDirectory()) {
+            baseStorage.mkdirs();
+        }
         for (File file : Objects.requireNonNull(baseDir.listFiles())) {
             if (file.getName().endsWith(".jar")) {
-                URLClassLoader classLoader = new URLClassLoader(new URL[]{file.toURI().toURL()});
-                plugins.add(new PluginContainer(classLoader));
+                File storage = new File(baseDir, file.getName().replace(".jar", ""));
+                if (!storage.isDirectory()) {
+                    storage.mkdirs();
+                }
+                URLClassLoader classLoader = new URLClassLoader(new URL[]{file.toURI().toURL(), storage.toURI().toURL()});
+                plugins.add(new PluginContainer(classLoader, storage));
             }
         }
         for (Plugin plugin : plugins) {

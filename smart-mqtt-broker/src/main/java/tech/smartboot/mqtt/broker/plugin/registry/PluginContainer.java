@@ -13,6 +13,7 @@ package tech.smartboot.mqtt.broker.plugin.registry;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -24,9 +25,11 @@ import java.util.ServiceLoader;
 public class PluginContainer extends Plugin {
     private final List<Plugin> plugins = new ArrayList<>();
     private final ClassLoader classLoader;
+    private File storage;
 
-    public PluginContainer(ClassLoader classLoader) {
+    public PluginContainer(ClassLoader classLoader, File storage) {
         this.classLoader = classLoader;
+        this.storage = storage;
     }
 
     @Override
@@ -38,6 +41,7 @@ public class PluginContainer extends Plugin {
         for (Plugin plugin : serviceLoader) {
             if (plugin.getClass().getClassLoader() == classLoader) {
                 plugins.add(plugin);
+                plugin.setStoreDirectory(storage);
                 plugin.install(brokerContext);
             }
         }

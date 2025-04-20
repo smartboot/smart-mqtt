@@ -13,12 +13,16 @@ package tech.smartboot.mqtt.plugin.spec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/4/1
  */
 public abstract class Plugin {
     private static final Logger LOGGER = LoggerFactory.getLogger(Plugin.class);
+
+    private File storeDirectory;
     /**
      * 是否已安装
      */
@@ -82,5 +86,16 @@ public abstract class Plugin {
      */
     public int order() {
         return 0;
+    }
+
+    public File storeDirectory() {
+        if (storeDirectory == null) {
+            throw new IllegalStateException("plugin [ " + pluginName() + " ] has no store directory!");
+        }
+        return storeDirectory;
+    }
+
+    public void setStoreDirectory(File storeDirectory) {
+        this.storeDirectory = storeDirectory;
     }
 }
