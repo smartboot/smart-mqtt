@@ -42,9 +42,11 @@ public class RegistryPlugin extends Plugin {
             return;
         }
         File baseDir = new File(baseDirPath);
+        if (baseDir.isFile()) {
+            throw new PluginException("SMART_MQTT_PLUGINS is a file,plugin will not be loaded!");
+        }
         if (!baseDir.isDirectory()) {
-            LOGGER.warn("SMART_MQTT_PLUGINS is not a directory,plugin will not be loaded!");
-            return;
+            baseDir.mkdirs();
         }
         File baseStorage = new File(baseDir, "_storage");
         if (baseStorage.isFile()) {
