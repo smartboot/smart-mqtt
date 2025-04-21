@@ -1,0 +1,129 @@
+plugins:
+  # 示例已有数据，保留开头部分
+  - id: smart-mqtt-plugin-enterprise
+    name: smart-mqtt-plugin-enterprise
+    version: 1.0.0
+    description: A plugin for smart-mqtt
+    author: smart-mqtt
+    url: https://www.baidu.com
+  # 生成 20 个新的高质量插件数据
+  - id: smart-mqtt-plugin-security-1
+    name: Smart MQTT Security Shield
+    version: 2.1.3
+    description: Advanced security plugin for smart-mqtt, providing encryption and authentication features.
+    author: Security Experts Team
+    url: https://securityplugin.example.com
+  - id: smart-mqtt-plugin-performance-2
+    name: Smart MQTT Performance Booster
+    version: 3.0.1
+    description: Optimize the performance of smart-mqtt, improving message throughput and reducing latency.
+    author: Performance Lab
+    url: https://performanceplugin.example.com
+  - id: smart-mqtt-plugin-data-3
+    name: Smart MQTT Data Processor
+    version: 1.2.5
+    description: Process and transform MQTT messages with flexible rules and filters.
+    author: Data Wizards
+    url: https://dataplugin.example.com
+  - id: smart-mqtt-plugin-monitor-4
+    name: Smart MQTT Monitor
+    version: 4.1.0
+    description: Real-time monitoring of smart-mqtt, providing metrics and alerts.
+    author: Monitoring Squad
+    url: https://monitorplugin.example.com
+  - id: smart-mqtt-plugin-iot-5
+    name: Smart MQTT IoT Bridge
+    version: 2.0.2
+    description: Bridge smart-mqtt with various IoT devices and platforms.
+    author: IoT Integration Team
+    url: https://iotplugin.example.com
+  - id: smart-mqtt-plugin-log-6
+    name: Smart MQTT Log Analyzer
+    version: 1.3.4
+    description: Analyze and manage MQTT logs for better troubleshooting.
+    author: Logging Pros
+    url: https://logplugin.example.com
+  - id: smart-mqtt-plugin-admin-7
+    name: Smart MQTT Admin Console
+    version: 3.2.1
+    description: A comprehensive admin console for managing smart-mqtt instances.
+    author: Admin Developers
+    url: https://adminplugin.example.com
+  - id: smart-mqtt-plugin-alert-8
+    name: Smart MQTT Alert System
+    version: 2.2.0
+    description: Configure and send alerts based on MQTT message patterns.
+    author: Alert Specialists
+    url: https://alertplugin.example.com
+  - id: smart-mqtt-plugin-gateway-9
+    name: Smart MQTT Gateway
+    version: 1.4.2
+    description: Connect smart-mqtt to external systems and protocols.
+    author: Gateway Engineers
+    url: https://gatewayplugin.example.com
+  - id: smart-mqtt-plugin-auth-10
+    name: Smart MQTT Enhanced Auth
+    version: 2.3.1
+    description: Provide enhanced authentication methods for smart-mqtt.
+    author: Auth Innovators
+    url: https://authplugin.example.com
+  - id: smart-mqtt-plugin-cache-11
+    name: Smart MQTT Cache Manager
+    version: 1.1.5
+    description: Manage and optimize MQTT message caching for better performance.
+    author: Cache Experts
+    url: https://cacheplugin.example.com
+  - id: smart-mqtt-plugin-translate-12
+    name: Smart MQTT Message Translator
+    version: 3.1.2
+    description: Translate MQTT messages between different formats and languages.
+    author: Translation Team
+    url: https://translateplugin.example.com
+  - id: smart-mqtt-plugin-retry-13
+    name: Smart MQTT Retry Mechanism
+    version: 2.0.3
+    description: Implement a reliable retry mechanism for failed MQTT messages.
+    author: Reliability Team
+    url: https://retryplugin.example.com
+  - id: smart-mqtt-plugin-load-14
+    name: Smart MQTT Load Balancer
+    version: 1.5.1
+    description: Distribute MQTT traffic evenly across multiple brokers.
+    author: Load Balancing Pros
+    url: https://loadplugin.example.com
+  - id: smart-mqtt-plugin-validate-15
+    name: Smart MQTT Message Validator
+    version: 2.4.0
+    description: Validate MQTT messages against predefined schemas and rules.
+    author: Validation Team
+    url: https://validateplugin.example.com
+  - id: smart-mqtt-plugin-compress-16
+    name: Smart MQTT Compression
+    version: 1.2.3
+    description: Compress MQTT messages to reduce bandwidth usage.
+    author: Compression Specialists
+    url: https://compressplugin.example.com
+  - id: smart-mqtt-plugin-visualize-17
+    name: Smart MQTT Visualizer
+    version: 3.0.2
+    description: Visualize MQTT message flow and metrics in real-time.
+    author: Visualization Lab
+    url: https://visualizeplugin.example.com
+  - id: smart-mqtt-plugin-backup-18
+    name: Smart MQTT Backup Tool
+    version: 2.1.1
+    description: Automatically backup and restore MQTT configurations and data.
+    author: Backup Experts
+    url: https://backupplugin.example.com
+  - id: smart-mqtt-plugin-schedule-19
+    name: Smart MQTT Scheduler
+    version: 1.3.3
+    description: Schedule MQTT message publishing and processing tasks.
+    author: Scheduling Team
+    url: https://scheduleplugin.example.com
+  - id: smart-mqtt-plugin-geo-20
+    name: Smart MQTT Geo-location
+    version: 2.2.2
+    description: Add geo-location information to MQTT messages for location-based services.
+    author: Geo-location Developers
+    url: https://geoplugin.example.com

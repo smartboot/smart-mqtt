@@ -105,7 +105,7 @@
             <plugin>
                 <groupId>tech.smartboot.mqtt</groupId>
                 <artifactId>smart-mqtt-maven-plugin</artifactId>
-                <version>1.0.0</version>
+                <version>0.0.0</version>
             </plugin>
         </plugins>
     </build>
