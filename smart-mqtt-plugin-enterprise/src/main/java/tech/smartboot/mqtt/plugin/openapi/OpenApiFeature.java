@@ -19,6 +19,7 @@ import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.mqtt.plugin.AbstractFeature;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 
+import java.io.File;
 import java.nio.channels.AsynchronousChannelGroup;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -39,10 +40,12 @@ public class OpenApiFeature extends AbstractFeature {
     private final OpenApiConfig openApiConfig;
 
     private ExecutorService asyncExecutor;
+    private File storage;
 
-    public OpenApiFeature(BrokerContext context) {
+    public OpenApiFeature(BrokerContext context, File storage) {
         super(context);
         openApiConfig = context.parseConfig(CONFIG_JSON_PATH, OpenApiConfig.class);
+        this.storage = storage;
     }
 
     private HttpServer httpServer;
@@ -71,7 +74,11 @@ public class OpenApiFeature extends AbstractFeature {
 
         asyncExecutor = Executors.newCachedThreadPool();
         OpenApiConfig finalConfig = config;
-        httpServer = FeatCloud.cloudServer(serverOptions -> serverOptions.addExternalBean("brokerContext", this.context).addExternalBean("openApiConfig", finalConfig).bannerEnabled(false).threadNum(4).readBufferSize(1024 * 8).group(asynchronousChannelGroup));
+        httpServer = FeatCloud.cloudServer(serverOptions ->
+                serverOptions.addExternalBean("brokerContext", this.context)
+                        .addExternalBean("openApiConfig", finalConfig)
+                        .addExternalBean("storage", storage)
+                        .bannerEnabled(false).threadNum(4).readBufferSize(1024 * 8).group(asynchronousChannelGroup));
         httpServer.listen(config.getHost(), config.getPort());
         LOGGER.debug("openapi server start success!");
         System.out.println("openapi server start success!");

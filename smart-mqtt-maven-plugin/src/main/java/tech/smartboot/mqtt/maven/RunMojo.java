@@ -13,7 +13,6 @@ package tech.smartboot.mqtt.maven;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -62,9 +61,10 @@ public class RunMojo extends AbstractMojo {
     private String path;
 
     @Override
-    public void execute() throws MojoExecutionException, MojoFailureException {
+    public void execute() throws MojoExecutionException {
         long startTime = System.currentTimeMillis();
         try {
+            //父容器为纯净的 smart-mqtt-broker
             List<URL> urlList = new ArrayList<>();
             pluginArtifacts.forEach(artifact -> {
                 try {
@@ -74,14 +74,16 @@ public class RunMojo extends AbstractMojo {
                     e.printStackTrace();
                 }
             });
-            urlList.add(new File(configurationDir, artifactId + "-" + version + ".jar").toURI().toURL());
-            urlList.add(new File(configurationDir, "classes").toURI().toURL());
             URL[] urls = new URL[urlList.size()];
             urlList.toArray(urls);
             URLClassLoader classLoader = new URLClassLoader(urls, ClassLoader.getSystemClassLoader());
-//            File webFile = new File(configurationDir, artifactId + "-" + version);
-//            System.out.println("webFile: " + webFile.getAbsolutePath());
             Thread.currentThread().setContextClassLoader(classLoader);
+
+            //将插件的target目录作为插件的存储目录
+            System.setProperty("SMART_MQTT_PLUGINS", configurationDir.getAbsolutePath());
+            //清理原有的jar文件，避免被当做插件加载
+            File originalJar = new File(configurationDir, "original-" + artifactId + "-" + version + ".jar");
+            originalJar.delete();
             Class<?> clazz = classLoader.loadClass("tech.smartboot.mqtt.maven.Start");
             clazz.getConstructor().newInstance();
         } catch (Throwable e) {

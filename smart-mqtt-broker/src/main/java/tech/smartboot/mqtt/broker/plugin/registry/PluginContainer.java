@@ -10,6 +10,8 @@
 
 package tech.smartboot.mqtt.broker.plugin.registry;
 
+import tech.smartboot.feat.core.common.logging.Logger;
+import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
 
@@ -23,29 +25,32 @@ import java.util.ServiceLoader;
  * @version v1.0 4/14/25
  */
 public class PluginContainer extends Plugin {
-    private final List<Plugin> plugins = new ArrayList<>();
+    private static final Logger LOGGER = LoggerFactory.getLogger(PluginContainer.class);
     private final ClassLoader classLoader;
-    private File storage;
+    private final Plugin plugin;
 
     public PluginContainer(ClassLoader classLoader, File storage) {
         this.classLoader = classLoader;
-        this.storage = storage;
+        ServiceLoader<Plugin> serviceLoader = ServiceLoader.load(Plugin.class, classLoader);
+        System.out.println("Plugin container loaded!" + serviceLoader);
+        List<Plugin> plugins = new ArrayList<>();
+        serviceLoader.forEach(p -> {
+            if (p.getClass().getClassLoader() == classLoader) {
+                plugins.add(p);
+            }
+        });
+        if (plugins.size() != 1) {
+            throw new RuntimeException("plugin container init error");
+        }
+        this.plugin = plugins.get(0);
+        plugin.setStorage(storage);
     }
 
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
         ClassLoader preClassLoader = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(classLoader);
-        ServiceLoader<Plugin> serviceLoader = ServiceLoader.load(Plugin.class, classLoader);
-        System.out.println("Plugin container loaded!" + serviceLoader);
-        for (Plugin plugin : serviceLoader) {
-            if (plugin.getClass().getClassLoader() == classLoader) {
-                plugins.add(plugin);
-                plugin.setStorage(storage);
-                plugin.install(brokerContext);
-            }
-        }
-
+        plugin.install(brokerContext);
         Thread.currentThread().setContextClassLoader(preClassLoader);
     }
 
@@ -53,10 +58,17 @@ public class PluginContainer extends Plugin {
     protected void destroyPlugin() {
         ClassLoader preClassLoader = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(classLoader);
-        for (Plugin plugin : plugins) {
-
-            plugin.uninstall();
-        }
+        plugin.uninstall();
         Thread.currentThread().setContextClassLoader(preClassLoader);
+    }
+
+    @Override
+    public String pluginName() {
+        return plugin.pluginName();
+    }
+
+    @Override
+    public String getVersion() {
+        return plugin.getVersion();
     }
 }

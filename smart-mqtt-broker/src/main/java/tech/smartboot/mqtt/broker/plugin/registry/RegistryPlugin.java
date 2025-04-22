@@ -56,18 +56,25 @@ public class RegistryPlugin extends Plugin {
             baseStorage.mkdirs();
         }
         for (File file : Objects.requireNonNull(baseDir.listFiles())) {
-            if (file.getName().endsWith(".jar")) {
-                File storage = new File(baseStorage, file.getName().replace(".jar", ""));
-                if (!storage.isDirectory()) {
-                    storage.mkdirs();
-                }
-                URLClassLoader classLoader = new URLClassLoader(new URL[]{file.toURI().toURL(), storage.toURI().toURL()});
-                plugins.add(new PluginContainer(classLoader, storage));
+            if (!file.getName().endsWith(".jar")) {
+                continue;
             }
-        }
-        for (Plugin plugin : plugins) {
-            LOGGER.info("load plugin:{}", plugin.pluginName());
-            plugin.install(brokerContext);
+            File storage = new File(baseStorage, file.getName().replace(".jar", ""));
+            if (!storage.isDirectory()) {
+                storage.mkdirs();
+            }
+            URLClassLoader classLoader = new URLClassLoader(new URL[]{file.toURI().toURL(), storage.toURI().toURL()}, RegistryPlugin.class.getClassLoader());
+            PluginContainer pluginContainer = new PluginContainer(classLoader, storage);
+            LOGGER.info("registryPlugin load plugin:{}", pluginContainer.pluginName());
+            // 插件目录下可能存在无效的插件
+            try {
+                pluginContainer.install(brokerContext);
+                plugins.add(pluginContainer);
+            }catch (ClassNotFoundException e) {
+                LOGGER.error("registryPlugin install error:{}, check ", e.getMessage());
+            }catch (Throwable e) {
+                LOGGER.error("registryPlugin install plugin:{} exception", file.getName(), e);
+            }
         }
     }
 

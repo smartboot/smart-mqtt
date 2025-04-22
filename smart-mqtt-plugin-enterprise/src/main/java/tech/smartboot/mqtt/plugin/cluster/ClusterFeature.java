@@ -77,6 +77,9 @@ public class ClusterFeature {
     @PostConstruct
     public void init() throws Exception {
         Config config = brokerContext.parseConfig("$.broker", Config.class);
+        if (config == null) {
+            config = new Config();
+        }
         MqttUtil.updateConfig(config, "broker");
         LOGGER.debug("load config:{}", JSONObject.toJSONString(config));
         if (StringUtils.isBlank(config.getNodeType())) {

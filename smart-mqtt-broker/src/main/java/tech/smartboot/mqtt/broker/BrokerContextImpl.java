@@ -525,6 +525,9 @@ public class BrokerContextImpl implements BrokerContext {
         //加载自定义配置文件
         loadYamlConfig();
         options = parseConfig("$.broker", Options.class);
+        if (options == null) {
+            options = new Options();
+        }
         MqttUtil.updateConfig(options, "broker");
         options.setChannelGroup(new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
             int i;
@@ -562,8 +565,8 @@ public class BrokerContextImpl implements BrokerContext {
      * @throws Throwable 如果插件加载或安装过程中发生错误
      */
     private void loadAndInstallPlugins() throws Throwable {
-        for (Plugin plugin : ServiceLoader.load(Plugin.class, Providers.class.getClassLoader())) {
-            LOGGER.debug("load plugin: " + plugin.pluginName());
+        for (Plugin plugin : ServiceLoader.load(Plugin.class, BrokerContextImpl.class.getClassLoader())) {
+            LOGGER.info("load plugin: " + plugin.pluginName());
             plugins.add(plugin);
         }
         //安装插件
@@ -671,6 +674,11 @@ public class BrokerContextImpl implements BrokerContext {
         } else {
             inputStream = Files.newInputStream(Paths.get(brokerConfig));
             LOGGER.info("load external yaml config.");
+        }
+        if (inputStream == null) {
+            LOGGER.warn("smart-mqtt.yaml not found.");
+            configJson = "{}";
+            return;
         }
         Yaml yaml = new Yaml();
         Object object = yaml.load(inputStream);

@@ -33,6 +33,11 @@ public abstract class Plugin {
     private String pluginName;
 
     /**
+     * 插件版本
+     */
+    private String version = "latest";
+
+    /**
      * 获取插件名称
      *
      * @return
@@ -97,5 +102,13 @@ public abstract class Plugin {
 
     public void setStorage(File storage) {
         this.storage = storage;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 }

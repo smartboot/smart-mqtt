@@ -46,7 +46,7 @@ public class EnterprisePlugin extends Plugin {
         brokerContext.Options().addPlugin(new MonitorPlugin<>(60));
         features.add(new DatabasePlugin(brokerContext));
         // openAPI增强
-        features.add(new OpenApiFeature(brokerContext));
+        features.add(new OpenApiFeature(brokerContext,storage()));
 
         for (Feature feature : features) {
             if (feature.isEnable()) {
