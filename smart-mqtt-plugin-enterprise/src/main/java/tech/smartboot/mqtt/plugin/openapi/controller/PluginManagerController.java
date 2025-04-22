@@ -65,26 +65,31 @@ public class PluginManagerController {
     public AsyncResponse download(@Param("id") String id) throws IOException {
         System.out.println("install: " + id);
         AsyncResponse response = new AsyncResponse();
-        File file = File.createTempFile(id, ".jar");
+        File file = File.createTempFile("smart-mqtt-plugin" + id, ".jar");
         logger.info("store plugin in " + file.getAbsolutePath());
         file.deleteOnExit();
-        try (FileOutputStream fos = new FileOutputStream(file)) {
-            Feat.httpClient("https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png", opt -> {
-            }).get().onResponseBody(new Stream() {
-                @Override
-                public void stream(HttpResponse response, byte[] bytes, boolean end) throws IOException {
-                    fos.write(bytes);
-                }
-            }).onSuccess(rsp -> {
-                //下载成功，触发安装
-                logger.info("下载插件成功");
-                response.complete(installPlugin(file));
-            }).onFailure(resp -> {
-                logger.error("下载插件失", resp);
-                response.complete(RestResult.fail("下载插件失败：" + resp.getMessage()));
-            }).submit().thenAccept(resp -> file.delete());
-        }
-
+        FileOutputStream fos = new FileOutputStream(file);
+        Feat.httpClient("https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png", opt -> {
+        }).get().onResponseBody(new Stream() {
+            @Override
+            public void stream(HttpResponse response, byte[] bytes, boolean end) throws IOException {
+                fos.write(bytes);
+            }
+        }).onSuccess(rsp -> {
+            //下载成功，触发安装
+            logger.info("下载插件成功");
+            response.complete(installPlugin(file));
+        }).onFailure(resp -> {
+            logger.error("下载插件失", resp);
+            response.complete(RestResult.fail("下载插件失败：" + resp.getMessage()));
+        }).submit().thenAccept(resp -> {
+            try {
+                fos.close();
+            } catch (IOException e) {
+                logger.error("close file error", e);
+            }
+            file.delete();
+        });
         return response;
     }
 
