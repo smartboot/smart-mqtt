@@ -40,7 +40,7 @@ public class OpenApiFeature extends AbstractFeature {
     private final OpenApiConfig openApiConfig;
 
     private ExecutorService asyncExecutor;
-    private File storage;
+    private final File storage;
 
     public OpenApiFeature(BrokerContext context, File storage) {
         super(context);
@@ -78,8 +78,8 @@ public class OpenApiFeature extends AbstractFeature {
                 serverOptions.addExternalBean("brokerContext", this.context)
                         .addExternalBean("openApiConfig", finalConfig)
                         .addExternalBean("storage", storage)
-                        .debug(true)
-                        .bannerEnabled(false).threadNum(4).readBufferSize(1024 * 8).group(asynchronousChannelGroup));
+                        .debug(false)
+                        .bannerEnabled(false).threadNum(4).readBufferSize(1024 * 8).writeBufferSize(8 * 1024).group(asynchronousChannelGroup));
         httpServer.listen(config.getHost(), config.getPort());
         LOGGER.debug("openapi server start success!");
         System.out.println("openapi server start success!");

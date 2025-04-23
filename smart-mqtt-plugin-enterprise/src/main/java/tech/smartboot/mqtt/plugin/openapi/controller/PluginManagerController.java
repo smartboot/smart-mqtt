@@ -62,34 +62,47 @@ public class PluginManagerController {
 
 
     @RequestMapping("/download")
-    public AsyncResponse download(@Param("id") String id) throws IOException {
-        System.out.println("install: " + id);
+    public AsyncResponse download(@Param("plugin") String plugin, @Param("version") String version) throws IOException {
+        System.out.println("install: " + plugin);
         AsyncResponse response = new AsyncResponse();
-        File file = File.createTempFile("smart-mqtt-plugin" + id, ".jar");
+//        File file = new File(storage, id + ".temp");
+        File file = File.createTempFile("smart-mqtt", plugin + ".temp");
+        response.getFuture().whenComplete((result, throwable) -> file.delete());
         logger.info("store plugin in " + file.getAbsolutePath());
-        file.deleteOnExit();
         FileOutputStream fos = new FileOutputStream(file);
-        Feat.httpClient("https://localhost:18083/repository/aa/bb/download", opt -> {
+        Feat.httpClient("http://localhost:18083/repository/redis/1.0.0/download", opt -> {
         }).get().onResponseBody(new Stream() {
             @Override
             public void stream(HttpResponse response, byte[] bytes, boolean end) throws IOException {
-                fos.write(bytes);
+                if (response.statusCode() == 200) {
+                    fos.write(bytes);
+                }
             }
         }).onSuccess(rsp -> {
-            //下载成功，触发安装
-            logger.info("下载插件成功");
-            response.complete(installPlugin(file));
+            if (rsp.statusCode() != 200) {
+                response.complete(RestResult.fail("下载插件失败,httpCode:" + rsp.statusCode() + " statusCode:" + rsp.getReasonPhrase()));
+            } else {
+                //下载成功，触发安装
+                logger.info("下载插件成功");
+                try {
+                    fos.flush();
+                    fos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    RestResult<String> result = installPlugin(file);
+                    response.complete(result);
+                } catch (Exception e) {
+                    response.complete(RestResult.fail("安装插件失败：" + e.getMessage()));
+                }
+
+
+            }
         }).onFailure(resp -> {
             logger.error("下载插件失", resp);
             response.complete(RestResult.fail("下载插件失败：" + resp.getMessage()));
-        }).submit().thenAccept(resp -> {
-            try {
-                fos.close();
-            } catch (IOException e) {
-                logger.error("close file error", e);
-            }
-            file.delete();
-        });
+        }).submit();
         return response;
     }
 
@@ -133,7 +146,7 @@ public class PluginManagerController {
             return RestResult.fail(e.getMessage());
         }
         List<Plugin> plugins = new ArrayList<>();
-        URLClassLoader urlClassLoader = new URLClassLoader(new URL[]{url});
+        URLClassLoader urlClassLoader = new URLClassLoader(new URL[]{url}, PluginManagerController.class.getClassLoader().getParent());
         ServiceLoader<Plugin> serviceLoader = ServiceLoader.load(Plugin.class, urlClassLoader);
         serviceLoader.forEach(plugin -> {
             if (plugin.getClass().getClassLoader() == urlClassLoader) {
@@ -147,7 +160,7 @@ public class PluginManagerController {
             return RestResult.fail("不支持混合插件");
         }
         Plugin plugin = plugins.get(0);
-        File destFile = new File(storage.getParentFile().getParentFile(), plugin.pluginName() + plugin.getVersion() + ".jar");
+        File destFile = new File(storage.getParentFile().getParentFile(), plugin.pluginName() + "-" + plugin.getVersion() + ".jar");
         if (destFile.exists()) {
             return RestResult.fail("插件已存在");
         }

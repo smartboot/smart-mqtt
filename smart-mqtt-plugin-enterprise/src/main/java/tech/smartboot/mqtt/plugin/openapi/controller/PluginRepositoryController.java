@@ -93,7 +93,7 @@ public class PluginRepositoryController {
     @RequestMapping("/:plugin/:version/download")
     public AsyncResponse download(@PathParam(value = "plugin") String pluginName, @PathParam(value = "version") String version, HttpResponse response) throws FileNotFoundException {
         AsyncResponse asyncResponse = new AsyncResponse();
-        File file = new File(storage, "repository/" + pluginName + "/" + pluginName + "-" + version + ".jar");
+        File file = new File(storage, "repository/" + pluginName + "/" + version + "/plugin.jar");
         if (!file.isFile()) {
             response.setHttpStatus(HttpStatus.NOT_FOUND);
             asyncResponse.complete();
