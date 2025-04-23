@@ -19,13 +19,13 @@ import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
-import tech.smartboot.feat.core.client.HttpResponse;
-import tech.smartboot.feat.core.client.stream.Stream;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.multipart.Part;
 import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.openapi.OpenApi;
+import tech.smartboot.mqtt.plugin.openapi.OpenApiConfig;
 import tech.smartboot.mqtt.plugin.openapi.to.PluginItem;
 import tech.smartboot.mqtt.plugin.openapi.to.PluginMarket;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
@@ -51,6 +51,9 @@ public class PluginManagerController {
     @Autowired
     private File storage;
 
+    @Autowired
+    private OpenApiConfig openApiConfig;
+
     @RequestMapping("/market")
     public RestResult<List<PluginItem>> market() {
         Yaml yaml = new Yaml();
@@ -63,20 +66,23 @@ public class PluginManagerController {
 
     @RequestMapping("/download")
     public AsyncResponse download(@Param("plugin") String plugin, @Param("version") String version) throws IOException {
+        ValidateUtils.notBlank(openApiConfig.getRegistry(), "registry is empty");
+        ValidateUtils.notBlank(plugin, "plugin is empty");
+        ValidateUtils.notBlank(version, "version is empty");
         System.out.println("install: " + plugin);
         AsyncResponse response = new AsyncResponse();
 //        File file = new File(storage, id + ".temp");
         File file = File.createTempFile("smart-mqtt", plugin + ".temp");
+        file.deleteOnExit();
         response.getFuture().whenComplete((result, throwable) -> file.delete());
         logger.info("store plugin in " + file.getAbsolutePath());
         FileOutputStream fos = new FileOutputStream(file);
-        Feat.httpClient("http://localhost:18083/repository/redis/1.0.0/download", opt -> {
-        }).get().onResponseBody(new Stream() {
-            @Override
-            public void stream(HttpResponse response, byte[] bytes, boolean end) throws IOException {
-                if (response.statusCode() == 200) {
-                    fos.write(bytes);
-                }
+
+        Feat.httpClient(openApiConfig.getRegistry(), opt -> {
+            opt.debug(true);
+        }).get("/repository/" + plugin + "/" + version + "/download").onResponseBody((response1, bytes, end) -> {
+            if (response1.statusCode() == 200) {
+                fos.write(bytes);
             }
         }).onSuccess(rsp -> {
             if (rsp.statusCode() != 200) {
@@ -169,5 +175,9 @@ public class PluginManagerController {
 
     public void setStorage(File storage) {
         this.storage = storage;
+    }
+
+    public void setOpenApiConfig(OpenApiConfig openApiConfig) {
+        this.openApiConfig = openApiConfig;
     }
 }

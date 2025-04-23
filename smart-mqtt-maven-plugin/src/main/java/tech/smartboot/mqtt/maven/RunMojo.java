@@ -74,6 +74,15 @@ public class RunMojo extends AbstractMojo {
                     e.printStackTrace();
                 }
             });
+
+            File configFile = new File(configurationDir, "classes/smart-mqtt.yaml");
+            if (configFile.isFile()) {
+                File configDir = new File(configurationDir, "conf");
+                configDir.mkdirs();
+                configFile.renameTo(new File(configDir, "smart-mqtt.yaml"));
+                urlList.add(configDir.toURI().toURL());
+            }
+
             URL[] urls = new URL[urlList.size()];
             urlList.toArray(urls);
             URLClassLoader classLoader = new URLClassLoader(urls, ClassLoader.getSystemClassLoader());

@@ -24,6 +24,11 @@ public class OpenApiConfig extends PluginConfig {
      */
     private String host;
 
+    /**
+     * 注册中心地址
+     */
+    private String registry;
+
     public int getPort() {
         return port;
     }
@@ -40,4 +45,11 @@ public class OpenApiConfig extends PluginConfig {
         this.host = host;
     }
 
+    public String getRegistry() {
+        return registry;
+    }
+
+    public void setRegistry(String registry) {
+        this.registry = registry;
+    }
 }
