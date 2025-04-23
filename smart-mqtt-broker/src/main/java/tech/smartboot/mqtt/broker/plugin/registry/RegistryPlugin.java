@@ -13,6 +13,7 @@ package tech.smartboot.mqtt.broker.plugin.registry;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
+import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
 import tech.smartboot.mqtt.plugin.spec.PluginException;
 
@@ -70,9 +71,9 @@ public class RegistryPlugin extends Plugin {
             try {
                 pluginContainer.install(brokerContext);
                 plugins.add(pluginContainer);
-            }catch (ClassNotFoundException e) {
+            } catch (ClassNotFoundException e) {
                 LOGGER.error("registryPlugin install error:{}, check ", e.getMessage());
-            }catch (Throwable e) {
+            } catch (Throwable e) {
                 LOGGER.error("registryPlugin install plugin:{} exception", file.getName(), e);
             }
         }
@@ -83,5 +84,20 @@ public class RegistryPlugin extends Plugin {
         for (Plugin plugin : plugins) {
             plugin.uninstall();
         }
+    }
+
+    @Override
+    public String getVersion() {
+        return Options.VERSION;
+    }
+
+    @Override
+    public String getVendor() {
+        return "smart-mqtt";
+    }
+
+    @Override
+    public String getDescription() {
+        return "smart-mqtt 插件注册中心";
     }
 }

@@ -19,6 +19,7 @@ import tech.smartboot.mqtt.plugin.dao.DatabasePlugin;
 import tech.smartboot.mqtt.plugin.openapi.OpenApiFeature;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
+import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
 import tech.smartboot.mqtt.plugin.spec.bus.DisposableEventBusSubscriber;
 import tech.smartboot.mqtt.plugin.spec.bus.EventBusConsumer;
@@ -46,7 +47,7 @@ public class EnterprisePlugin extends Plugin {
         brokerContext.Options().addPlugin(new MonitorPlugin<>(60));
         features.add(new DatabasePlugin(brokerContext));
         // openAPI增强
-        features.add(new OpenApiFeature(brokerContext,storage()));
+        features.add(new OpenApiFeature(brokerContext, storage()));
 
         for (Feature feature : features) {
             if (feature.isEnable()) {
@@ -81,6 +82,21 @@ public class EnterprisePlugin extends Plugin {
     @Override
     public int order() {
         return super.order() + 1;
+    }
+
+    @Override
+    public String getVersion() {
+        return Options.VERSION;
+    }
+
+    @Override
+    public String getVendor() {
+        return Options.VENDOR;
+    }
+
+    @Override
+    public String getDescription() {
+        return "smart-mqtt 企业版";
     }
 
 

@@ -78,6 +78,7 @@ public class OpenApiFeature extends AbstractFeature {
                 serverOptions.addExternalBean("brokerContext", this.context)
                         .addExternalBean("openApiConfig", finalConfig)
                         .addExternalBean("storage", storage)
+                        .debug(true)
                         .bannerEnabled(false).threadNum(4).readBufferSize(1024 * 8).group(asynchronousChannelGroup));
         httpServer.listen(config.getHost(), config.getPort());
         LOGGER.debug("openapi server start success!");

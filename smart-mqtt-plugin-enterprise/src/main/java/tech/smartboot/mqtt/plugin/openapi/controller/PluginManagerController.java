@@ -69,7 +69,7 @@ public class PluginManagerController {
         logger.info("store plugin in " + file.getAbsolutePath());
         file.deleteOnExit();
         FileOutputStream fos = new FileOutputStream(file);
-        Feat.httpClient("https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png", opt -> {
+        Feat.httpClient("https://localhost:18083/repository/aa/bb/download", opt -> {
         }).get().onResponseBody(new Stream() {
             @Override
             public void stream(HttpResponse response, byte[] bytes, boolean end) throws IOException {

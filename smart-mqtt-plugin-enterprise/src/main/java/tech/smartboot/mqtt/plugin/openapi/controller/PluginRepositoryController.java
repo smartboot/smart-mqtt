@@ -11,19 +11,30 @@
 package tech.smartboot.mqtt.plugin.openapi.controller;
 
 import tech.smartboot.feat.cloud.AsyncResponse;
+import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
+import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.mqtt.plugin.openapi.to.PluginItem;
+import tech.smartboot.mqtt.plugin.openapi.to.PluginMarket;
+import tech.smartboot.mqtt.plugin.spec.Plugin;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Objects;
+import java.util.ServiceLoader;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
@@ -37,10 +48,52 @@ public class PluginRepositoryController {
     @Autowired
     private File storage;
 
+    @RequestMapping("/")
+    public RestResult<PluginMarket> list() throws FileNotFoundException, MalformedURLException {
+        PluginMarket pluginMarket = new PluginMarket();
+        pluginMarket.setPlugins(new ArrayList<>());
+
+        File file = new File(storage, "repository");
+        if (!file.isDirectory()) {
+            return RestResult.fail("服务异常");
+        }
+        for (File pluginDir : Objects.requireNonNull(file.listFiles((dir, name) -> dir.isDirectory()))) {
+            PluginItem item = new PluginItem();
+            // 读取最新版本
+            File[] versions = pluginDir.listFiles((dir, name) -> dir.isDirectory());
+            if (versions == null || versions.length == 0) {
+                continue;
+            }
+            for (File version : versions) {
+                item.setId(pluginDir.getName());
+                File pluginFile = new File(version, "plugin.jar");
+                if (!pluginFile.isFile()) {
+                    continue;
+                }
+                URLClassLoader classLoader = new URLClassLoader(new URL[]{pluginFile.toURI().toURL()}, PluginRepositoryController.class.getClassLoader());
+                ServiceLoader<Plugin> serviceLoader = ServiceLoader.load(Plugin.class, classLoader);
+                for (Plugin plugin : serviceLoader) {
+                    if (plugin.getClass().getClassLoader() == classLoader) {
+                        item.setName(plugin.pluginName());
+                        item.setAuthor(plugin.getVendor());
+                        item.setVersion(plugin.getVersion());
+                        item.setDescription(plugin.getDescription());
+                        item.setUrl("repository/" + pluginDir.getName() + "/" + version.getName() + "/download");
+                        break;
+                    }
+                }
+            }
+            if (StringUtils.isNotBlank(item.getName())) {
+                pluginMarket.getPlugins().add(item);
+            }
+        }
+        return RestResult.ok(pluginMarket);
+    }
+
     @RequestMapping("/:plugin/:version/download")
     public AsyncResponse download(@PathParam(value = "plugin") String pluginName, @PathParam(value = "version") String version, HttpResponse response) throws FileNotFoundException {
         AsyncResponse asyncResponse = new AsyncResponse();
-        File file = new File(storage, "repository/" + pluginName + "/" + version + "/" + pluginName + "-" + version + ".jar");
+        File file = new File(storage, "repository/" + pluginName + "/" + pluginName + "-" + version + ".jar");
         if (!file.isFile()) {
             response.setHttpStatus(HttpStatus.NOT_FOUND);
             asyncResponse.complete();

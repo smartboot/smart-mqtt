@@ -26,6 +26,7 @@ import tech.smartboot.mqtt.common.MqttProtocol;
 import tech.smartboot.mqtt.common.message.MqttMessage;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.MqttProcessor;
+import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
 import tech.smartboot.mqtt.plugin.spec.bus.EventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
@@ -96,5 +97,20 @@ public class WebSocketPlugin extends Plugin {
         if (httpBootstrap != null) {
             httpBootstrap.shutdown();
         }
+    }
+
+    @Override
+    public String getVersion() {
+        return Options.VERSION;
+    }
+
+    @Override
+    public String getVendor() {
+        return Options.VENDOR;
+    }
+
+    @Override
+    public String getDescription() {
+        return "mqtt over websocket";
     }
 }

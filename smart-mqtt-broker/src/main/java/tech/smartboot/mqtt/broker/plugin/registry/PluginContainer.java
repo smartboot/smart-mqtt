@@ -71,4 +71,14 @@ public class PluginContainer extends Plugin {
     public String getVersion() {
         return plugin.getVersion();
     }
+
+    @Override
+    public String getVendor() {
+        return plugin.getVendor();
+    }
+
+    @Override
+    public String getDescription() {
+        return plugin.getDescription();
+    }
 }

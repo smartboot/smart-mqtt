@@ -27,15 +27,6 @@ public abstract class Plugin {
      * 是否已安装
      */
     private boolean installed;
-    /**
-     * 插件名称
-     */
-    private String pluginName;
-
-    /**
-     * 插件版本
-     */
-    private String version = "latest";
 
     /**
      * 获取插件名称
@@ -43,10 +34,7 @@ public abstract class Plugin {
      * @return
      */
     public String pluginName() {
-        if (pluginName == null) {
-            pluginName = this.getClass().getSimpleName();
-        }
-        return pluginName;
+        return this.getClass().getSimpleName();
     }
 
 
@@ -104,11 +92,10 @@ public abstract class Plugin {
         this.storage = storage;
     }
 
-    public String getVersion() {
-        return version;
-    }
+    public abstract String getVersion();
 
-    public void setVersion(String version) {
-        this.version = version;
-    }
+    public abstract String getVendor();
+
+
+    public abstract String getDescription();
 }
