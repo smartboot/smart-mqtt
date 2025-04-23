@@ -20,8 +20,8 @@ import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.mqtt.plugin.openapi.to.PluginItem;
-import tech.smartboot.mqtt.plugin.openapi.to.PluginMarket;
+import tech.smartboot.mqtt.plugin.openapi.to.PluginTO;
+import tech.smartboot.mqtt.plugin.openapi.to.RepositoryPlugin;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
 
 import java.io.File;
@@ -49,8 +49,8 @@ public class PluginRepositoryController {
     private File storage;
 
     @RequestMapping("/")
-    public RestResult<PluginMarket> list() throws FileNotFoundException, MalformedURLException {
-        PluginMarket pluginMarket = new PluginMarket();
+    public RestResult<RepositoryPlugin> list() throws FileNotFoundException, MalformedURLException {
+        RepositoryPlugin pluginMarket = new RepositoryPlugin();
         pluginMarket.setPlugins(new ArrayList<>());
 
         File file = new File(storage, "repository");
@@ -58,7 +58,7 @@ public class PluginRepositoryController {
             return RestResult.fail("服务异常");
         }
         for (File pluginDir : Objects.requireNonNull(file.listFiles((dir, name) -> dir.isDirectory()))) {
-            PluginItem item = new PluginItem();
+            PluginTO item = new PluginTO();
             // 读取最新版本
             File[] versions = pluginDir.listFiles((dir, name) -> dir.isDirectory());
             if (versions == null || versions.length == 0) {

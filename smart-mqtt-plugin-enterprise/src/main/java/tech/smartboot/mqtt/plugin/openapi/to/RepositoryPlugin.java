@@ -10,23 +10,20 @@
 
 package tech.smartboot.mqtt.plugin.openapi.to;
 
+import java.util.List;
+
 /**
  * @author 三刀
- * @version v1.0 4/21/25
+ * @version v1.0 4/23/25
  */
-public class PluginItem extends PluginTO {
-    /**
-     * 插件状态: uninstall,
-     */
-    private String status;
+public class RepositoryPlugin {
+    private List<PluginTO> plugins;
 
-
-    public String getStatus() {
-        return status;
+    public List<PluginTO> getPlugins() {
+        return plugins;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setPlugins(List<PluginTO> plugins) {
+        this.plugins = plugins;
     }
-
 }

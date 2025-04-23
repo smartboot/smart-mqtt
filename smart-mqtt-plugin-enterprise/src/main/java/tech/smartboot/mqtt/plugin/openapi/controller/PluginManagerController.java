@@ -11,7 +11,6 @@
 package tech.smartboot.mqtt.plugin.openapi.controller;
 
 import com.alibaba.fastjson2.JSONObject;
-import org.yaml.snakeyaml.Yaml;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.cloud.AsyncResponse;
 import tech.smartboot.feat.cloud.RestResult;
@@ -27,7 +26,6 @@ import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.openapi.OpenApi;
 import tech.smartboot.mqtt.plugin.openapi.OpenApiConfig;
 import tech.smartboot.mqtt.plugin.openapi.to.PluginItem;
-import tech.smartboot.mqtt.plugin.openapi.to.PluginMarket;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
 
 import java.io.File;
@@ -55,12 +53,18 @@ public class PluginManagerController {
     private OpenApiConfig openApiConfig;
 
     @RequestMapping("/market")
-    public RestResult<List<PluginItem>> market() {
-        Yaml yaml = new Yaml();
-        Object object = yaml.load(PluginManagerController.class.getClassLoader().getResourceAsStream("market.yaml"));
-        String configJson = JSONObject.toJSONString(object);
-        PluginMarket market = JSONObject.parseObject(configJson, PluginMarket.class);
-        return RestResult.ok(market.getPlugins());
+    public AsyncResponse market() {
+        AsyncResponse asyncResponse = new AsyncResponse();
+        Feat.httpClient(openApiConfig.getRegistry(), opt -> {
+            opt.debug(true);
+        }).get("/repository/").onSuccess(resp -> {
+            JSONObject jsonObject = JSONObject.parseObject(resp.body()).getJSONObject("data");
+            List<PluginItem> result = jsonObject.getList("plugins", PluginItem.class);
+            asyncResponse.complete(RestResult.ok(result));
+        }).onFailure(error -> {
+            asyncResponse.complete(RestResult.fail(error.getMessage()));
+        }).submit();
+        return asyncResponse;
     }
 
 
@@ -71,7 +75,6 @@ public class PluginManagerController {
         ValidateUtils.notBlank(version, "version is empty");
         System.out.println("install: " + plugin);
         AsyncResponse response = new AsyncResponse();
-//        File file = new File(storage, id + ".temp");
         File file = File.createTempFile("smart-mqtt", plugin + ".temp");
         file.deleteOnExit();
         response.getFuture().whenComplete((result, throwable) -> file.delete());
