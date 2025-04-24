@@ -35,6 +35,8 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -169,11 +171,30 @@ public class PluginManagerController {
             return RestResult.fail("不支持混合插件");
         }
         Plugin plugin = plugins.get(0);
+        //部署到本地仓库
+        File localRepository = new File(storage, "repository/" + plugin.pluginName() + "/" + plugin.getVersion() + "/plugin.jar");
+        if (localRepository.isFile()) {
+            return RestResult.fail("本地仓库已存在");
+        }
+        try {
+            Files.copy(tempFile.toPath(), localRepository.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            logger.error("插件存储本地仓库失败", e);
+            return RestResult.fail("插件存储本地仓库失败");
+        }
+
+        //启动插件
         File destFile = new File(storage.getParentFile().getParentFile(), plugin.pluginName() + "-" + plugin.getVersion() + ".jar");
         if (destFile.exists()) {
             return RestResult.fail("插件已存在");
         }
-        return tempFile.renameTo(destFile) ? RestResult.ok("安装成功") : RestResult.fail("安装失败");
+        try {
+            Files.copy(tempFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            logger.error("安装失败", e);
+            return RestResult.fail("插件安装失败");
+        }
+        return RestResult.ok("插件安装成功");
     }
 
     public void setStorage(File storage) {
