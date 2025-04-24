@@ -15,18 +15,18 @@ package tech.smartboot.mqtt.plugin.openapi.to;
  * @version v1.0 4/23/25
  */
 public class PluginTO {
-    private String id;
+    private int id;
     private String name;
     private String version;
     private String description;
     private String author;
     private String url;
 
-    public String getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(int id) {
         this.id = id;
     }
 

@@ -16,7 +16,7 @@ package tech.smartboot.mqtt.plugin.openapi.to;
  */
 public class PluginItem extends PluginTO {
     /**
-     * 插件状态: uninstall,
+     * 插件状态: uninstalled,enabled,disabled,required
      */
     private String status;
 

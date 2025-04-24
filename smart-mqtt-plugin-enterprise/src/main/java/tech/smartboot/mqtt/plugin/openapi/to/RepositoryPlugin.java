@@ -17,6 +17,8 @@ import java.util.List;
  * @version v1.0 4/23/25
  */
 public class RepositoryPlugin {
+    public static final String REPOSITORY = "repository";
+    public static final String REPOSITORY_PLUGIN_NAME = "plugin.jar";
     private List<PluginTO> plugins;
 
     public List<PluginTO> getPlugins() {

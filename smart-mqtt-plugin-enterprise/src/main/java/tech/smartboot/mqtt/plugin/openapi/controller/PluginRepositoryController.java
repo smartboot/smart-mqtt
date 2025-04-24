@@ -53,7 +53,7 @@ public class PluginRepositoryController {
         RepositoryPlugin pluginMarket = new RepositoryPlugin();
         pluginMarket.setPlugins(new ArrayList<>());
 
-        File file = new File(storage, "repository");
+        File file = new File(storage, RepositoryPlugin.REPOSITORY);
         if (!file.isDirectory()) {
             return RestResult.fail("服务异常");
         }
@@ -65,8 +65,7 @@ public class PluginRepositoryController {
                 continue;
             }
             for (File version : versions) {
-                item.setId(pluginDir.getName());
-                File pluginFile = new File(version, "plugin.jar");
+                File pluginFile = new File(version, RepositoryPlugin.REPOSITORY_PLUGIN_NAME);
                 if (!pluginFile.isFile()) {
                     continue;
                 }
@@ -74,6 +73,7 @@ public class PluginRepositoryController {
                 ServiceLoader<Plugin> serviceLoader = ServiceLoader.load(Plugin.class, classLoader);
                 for (Plugin plugin : serviceLoader) {
                     if (plugin.getClass().getClassLoader() == classLoader) {
+                        item.setId(plugin.id());
                         item.setName(plugin.pluginName());
                         item.setAuthor(plugin.getVendor());
                         item.setVersion(plugin.getVersion());
