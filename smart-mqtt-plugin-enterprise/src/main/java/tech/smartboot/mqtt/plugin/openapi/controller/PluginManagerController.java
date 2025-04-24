@@ -43,6 +43,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -213,7 +214,10 @@ public class PluginManagerController {
         }
         Plugin plugin = plugins.get(0);
         File file = new File(storage, "repository/" + plugin.id());
-        Files.delete(file.toPath());
+        Files.walk(file.toPath())
+                .sorted(Comparator.reverseOrder())
+                .map(Path::toFile)
+                .forEach(File::delete);
         return RestResult.ok(null);
     }
 
