@@ -23,6 +23,7 @@ import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.multipart.Part;
 import tech.smartboot.feat.core.common.utils.CollectionUtils;
+import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.openapi.OpenApi;
@@ -110,6 +111,11 @@ public class PluginManagerController {
     @RequestMapping("/market")
     public AsyncResponse market() {
         AsyncResponse asyncResponse = new AsyncResponse();
+        if (StringUtils.isBlank(openApiConfig.getRegistry())) {
+            asyncResponse.complete(RestResult.fail("registry is empty"));
+            return asyncResponse;
+        }
+
         Feat.httpClient(openApiConfig.getRegistry(), opt -> {
             opt.debug(true);
         }).get("/repository/").onSuccess(resp -> {
