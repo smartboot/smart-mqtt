@@ -66,7 +66,7 @@ public class PluginManagerController {
     @Autowired
     private BrokerContext brokerContext;
 
-    private final Map<Integer, List<Plugin>> plugins = new HashMap<>();
+    private final Map<Integer, List<Plugin>> localPlugins = new HashMap<>();
 
     @PostConstruct
     public void init() throws IOException {
@@ -76,7 +76,7 @@ public class PluginManagerController {
             Files.walk(repository.toPath()).filter(path -> path.getFileName().toString().equals(RepositoryPlugin.REPOSITORY_PLUGIN_NAME)).forEach(path -> {
                 Plugin p = loadPlugin(path);
                 if (p != null) {
-                    plugins.computeIfAbsent(p.id(), k -> new ArrayList<>()).add(p);
+                    localPlugins.computeIfAbsent(p.id(), k -> new ArrayList<>()).add(p);
                 }
             });
         }
@@ -115,6 +115,15 @@ public class PluginManagerController {
         }).get("/repository/").onSuccess(resp -> {
             JSONObject jsonObject = JSONObject.parseObject(resp.body()).getJSONObject("data");
             List<PluginItem> result = jsonObject.getList("plugins", PluginItem.class);
+            result.forEach(pluginItem -> {
+                pluginItem.setStatus("uninstalled");
+                if (localPlugins.containsKey(pluginItem.getId())) {
+                    pluginItem.setStatus("disabled");
+                }
+                if (brokerContext.pluginRegistry().containsPlugin(pluginItem.getId())) {
+                    pluginItem.setStatus("enabled");
+                }
+            });
             asyncResponse.complete(RestResult.ok(result));
         }).onFailure(error -> {
             asyncResponse.complete(RestResult.fail(error.getMessage()));
@@ -128,7 +137,7 @@ public class PluginManagerController {
     @RequestMapping("/list")
     public RestResult<List<PluginItem>> list() throws IOException {
         List<PluginItem> pluginItems = new ArrayList<>();
-        plugins.forEach((id, pluginList) -> {
+        localPlugins.forEach((id, pluginList) -> {
             Plugin plugin = pluginList.get(0);
             PluginItem item = new PluginItem();
             item.setId(plugin.id());
@@ -201,7 +210,7 @@ public class PluginManagerController {
         if (brokerContext.pluginRegistry().containsPlugin(id)) {
             return RestResult.fail("请先停用该插件");
         }
-        List<Plugin> plugins = this.plugins.remove(id);
+        List<Plugin> plugins = this.localPlugins.remove(id);
         if (CollectionUtils.isEmpty(plugins)) {
             return RestResult.fail("该插件不存在");
         }
@@ -216,7 +225,7 @@ public class PluginManagerController {
         if (brokerContext.pluginRegistry().containsPlugin(id)) {
             return RestResult.fail("该插件已启用");
         }
-        Plugin plugin = plugins.get(id).get(0);
+        Plugin plugin = localPlugins.get(id).get(0);
         Path path = Paths.get(storage.getAbsolutePath(), RepositoryPlugin.REPOSITORY, String.valueOf(plugin.id()), plugin.getVersion(), RepositoryPlugin.REPOSITORY_PLUGIN_NAME);
         if (!Files.exists(path)) {
             return RestResult.fail("该插件不存在");
@@ -228,7 +237,7 @@ public class PluginManagerController {
 
     @RequestMapping("/disable")
     public RestResult<Void> disable(@Param("id") int id) throws IOException {
-        List<Plugin> p = plugins.get(id);
+        List<Plugin> p = localPlugins.get(id);
         if (CollectionUtils.isEmpty(p)) {
             return RestResult.fail("无法停用非本地仓库插件");
         }
@@ -301,7 +310,7 @@ public class PluginManagerController {
         }
         try {
             Files.copy(tempFile.toPath(), localRepository.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            this.plugins.computeIfAbsent(plugin.id(), k -> new ArrayList<>()).add(plugin);
+            this.localPlugins.computeIfAbsent(plugin.id(), k -> new ArrayList<>()).add(plugin);
         } catch (IOException e) {
             logger.error("插件存储本地仓库失败", e);
             return RestResult.fail("插件存储本地仓库失败");
