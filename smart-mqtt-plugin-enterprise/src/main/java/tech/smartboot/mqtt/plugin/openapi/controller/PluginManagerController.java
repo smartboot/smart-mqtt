@@ -165,13 +165,11 @@ public class PluginManagerController {
 
 
     @RequestMapping("/download")
-    public AsyncResponse download(@Param("plugin") String plugin, @Param("version") String version) throws IOException {
+    public AsyncResponse download(@Param("url") String url) throws IOException {
         ValidateUtils.notBlank(openApiConfig.getRegistry(), "registry is empty");
-        ValidateUtils.notBlank(plugin, "plugin is empty");
-        ValidateUtils.notBlank(version, "version is empty");
-        System.out.println("install: " + plugin);
+        ValidateUtils.notBlank(url, "插件下载地址未知");
         AsyncResponse response = new AsyncResponse();
-        File file = File.createTempFile("smart-mqtt", plugin + ".temp");
+        File file = File.createTempFile("smart-mqtt", url.hashCode() + ".temp");
         file.deleteOnExit();
         response.getFuture().whenComplete((result, throwable) -> file.delete());
         logger.info("store plugin in " + file.getAbsolutePath());
@@ -179,7 +177,7 @@ public class PluginManagerController {
 
         Feat.httpClient(openApiConfig.getRegistry(), opt -> {
             opt.debug(true);
-        }).get("/repository/" + plugin + "/" + version + "/download").onResponseBody((response1, bytes, end) -> {
+        }).get(url).onResponseBody((response1, bytes, end) -> {
             if (response1.statusCode() == 200) {
                 fos.write(bytes);
             }

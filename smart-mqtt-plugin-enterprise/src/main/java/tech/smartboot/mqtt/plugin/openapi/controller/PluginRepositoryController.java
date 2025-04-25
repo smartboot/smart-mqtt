@@ -78,7 +78,7 @@ public class PluginRepositoryController {
                         item.setAuthor(plugin.getVendor());
                         item.setVersion(plugin.getVersion());
                         item.setDescription(plugin.getDescription());
-                        item.setUrl("repository/" + pluginDir.getName() + "/" + version.getName() + "/download");
+                        item.setUrl("/repository/" + pluginDir.getName() + "/" + version.getName() + "/download");
                         break;
                     }
                 }
