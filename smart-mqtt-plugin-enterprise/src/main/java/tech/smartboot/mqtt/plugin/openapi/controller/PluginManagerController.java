@@ -204,7 +204,9 @@ public class PluginManagerController {
                             if (response1.statusCode() == 200) {
                                 fos.write(bytes);
                                 //使其不超过100%
-                                sseEmitter.sendJSONString(RestResult.ok((downloadSize.getAndAdd(bytes.length) * 100 / fileSize.get())));
+                                if (bytes.length > 0) {
+                                    sseEmitter.sendJSONString(RestResult.ok((downloadSize.getAndAdd(bytes.length) * 100 / fileSize.get())));
+                                }
                             }
                         })
                         //下载完成,触发安装
