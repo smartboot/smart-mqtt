@@ -225,7 +225,6 @@ public class PluginManagerController {
                                     } else {
                                         sseEmitter.sendJSONString(result);
                                     }
-
                                 } catch (Exception e) {
                                     sseEmitter.sendJSONString(RestResult.fail("安装插件失败：" + e.getMessage()));
                                 }
