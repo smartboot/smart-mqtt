@@ -62,4 +62,5 @@ public interface BrokerContext {
 
     Map<Class<? extends MqttMessage>, MqttProcessor<?, ?, ?>> getMessageProcessors();
 
+    PluginRegistry pluginRegistry();
 }

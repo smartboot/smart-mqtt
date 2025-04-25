@@ -99,7 +99,7 @@ public abstract class Plugin {
 
     public abstract String getDescription();
 
-    public final int id() {
+    public int id() {
         // 插件id为类名的hash值
         int hashCode = pluginName().hashCode();
         return hashCode > 0 ? hashCode : -hashCode;

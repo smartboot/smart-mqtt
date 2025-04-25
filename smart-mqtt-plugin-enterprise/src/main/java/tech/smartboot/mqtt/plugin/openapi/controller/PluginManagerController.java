@@ -29,6 +29,7 @@ import tech.smartboot.mqtt.plugin.openapi.OpenApi;
 import tech.smartboot.mqtt.plugin.openapi.OpenApiConfig;
 import tech.smartboot.mqtt.plugin.openapi.to.PluginItem;
 import tech.smartboot.mqtt.plugin.openapi.to.RepositoryPlugin;
+import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
 
 import java.io.File;
@@ -62,22 +63,13 @@ public class PluginManagerController {
     @Autowired
     private OpenApiConfig openApiConfig;
 
-    private final Map<Integer, Plugin> enabledPlugins = new HashMap<>();
+    @Autowired
+    private BrokerContext brokerContext;
+
     private final Map<Integer, List<Plugin>> plugins = new HashMap<>();
 
     @PostConstruct
     public void init() throws IOException {
-        // 加载已启用的插件
-        File baseDir = storage.getParentFile().getParentFile();
-        for (File file : baseDir.listFiles()) {
-            if (file.isDirectory() || !file.getName().endsWith(".jar")) {
-                continue;
-            }
-            Plugin plugin = loadPlugin(file.toPath());
-            if (plugin != null) {
-                enabledPlugins.put(plugin.id(), plugin);
-            }
-        }
         // 加载已安装的插件
         File repository = new File(storage, RepositoryPlugin.REPOSITORY);
         if (repository.isDirectory()) {
@@ -143,8 +135,9 @@ public class PluginManagerController {
             item.setName(plugin.pluginName());
             item.setAuthor(plugin.getVendor());
             item.setDescription(plugin.getDescription());
-            if (enabledPlugins.containsKey(plugin.id())) {
-                item.setVersion(enabledPlugins.get(plugin.id()).getVersion());
+            Plugin enabledPlugins = brokerContext.pluginRegistry().getPlugin(plugin.id());
+            if (enabledPlugins != null) {
+                item.setVersion(enabledPlugins.getVersion());
                 item.setStatus("enabled");
             } else {
                 item.setVersion(plugin.getVersion());
@@ -205,7 +198,7 @@ public class PluginManagerController {
 
     @RequestMapping("/uninstall")
     public RestResult<Void> uninstall(@Param("id") int id) throws IOException {
-        if (enabledPlugins.containsKey(id)) {
+        if (brokerContext.pluginRegistry().containsPlugin(id)) {
             return RestResult.fail("请先停用该插件");
         }
         List<Plugin> plugins = this.plugins.remove(id);
@@ -214,16 +207,13 @@ public class PluginManagerController {
         }
         Plugin plugin = plugins.get(0);
         File file = new File(storage, "repository/" + plugin.id());
-        Files.walk(file.toPath())
-                .sorted(Comparator.reverseOrder())
-                .map(Path::toFile)
-                .forEach(File::delete);
+        Files.walk(file.toPath()).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
         return RestResult.ok(null);
     }
 
     @RequestMapping("/enable")
-    public RestResult<Void> enable(@Param("id") int id) throws IOException {
-        if (enabledPlugins.containsKey(id)) {
+    public RestResult<Void> enable(@Param("id") int id) throws Throwable {
+        if (brokerContext.pluginRegistry().containsPlugin(id)) {
             return RestResult.fail("该插件已启用");
         }
         Plugin plugin = plugins.get(id).get(0);
@@ -232,20 +222,22 @@ public class PluginManagerController {
             return RestResult.fail("该插件不存在");
         }
         Files.copy(path, new File(storage.getParentFile().getParentFile(), plugin.pluginName() + "-" + plugin.getVersion() + ".jar").toPath(), StandardCopyOption.REPLACE_EXISTING);
-        enabledPlugins.put(id, plugin);
+        brokerContext.pluginRegistry().startPlugin(plugin.id());
         return RestResult.ok(null);
     }
 
     @RequestMapping("/disable")
     public RestResult<Void> disable(@Param("id") int id) throws IOException {
-        Plugin plugin = enabledPlugins.remove(id);
-        if (plugin == null) {
-            return RestResult.fail("该插件已停用");
+        List<Plugin> p = plugins.get(id);
+        if (CollectionUtils.isEmpty(p)) {
+            return RestResult.fail("无法停用非本地仓库插件");
         }
+        Plugin plugin = p.get(0);
         File file = new File(storage.getParentFile().getParentFile(), plugin.pluginName() + "-" + plugin.getVersion() + ".jar");
-        if (file.exists()) {
-            file.delete();
+        if (file.exists() && !file.delete()) {
+            return RestResult.fail("插件停用失败!");
         }
+        brokerContext.pluginRegistry().stopPlugin(id);
         return RestResult.ok(null);
     }
 
@@ -322,8 +314,8 @@ public class PluginManagerController {
         }
         try {
             Files.copy(tempFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            enabledPlugins.put(plugin.id(), plugin);
-        } catch (IOException e) {
+            brokerContext.pluginRegistry().startPlugin(plugin.id());
+        } catch (Throwable e) {
             logger.error("安装失败", e);
             return RestResult.fail("插件安装失败");
         }
@@ -336,5 +328,9 @@ public class PluginManagerController {
 
     public void setOpenApiConfig(OpenApiConfig openApiConfig) {
         this.openApiConfig = openApiConfig;
+    }
+
+    public void setBrokerContext(BrokerContext brokerContext) {
+        this.brokerContext = brokerContext;
     }
 }

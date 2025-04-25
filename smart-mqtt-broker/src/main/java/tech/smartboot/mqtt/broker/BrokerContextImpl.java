@@ -64,6 +64,7 @@ import tech.smartboot.mqtt.plugin.spec.MqttProcessor;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
+import tech.smartboot.mqtt.plugin.spec.PluginRegistry;
 import tech.smartboot.mqtt.plugin.spec.PublishBuilder;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 import tech.smartboot.mqtt.plugin.spec.provider.Providers;
@@ -256,6 +257,7 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private String configJson;
 
+    private PluginRegistryImpl pluginRegistry = new PluginRegistryImpl(this);
     /**
      * MQTT消息处理器映射表。
      * <p>
@@ -321,6 +323,8 @@ public class BrokerContextImpl implements BrokerContext {
         initPushThread();
 
         loadAndInstallPlugins();
+
+        pluginRegistry.init();
 
         try {
             options.getPlugins().forEach(processor::addPlugin);
@@ -694,6 +698,11 @@ public class BrokerContextImpl implements BrokerContext {
         return processors;
     }
 
+    @Override
+    public PluginRegistry pluginRegistry() {
+        return pluginRegistry;
+    }
+
 
     public void destroy() {
         LOGGER.info("destroy broker...");
@@ -707,6 +716,7 @@ public class BrokerContextImpl implements BrokerContext {
         timer.shutdown();
 
         bufferPagePool.release();
+        pluginRegistry.destroy();
         //卸载插件
         plugins.forEach(Plugin::uninstall);
         plugins.clear();

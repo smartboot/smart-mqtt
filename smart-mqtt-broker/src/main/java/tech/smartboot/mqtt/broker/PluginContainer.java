@@ -8,10 +8,8 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.mqtt.broker.plugin.registry;
+package tech.smartboot.mqtt.broker;
 
-import tech.smartboot.feat.core.common.logging.Logger;
-import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
 
@@ -24,8 +22,7 @@ import java.util.ServiceLoader;
  * @author 三刀
  * @version v1.0 4/14/25
  */
-public class PluginContainer extends Plugin {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PluginContainer.class);
+class PluginContainer extends Plugin {
     private final ClassLoader classLoader;
     private final Plugin plugin;
 
@@ -80,5 +77,10 @@ public class PluginContainer extends Plugin {
     @Override
     public String getDescription() {
         return plugin.getDescription();
+    }
+
+    @Override
+    public int id() {
+        return plugin.id();
     }
 }
