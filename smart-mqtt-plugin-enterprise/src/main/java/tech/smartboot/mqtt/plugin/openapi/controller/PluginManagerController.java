@@ -19,12 +19,15 @@ import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
+import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.multipart.Part;
 import tech.smartboot.feat.core.common.utils.CollectionUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.upgrade.sse.SSEUpgrade;
+import tech.smartboot.feat.core.server.upgrade.sse.SseEmitter;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.openapi.OpenApi;
 import tech.smartboot.mqtt.plugin.openapi.OpenApiConfig;
@@ -50,6 +53,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author 三刀
@@ -165,48 +169,84 @@ public class PluginManagerController {
 
 
     @RequestMapping("/download")
-    public AsyncResponse download(@Param("url") String url) throws IOException {
+    public void download(@Param("url") String url, HttpRequest request) throws IOException {
         ValidateUtils.notBlank(openApiConfig.getRegistry(), "registry is empty");
         ValidateUtils.notBlank(url, "插件下载地址未知");
-        AsyncResponse response = new AsyncResponse();
         File file = File.createTempFile("smart-mqtt", url.hashCode() + ".temp");
         file.deleteOnExit();
-        response.getFuture().whenComplete((result, throwable) -> file.delete());
-        logger.info("store plugin in " + file.getAbsolutePath());
         FileOutputStream fos = new FileOutputStream(file);
 
-        Feat.httpClient(openApiConfig.getRegistry(), opt -> {
-            opt.debug(true);
-        }).get(url).onResponseBody((response1, bytes, end) -> {
-            if (response1.statusCode() == 200) {
-                fos.write(bytes);
-            }
-        }).onSuccess(rsp -> {
-            if (rsp.statusCode() != 200) {
-                response.complete(RestResult.fail("下载插件失败,httpCode:" + rsp.statusCode() + " statusCode:" + rsp.getReasonPhrase()));
-            } else {
-                //下载成功，触发安装
-                logger.info("下载插件成功");
-                try {
-                    fos.flush();
-                    fos.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                try {
-                    RestResult<String> result = installPlugin(file);
-                    response.complete(result);
-                } catch (Exception e) {
-                    response.complete(RestResult.fail("安装插件失败：" + e.getMessage()));
-                }
+        //连接远程仓库
+        HttpClient httpClient = Feat.httpClient(openApiConfig.getRegistry(), opt -> {
+//            opt.debug(true);
+        });
+        AtomicLong fileSize = new AtomicLong();
+        AtomicLong downloadSize = new AtomicLong();
 
+        request.upgrade(new SSEUpgrade() {
+            @Override
+            public void onOpen(SseEmitter sseEmitter) throws IOException {
+                logger.info("store plugin in " + file.getAbsolutePath());
+                sseEmitter.sendJSONString(RestResult.ok(0));
 
+                httpClient.get(url)
+                        //获取文件大小
+                        .onResponseHeader(httpResponse -> {
+                            if (httpResponse.statusCode() != 200) {
+                                sseEmitter.sendJSONString(RestResult.fail("下载插件失败,httpCode:" + httpResponse.statusCode() + " statusCode:" + httpResponse.getReasonPhrase()));
+                                sseEmitter.complete();
+                            } else {
+                                fileSize.set(httpResponse.getContentLength());
+                            }
+                        })
+                        //下载文件,推送进度
+                        .onResponseBody((response1, bytes, end) -> {
+                            if (response1.statusCode() == 200) {
+                                fos.write(bytes);
+                                //使其不超过100%
+                                sseEmitter.sendJSONString(RestResult.ok((downloadSize.getAndAdd(bytes.length) * 100 / fileSize.get())));
+                            }
+                        })
+                        //下载完成,触发安装
+                        .onSuccess(rsp -> {
+                            if (rsp.statusCode() == 200) {
+                                //下载成功，触发安装
+                                logger.info("下载插件成功");
+                                try {
+                                    fos.flush();
+                                    fos.close();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                                try {
+                                    RestResult<String> result = installPlugin(file);
+                                    if (result.isSuccess()) {
+                                        sseEmitter.sendJSONString(RestResult.ok(100));
+                                    } else {
+                                        sseEmitter.sendJSONString(result);
+                                    }
+
+                                } catch (Exception e) {
+                                    sseEmitter.sendJSONString(RestResult.fail("安装插件失败：" + e.getMessage()));
+                                }
+                            }
+                            sseEmitter.complete();
+                        })
+                        //下载失败
+                        .onFailure(resp -> {
+                            logger.error("下载插件失", resp);
+                            sseEmitter.sendJSONString(RestResult.fail("下载插件失败：" + resp.getMessage()));
+                            sseEmitter.complete();
+                        }).submit();
             }
-        }).onFailure(resp -> {
-            logger.error("下载插件失", resp);
-            response.complete(RestResult.fail("下载插件失败：" + resp.getMessage()));
-        }).submit();
-        return response;
+
+            @Override
+            public void destroy() {
+                super.destroy();
+                file.delete();
+                httpClient.close();
+            }
+        });
     }
 
     @RequestMapping("/uninstall")
