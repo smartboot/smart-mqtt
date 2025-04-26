@@ -123,7 +123,7 @@ class PluginRegistryImpl implements PluginRegistry {
                 if (pluginContainer.id() != pluginId) {
                     continue;
                 }
-                File storage = new File(new File(baseDir, "_storage"), file.getName().replace(".jar", ""));
+                File storage = new File(new File(baseDir, "_storage"), String.valueOf(pluginContainer.id()));
                 if (!storage.isDirectory()) {
                     storage.mkdirs();
                 }

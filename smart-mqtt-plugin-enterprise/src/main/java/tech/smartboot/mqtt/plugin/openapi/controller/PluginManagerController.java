@@ -17,13 +17,16 @@ import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.Param;
+import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.multipart.Part;
 import tech.smartboot.feat.core.common.utils.CollectionUtils;
+import tech.smartboot.feat.core.common.utils.NumberUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.upgrade.sse.SSEUpgrade;
@@ -37,6 +40,7 @@ import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -95,6 +99,11 @@ public class PluginManagerController {
             List<Plugin> plugins = new ArrayList<>();
             for (Plugin plugin : serviceLoader) {
                 if (plugin.getClass().getClassLoader() == classLoader) {
+                    File pluginStorage = new File(storage.getParent(), String.valueOf(plugin.id()));
+                    if (!pluginStorage.exists()) {
+                        pluginStorage.mkdirs();
+                    }
+                    plugin.setStorage(pluginStorage);
                     plugins.add(plugin);
                 }
             }
@@ -110,6 +119,45 @@ public class PluginManagerController {
             throw new RuntimeException(e);
         }
         return p;
+    }
+
+    @RequestMapping("/:id/config")
+    public RestResult<String> config(@PathParam("id") String id) {
+        List<Plugin> plugins = localPlugins.get(NumberUtils.toInt(id, 0));
+        if (CollectionUtils.isEmpty(plugins)) {
+            return RestResult.fail("插件不存在");
+        }
+        Plugin plugin = plugins.get(0);
+        File file = new File(plugin.storage(), "plugin.yaml");
+        if (!file.exists()) {
+            return RestResult.ok("");
+        }
+        try (FileInputStream inputStream = new FileInputStream(file)) {
+            return RestResult.ok(FeatUtils.asString(inputStream));
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+            return RestResult.fail(e.getMessage());
+        }
+    }
+
+    @RequestMapping("/:id/config/save")
+    public RestResult<Void> config(@PathParam("id") String id, @Param("config") String config) {
+        if (StringUtils.isBlank(config)) {
+            return RestResult.fail("配置内容为空");
+        }
+        List<Plugin> plugins = localPlugins.get(NumberUtils.toInt(id, 0));
+        if (CollectionUtils.isEmpty(plugins)) {
+            return RestResult.fail("插件不存在");
+        }
+        Plugin plugin = plugins.get(0);
+        File file = new File(plugin.storage(), "plugin.yaml");
+        try (FileOutputStream outputStream = new FileOutputStream(file);) {
+            outputStream.write(config.getBytes());
+            outputStream.flush();
+            return RestResult.ok(null);
+        } catch (IOException e) {
+            return RestResult.fail(e.getMessage());
+        }
     }
 
     @RequestMapping("/market")
@@ -187,13 +235,13 @@ public class PluginManagerController {
             @Override
             public void onOpen(SseEmitter sseEmitter) throws IOException {
                 logger.info("store plugin in " + file.getAbsolutePath());
-                sseEmitter.sendJSONString(RestResult.ok(0));
+                sseEmitter.sendAsJson(RestResult.ok(0));
 
                 httpClient.get(url)
                         //获取文件大小
                         .onResponseHeader(httpResponse -> {
                             if (httpResponse.statusCode() != 200) {
-                                sseEmitter.sendJSONString(RestResult.fail("下载插件失败,httpCode:" + httpResponse.statusCode() + " statusCode:" + httpResponse.getReasonPhrase()));
+                                sseEmitter.sendAsJson(RestResult.fail("下载插件失败,httpCode:" + httpResponse.statusCode() + " statusCode:" + httpResponse.getReasonPhrase()));
                                 sseEmitter.complete();
                             } else {
                                 fileSize.set(httpResponse.getContentLength());
@@ -205,7 +253,7 @@ public class PluginManagerController {
                                 fos.write(bytes);
                                 //使其不超过100%
                                 if (bytes.length > 0) {
-                                    sseEmitter.sendJSONString(RestResult.ok((downloadSize.getAndAdd(bytes.length) * 100 / fileSize.get())));
+                                    sseEmitter.sendAsJson(RestResult.ok((downloadSize.getAndAdd(bytes.length) * 100 / fileSize.get())));
                                 }
                             }
                         })
@@ -223,12 +271,12 @@ public class PluginManagerController {
                                 try {
                                     RestResult<String> result = installPlugin(file);
                                     if (result.isSuccess()) {
-                                        sseEmitter.sendJSONString(RestResult.ok(100));
+                                        sseEmitter.sendAsJson(RestResult.ok(100));
                                     } else {
-                                        sseEmitter.sendJSONString(result);
+                                        sseEmitter.sendAsJson(result);
                                     }
                                 } catch (Exception e) {
-                                    sseEmitter.sendJSONString(RestResult.fail("安装插件失败：" + e.getMessage()));
+                                    sseEmitter.sendAsJson(RestResult.fail("安装插件失败：" + e.getMessage()));
                                 }
                             }
                             sseEmitter.complete();
@@ -236,7 +284,7 @@ public class PluginManagerController {
                         //下载失败
                         .onFailure(resp -> {
                             logger.error("下载插件失", resp);
-                            sseEmitter.sendJSONString(RestResult.fail("下载插件失败：" + resp.getMessage()));
+                            sseEmitter.sendAsJson(RestResult.fail("下载插件失败：" + resp.getMessage()));
                             sseEmitter.complete();
                         }).submit();
             }
