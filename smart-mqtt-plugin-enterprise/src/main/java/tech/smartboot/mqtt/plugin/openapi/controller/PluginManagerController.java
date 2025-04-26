@@ -83,16 +83,12 @@ public class PluginManagerController {
         File repository = new File(storage, RepositoryPlugin.REPOSITORY);
         if (repository.isDirectory()) {
             Files.walk(repository.toPath()).filter(path -> path.getFileName().toString().equals(RepositoryPlugin.REPOSITORY_PLUGIN_NAME)).forEach(path -> {
-                Plugin p = loadPlugin(path);
-                if (p != null) {
-                    localPlugins.computeIfAbsent(p.id(), k -> new ArrayList<>()).add(p);
-                }
+                loadPlugin(path);
             });
         }
     }
 
-    private Plugin loadPlugin(Path jarPath) {
-        Plugin p = null;
+    private void loadPlugin(Path jarPath) {
         try {
             ClassLoader classLoader = new URLClassLoader(new URL[]{jarPath.toUri().toURL()}, PluginManagerController.class.getClassLoader().getParent());
             ServiceLoader<Plugin> serviceLoader = ServiceLoader.load(Plugin.class, classLoader);
@@ -112,13 +108,13 @@ public class PluginManagerController {
                 logger.warn("invalid plugin: " + jarPath + ",clean it");
                 Files.delete(jarPath);
             } else {
-                p = plugins.get(0);
+                Plugin p = plugins.get(0);
+                localPlugins.computeIfAbsent(p.id(), k -> new ArrayList<>()).add(p);
             }
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             throw new RuntimeException(e);
         }
-        return p;
     }
 
     @RequestMapping("/:id/config")
@@ -310,6 +306,7 @@ public class PluginManagerController {
         Plugin plugin = plugins.get(0);
         File file = new File(storage, "repository/" + plugin.id());
         Files.walk(file.toPath()).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
+        Files.walk(plugin.storage().toPath()).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
         return RestResult.ok(null);
     }
 
@@ -323,7 +320,7 @@ public class PluginManagerController {
         if (!Files.exists(path)) {
             return RestResult.fail("该插件不存在");
         }
-        Files.copy(path, new File(storage.getParentFile().getParentFile(), plugin.pluginName() + "-" + plugin.getVersion() + ".jar").toPath(), StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(path, new File(storage.getParentFile().getParentFile(), plugin.id() + ".jar").toPath(), StandardCopyOption.REPLACE_EXISTING);
         brokerContext.pluginRegistry().startPlugin(plugin.id());
         return RestResult.ok(null);
     }
@@ -335,7 +332,7 @@ public class PluginManagerController {
             return RestResult.fail("无法停用非本地仓库插件");
         }
         Plugin plugin = p.get(0);
-        File file = new File(storage.getParentFile().getParentFile(), plugin.pluginName() + "-" + plugin.getVersion() + ".jar");
+        File file = new File(storage.getParentFile().getParentFile(), plugin.id() + ".jar");
         if (file.exists() && !file.delete()) {
             return RestResult.fail("插件停用失败!");
         }
@@ -403,14 +400,14 @@ public class PluginManagerController {
         }
         try {
             Files.copy(tempFile.toPath(), localRepository.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            this.localPlugins.computeIfAbsent(plugin.id(), k -> new ArrayList<>()).add(plugin);
+            loadPlugin(localRepository.toPath());
         } catch (IOException e) {
             logger.error("插件存储本地仓库失败", e);
             return RestResult.fail("插件存储本地仓库失败");
         }
 
         //启动插件
-        File destFile = new File(storage.getParentFile().getParentFile(), plugin.pluginName() + "-" + plugin.getVersion() + ".jar");
+        File destFile = new File(storage.getParentFile().getParentFile(), plugin.id() + ".jar");
         if (destFile.exists()) {
             return RestResult.fail("插件已存在");
         }
