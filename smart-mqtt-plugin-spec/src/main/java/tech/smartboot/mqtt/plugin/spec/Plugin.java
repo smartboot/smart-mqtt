@@ -13,7 +13,9 @@ package tech.smartboot.mqtt.plugin.spec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.InputStream;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -103,5 +105,27 @@ public abstract class Plugin {
         // 插件id为类名的hash值
         int hashCode = pluginName().hashCode();
         return hashCode > 0 ? hashCode : -hashCode;
+    }
+
+    /**
+     * 获取插件配置内容,plugin.yaml
+     */
+    public String config() {
+        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("plugin.yaml");
+        if (inputStream == null) {
+            return null;
+        }
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        try {
+            byte[] buffer = new byte[1024];
+            int len;
+            while ((len = inputStream.read(buffer)) != -1) {
+                byteArrayOutputStream.write(buffer, 0, len);
+            }
+            return byteArrayOutputStream.toString("UTF-8");
+        } catch (Exception e) {
+            LOGGER.error("get plugin config error", e);
+            return null;
+        }
     }
 }
