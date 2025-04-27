@@ -1,0 +1,5 @@
+enabled: true
+http:
+  port: 18083
+  host: 0.0.0.0
+registry: http://82.157.162.230:8083/
