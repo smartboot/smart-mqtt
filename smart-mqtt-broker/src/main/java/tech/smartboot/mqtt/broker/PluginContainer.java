@@ -12,8 +12,12 @@ package tech.smartboot.mqtt.broker;
 
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
+import tech.smartboot.mqtt.plugin.spec.PluginException;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -26,7 +30,7 @@ class PluginContainer extends Plugin {
     private final ClassLoader classLoader;
     private final Plugin plugin;
 
-    public PluginContainer(ClassLoader classLoader, File storage) {
+    public PluginContainer(ClassLoader classLoader, File baseStorage) {
         this.classLoader = classLoader;
         ServiceLoader<Plugin> serviceLoader = ServiceLoader.load(Plugin.class, classLoader);
         System.out.println("Plugin container loaded!" + serviceLoader);
@@ -40,7 +44,27 @@ class PluginContainer extends Plugin {
             throw new RuntimeException("plugin container init error");
         }
         this.plugin = plugins.get(0);
-        plugin.setStorage(storage);
+        File storage = new File(baseStorage, String.valueOf(plugin.id()));
+        if (!storage.exists()) {
+            storage.mkdirs();
+        }
+        File storageFile = new File(storage, Plugin.CONFIG_FILE_NAME);
+        if (!storageFile.exists()) {
+            InputStream inputStream = classLoader.getResourceAsStream(Plugin.CONFIG_FILE_NAME);
+            if (inputStream != null) {
+                try (FileOutputStream outputStream = new FileOutputStream(storageFile);) {
+                    byte[] buffer = new byte[1024];
+                    int length;
+                    while ((length = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, length);
+                    }
+                    outputStream.flush();
+                } catch (IOException e) {
+                    throw new PluginException(e.getMessage(), e);
+                }
+            }
+        }
+        this.plugin.setStorage(storage);
     }
 
     @Override
@@ -77,6 +101,16 @@ class PluginContainer extends Plugin {
     @Override
     public String getDescription() {
         return plugin.getDescription();
+    }
+
+    @Override
+    public File storage() {
+        return plugin.storage();
+    }
+
+    @Override
+    public void setStorage(File storage) {
+        plugin.setStorage(storage);
     }
 
     @Override

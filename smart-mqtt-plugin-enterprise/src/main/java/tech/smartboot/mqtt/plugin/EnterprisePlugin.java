@@ -10,9 +10,11 @@
 
 package tech.smartboot.mqtt.plugin;
 
+import com.alibaba.fastjson2.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.socket.extension.plugins.MonitorPlugin;
+import org.yaml.snakeyaml.Yaml;
 import tech.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
 import tech.smartboot.mqtt.plugin.dao.DatabasePlugin;
@@ -44,10 +46,16 @@ public class EnterprisePlugin extends Plugin {
             LOGGER.info("enterprise plugin disabled");
             return;
         }
+
+        Yaml yaml = new Yaml();
+        Object object = yaml.load(config());
+        PluginConfig config = JSONObject.from(object).to(PluginConfig.class);
+
+
         brokerContext.Options().addPlugin(new MonitorPlugin<>(60));
         features.add(new DatabasePlugin(brokerContext));
         // openAPI增强
-        features.add(new OpenApiFeature(brokerContext, storage()));
+        features.add(new OpenApiFeature(brokerContext, storage(), config));
 
         for (Feature feature : features) {
             if (feature.isEnable()) {

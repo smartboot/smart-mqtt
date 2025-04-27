@@ -23,11 +23,11 @@ import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
+import tech.smartboot.mqtt.plugin.PluginConfig;
 import tech.smartboot.mqtt.plugin.convert.BridgeConvert;
 import tech.smartboot.mqtt.plugin.dao.mapper.PluginConfigMapper;
 import tech.smartboot.mqtt.plugin.dao.model.PluginConfigDO;
 import tech.smartboot.mqtt.plugin.openapi.OpenApi;
-import tech.smartboot.mqtt.plugin.openapi.OpenApiConfig;
 import tech.smartboot.mqtt.plugin.openapi.to.BridgeConfigTO;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.bus.DisposableEventBusSubscriber;
@@ -47,14 +47,14 @@ public class BridgeController {
     private HttpClient client;
 
     @Autowired
-    private OpenApiConfig openApiConfig;
+    private PluginConfig pluginConfig;
 
     @Autowired
     private PluginConfigMapper pluginConfigMapper;
 
     @PostConstruct
     public void init() {
-        client = new HttpClient(openApiConfig.getHost(), openApiConfig.getPort());
+        client = new HttpClient(pluginConfig.getHttpConfig().getHost(), pluginConfig.getHttpConfig().getPort());
         client.options().connectTimeout(3000);
 //        client.configuration().debug(true);
         brokerContext.getEventBus().subscribe(EventType.BROKER_STARTED, new DisposableEventBusSubscriber<BrokerContext>() {
@@ -180,8 +180,8 @@ public class BridgeController {
         this.brokerContext = brokerContext;
     }
 
-    public void setOpenApiConfig(OpenApiConfig openApiConfig) {
-        this.openApiConfig = openApiConfig;
+    public void setPluginConfig(PluginConfig pluginConfig) {
+        this.pluginConfig = pluginConfig;
     }
 
     public void setPluginConfigMapper(PluginConfigMapper pluginConfigMapper) {

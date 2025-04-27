@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.nio.file.Files;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -23,6 +24,7 @@ import java.io.InputStream;
  */
 public abstract class Plugin {
     private static final Logger LOGGER = LoggerFactory.getLogger(Plugin.class);
+    public static final String CONFIG_FILE_NAME = "plugin.yaml";
 
     private File storage;
     /**
@@ -111,12 +113,12 @@ public abstract class Plugin {
      * 获取插件配置内容,plugin.yaml
      */
     public String config() {
-        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("plugin.yaml");
-        if (inputStream == null) {
+        File file = new File(storage(), "plugin.yaml");
+        if (!file.exists()) {
             return null;
         }
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        try {
+        try (InputStream inputStream = Files.newInputStream(file.toPath())) {
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             byte[] buffer = new byte[1024];
             int len;
             while ((len = inputStream.read(buffer)) != -1) {

@@ -32,8 +32,8 @@ import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.upgrade.sse.SSEUpgrade;
 import tech.smartboot.feat.core.server.upgrade.sse.SseEmitter;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
+import tech.smartboot.mqtt.plugin.PluginConfig;
 import tech.smartboot.mqtt.plugin.openapi.OpenApi;
-import tech.smartboot.mqtt.plugin.openapi.OpenApiConfig;
 import tech.smartboot.mqtt.plugin.openapi.to.PluginItem;
 import tech.smartboot.mqtt.plugin.openapi.to.RepositoryPlugin;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
@@ -70,7 +70,7 @@ public class PluginManagerController {
     private File storage;
 
     @Autowired
-    private OpenApiConfig openApiConfig;
+    private PluginConfig pluginConfig;
 
     @Autowired
     private BrokerContext brokerContext;
@@ -159,12 +159,12 @@ public class PluginManagerController {
     @RequestMapping("/market")
     public AsyncResponse market() {
         AsyncResponse asyncResponse = new AsyncResponse();
-        if (StringUtils.isBlank(openApiConfig.getRegistry())) {
+        if (StringUtils.isBlank(pluginConfig.getRegistry())) {
             asyncResponse.complete(RestResult.fail("registry is empty"));
             return asyncResponse;
         }
 
-        Feat.httpClient(openApiConfig.getRegistry(), opt -> {
+        Feat.httpClient(pluginConfig.getRegistry(), opt -> {
             opt.debug(true);
         }).get("/repository/").onSuccess(resp -> {
             JSONObject jsonObject = JSONObject.parseObject(resp.body()).getJSONObject("data");
@@ -214,14 +214,14 @@ public class PluginManagerController {
 
     @RequestMapping("/download")
     public void download(@Param("url") String url, HttpRequest request) throws IOException {
-        ValidateUtils.notBlank(openApiConfig.getRegistry(), "registry is empty");
+        ValidateUtils.notBlank(pluginConfig.getRegistry(), "registry is empty");
         ValidateUtils.notBlank(url, "插件下载地址未知");
         File file = File.createTempFile("smart-mqtt", url.hashCode() + ".temp");
         file.deleteOnExit();
         FileOutputStream fos = new FileOutputStream(file);
 
         //连接远程仓库
-        HttpClient httpClient = Feat.httpClient(openApiConfig.getRegistry(), opt -> {
+        HttpClient httpClient = Feat.httpClient(pluginConfig.getRegistry(), opt -> {
 //            opt.debug(true);
         });
         AtomicLong fileSize = new AtomicLong();
@@ -425,8 +425,8 @@ public class PluginManagerController {
         this.storage = storage;
     }
 
-    public void setOpenApiConfig(OpenApiConfig openApiConfig) {
-        this.openApiConfig = openApiConfig;
+    public void setPluginConfig(PluginConfig pluginConfig) {
+        this.pluginConfig = pluginConfig;
     }
 
     public void setBrokerContext(BrokerContext brokerContext) {

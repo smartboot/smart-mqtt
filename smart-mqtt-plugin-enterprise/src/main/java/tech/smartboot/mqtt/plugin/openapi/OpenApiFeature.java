@@ -10,13 +10,13 @@
 
 package tech.smartboot.mqtt.plugin.openapi;
 
-import com.alibaba.fastjson2.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.mqtt.plugin.AbstractFeature;
+import tech.smartboot.mqtt.plugin.PluginConfig;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 
 import java.io.File;
@@ -37,14 +37,13 @@ public class OpenApiFeature extends AbstractFeature {
 
     private AsynchronousChannelGroup asynchronousChannelGroup;
 
-    private final OpenApiConfig openApiConfig;
-
     private ExecutorService asyncExecutor;
     private final File storage;
+    private final PluginConfig pluginConfig;
 
-    public OpenApiFeature(BrokerContext context, File storage) {
+    public OpenApiFeature(BrokerContext context, File storage, PluginConfig config) {
         super(context);
-        openApiConfig = context.parseConfig(CONFIG_JSON_PATH, OpenApiConfig.class);
+        this.pluginConfig = config;
         this.storage = storage;
     }
 
@@ -57,12 +56,6 @@ public class OpenApiFeature extends AbstractFeature {
 
     @Override
     public void start() throws Exception {
-        OpenApiConfig config = openApiConfig;
-        if (config == null) {
-            LOGGER.warn("openapi config is unset, init default config");
-            config = new OpenApiConfig();
-        }
-        LOGGER.debug("openapi config:{}", JSONObject.toJSONString(config));
         asynchronousChannelGroup = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
             int i;
 
@@ -73,14 +66,8 @@ public class OpenApiFeature extends AbstractFeature {
         });
 
         asyncExecutor = Executors.newCachedThreadPool();
-        OpenApiConfig finalConfig = config;
-        httpServer = FeatCloud.cloudServer(serverOptions ->
-                serverOptions.addExternalBean("brokerContext", this.context)
-                        .addExternalBean("openApiConfig", finalConfig)
-                        .addExternalBean("storage", storage)
-                        .debug(false)
-                        .bannerEnabled(false).threadNum(4).readBufferSize(1024 * 8).writeBufferSize(8 * 1024).group(asynchronousChannelGroup));
-        httpServer.listen(config.getHost(), config.getPort());
+        httpServer = FeatCloud.cloudServer(serverOptions -> serverOptions.addExternalBean("brokerContext", this.context).addExternalBean("pluginConfig", pluginConfig).addExternalBean("storage", storage).debug(false).bannerEnabled(false).threadNum(4).readBufferSize(1024 * 8).writeBufferSize(8 * 1024).group(asynchronousChannelGroup));
+        httpServer.listen(pluginConfig.getHttpConfig().getHost(), pluginConfig.getHttpConfig().getPort());
         LOGGER.debug("openapi server start success!");
         System.out.println("openapi server start success!");
 

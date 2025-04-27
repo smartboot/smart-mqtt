@@ -65,12 +65,8 @@ class PluginRegistryImpl implements PluginRegistry {
             if (!file.getName().endsWith(".jar")) {
                 continue;
             }
-            File storage = new File(baseStorage, file.getName().replace(".jar", ""));
-            if (!storage.isDirectory()) {
-                storage.mkdirs();
-            }
-            URLClassLoader classLoader = new URLClassLoader(new URL[]{file.toURI().toURL(), storage.toURI().toURL()}, PluginRegistry.class.getClassLoader());
-            PluginContainer pluginContainer = new PluginContainer(classLoader, storage);
+            URLClassLoader classLoader = new URLClassLoader(new URL[]{file.toURI().toURL()}, PluginRegistry.class.getClassLoader());
+            PluginContainer pluginContainer = new PluginContainer(classLoader, baseStorage);
             LOGGER.info("registryPlugin load plugin:{}", pluginContainer.pluginName());
             // 插件目录下可能存在无效的插件
             try {
@@ -110,6 +106,7 @@ class PluginRegistryImpl implements PluginRegistry {
         if (containsPlugin(pluginId)) {
             throw new PluginException("This plugin is already running.");
         }
+        File baseStorage = new File(baseDir, "_storage");
         for (File file : Objects.requireNonNull(baseDir.listFiles())) {
             if (!file.getName().endsWith(".jar")) {
                 continue;
@@ -119,16 +116,10 @@ class PluginRegistryImpl implements PluginRegistry {
             }
             try {
                 URLClassLoader classLoader = new URLClassLoader(new URL[]{file.toURI().toURL()}, PluginRegistry.class.getClassLoader());
-                PluginContainer pluginContainer = new PluginContainer(classLoader, null);
+                PluginContainer pluginContainer = new PluginContainer(classLoader, baseStorage);
                 if (pluginContainer.id() != pluginId) {
                     continue;
                 }
-                File storage = new File(new File(baseDir, "_storage"), String.valueOf(pluginContainer.id()));
-                if (!storage.isDirectory()) {
-                    storage.mkdirs();
-                }
-                classLoader = new URLClassLoader(new URL[]{file.toURI().toURL(), storage.toURI().toURL()}, PluginRegistry.class.getClassLoader());
-                pluginContainer = new PluginContainer(classLoader, storage);
                 LOGGER.info("registryPlugin load plugin:{}", pluginContainer.pluginName());
                 // 插件目录下可能存在无效的插件
                 pluginContainer.install(brokerContext);
