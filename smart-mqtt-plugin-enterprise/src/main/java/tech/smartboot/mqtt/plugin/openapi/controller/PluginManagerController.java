@@ -137,7 +137,7 @@ public class PluginManagerController {
     }
 
     @RequestMapping("/:id/config/save")
-    public RestResult<Void> config(@PathParam("id") String id, @Param("config") String config) {
+    public RestResult<Void> config(@PathParam("id") String id, @Param("config") String config) throws Throwable {
         if (StringUtils.isBlank(config)) {
             return RestResult.fail("配置内容为空");
         }
@@ -150,10 +150,15 @@ public class PluginManagerController {
         try (FileOutputStream outputStream = new FileOutputStream(file);) {
             outputStream.write(config.getBytes());
             outputStream.flush();
-            return RestResult.ok(null);
+
         } catch (IOException e) {
             return RestResult.fail(e.getMessage());
         }
+        RestResult<Void> result = disable(plugin.id());
+        if (!result.isSuccess()) {
+            return result;
+        }
+        return enable(plugin.id());
     }
 
     @RequestMapping("/market")
@@ -326,7 +331,7 @@ public class PluginManagerController {
     }
 
     @RequestMapping("/disable")
-    public RestResult<Void> disable(@Param("id") int id) throws IOException {
+    public RestResult<Void> disable(@Param("id") int id) {
         List<Plugin> p = localPlugins.get(id);
         if (CollectionUtils.isEmpty(p)) {
             return RestResult.fail("无法停用非本地仓库插件");
