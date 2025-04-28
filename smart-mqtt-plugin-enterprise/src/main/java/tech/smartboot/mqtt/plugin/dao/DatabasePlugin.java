@@ -26,12 +26,14 @@ import tech.smartboot.mqtt.plugin.spec.BrokerContext;
  */
 public class DatabasePlugin extends AbstractFeature {
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabasePlugin.class);
-    private static final String CONFIG_JSON_PATH = "$['broker']['database']";
     private PluginConfig.DataBaseConfig dataBaseConfig;
 
     public DatabasePlugin(BrokerContext context, PluginConfig pluginConfig) {
         super(context);
         this.dataBaseConfig = pluginConfig.getDataBase();
+        if (this.dataBaseConfig == null) {
+            this.dataBaseConfig = new PluginConfig.DataBaseConfig();
+        }
     }
 
     @Override

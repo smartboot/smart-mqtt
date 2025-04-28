@@ -117,7 +117,7 @@ public class PluginConfig {
         }
     }
 
-    public class DataBaseConfig {
+    public static class DataBaseConfig {
 
         /**
          * 数据库类型：h2、mysql
