@@ -155,6 +155,10 @@ public class PluginManagerController {
         } catch (IOException e) {
             return RestResult.fail(e.getMessage());
         }
+        if (brokerContext.pluginRegistry().getPlugin(plugin.id()) == null) {
+            return RestResult.ok(null);
+        }
+        //自动重启
         RestResult<Void> result = disable(plugin.id());
         if (!result.isSuccess()) {
             return result;
