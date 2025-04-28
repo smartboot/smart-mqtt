@@ -33,6 +33,7 @@
             <groupId>tech.smartboot.mqtt</groupId>
             <artifactId>smart-mqtt-plugin-spec</artifactId>
             <version>1.0.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.lionsoul</groupId>

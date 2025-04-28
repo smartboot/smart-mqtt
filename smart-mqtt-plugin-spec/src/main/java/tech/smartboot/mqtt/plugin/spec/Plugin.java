@@ -119,7 +119,23 @@ public abstract class Plugin {
     public abstract String getVendor();
 
 
-    public abstract String getDescription();
+    public String getDescription() {
+        try (InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("readme.md");) {
+            if (inputStream == null) {
+                return "readme.md not found";
+            }
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = inputStream.read(buffer)) != -1) {
+                byteArrayOutputStream.write(buffer, 0, length);
+            }
+            return byteArrayOutputStream.toString();
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+        return "readme.md not found";
+    }
 
     public int id() {
         // 插件id为类名的hash值
