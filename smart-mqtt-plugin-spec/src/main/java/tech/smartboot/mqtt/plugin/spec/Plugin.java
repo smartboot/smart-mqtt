@@ -33,6 +33,11 @@ public abstract class Plugin {
     private boolean installed;
 
     /**
+     * 启动异常
+     */
+    private Throwable throwable;
+
+    /**
      * 获取插件名称
      *
      * @return
@@ -47,8 +52,21 @@ public abstract class Plugin {
      */
     public final void install(BrokerContext brokerContext) throws Throwable {
         checkSate();
-        initPlugin(brokerContext);
-        installed = true;
+        try {
+            initPlugin(brokerContext);
+            installed = true;
+        } catch (Throwable e) {
+            throwable = e;
+            throw e;
+        }
+    }
+
+    public boolean isInstalled() {
+        return installed;
+    }
+
+    public Throwable getThrowable() {
+        return throwable;
     }
 
     /**

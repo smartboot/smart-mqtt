@@ -34,6 +34,7 @@ import tech.smartboot.feat.core.server.upgrade.sse.SseEmitter;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.PluginConfig;
 import tech.smartboot.mqtt.plugin.openapi.OpenApi;
+import tech.smartboot.mqtt.plugin.openapi.enums.PluginStatusEnum;
 import tech.smartboot.mqtt.plugin.openapi.to.PluginItem;
 import tech.smartboot.mqtt.plugin.openapi.to.RepositoryPlugin;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
@@ -206,10 +207,18 @@ public class PluginManagerController {
             Plugin enabledPlugins = brokerContext.pluginRegistry().getPlugin(plugin.id());
             if (enabledPlugins != null) {
                 item.setVersion(enabledPlugins.getVersion());
-                item.setStatus("enabled");
+                if (enabledPlugins.isInstalled()) {
+                    item.setStatus(PluginStatusEnum.ENABLED.getCode());
+                } else if (enabledPlugins.getThrowable() != null) {
+                    item.setStatus(PluginStatusEnum.ERROR.getCode());
+                    item.setMessage(enabledPlugins.getThrowable().toString());
+                } else {
+                    item.setStatus(PluginStatusEnum.ERROR.getCode());
+                    item.setMessage(PluginStatusEnum.ERROR.getDesc());
+                }
             } else {
                 item.setVersion(plugin.getVersion());
-                item.setStatus("disabled");
+                item.setStatus(PluginStatusEnum.DISABLED.getCode());
             }
             pluginItems.add(item);
         });

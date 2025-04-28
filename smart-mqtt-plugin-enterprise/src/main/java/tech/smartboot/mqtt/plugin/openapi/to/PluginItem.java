@@ -16,10 +16,11 @@ package tech.smartboot.mqtt.plugin.openapi.to;
  */
 public class PluginItem extends PluginTO {
     /**
-     * 插件状态: uninstalled,enabled,disabled,required
+     * 插件状态: uninstalled,enabled,disabled,error
      */
     private String status;
 
+    private String message;
 
     public String getStatus() {
         return status;
@@ -29,4 +30,11 @@ public class PluginItem extends PluginTO {
         this.status = status;
     }
 
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
 }

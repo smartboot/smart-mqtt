@@ -71,16 +71,22 @@ class PluginContainer extends Plugin {
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
         ClassLoader preClassLoader = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(classLoader);
-        plugin.install(brokerContext);
-        Thread.currentThread().setContextClassLoader(preClassLoader);
+        try {
+            plugin.install(brokerContext);
+        } finally {
+            Thread.currentThread().setContextClassLoader(preClassLoader);
+        }
     }
 
     @Override
     protected void destroyPlugin() {
         ClassLoader preClassLoader = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(classLoader);
-        plugin.uninstall();
-        Thread.currentThread().setContextClassLoader(preClassLoader);
+        try {
+            plugin.uninstall();
+        } finally {
+            Thread.currentThread().setContextClassLoader(preClassLoader);
+        }
     }
 
     @Override
