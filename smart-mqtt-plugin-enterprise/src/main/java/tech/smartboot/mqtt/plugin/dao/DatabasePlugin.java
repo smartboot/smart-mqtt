@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import tech.smartboot.mqtt.common.exception.MqttException;
 import tech.smartboot.mqtt.common.util.MqttUtil;
 import tech.smartboot.mqtt.plugin.AbstractFeature;
+import tech.smartboot.mqtt.plugin.PluginConfig;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 
 /**
@@ -26,9 +27,11 @@ import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 public class DatabasePlugin extends AbstractFeature {
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabasePlugin.class);
     private static final String CONFIG_JSON_PATH = "$['broker']['database']";
+    private PluginConfig.DataBaseConfig dataBaseConfig;
 
-    public DatabasePlugin(BrokerContext context) {
+    public DatabasePlugin(BrokerContext context, PluginConfig pluginConfig) {
         super(context);
+        this.dataBaseConfig = pluginConfig.getDataBase();
     }
 
     @Override
@@ -38,26 +41,20 @@ public class DatabasePlugin extends AbstractFeature {
 
     @Override
     public void start() throws Exception {
-        Config config = context.parseConfig(CONFIG_JSON_PATH, Config.class);
-        if (config == null) {
-            config = new Config();
-            config.setDbType("h2_mem");
-            LOGGER.debug("none database config, use default memory model");
-        }
-        MqttUtil.updateConfig(config, "broker.database");
-        LOGGER.debug("database config:{}", JSON.toJSONString(config));
+        MqttUtil.updateConfig(dataBaseConfig, "broker.database");
+        LOGGER.debug("database config:{}", JSON.toJSONString(dataBaseConfig));
         try {
-            if (StringUtils.isNotBlank(config.getDbType())) {
-                System.setProperty(MybatisSessionFactory.CONFIG_JDBC_DB_TYPE, config.getDbType());
+            if (StringUtils.isNotBlank(dataBaseConfig.getDbType())) {
+                System.setProperty(MybatisSessionFactory.CONFIG_JDBC_DB_TYPE, dataBaseConfig.getDbType());
             }
-            if (StringUtils.isNotBlank(config.getUrl())) {
-                System.setProperty(MybatisSessionFactory.CONFIG_JDBC_URL, config.getUrl());
+            if (StringUtils.isNotBlank(dataBaseConfig.getUrl())) {
+                System.setProperty(MybatisSessionFactory.CONFIG_JDBC_URL, dataBaseConfig.getUrl());
             }
-            if (StringUtils.isNotBlank(config.getUsername())) {
-                System.setProperty(MybatisSessionFactory.CONFIG_JDBC_USERNAME, config.getUsername());
+            if (StringUtils.isNotBlank(dataBaseConfig.getUsername())) {
+                System.setProperty(MybatisSessionFactory.CONFIG_JDBC_USERNAME, dataBaseConfig.getUsername());
             }
-            if (StringUtils.isNotBlank(config.getPassword())) {
-                System.setProperty(MybatisSessionFactory.CONFIG_JDBC_PASSWORD, config.getPassword());
+            if (StringUtils.isNotBlank(dataBaseConfig.getPassword())) {
+                System.setProperty(MybatisSessionFactory.CONFIG_JDBC_PASSWORD, dataBaseConfig.getPassword());
             }
 //            RestfulBootstrap bootstrap = brokerContext.getBundle("openapi");
 //            bootstrap.scan("org.smartboot.mqtt.plugins.database");

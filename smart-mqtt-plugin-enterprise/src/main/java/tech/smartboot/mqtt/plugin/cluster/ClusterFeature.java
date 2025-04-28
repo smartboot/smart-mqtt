@@ -22,8 +22,8 @@ import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.mqtt.client.MqttClient;
 import tech.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import tech.smartboot.mqtt.common.message.payload.MqttConnectPayload;
-import tech.smartboot.mqtt.common.util.MqttUtil;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
+import tech.smartboot.mqtt.plugin.PluginConfig;
 import tech.smartboot.mqtt.plugin.dao.mapper.BrokerNodeMapper;
 import tech.smartboot.mqtt.plugin.dao.model.BrokerNodeDO;
 import tech.smartboot.mqtt.plugin.openapi.enums.BrokerNodeTypeEnum;
@@ -73,42 +73,38 @@ public class ClusterFeature {
     @Autowired
     private BrokerContext brokerContext;
 
+    @Autowired
+    private PluginConfig pluginConfig;
+
 
     @PostConstruct
     public void init() throws Exception {
-        Config config = brokerContext.parseConfig("$.broker", Config.class);
-        if (config == null) {
-            config = new Config();
-        }
-        MqttUtil.updateConfig(config, "broker");
-        LOGGER.debug("load config:{}", JSONObject.toJSONString(config));
-        if (StringUtils.isBlank(config.getNodeType())) {
-            config.setNodeType(BrokerNodeTypeEnum.CORE_NODE.getCode());
+        if (StringUtils.isBlank(pluginConfig.getNodeType())) {
+            pluginConfig.setNodeType(BrokerNodeTypeEnum.CORE_NODE.getCode());
             LOGGER.error("broker.nodeType is blank, set default config: core");
         }
-        if (config.getClusterEndpoint() == null) {
+        if (pluginConfig.getClusterEndpoint() == null) {
             LOGGER.error("broker.clusterEndpoint is null, cluster disabled");
-            config.setClusterEndpoint("");
+            pluginConfig.setClusterEndpoint("");
         }
 //        int limit = NumberUtils.toInt(properties.getProperty("cluster.limit"), 1);
         ValidateUtils.notNull(brokerContext.Options().getNodeId(), "broker.nodeId is null");
         BrokerNodeDO nodeDO = brokerNodeMapper.selectById(brokerContext.Options().getNodeId());
-        String yamlConfig = brokerContext.parseConfig("$", JSONObject.class).toString();
         if (nodeDO == null) {
             nodeDO = new BrokerNodeDO();
             nodeDO.setNodeId(brokerContext.Options().getNodeId());
-            nodeDO.setNodeType(config.getNodeType());
+            nodeDO.setNodeType(pluginConfig.getNodeType());
 
-            setNodeDO(nodeDO, config, yamlConfig);
+            setNodeDO(nodeDO, pluginConfig);
 
             brokerNodeMapper.insert(nodeDO);
         } else {
-            ValidateUtils.isTrue(StringUtils.equals(nodeDO.getNodeType(), config.getNodeType()), "nodeType is different from before.");
+            ValidateUtils.isTrue(StringUtils.equals(nodeDO.getNodeType(), pluginConfig.getNodeType()), "nodeType is different from before.");
             if (StringUtils.equals(nodeDO.getStatus(), BrokerStatueEnum.RUNNING.getCode())) {
                 LOGGER.warn("This node did not exit normally previously.");
             }
 
-            setNodeDO(nodeDO, config, yamlConfig);
+            setNodeDO(nodeDO, pluginConfig);
 
             brokerNodeMapper.update(nodeDO);
         }
@@ -131,13 +127,12 @@ public class ClusterFeature {
         }, 5, TimeUnit.SECONDS);
     }
 
-    private void setNodeDO(BrokerNodeDO nodeDO, Config config, String yamlConfig) {
+    private void setNodeDO(BrokerNodeDO nodeDO, PluginConfig config) {
         nodeDO.setCoreNodeId(config.getCoreNodeId());
         nodeDO.setClusterEndpoint(config.getClusterEndpoint());
         nodeDO.setIpAddress(brokerContext.Options().getHost());
         nodeDO.setStatus(BrokerStatueEnum.RUNNING.getCode());
         nodeDO.setPort(brokerContext.Options().getPort());
-        nodeDO.setConfig(yamlConfig);
         nodeDO.setStartTime(new Date());
         if (StringUtils.isBlank(nodeDO.getClusterEndpoint())) {
             nodeDO.setStatus(BrokerStatueEnum.UNHEALTHY.getCode());
@@ -400,5 +395,9 @@ public class ClusterFeature {
 
     public void setBrokerContext(BrokerContext brokerContext) {
         this.brokerContext = brokerContext;
+    }
+
+    public void setPluginConfig(PluginConfig pluginConfig) {
+        this.pluginConfig = pluginConfig;
     }
 }

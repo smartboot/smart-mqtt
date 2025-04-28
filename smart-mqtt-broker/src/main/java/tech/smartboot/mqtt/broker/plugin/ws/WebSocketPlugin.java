@@ -10,7 +10,6 @@
 
 package tech.smartboot.mqtt.broker.plugin.ws;
 
-import com.alibaba.fastjson2.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tech.smartboot.feat.Feat;
@@ -43,12 +42,6 @@ public class WebSocketPlugin extends Plugin {
 
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
-        Config config = brokerContext.parseConfig("$.broker.ws", Config.class);
-        if (config == null) {
-            LOGGER.error("mqtt over websocket is disable.");
-            return;
-        }
-        LOGGER.debug("websocket config:{}", JSONObject.toJSONString(config));
         MqttProtocol protocol = new MqttProtocol(brokerContext.Options().getMaxPacketSize());
         httpBootstrap = Feat.httpServer(serverOptions -> serverOptions.debug(true).bannerEnabled(false).readBufferSize(1024 * 1024)).httpHandler(new HttpHandler() {
             @Override
@@ -89,7 +82,7 @@ public class WebSocketPlugin extends Plugin {
                 });
             }
         });
-        httpBootstrap.listen(config.getPort());
+        httpBootstrap.listen(brokerContext.Options().getWsPort());
     }
 
     @Override

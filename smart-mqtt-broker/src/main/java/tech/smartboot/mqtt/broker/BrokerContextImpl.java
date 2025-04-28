@@ -11,8 +11,6 @@
 package tech.smartboot.mqtt.broker;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.alibaba.fastjson2.JSONPath;
-import com.alibaba.fastjson2.JSONReader;
 import org.apache.commons.lang.StringUtils;
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
@@ -146,7 +144,7 @@ public class BrokerContextImpl implements BrokerContext {
     /**
      * Broker配置选项，包含服务器端口、最大连接数等配置参数。
      */
-    private Options options;
+    private Options options = new Options();
 
     /**
      * 主题发布树，用于高效地管理和匹配消息发布。
@@ -252,12 +250,8 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private final MqttBrokerMessageProcessor processor = new MqttBrokerMessageProcessor(this);
 
-    /**
-     * Broker配置文件的JSON内容。
-     */
-    private String configJson;
 
-    private PluginRegistryImpl pluginRegistry = new PluginRegistryImpl(this);
+    private final PluginRegistryImpl pluginRegistry = new PluginRegistryImpl(this);
     /**
      * MQTT消息处理器映射表。
      * <p>
@@ -340,8 +334,6 @@ public class BrokerContextImpl implements BrokerContext {
         }
 
         eventBus.publish(EventType.BROKER_STARTED, this);
-        //释放内存
-        configJson = null;
         System.out.println(Options.BANNER + "\r\n ::smart-mqtt broker" + "::\t(" + Options.VERSION + ")");
         System.out.println("Gitee: https://gitee.com/smartboot/smart-mqtt");
         System.out.println("Github: https://github.com/smartboot/smart-mqtt");
@@ -528,10 +520,6 @@ public class BrokerContextImpl implements BrokerContext {
     private void updateBrokerConfigure() throws IOException {
         //加载自定义配置文件
         loadYamlConfig();
-        options = parseConfig("$.broker", Options.class);
-        if (options == null) {
-            options = new Options();
-        }
         MqttUtil.updateConfig(options, "broker");
         options.setChannelGroup(new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
             int i;
@@ -647,18 +635,6 @@ public class BrokerContextImpl implements BrokerContext {
         return providers;
     }
 
-    @Override
-    public <T> T parseConfig(String path, Class<T> clazz) {
-        JSONPath jsonPath = JSONPath.of(path);
-        JSONReader parser = JSONReader.of(configJson);
-        Object result = jsonPath.extract(parser);
-        if (result instanceof JSONObject) {
-            return ((JSONObject) result).to(clazz);
-        } else {
-            return null;
-        }
-    }
-
     public BrokerTopicRegistry getPublishTopicTree() {
         return topicRegistry;
     }
@@ -681,12 +657,11 @@ public class BrokerContextImpl implements BrokerContext {
         }
         if (inputStream == null) {
             LOGGER.warn("smart-mqtt.yaml not found.");
-            configJson = "{}";
             return;
         }
         Yaml yaml = new Yaml();
         Object object = yaml.load(inputStream);
-        configJson = JSONObject.toJSONString(object);
+        options = JSONObject.from(object).to(Options.class);
         if (inputStream != null) {
             inputStream.close();
         }

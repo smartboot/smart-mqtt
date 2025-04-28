@@ -96,6 +96,8 @@ public class Options extends ToString {
      */
     private int port = 1883;
 
+    private int wsPort = 1884;
+
     /**
      * 网络IO缓冲区大小（字节）。
      * <p>
@@ -428,6 +430,14 @@ public class Options extends ToString {
 
     public void setLowMemory(boolean lowMemory) {
         this.lowMemory = lowMemory;
+    }
+
+    public int getWsPort() {
+        return wsPort;
+    }
+
+    public void setWsPort(int wsPort) {
+        this.wsPort = wsPort;
     }
 
     @Override

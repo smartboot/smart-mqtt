@@ -53,7 +53,7 @@ public class EnterprisePlugin extends Plugin {
 
 
         brokerContext.Options().addPlugin(new MonitorPlugin<>(60));
-        features.add(new DatabasePlugin(brokerContext));
+        features.add(new DatabasePlugin(brokerContext, config));
         // openAPI增强
         features.add(new OpenApiFeature(brokerContext, storage(), config));
 

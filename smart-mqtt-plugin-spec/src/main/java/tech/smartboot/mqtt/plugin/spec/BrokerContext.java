@@ -55,11 +55,6 @@ public interface BrokerContext {
 
     Providers getProviders();
 
-    /**
-     * 解析配置文件
-     */
-    <T> T parseConfig(String path, Class<T> clazz);
-
     Map<Class<? extends MqttMessage>, MqttProcessor<?, ?, ?>> getMessageProcessors();
 
     PluginRegistry pluginRegistry();
