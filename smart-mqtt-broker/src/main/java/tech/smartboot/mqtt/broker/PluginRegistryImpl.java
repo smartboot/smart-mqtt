@@ -120,8 +120,8 @@ class PluginRegistryImpl implements PluginRegistry {
                 }
                 LOGGER.info("registryPlugin load plugin:{}", pluginContainer.pluginName());
                 // 插件目录下可能存在无效的插件
-                pluginContainer.install(brokerContext);
                 plugins.put(pluginContainer.id(), new PluginUnit(pluginContainer, file));
+                pluginContainer.install(brokerContext);
                 LOGGER.info("registryPlugin start plugin:{}, version:{}", pluginContainer.pluginName(), pluginContainer.getVersion());
             } catch (ClassNotFoundException e) {
                 LOGGER.error("registryPlugin install error:{}, check ", e.getMessage());

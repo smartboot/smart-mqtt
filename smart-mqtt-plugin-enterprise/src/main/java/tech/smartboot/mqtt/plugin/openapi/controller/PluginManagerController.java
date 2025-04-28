@@ -180,12 +180,10 @@ public class PluginManagerController {
             JSONObject jsonObject = JSONObject.parseObject(resp.body()).getJSONObject("data");
             List<PluginItem> result = jsonObject.getList("plugins", PluginItem.class);
             result.forEach(pluginItem -> {
-                pluginItem.setStatus("uninstalled");
-                if (localPlugins.containsKey(pluginItem.getId())) {
-                    pluginItem.setStatus("disabled");
-                }
-                if (brokerContext.pluginRegistry().containsPlugin(pluginItem.getId())) {
-                    pluginItem.setStatus("enabled");
+                pluginItem.setStatus(PluginStatusEnum.UNINSTALLED.getCode());
+                List<Plugin> plugins = localPlugins.get(pluginItem.getId());
+                if (CollectionUtils.isNotEmpty(plugins)) {
+                    setPluginStatus(plugins.get(0), pluginItem);
                 }
             });
             asyncResponse.complete(RestResult.ok(result));
@@ -208,25 +206,29 @@ public class PluginManagerController {
             item.setName(plugin.pluginName());
             item.setAuthor(plugin.getVendor());
             item.setDescription(plugin.getDescription());
-            Plugin enabledPlugins = brokerContext.pluginRegistry().getPlugin(plugin.id());
-            if (enabledPlugins != null) {
-                item.setVersion(enabledPlugins.getVersion());
-                if (enabledPlugins.isInstalled()) {
-                    item.setStatus(PluginStatusEnum.ENABLED.getCode());
-                } else if (enabledPlugins.getThrowable() != null) {
-                    item.setStatus(PluginStatusEnum.ERROR.getCode());
-                    item.setMessage(enabledPlugins.getThrowable().toString());
-                } else {
-                    item.setStatus(PluginStatusEnum.ERROR.getCode());
-                    item.setMessage(PluginStatusEnum.ERROR.getDesc());
-                }
-            } else {
-                item.setVersion(plugin.getVersion());
-                item.setStatus(PluginStatusEnum.DISABLED.getCode());
-            }
+            setPluginStatus(plugin, item);
             pluginItems.add(item);
         });
         return RestResult.ok(pluginItems);
+    }
+
+    private void setPluginStatus(Plugin plugin, PluginItem item) {
+        Plugin enabledPlugins = brokerContext.pluginRegistry().getPlugin(plugin.id());
+        if (enabledPlugins != null) {
+            item.setVersion(enabledPlugins.getVersion());
+            if (enabledPlugins.isInstalled()) {
+                item.setStatus(PluginStatusEnum.ENABLED.getCode());
+            } else if (enabledPlugins.getThrowable() != null) {
+                item.setStatus(PluginStatusEnum.ERROR.getCode());
+                item.setMessage(enabledPlugins.getThrowable().toString());
+            } else {
+                item.setStatus(PluginStatusEnum.ERROR.getCode());
+                item.setMessage(PluginStatusEnum.ERROR.getDesc());
+            }
+        } else {
+            item.setVersion(plugin.getVersion());
+            item.setStatus(PluginStatusEnum.DISABLED.getCode());
+        }
     }
 
 
