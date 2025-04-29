@@ -10,8 +10,10 @@
 
 package tech.smartboot.mqtt.plugin.spec;
 
+import com.alibaba.fastjson2.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -143,10 +145,15 @@ public abstract class Plugin {
         return hashCode > 0 ? hashCode : -hashCode;
     }
 
+    public <T> T loadPluginConfig(Class<T> clazz) {
+        Yaml yaml = new Yaml();
+        return JSONObject.from(yaml.load(config())).to(clazz);
+    }
+
     /**
      * 获取插件配置内容,plugin.yaml
      */
-    public String config() {
+    private String config() {
         File file = new File(storage(), "plugin.yaml");
         if (!file.exists()) {
             return null;

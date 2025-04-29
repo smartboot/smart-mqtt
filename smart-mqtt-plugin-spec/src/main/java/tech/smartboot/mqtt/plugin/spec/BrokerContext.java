@@ -11,12 +11,9 @@
 package tech.smartboot.mqtt.plugin.spec;
 
 import org.smartboot.socket.timer.Timer;
-import tech.smartboot.mqtt.common.message.MqttMessage;
 import tech.smartboot.mqtt.plugin.spec.bus.EventBus;
 import tech.smartboot.mqtt.plugin.spec.bus.MessageBus;
 import tech.smartboot.mqtt.plugin.spec.provider.Providers;
-
-import java.util.Map;
 
 /**
  * @author 三刀
@@ -54,8 +51,6 @@ public interface BrokerContext {
     Timer getTimer();
 
     Providers getProviders();
-
-    Map<Class<? extends MqttMessage>, MqttProcessor<?, ?, ?>> getMessageProcessors();
 
     PluginRegistry pluginRegistry();
 }

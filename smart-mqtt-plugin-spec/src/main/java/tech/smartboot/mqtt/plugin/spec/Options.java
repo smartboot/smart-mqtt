@@ -11,6 +11,7 @@
 package tech.smartboot.mqtt.plugin.spec;
 
 import org.smartboot.socket.extension.plugins.Plugin;
+import tech.smartboot.mqtt.common.MqttMessageProcessor;
 import tech.smartboot.mqtt.common.ToString;
 import tech.smartboot.mqtt.common.message.MqttMessage;
 
@@ -95,8 +96,6 @@ public class Options extends ToString {
      * 建议在生产环境中使用8883端口并启用SSL/TLS加密。
      */
     private int port = 1883;
-
-    private int wsPort = 1884;
 
     /**
      * 网络IO缓冲区大小（字节）。
@@ -309,6 +308,8 @@ public class Options extends ToString {
      */
     private boolean lowMemory = false;
 
+    private MqttMessageProcessor processor;
+
     public int getPort() {
         return port;
     }
@@ -432,14 +433,6 @@ public class Options extends ToString {
         this.lowMemory = lowMemory;
     }
 
-    public int getWsPort() {
-        return wsPort;
-    }
-
-    public void setWsPort(int wsPort) {
-        this.wsPort = wsPort;
-    }
-
     @Override
     public String toString() {
         return "BrokerConfigure{" +
@@ -452,6 +445,13 @@ public class Options extends ToString {
                 '}';
     }
 
+    public MqttMessageProcessor getProcessor() {
+        return processor;
+    }
+
+    public void setProcessor(MqttMessageProcessor processor) {
+        this.processor = processor;
+    }
 
     public interface SystemProperty {
         /**

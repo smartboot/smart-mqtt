@@ -12,24 +12,16 @@ package tech.smartboot.mqtt.broker;
 
 import com.alibaba.fastjson2.JSONObject;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.timer.Timer;
 import org.smartboot.socket.transport.AioQuickServer;
 import org.yaml.snakeyaml.Yaml;
-import tech.smartboot.feat.core.common.logging.Logger;
-import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.broker.bus.event.KeepAliveMonitorSubscriber;
 import tech.smartboot.mqtt.broker.bus.message.RetainPersistenceConsumer;
-import tech.smartboot.mqtt.broker.processor.ConnectProcessor;
-import tech.smartboot.mqtt.broker.processor.DisConnectProcessor;
-import tech.smartboot.mqtt.broker.processor.MqttAckProcessor;
-import tech.smartboot.mqtt.broker.processor.PingReqProcessor;
-import tech.smartboot.mqtt.broker.processor.PubRelProcessor;
-import tech.smartboot.mqtt.broker.processor.PublishProcessor;
-import tech.smartboot.mqtt.broker.processor.SubscribeProcessor;
-import tech.smartboot.mqtt.broker.processor.UnSubscribeProcessor;
 import tech.smartboot.mqtt.broker.provider.impl.session.MemorySessionStateProvider;
 import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import tech.smartboot.mqtt.broker.topic.BrokerTopicRegistry;
@@ -40,25 +32,13 @@ import tech.smartboot.mqtt.common.InflightQueue;
 import tech.smartboot.mqtt.common.MqttProtocol;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
 import tech.smartboot.mqtt.common.enums.MqttVersion;
-import tech.smartboot.mqtt.common.message.MqttConnectMessage;
-import tech.smartboot.mqtt.common.message.MqttDisconnectMessage;
-import tech.smartboot.mqtt.common.message.MqttMessage;
 import tech.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
-import tech.smartboot.mqtt.common.message.MqttPingReqMessage;
-import tech.smartboot.mqtt.common.message.MqttPubAckMessage;
-import tech.smartboot.mqtt.common.message.MqttPubCompMessage;
-import tech.smartboot.mqtt.common.message.MqttPubRecMessage;
-import tech.smartboot.mqtt.common.message.MqttPubRelMessage;
-import tech.smartboot.mqtt.common.message.MqttPublishMessage;
-import tech.smartboot.mqtt.common.message.MqttSubscribeMessage;
-import tech.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import tech.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import tech.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import tech.smartboot.mqtt.common.util.MqttUtil;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Message;
-import tech.smartboot.mqtt.plugin.spec.MqttProcessor;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
@@ -72,11 +52,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -252,36 +229,9 @@ public class BrokerContextImpl implements BrokerContext {
 
 
     private final PluginRegistryImpl pluginRegistry = new PluginRegistryImpl(this);
-    /**
-     * MQTT消息处理器映射表。
-     * <p>
-     * Key为MQTT消息类型，Value为对应的消息处理器。
-     * 支持所有MQTT协议定义的消息类型，包括：
-     * <ul>
-     *   <li>连接消息（CONNECT）</li>
-     *   <li>发布消息（PUBLISH）</li>
-     *   <li>订阅消息（SUBSCRIBE）</li>
-     *   <li>确认消息（PUBACK等）</li>
-     * </ul>
-     * </p>
-     */
-    private final Map<Class<? extends MqttMessage>, MqttProcessor<?, ?, ?>> processors;
+
     private final BufferPagePool bufferPagePool = new BufferPagePool(1, true);
 
-    {
-        Map<Class<? extends MqttMessage>, MqttProcessor<?, ?, ?>> mqttProcessors = new HashMap<>();
-        mqttProcessors.put(MqttPingReqMessage.class, new PingReqProcessor());
-        mqttProcessors.put(MqttConnectMessage.class, new ConnectProcessor());
-        mqttProcessors.put(MqttPublishMessage.class, new PublishProcessor());
-        mqttProcessors.put(MqttSubscribeMessage.class, new SubscribeProcessor());
-        mqttProcessors.put(MqttUnsubscribeMessage.class, new UnSubscribeProcessor());
-        mqttProcessors.put(MqttPubAckMessage.class, new MqttAckProcessor<>());
-        mqttProcessors.put(MqttPubRelMessage.class, new PubRelProcessor());
-        mqttProcessors.put(MqttPubRecMessage.class, new MqttAckProcessor<>());
-        mqttProcessors.put(MqttPubCompMessage.class, new MqttAckProcessor<>());
-        mqttProcessors.put(MqttDisconnectMessage.class, new DisConnectProcessor());
-        processors = Collections.unmodifiableMap(mqttProcessors);
-    }
 
     /**
      * 初始化MQTT Broker，完成所有必要的启动步骤。
@@ -529,6 +479,7 @@ public class BrokerContextImpl implements BrokerContext {
                 return new Thread(r, "smart-mqtt-broker-" + (++i));
             }
         }));
+        options.setProcessor(processor);
         eventBus.publish(EventType.BROKER_CONFIGURE_LOADED, options);
 //        System.out.println("brokerConfigure: " + brokerConfigure);
     }
@@ -665,12 +616,6 @@ public class BrokerContextImpl implements BrokerContext {
         if (inputStream != null) {
             inputStream.close();
         }
-    }
-
-
-    @Override
-    public Map<Class<? extends MqttMessage>, MqttProcessor<?, ?, ?>> getMessageProcessors() {
-        return processors;
     }
 
     @Override
