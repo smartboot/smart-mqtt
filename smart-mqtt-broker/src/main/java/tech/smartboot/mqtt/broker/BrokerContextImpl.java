@@ -22,7 +22,6 @@ import org.smartboot.socket.transport.AioQuickServer;
 import org.yaml.snakeyaml.Yaml;
 import tech.smartboot.mqtt.broker.bus.event.KeepAliveMonitorSubscriber;
 import tech.smartboot.mqtt.broker.bus.message.RetainPersistenceConsumer;
-import tech.smartboot.mqtt.broker.provider.impl.session.MemorySessionStateProvider;
 import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import tech.smartboot.mqtt.broker.topic.BrokerTopicRegistry;
 import tech.smartboot.mqtt.broker.topic.TopicSubscriptionRegistry;
@@ -257,7 +256,6 @@ public class BrokerContextImpl implements BrokerContext {
      * @throws Throwable 如果初始化过程中发生任何错误
      */
     public void init() throws Throwable {
-        providers.setSessionStateProvider(new MemorySessionStateProvider());
         updateBrokerConfigure();
 
         subscribeEventBus();
