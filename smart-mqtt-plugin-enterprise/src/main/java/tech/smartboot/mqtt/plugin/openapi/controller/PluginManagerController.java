@@ -110,7 +110,9 @@ public class PluginManagerController {
                 Files.delete(jarPath);
             } else {
                 Plugin p = plugins.get(0);
-                localPlugins.computeIfAbsent(p.id(), k -> new ArrayList<>()).add(p);
+                List<Plugin> list = localPlugins.computeIfAbsent(p.id(), k -> new ArrayList<>());
+                list.removeIf(plugin -> plugin.getVersion().equals(p.getVersion()));
+                list.add(p);
             }
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
@@ -204,8 +206,8 @@ public class PluginManagerController {
             PluginItem item = new PluginItem();
             item.setId(plugin.id());
             item.setName(plugin.pluginName());
-            item.setAuthor(plugin.getVendor());
             item.setDescription(plugin.getDescription());
+            item.setVendor(plugin.getVendor());
             setPluginStatus(plugin, item);
             pluginItems.add(item);
         });
@@ -285,13 +287,13 @@ public class PluginManagerController {
                                     e.printStackTrace();
                                 }
                                 try {
-                                    RestResult<String> result = installPlugin(file);
+                                    RestResult<Void> result = installPlugin(file);
                                     if (result.isSuccess()) {
                                         sseEmitter.sendAsJson(RestResult.ok(100));
                                     } else {
                                         sseEmitter.sendAsJson(result);
                                     }
-                                } catch (Exception e) {
+                                } catch (Throwable e) {
                                     sseEmitter.sendAsJson(RestResult.fail("安装插件失败：" + e.getMessage()));
                                 }
                             }
@@ -361,7 +363,7 @@ public class PluginManagerController {
     }
 
     @RequestMapping("/upload")
-    public RestResult<String> upload(HttpRequest request) throws IOException, ClassNotFoundException {
+    public RestResult<Void> upload(HttpRequest request) throws Throwable {
         Part part = request.getPart("plugin");
         if (part == null) {
             return RestResult.fail("plugin is null");
@@ -387,7 +389,7 @@ public class PluginManagerController {
         }
     }
 
-    private RestResult<String> installPlugin(File tempFile) {
+    private RestResult<Void> installPlugin(File tempFile) throws Throwable {
         URL url = null;
         try {
             url = tempFile.toURI().toURL();
@@ -414,10 +416,7 @@ public class PluginManagerController {
         if (!localRepositoryDir.exists()) {
             localRepositoryDir.mkdirs();
         }
-        File localRepository = new File(localRepositoryDir, "/plugin.jar");
-        if (localRepository.isFile()) {
-            return RestResult.fail("本地仓库已存在");
-        }
+        File localRepository = new File(localRepositoryDir, "plugin.jar");
         try {
             Files.copy(tempFile.toPath(), localRepository.toPath(), StandardCopyOption.REPLACE_EXISTING);
             loadPlugin(localRepository.toPath());
@@ -425,20 +424,14 @@ public class PluginManagerController {
             logger.error("插件存储本地仓库失败", e);
             return RestResult.fail("插件存储本地仓库失败");
         }
+        //当前插件正在使用中，自动启用
+        if (brokerContext.pluginRegistry().getPlugin(plugin.id()) != null) {
+            disable(plugin.id());
+            return enable(plugin.id());
+        } else {
+            return RestResult.ok(null);
+        }
 
-        //启动插件
-        File destFile = new File(storage.getParentFile().getParentFile(), plugin.id() + ".jar");
-        if (destFile.exists()) {
-            return RestResult.fail("插件已存在");
-        }
-        try {
-            Files.copy(tempFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            brokerContext.pluginRegistry().startPlugin(plugin.id());
-        } catch (Throwable e) {
-            logger.error("安装失败", e);
-            return RestResult.fail("插件安装失败");
-        }
-        return RestResult.ok("插件安装成功");
     }
 
     public void setStorage(File storage) {

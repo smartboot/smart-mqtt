@@ -19,8 +19,9 @@ public class PluginTO {
     private String name;
     private String version;
     private String description;
-    private String author;
+    private String vendor;
     private String url;
+    private long size;
 
     public int getId() {
         return id;
@@ -54,12 +55,20 @@ public class PluginTO {
         this.description = description;
     }
 
-    public String getAuthor() {
-        return author;
+    public String getVendor() {
+        return vendor;
     }
 
-    public void setAuthor(String author) {
-        this.author = author;
+    public void setVendor(String vendor) {
+        this.vendor = vendor;
+    }
+
+    public long getSize() {
+        return size;
+    }
+
+    public void setSize(long size) {
+        this.size = size;
     }
 
     public String getUrl() {

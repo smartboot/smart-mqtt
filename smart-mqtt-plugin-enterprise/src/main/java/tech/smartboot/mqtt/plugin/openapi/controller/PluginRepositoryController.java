@@ -75,9 +75,10 @@ public class PluginRepositoryController {
                     if (plugin.getClass().getClassLoader() == classLoader) {
                         item.setId(plugin.id());
                         item.setName(plugin.pluginName());
-                        item.setAuthor(plugin.getVendor());
+                        item.setVendor(plugin.getVendor());
                         item.setVersion(plugin.getVersion());
                         item.setDescription(plugin.getDescription());
+                        item.setSize(pluginFile.length());
                         item.setUrl("/repository/" + pluginDir.getName() + "/" + version.getName() + "/download");
                         break;
                     }
