@@ -90,5 +90,5 @@ jobs:
           context: smart-mqtt-enterprise
           push: true
           no-cache: true
-          tags: smartboot/smart-mqtt:latest,smartboot/smart-mqtt:${{ github.ref_name }}
+          tags: smartboot/smart-mqtt:latest,smartboot/smart-mqtt:${{ github.ref_name }},smartboot/smart-mqtt:1.1.0
           platforms: linux/amd64,linux/arm64
