@@ -16,7 +16,7 @@
     <parent>
         <groupId>tech.smartboot.mqtt</groupId>
         <artifactId>smart-mqtt</artifactId>
-        <version>1.0.0</version>
+        <version>1.1.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
