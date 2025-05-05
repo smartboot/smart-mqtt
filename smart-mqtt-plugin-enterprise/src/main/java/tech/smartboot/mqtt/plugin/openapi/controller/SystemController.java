@@ -19,12 +19,15 @@ import org.slf4j.LoggerFactory;
 import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.InterceptorMapping;
 import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
-import tech.smartboot.feat.core.common.Cookie;
+import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.Session;
+import tech.smartboot.feat.router.Interceptor;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.convert.UserConvert;
 import tech.smartboot.mqtt.plugin.dao.mapper.SystemConfigMapper;
@@ -45,7 +48,7 @@ import java.util.concurrent.TimeUnit;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 5/1/23
  */
-@Controller(async = true)
+@Controller
 public class SystemController {
     private static final Logger LOGGER = LoggerFactory.getLogger(SystemController.class);
 
@@ -79,29 +82,34 @@ public class SystemController {
 //        response.setHeader("Access-Control-Allow-Origin", "*");
 //        response.setHeader("Access-Control-Allow-Headers", "*");
 //    }
-//
-//    @Interceptor(patterns = {OpenApi.BASE_API + "/**"}, exclude = {OpenApi.USER_LOGIN, "/api/acl/test/**"})
-//    public RestResult<Void> sessionCheck(HttpRequest request, HttpResponse response) {
-//        for (Cookie cookie : request.getCookies()) {
-//            if ("sessionId".equals(cookie.getName())) {
-//                return null;
-//            }
-//        }
-//        response.setHttpStatus(HttpStatus.UNAUTHORIZED);
-//        return RestResult.fail("noLogin");
-//    }
+
+    @InterceptorMapping(OpenApi.BASE_API + "/*")
+    public Interceptor sessionCheck() {
+        return (context, completableFuture, chain) -> {
+            String uri = context.Request.getRequestURI();
+            if (StringUtils.equals(uri, OpenApi.USER_LOGIN)) {
+                chain.proceed(context, completableFuture);
+                return;
+            }
+            Session session = context.session();
+            if (session.get("username") == null) {
+                context.Response.setHttpStatus(HttpStatus.UNAUTHORIZED);
+                completableFuture.complete(null);
+            } else {
+                chain.proceed(context, completableFuture);
+            }
+        };
+    }
 
     @RequestMapping(OpenApi.BASE_API + "/user/login")
-    public RestResult<UserTO> login(@Param("username") String username, @Param("password") String password, HttpResponse response) {
+    public RestResult<UserTO> login(@Param("username") String username, @Param("password") String password, Session session, HttpResponse response) {
         UserDO userDO = userMapper.getUser(username, SecureUtil.shaEncrypt(password));
         if (userDO == null) {
             return RestResult.fail("无效账户名或密码");
         }
         UserTO userTO = new UserTO();
         userTO.setUsername(username);
-        Cookie cookie = new Cookie("sessionId", username);
-        cookie.setPath(OpenApi.BASE_API);
-        response.addCookie(cookie);
+        session.put("username", username);
         return RestResult.ok(userTO);
     }
 

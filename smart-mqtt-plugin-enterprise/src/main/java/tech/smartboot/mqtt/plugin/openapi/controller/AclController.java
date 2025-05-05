@@ -32,7 +32,7 @@ import tech.smartboot.mqtt.plugin.utils.SecureUtil;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 5/1/23
  */
-@Controller(async = true)
+@Controller
 public class AclController {
     private static final Logger LOGGER = LoggerFactory.getLogger(AclController.class);
 

@@ -19,7 +19,7 @@ import tech.smartboot.mqtt.plugin.spec.BrokerContext;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/2/2
  */
-@Controller(async = true)
+@Controller
 public class DashBoardController {
 
     @Autowired

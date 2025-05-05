@@ -73,7 +73,7 @@ import java.util.stream.Collectors;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/2/21
  */
-@Controller(async = true)
+@Controller
 public class MetricController {
     private static final Logger LOGGER = LoggerFactory.getLogger(MetricController.class);
     @Autowired

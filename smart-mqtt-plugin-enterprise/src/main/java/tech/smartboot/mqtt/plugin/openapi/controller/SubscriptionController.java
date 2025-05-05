@@ -48,7 +48,7 @@ import java.util.function.Consumer;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/1/23
  */
-@Controller(async = true)
+@Controller
 public class SubscriptionController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SubscriptionController.class);

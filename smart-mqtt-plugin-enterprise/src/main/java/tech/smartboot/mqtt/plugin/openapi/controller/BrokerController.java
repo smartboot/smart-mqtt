@@ -27,7 +27,7 @@ import java.util.List;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 4/7/23
  */
-@Controller(async = true)
+@Controller
 public class BrokerController {
 
     @Autowired

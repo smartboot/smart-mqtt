@@ -37,7 +37,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-@Controller(async = true)
+@Controller
 public class BridgeController {
     private static final Logger LOGGER = LoggerFactory.getLogger(BridgeController.class);
 

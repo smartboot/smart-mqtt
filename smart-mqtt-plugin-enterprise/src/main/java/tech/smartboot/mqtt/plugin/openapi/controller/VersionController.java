@@ -28,7 +28,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-@Controller(async = true)
+@Controller
 public class VersionController {
     private static final Logger LOGGER = LoggerFactory.getLogger(VersionController.class);
     private VersionTO version;

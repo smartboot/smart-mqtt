@@ -64,7 +64,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author 三刀
  * @version v1.0 4/21/25
  */
-@Controller(async = true, value = OpenApi.BASE_API + "/plugin")
+@Controller(value = OpenApi.BASE_API + "/plugin")
 public class PluginManagerController {
     private static final Logger logger = LoggerFactory.getLogger(PluginManagerController.class);
     @Autowired

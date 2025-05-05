@@ -40,7 +40,7 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.Properties;
 
-@Controller(async = true)
+@Controller
 public class LicenseController {
     private static final Logger LOGGER = LoggerFactory.getLogger(LicenseController.class);
 
