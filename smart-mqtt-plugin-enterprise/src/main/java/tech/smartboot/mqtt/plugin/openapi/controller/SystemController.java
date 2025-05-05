@@ -93,6 +93,7 @@ public class SystemController {
             }
             Session session = context.session();
             if (session.get("username") == null) {
+                session.invalidate();
                 context.Response.setHttpStatus(HttpStatus.UNAUTHORIZED);
                 completableFuture.complete(null);
             } else {
