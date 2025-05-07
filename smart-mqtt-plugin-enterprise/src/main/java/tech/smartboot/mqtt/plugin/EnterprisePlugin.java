@@ -51,7 +51,7 @@ public class EnterprisePlugin extends Plugin {
 
         PluginConfig config = loadPluginConfig(PluginConfig.class);
 
-        SqlSessionFactory sessionFactory = MybatisSessionFactory.sessionFactory(config);
+        SqlSessionFactory sessionFactory = MybatisSessionFactory.sessionFactory(storage(),config);
         brokerContext.Options().addPlugin(new MonitorPlugin<>(60));
 
         asynchronousChannelGroup = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {

@@ -17,6 +17,7 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import tech.smartboot.mqtt.plugin.PluginConfig;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -29,11 +30,20 @@ public class MybatisSessionFactory {
     public static final String CONFIG_JDBC_URL = "jdbc.url";
     public static final String CONFIG_JDBC_USERNAME = "jdbc.username";
     public static final String CONFIG_JDBC_PASSWORD = "jdbc.password";
+    private static final String DB_TYPE_H2 = "h2";
+    private static final String DB_TYPE_MYSQL = "mysql";
+    private static final String DB_TYPE_H2_MEM = "h2_mem";
 
-    public static SqlSessionFactory sessionFactory(PluginConfig pluginConfig) throws IOException {
+    public static SqlSessionFactory sessionFactory(File storage, PluginConfig pluginConfig) throws IOException {
         PluginConfig.DataBaseConfig dataBaseConfig = pluginConfig.getDataBase();
         if (dataBaseConfig == null) {
             dataBaseConfig = new PluginConfig.DataBaseConfig();
+        }
+        if (StringUtils.isBlank(dataBaseConfig.getDbType())) {
+            dataBaseConfig.setDbType(DB_TYPE_H2_MEM);
+        }
+        if (DB_TYPE_H2.equals(dataBaseConfig.getDbType())) {
+            dataBaseConfig.setUrl("jdbc:h2:" + new File(storage, "smart-mqtt").getAbsoluteFile() + ";NON_KEYWORDS=value;mode=mysql;");
         }
 
         String resource = "mybatis/mybatis-config.xml";
