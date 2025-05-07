@@ -15,6 +15,7 @@ import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.jdbc.ScriptRunner;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.mqtt.plugin.PluginConfig;
 
 import java.io.File;
@@ -26,6 +27,7 @@ import java.util.Properties;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/1/24
  */
+@Bean
 public class MybatisSessionFactory {
     public static final String CONFIG_JDBC_URL = "jdbc.url";
     public static final String CONFIG_JDBC_USERNAME = "jdbc.username";
@@ -34,7 +36,9 @@ public class MybatisSessionFactory {
     private static final String DB_TYPE_MYSQL = "mysql";
     private static final String DB_TYPE_H2_MEM = "h2_mem";
 
-    public static SqlSessionFactory sessionFactory(File storage, PluginConfig pluginConfig) throws IOException {
+
+    @Bean
+    public SqlSessionFactory sessionFactory(PluginConfig pluginConfig, File storage) throws IOException {
         PluginConfig.DataBaseConfig dataBaseConfig = pluginConfig.getDataBase();
         if (dataBaseConfig == null) {
             dataBaseConfig = new PluginConfig.DataBaseConfig();
@@ -58,4 +62,5 @@ public class MybatisSessionFactory {
         runner.runScript(Resources.getResourceAsReader("mybatis/ddl/schema.sql"));
         return sessionFactory;
     }
+
 }

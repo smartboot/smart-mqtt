@@ -10,7 +10,6 @@
 
 package tech.smartboot.mqtt.plugin;
 
-import org.apache.ibatis.session.SqlSessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
@@ -19,7 +18,6 @@ import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
-import tech.smartboot.mqtt.plugin.dao.MybatisSessionFactory;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.Options;
@@ -51,7 +49,6 @@ public class EnterprisePlugin extends Plugin {
 
         PluginConfig config = loadPluginConfig(PluginConfig.class);
 
-        SqlSessionFactory sessionFactory = MybatisSessionFactory.sessionFactory(storage(),config);
         brokerContext.Options().addPlugin(new MonitorPlugin<>(60));
 
         asynchronousChannelGroup = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
@@ -68,7 +65,6 @@ public class EnterprisePlugin extends Plugin {
                 .addExternalBean("brokerContext", brokerContext)
                 .addExternalBean("pluginConfig", config)
                 .addExternalBean("storage", storage())
-                .addExternalBean("sessionFactory", sessionFactory)
                 .debug(false).bannerEnabled(false).threadNum(4).readBufferSize(1024 * 8).writeBufferSize(8 * 1024).group(asynchronousChannelGroup));
         httpServer.listen(config.getHttpConfig().getHost(), config.getHttpConfig().getPort());
         LOGGER.debug("openapi server start success!");
