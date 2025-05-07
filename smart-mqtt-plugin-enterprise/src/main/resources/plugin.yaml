@@ -2,6 +2,11 @@ enabled: true
 http:
   port: 18083
   host: 0.0.0.0
+database:
+  dbType: h2_mem
+  url: ""
+  username: ""
+  password: ""
 registry: http://82.157.162.230:8083/
 
 nodeType: "core"

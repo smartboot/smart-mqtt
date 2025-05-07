@@ -10,13 +10,16 @@
 
 package tech.smartboot.mqtt.plugin;
 
+import org.apache.ibatis.session.SqlSessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import org.smartboot.socket.extension.plugins.MonitorPlugin;
+import tech.smartboot.feat.cloud.FeatCloud;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
-import tech.smartboot.mqtt.plugin.dao.DatabasePlugin;
-import tech.smartboot.mqtt.plugin.openapi.OpenApiFeature;
+import tech.smartboot.mqtt.plugin.dao.MybatisSessionFactory;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.Options;
@@ -26,8 +29,8 @@ import tech.smartboot.mqtt.plugin.spec.bus.EventBusConsumer;
 import tech.smartboot.mqtt.plugin.spec.bus.EventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.nio.channels.AsynchronousChannelGroup;
+import java.util.concurrent.ThreadFactory;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -36,7 +39,8 @@ import java.util.List;
 public class EnterprisePlugin extends Plugin {
     private static final Logger LOGGER = LoggerFactory.getLogger(EnterprisePlugin.class);
 
-    private final List<Feature> features = new ArrayList<>();
+    private AsynchronousChannelGroup asynchronousChannelGroup;
+    private HttpServer httpServer;
 
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Exception {
@@ -47,18 +51,28 @@ public class EnterprisePlugin extends Plugin {
 
         PluginConfig config = loadPluginConfig(PluginConfig.class);
 
-
+        SqlSessionFactory sessionFactory = MybatisSessionFactory.sessionFactory(config);
         brokerContext.Options().addPlugin(new MonitorPlugin<>(60));
-        features.add(new DatabasePlugin(brokerContext, config));
-        // openAPI增强
-        features.add(new OpenApiFeature(brokerContext, storage(), config));
 
-        for (Feature feature : features) {
-            if (feature.isEnable()) {
-                LOGGER.debug("start feature:[{}]", feature.name());
-                feature.start();
+        asynchronousChannelGroup = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
+            int i;
+
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "openApi-" + (++i));
             }
-        }
+        });
+
+
+        httpServer = FeatCloud.cloudServer(serverOptions -> serverOptions
+                .addExternalBean("brokerContext", brokerContext)
+                .addExternalBean("pluginConfig", config)
+                .addExternalBean("storage", storage())
+                .addExternalBean("sessionFactory", sessionFactory)
+                .debug(false).bannerEnabled(false).threadNum(4).readBufferSize(1024 * 8).writeBufferSize(8 * 1024).group(asynchronousChannelGroup));
+        httpServer.listen(config.getHttpConfig().getHost(), config.getHttpConfig().getPort());
+        LOGGER.debug("openapi server start success!");
+        System.out.println("openapi server start success!");
 
         brokerContext.getEventBus().subscribe(EventType.BROKER_STARTED, new DisposableEventBusSubscriber<BrokerContext>() {
             @Override
@@ -79,7 +93,11 @@ public class EnterprisePlugin extends Plugin {
 
     @Override
     protected void destroyPlugin() {
-        features.forEach(Feature::destroy);
+        if (httpServer != null) {
+            httpServer.shutdown();
+        }
+
+        asynchronousChannelGroup.shutdown();
     }
 
 

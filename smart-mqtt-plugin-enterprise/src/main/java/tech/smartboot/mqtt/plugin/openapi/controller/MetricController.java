@@ -29,8 +29,8 @@ import tech.smartboot.mqtt.common.message.MqttConnAckMessage;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
 import tech.smartboot.mqtt.common.message.MqttMessage;
 import tech.smartboot.mqtt.common.message.MqttPublishMessage;
+import tech.smartboot.mqtt.plugin.PluginConfig;
 import tech.smartboot.mqtt.plugin.convert.NodeConvert;
-import tech.smartboot.mqtt.plugin.dao.MybatisSessionFactory;
 import tech.smartboot.mqtt.plugin.dao.mapper.BrokerNodeMapper;
 import tech.smartboot.mqtt.plugin.dao.mapper.ConnectionMapper;
 import tech.smartboot.mqtt.plugin.dao.mapper.MetricMapper;
@@ -99,9 +99,12 @@ public class MetricController {
     private final Map<MqttMetricEnum, List<MetricDO>> metricMap = new HashMap<>();
     private static final long START_TIME = System.currentTimeMillis();
 
+    @Autowired
+    private PluginConfig pluginConfig;
+
     @PostConstruct
     public void init() {
-        h2 = System.getProperty(MybatisSessionFactory.CONFIG_JDBC_DB_TYPE, "").contains("h2");
+        h2 = pluginConfig.getDataBase().getDbType().contains("h2");
         initMetric(brokerContext);
         recordTypeEnum = RecordTypeEnum.getByCode(systemConfigMapper.getConfig(SystemConfigEnum.METRIC_RECORD.getCode()));
         //周期性重置指标值
@@ -396,5 +399,9 @@ public class MetricController {
 
     public void setSystemConfigMapper(SystemConfigMapper systemConfigMapper) {
         this.systemConfigMapper = systemConfigMapper;
+    }
+
+    public void setPluginConfig(PluginConfig pluginConfig) {
+        this.pluginConfig = pluginConfig;
     }
 }
