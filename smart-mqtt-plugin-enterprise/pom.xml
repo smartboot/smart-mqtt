@@ -41,9 +41,9 @@
             <version>2.7.0</version>
         </dependency>
         <dependency>
-            <groupId>org.smartboot.license</groupId>
+            <groupId>tech.smartboot.license</groupId>
             <artifactId>license-client</artifactId>
-            <version>2.1</version>
+            <version>3.1</version>
         </dependency>
         <dependency>
             <groupId>tech.smartboot.mqtt</groupId>

@@ -13,7 +13,6 @@ package tech.smartboot.mqtt.plugin.acl;
 import com.alibaba.fastjson2.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.license.client.License;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
@@ -22,6 +21,7 @@ import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.license.client.License;
 import tech.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import tech.smartboot.mqtt.plugin.acl.to.AclConfigTO;
 import tech.smartboot.mqtt.plugin.dao.mapper.BrokerNodeMapper;
@@ -77,6 +77,13 @@ public class AclFeature {
                 MqttSession.connFailAck(MqttConnectReturnCode.SERVER_UNAVAILABLE_5, session);
                 return;
             }
+
+            if (!license.getEntity().getLimit().tryAcquire()) {
+                LOGGER.warn("reject connect because of license has been used up.");
+                MqttSession.connFailAck(MqttConnectReturnCode.SERVER_UNAVAILABLE_5, session);
+                return;
+            }
+
             if (aclConfig == null) {
                 LOGGER.warn("there none acl config!");
                 return;
@@ -86,6 +93,11 @@ public class AclFeature {
                 return;
             }
             aclStrategy.acl(session, object.getObject());
+        });
+        brokerContext.getEventBus().subscribe(EventType.DISCONNECT, (eventType, object) -> {
+            if (license != null) {
+                license.getEntity().getLimit().release();
+            }
         });
     }
 

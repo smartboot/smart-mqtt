@@ -13,8 +13,6 @@ package tech.smartboot.mqtt.plugin.openapi.controller;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartboot.license.client.License;
-import org.smartboot.license.client.LicenseEntity;
 import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
@@ -25,6 +23,9 @@ import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.multipart.Part;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.license.client.License;
+import tech.smartboot.license.client.LicenseEntity;
+import tech.smartboot.license.client.Limit;
 import tech.smartboot.mqtt.plugin.dao.mapper.SystemConfigMapper;
 import tech.smartboot.mqtt.plugin.openapi.OpenApi;
 import tech.smartboot.mqtt.plugin.openapi.enums.SystemConfigEnum;
@@ -138,6 +139,14 @@ public class LicenseController {
             response.setHttpStatus(HttpStatus.FORBIDDEN);
             return RestResult.fail("license expire");
         } else {
+            Limit limit = license.getEntity().getLimit();
+            if (limit.limit() == 0) {
+                licenseTO.setLimit("无限制");
+                licenseTO.setAvailable("");
+            } else {
+                licenseTO.setLimit(String.valueOf(limit.limit()));
+                licenseTO.setAvailable(String.valueOf(limit.available()));
+            }
             return RestResult.ok(licenseTO);
         }
     }

@@ -26,6 +26,14 @@ public class LicenseTO {
      * 过期时间
      */
     private long expireTime;
+    /**
+     * 可用额度
+     */
+    private String limit;
+    /**
+     * 剩余额度
+     */
+    private String available;
 
     public String getApplicant() {
         return applicant;
@@ -61,5 +69,21 @@ public class LicenseTO {
 
     public void setSn(String sn) {
         this.sn = sn;
+    }
+
+    public String getLimit() {
+        return limit;
+    }
+
+    public void setLimit(String limit) {
+        this.limit = limit;
+    }
+
+    public String getAvailable() {
+        return available;
+    }
+
+    public void setAvailable(String available) {
+        this.available = available;
     }
 }
