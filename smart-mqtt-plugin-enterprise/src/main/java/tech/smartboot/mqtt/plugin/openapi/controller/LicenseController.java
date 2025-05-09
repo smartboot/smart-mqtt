@@ -141,7 +141,7 @@ public class LicenseController {
 
 
     @RequestMapping(OpenApi.LICENSE_IMPORT)
-    public RestResult<Void> importLicense(HttpRequest request, HttpResponse response) throws IOException {
+    public RestResult<Void> importLicense(HttpRequest request) {
         try {
             for (Part part : request.getParts()) {
                 if (part.getSubmittedFileName() == null) {
