@@ -229,7 +229,7 @@ public class BrokerContextImpl implements BrokerContext {
 
     private final PluginRegistryImpl pluginRegistry = new PluginRegistryImpl(this);
 
-    private final BufferPagePool bufferPagePool = new BufferPagePool(1, true);
+    private BufferPagePool bufferPagePool;
 
 
     /**
@@ -478,6 +478,7 @@ public class BrokerContextImpl implements BrokerContext {
             }
         }));
         options.setProcessor(processor);
+        this.bufferPagePool = new BufferPagePool(Runtime.getRuntime().availableProcessors(), true);
         eventBus.publish(EventType.BROKER_CONFIGURE_LOADED, options);
 //        System.out.println("brokerConfigure: " + brokerConfigure);
     }
