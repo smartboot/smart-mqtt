@@ -95,7 +95,7 @@ public class AclFeature {
             aclStrategy.acl(session, object.getObject());
         });
         brokerContext.getEventBus().subscribe(EventType.DISCONNECT, (eventType, object) -> {
-            if (license != null) {
+            if (license != null && license.getEntity() != null) {
                 license.getEntity().getLimit().release();
             }
         });
