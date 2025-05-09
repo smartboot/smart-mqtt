@@ -16,16 +16,9 @@ import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import org.smartboot.socket.extension.plugins.MonitorPlugin;
 import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.mqtt.common.enums.MqttConnectReturnCode;
-import tech.smartboot.mqtt.common.message.MqttConnectMessage;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
-import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
-import tech.smartboot.mqtt.plugin.spec.bus.DisposableEventBusSubscriber;
-import tech.smartboot.mqtt.plugin.spec.bus.EventBusConsumer;
-import tech.smartboot.mqtt.plugin.spec.bus.EventObject;
-import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 
 import java.nio.channels.AsynchronousChannelGroup;
 import java.util.concurrent.ThreadFactory;
@@ -69,22 +62,6 @@ public class EnterprisePlugin extends Plugin {
         httpServer.listen(config.getHttpConfig().getHost(), config.getHttpConfig().getPort());
         LOGGER.debug("openapi server start success!");
         System.out.println("openapi server start success!");
-
-        brokerContext.getEventBus().subscribe(EventType.BROKER_STARTED, new DisposableEventBusSubscriber<BrokerContext>() {
-            @Override
-            public void consumer(EventType<BrokerContext> eventType, BrokerContext object) {
-                brokerContext.getEventBus().subscribe(EventType.CONNECT, new EventBusConsumer<EventObject<MqttConnectMessage>>() {
-                    @Override
-                    public void consumer(EventType<EventObject<MqttConnectMessage>> eventType, EventObject<MqttConnectMessage> object) {
-                        MqttSession session = object.getSession();
-                        if (!session.isAuthorized() && !session.isDisconnect()) {
-                            LOGGER.warn("NOT_AUTHORIZED ,connection fail");
-                            MqttSession.connFailAck(MqttConnectReturnCode.NOT_AUTHORIZED, session);
-                        }
-                    }
-                });
-            }
-        });
     }
 
     @Override
