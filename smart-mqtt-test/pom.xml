@@ -16,7 +16,7 @@
     <parent>
         <groupId>tech.smartboot.mqtt</groupId>
         <artifactId>smart-mqtt</artifactId>
-        <version>1.1.0</version>
+        <version>1.1.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -26,7 +26,7 @@
         <dependency>
             <groupId>tech.smartboot.mqtt</groupId>
             <artifactId>smart-mqtt-broker</artifactId>
-            <version>1.1.0</version>
+            <version>1.1.1</version>
         </dependency>
         <dependency>
             <groupId>tech.smartboot.mqtt</groupId>

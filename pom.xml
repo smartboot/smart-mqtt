@@ -4,13 +4,13 @@
     <groupId>tech.smartboot.mqtt</groupId>
     <artifactId>smart-mqtt</artifactId>
     <name>smart-mqtt</name>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
     <modelVersion>4.0.0</modelVersion>
     <description>mqtt broker</description>
 
     <properties>
-        <smart.mqtt.version>1.1.0</smart.mqtt.version>
-        <smart-socket.version>1.5.62-SNAPSHOT</smart-socket.version>
+        <smart.mqtt.version>1.1.1</smart.mqtt.version>
+        <smart-socket.version>1.5.62</smart-socket.version>
         <commons.lang.version>2.6</commons.lang.version>
         <junit.version>4.13.2</junit.version>
     </properties>
