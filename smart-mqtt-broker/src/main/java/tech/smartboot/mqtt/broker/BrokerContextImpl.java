@@ -621,6 +621,10 @@ public class BrokerContextImpl implements BrokerContext {
         return pluginRegistry;
     }
 
+    @Override
+    public BufferPagePool bufferPagePool() {
+        return bufferPagePool;
+    }
 
     public void destroy() {
         LOGGER.info("destroy broker...");

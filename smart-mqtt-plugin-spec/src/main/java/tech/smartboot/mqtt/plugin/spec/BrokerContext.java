@@ -10,6 +10,7 @@
 
 package tech.smartboot.mqtt.plugin.spec;
 
+import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.timer.Timer;
 import tech.smartboot.mqtt.plugin.spec.bus.EventBus;
 import tech.smartboot.mqtt.plugin.spec.bus.MessageBus;
@@ -53,4 +54,11 @@ public interface BrokerContext {
     Providers getProviders();
 
     PluginRegistry pluginRegistry();
+
+    /**
+     * 获取缓冲区池
+     *
+     * @return
+     */
+    BufferPagePool bufferPagePool();
 }
