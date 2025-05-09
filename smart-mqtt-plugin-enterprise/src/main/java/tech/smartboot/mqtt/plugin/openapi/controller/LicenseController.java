@@ -13,6 +13,9 @@ package tech.smartboot.mqtt.plugin.openapi.controller;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.socket.StateMachineEnum;
+import org.smartboot.socket.extension.plugins.AbstractPlugin;
+import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
@@ -26,11 +29,15 @@ import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.license.client.License;
 import tech.smartboot.license.client.LicenseEntity;
 import tech.smartboot.license.client.Limit;
+import tech.smartboot.mqtt.common.enums.MqttConnectReturnCode;
+import tech.smartboot.mqtt.common.message.MqttMessage;
 import tech.smartboot.mqtt.plugin.dao.mapper.SystemConfigMapper;
 import tech.smartboot.mqtt.plugin.openapi.OpenApi;
 import tech.smartboot.mqtt.plugin.openapi.enums.SystemConfigEnum;
 import tech.smartboot.mqtt.plugin.openapi.to.LicenseTO;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
+import tech.smartboot.mqtt.plugin.spec.MqttSession;
+import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 import tech.smartboot.mqtt.plugin.utils.Streams;
 
 import java.io.ByteArrayInputStream;
@@ -40,6 +47,7 @@ import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Controller
 public class LicenseController {
@@ -54,6 +62,7 @@ public class LicenseController {
     private License license;
 
     private LicenseTO licenseTO;
+    private final AtomicInteger requestCount = new AtomicInteger(0);
 
     /**
      * 初始化LICENSE实例
@@ -88,6 +97,35 @@ public class LicenseController {
         } catch (Exception e) {
             LOGGER.error("load license exception", e);
         }
+        brokerContext.Options().addPlugin(new AbstractPlugin<MqttMessage>() {
+            @Override
+            public void stateEvent(StateMachineEnum stateMachineEnum, AioSession session, Throwable throwable) {
+                if (stateMachineEnum == StateMachineEnum.NEW_SESSION) {
+                    requestCount.incrementAndGet();
+                } else if (stateMachineEnum == StateMachineEnum.SESSION_CLOSED) {
+                    requestCount.decrementAndGet();
+                }
+            }
+        });
+
+        brokerContext.getEventBus().subscribe(EventType.CONNECT, (eventType, object) -> {
+            MqttSession session = object.getSession();
+            if (session.isDisconnect()) {
+                return;
+            }
+            //License过期，无法建立新链接
+            if (license == null || license.getEntity() == null || license.getEntity().getExpireTime() < System.currentTimeMillis()) {
+                LOGGER.error("reject connect because of license has expired.");
+                MqttSession.connFailAck(MqttConnectReturnCode.QUOTA_EXCEEDED, session);
+                return;
+            }
+
+            int limit = license.getEntity().getLimit().limit();
+            if (limit > 0 && limit < requestCount.get()) {
+                LOGGER.warn("reject connect because of license has been used up.");
+                MqttSession.connFailAck(MqttConnectReturnCode.QUOTA_EXCEEDED, session);
+            }
+        });
     }
 
     private LicenseTO loadLicense(LicenseEntity entity) throws IOException {
@@ -145,7 +183,7 @@ public class LicenseController {
                 licenseTO.setAvailable("");
             } else {
                 licenseTO.setLimit(String.valueOf(limit.limit()));
-                licenseTO.setAvailable(String.valueOf(limit.available()));
+                licenseTO.setAvailable(String.valueOf(limit.limit() - requestCount.get()));
             }
             return RestResult.ok(licenseTO);
         }
