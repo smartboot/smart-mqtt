@@ -199,20 +199,10 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
             return;
         }
         DeliverGroup group = topic.getSubscriberGroup(topicToken);
-        MessageDeliver consumerRecord = group.getSubscriber(this);
-        //共享订阅不会为null
-        if (consumerRecord == null) {
-            Qos0MessageDeliver deliver = newConsumerRecord(topic, topicSubscription, topic.getMessageQueue().getLatestOffset() + 1);
-            mqttContext.getEventBus().publish(EventType.SUBSCRIBE_TOPIC, EventObject.newEventObject(this, deliver));
-            group.addSubscriber(deliver);
-            subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, deliver);
-            return;
-        }
-        //此前的订阅关系
-        TopicToken preToken = consumerRecord.getTopicFilterToken();
-        //此前为统配订阅或者未共享订阅，则更新订阅关系
-        if (topicToken.isShared()) {
-            ValidateUtils.isTrue(preToken.getTopicFilter().equals(topicSubscription.getTopicFilterToken().getTopicFilter()), "invalid subscriber");
+        if (group.isShared()) {
+//            MessageDeliver consumerRecord = group.getSubscriber(this);
+//            TopicToken preToken = consumerRecord.getTopicFilterToken();
+//            ValidateUtils.isTrue(preToken.getTopicFilter().equals(topicSubscription.getTopicFilterToken().getTopicFilter()), "invalid subscriber");
             Qos0MessageDeliver record = new Qos0MessageDeliver(topic, MqttSessionImpl.this, topicSubscription, topic.getMessageQueue().getLatestOffset() + 1) {
                 @Override
                 public void pushToClient() {
@@ -221,20 +211,29 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
             };
             group.addSubscriber(record);
             subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, record);
-        } else if (preToken.isWildcards()) {
-            if (!topicToken.isWildcards() || topicToken.getTopicFilter().length() > preToken.getTopicFilter().length()) {
-                //解除旧的订阅关系
-                AbstractMessageDeliver preRecord = subscribers.get(preToken.getTopicFilter()).getTopicSubscribers().remove(topic);
-                ValidateUtils.isTrue(preRecord == consumerRecord, "invalid consumerRecord");
-                preRecord.disable();
-
-                //绑定新的订阅关系
-                Qos0MessageDeliver record = newConsumerRecord(topic, topicSubscription, preRecord.getNextConsumerOffset());
-                subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, record);
-                mqttContext.getEventBus().publish(EventType.SUBSCRIBE_REFRESH_TOPIC, record);
-            }
+            return;
         }
+        MessageDeliver consumerRecord = group.getSubscriber(this);
+        if (consumerRecord == null) {
+            Qos0MessageDeliver deliver = newConsumerRecord(topic, topicSubscription, topic.getMessageQueue().getLatestOffset() + 1);
+            mqttContext.getEventBus().publish(EventType.SUBSCRIBE_TOPIC, EventObject.newEventObject(this, deliver));
+            group.addSubscriber(deliver);
+            subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, deliver);
+            return;
+        }
+        TopicToken preToken = consumerRecord.getTopicFilterToken();
+        //此前为统配订阅，则更新订阅关系
+        if (preToken.isWildcards() && (!topicToken.isWildcards() || topicToken.getTopicFilter().length() > preToken.getTopicFilter().length())) {
+            //解除旧的订阅关系
+            AbstractMessageDeliver preRecord = subscribers.get(preToken.getTopicFilter()).getTopicSubscribers().remove(topic);
+            ValidateUtils.isTrue(preRecord == consumerRecord, "invalid consumerRecord");
+            preRecord.disable();
 
+            //绑定新的订阅关系
+            Qos0MessageDeliver record = newConsumerRecord(topic, topicSubscription, preRecord.getNextConsumerOffset());
+            subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, record);
+            mqttContext.getEventBus().publish(EventType.SUBSCRIBE_REFRESH_TOPIC, record);
+        }
     }
 
     private Qos0MessageDeliver newConsumerRecord(BrokerTopicImpl topic, TopicSubscription topicSubscription, long nextConsumerOffset) {

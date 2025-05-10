@@ -41,4 +41,8 @@ class SharedDeliverGroup extends DeliverGroup {
         }
         return consumerRecord;
     }
+
+    public boolean isShared() {
+        return true;
+    }
 }

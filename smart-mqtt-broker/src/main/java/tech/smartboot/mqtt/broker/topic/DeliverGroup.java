@@ -99,4 +99,8 @@ public class DeliverGroup {
     public int count() {
         return subscribers.size();
     }
+
+    public boolean isShared() {
+        return false;
+    }
 }
