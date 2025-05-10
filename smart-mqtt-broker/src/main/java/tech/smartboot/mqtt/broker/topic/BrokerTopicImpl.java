@@ -69,7 +69,7 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
      * 共享订阅允许多个订阅者以负载均衡的方式接收消息，适用于集群环境。
      * </p>
      */
-    private final Map<String, DeliverGroup> shareSubscribers = new ConcurrentHashMap<>();
+    private final Map<String, DeliverGroup> sharedGroup = new ConcurrentHashMap<>();
     /**
      * 消息推送控制信号量，用于确保消息推送的并发控制。
      * <p>
@@ -149,14 +149,14 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
 
     public DeliverGroup getSubscriberGroup(TopicToken topicToken) {
         if (topicToken.isShared()) {
-            return shareSubscribers.computeIfAbsent(topicToken.getTopicFilter(), s -> new SharedDeliverGroup(BrokerTopicImpl.this));
+            return sharedGroup.computeIfAbsent(topicToken.getTopicFilter(), s -> new SharedDeliverGroup(BrokerTopicImpl.this));
         } else {
             return defaultGroup;
         }
     }
 
     public void removeShareGroup(String topicFilter) {
-        shareSubscribers.remove(topicFilter);
+        sharedGroup.remove(topicFilter);
     }
 
     /**
@@ -169,7 +169,7 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
      * @return 订阅者总数
      */
     public int subscribeCount() {
-        return shareSubscribers.size() + defaultGroup.count();
+        return sharedGroup.size() + defaultGroup.count();
     }
 
     public void addSubscriber(Push subscriber) {

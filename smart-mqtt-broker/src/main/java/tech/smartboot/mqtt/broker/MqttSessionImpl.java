@@ -220,12 +220,15 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
             subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, record);
             return;
         }
+        //从 BrokerTopic 中获取当前连接的MessageDeliver
         MessageDeliver messageDeliver = group.getMessageDeliver(this);
         if (messageDeliver == null) {
             SimpleMessageDeliver deliver = newConsumerRecord(topic, topicSubscription, topic.getMessageQueue().getLatestOffset() + 1);
             //加入推送队列
             addSubscriber(topic, deliver);
+            //将 deliver 添加到 topic 的订阅组
             group.addMessageDeliver(deliver);
+            //更新当前连接的订阅关系
             subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, deliver);
             mqttContext.getEventBus().publish(EventType.SUBSCRIBE_TOPIC, EventObject.newEventObject(this, deliver));
             return;
@@ -242,6 +245,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
             SimpleMessageDeliver record = newConsumerRecord(topic, topicSubscription, preRecord.getNextConsumerOffset());
             topic.addSubscriber(record);
             group.addMessageDeliver(record);
+            //更新订阅关系
             subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, record);
             mqttContext.getEventBus().publish(EventType.SUBSCRIBE_REFRESH_TOPIC, record);
         }
