@@ -114,7 +114,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
 
     @Override
     public void accepted(MqttPublishMessage mqttMessage) {
-        mqttContext.getMessageBus().publish(this, mqttMessage);
+        mqttContext.getOriginalMessageBus().publish(this, mqttMessage);
     }
 
     @Override
@@ -143,7 +143,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
 
         if (willMessage != null) {
             //非正常中断，推送遗嘱消息
-            mqttContext.getMessageBus().publish(this, willMessage);
+            mqttContext.getOriginalMessageBus().publish(this, willMessage);
 //            mqttContext.publish( willMessage.getVariableHeader().getTopicName());
         }
         subscribers.keySet().forEach(this::unsubscribe);

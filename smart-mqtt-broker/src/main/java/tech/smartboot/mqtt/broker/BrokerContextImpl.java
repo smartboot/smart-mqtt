@@ -32,7 +32,9 @@ import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
 import tech.smartboot.mqtt.plugin.spec.PluginRegistry;
+import tech.smartboot.mqtt.plugin.spec.bus.EventBus;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
+import tech.smartboot.mqtt.plugin.spec.bus.MessageBus;
 import tech.smartboot.mqtt.plugin.spec.provider.Providers;
 
 import java.io.IOException;
@@ -501,12 +503,16 @@ public class BrokerContextImpl implements BrokerContext {
 //    }
 
     @Override
-    public MessageBusImpl getMessageBus() {
+    public MessageBus getMessageBus() {
+        return messageBus;
+    }
+
+    MessageBusImpl getOriginalMessageBus() {
         return messageBus;
     }
 
     @Override
-    public EventBusImpl getEventBus() {
+    public EventBus getEventBus() {
         return eventBus;
     }
 
