@@ -194,11 +194,6 @@ public class BrokerContextImpl implements BrokerContext {
     private ExecutorService pushThreadPool;
 
     /**
-     * 保留消息推送线程池，专门用于处理保留消息的异步推送。
-     */
-    private ExecutorService retainPushThreadPool;
-
-    /**
      * MQTT Broker服务器实例。
      * <p>
      * 基于AIO实现的高性能网络服务器，负责：
@@ -306,13 +301,12 @@ public class BrokerContextImpl implements BrokerContext {
         if (options.getTopicLimit() <= 0) {
             options.setTopicLimit(10);
         }
-        retainPushThreadPool = Executors.newFixedThreadPool(Options().getPushThreadNum());
         pushThreadPool = Executors.newFixedThreadPool(Options().getPushThreadNum(), new ThreadFactory() {
             int index = 0;
 
             @Override
             public Thread newThread(Runnable r) {
-                return new Thread(r, "broker-push-" + (index++));
+                return new Thread(r, "broker-pusher-" + (index++));
             }
         });
     }

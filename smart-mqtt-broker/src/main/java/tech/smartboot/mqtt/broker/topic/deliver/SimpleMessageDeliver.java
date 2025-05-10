@@ -48,7 +48,7 @@ import tech.smartboot.mqtt.plugin.spec.PublishBuilder;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/25
  */
-public class SimpleMessageDeliver extends AbstractMessageDeliver implements Push {
+public class SimpleMessageDeliver extends AbstractMessageDeliver implements Runnable {
 
 
     public SimpleMessageDeliver(BrokerTopicImpl topic, MqttSessionImpl session, TopicSubscription topicSubscription, long nextConsumerOffset) {
@@ -67,7 +67,7 @@ public class SimpleMessageDeliver extends AbstractMessageDeliver implements Push
      * </ul>
      * </p>
      */
-    public void pushToClient() {
+    public void run() {
         if (getMqttSession().isDisconnect() || !enable) {
             return;
         }

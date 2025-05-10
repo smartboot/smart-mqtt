@@ -29,7 +29,7 @@ import java.util.concurrent.Semaphore;
 /**
  * 顺序共享订阅
  */
-public class SharedOrderedMessageDeliver extends AbstractMessageDeliver implements Push {
+public class SharedOrderedMessageDeliver extends AbstractMessageDeliver implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(SharedOrderedMessageDeliver.class);
     /**
      * 共享订阅者队列
@@ -54,7 +54,7 @@ public class SharedOrderedMessageDeliver extends AbstractMessageDeliver implemen
     }
 
     @Override
-    public void pushToClient() {
+    public void run() {
         if (semaphore.tryAcquire()) {
             try {
                 push0();

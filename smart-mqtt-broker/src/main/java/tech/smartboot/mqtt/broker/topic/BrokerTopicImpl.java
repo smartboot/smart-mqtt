@@ -12,7 +12,6 @@ package tech.smartboot.mqtt.broker.topic;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import tech.smartboot.mqtt.broker.topic.deliver.Push;
 import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.TopicToken;
 import tech.smartboot.mqtt.common.message.MqttCodecUtil;
@@ -88,12 +87,12 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
     private final AsyncTask asyncTask = new AsyncTask() {
         @Override
         public void execute() {
-            Push subscriber;
+            Runnable subscriber;
             queue.offer(BREAK);
             int mark = version;
             while ((subscriber = queue.poll()) != BREAK) {
                 try {
-                    subscriber.pushToClient();
+                    subscriber.run();
                 } catch (Exception e) {
                     LOGGER.error("batch publish exception:{}", e.getMessage(), e);
                 }
@@ -129,9 +128,9 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
      * 在多线程环境下的安全访问。订阅者按照FIFO顺序处理。
      * </p>
      */
-    private final ConcurrentLinkedQueue<Push> queue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Runnable> queue = new ConcurrentLinkedQueue<>();
 
-    private static final Push BREAK = () -> {
+    private static final Runnable BREAK = () -> {
         throw new UnsupportedOperationException();
     };
 
@@ -172,7 +171,7 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
         return sharedGroup.size() + defaultGroup.count();
     }
 
-    public void addSubscriber(Push subscriber) {
+    public void addSubscriber(Runnable subscriber) {
         queue.offer(subscriber);
     }
 

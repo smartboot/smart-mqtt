@@ -212,7 +212,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
 //            ValidateUtils.isTrue(preToken.getTopicFilter().equals(topicSubscription.getTopicFilterToken().getTopicFilter()), "invalid subscriber");
             AbstractMessageDeliver record = new SimpleMessageDeliver(topic, MqttSessionImpl.this, topicSubscription, topic.getMessageQueue().getLatestOffset() + 1) {
                 @Override
-                public void pushToClient() {
+                public void run() {
                     throw new IllegalStateException();
                 }
             };

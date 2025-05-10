@@ -44,7 +44,7 @@ public class AdvancedMessageDeliver extends SimpleMessageDeliver {
     /**
      * 推送消息到客户端
      */
-    public void pushToClient() {
+    public void run() {
         if (getMqttSession().isDisconnect() || !enable) {
             return;
         }
