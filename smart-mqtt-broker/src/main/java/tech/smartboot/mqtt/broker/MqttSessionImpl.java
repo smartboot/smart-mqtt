@@ -17,8 +17,8 @@ import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import tech.smartboot.mqtt.broker.topic.DeliverGroup;
 import tech.smartboot.mqtt.broker.topic.deliver.AbstractMessageDeliver;
-import tech.smartboot.mqtt.broker.topic.deliver.Qos0MessageDeliver;
-import tech.smartboot.mqtt.broker.topic.deliver.Qos12MessageDeliver;
+import tech.smartboot.mqtt.broker.topic.deliver.AdvancedMessageDeliver;
+import tech.smartboot.mqtt.broker.topic.deliver.SimpleMessageDeliver;
 import tech.smartboot.mqtt.common.AbstractSession;
 import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.MqttWriter;
@@ -203,7 +203,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
 //            MessageDeliver consumerRecord = group.getSubscriber(this);
 //            TopicToken preToken = consumerRecord.getTopicFilterToken();
 //            ValidateUtils.isTrue(preToken.getTopicFilter().equals(topicSubscription.getTopicFilterToken().getTopicFilter()), "invalid subscriber");
-            Qos0MessageDeliver record = new Qos0MessageDeliver(topic, MqttSessionImpl.this, topicSubscription, topic.getMessageQueue().getLatestOffset() + 1) {
+            SimpleMessageDeliver record = new SimpleMessageDeliver(topic, MqttSessionImpl.this, topicSubscription, topic.getMessageQueue().getLatestOffset() + 1) {
                 @Override
                 public void pushToClient() {
                     throw new IllegalStateException();
@@ -215,7 +215,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
         }
         MessageDeliver consumerRecord = group.getSubscriber(this);
         if (consumerRecord == null) {
-            Qos0MessageDeliver deliver = newConsumerRecord(topic, topicSubscription, topic.getMessageQueue().getLatestOffset() + 1);
+            AbstractMessageDeliver deliver = newConsumerRecord(topic, topicSubscription, topic.getMessageQueue().getLatestOffset() + 1);
             mqttContext.getEventBus().publish(EventType.SUBSCRIBE_TOPIC, EventObject.newEventObject(this, deliver));
             group.addSubscriber(deliver);
             subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, deliver);
@@ -230,17 +230,17 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
             preRecord.disable();
 
             //绑定新的订阅关系
-            Qos0MessageDeliver record = newConsumerRecord(topic, topicSubscription, preRecord.getNextConsumerOffset());
+            AbstractMessageDeliver record = newConsumerRecord(topic, topicSubscription, preRecord.getNextConsumerOffset());
             subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, record);
             mqttContext.getEventBus().publish(EventType.SUBSCRIBE_REFRESH_TOPIC, record);
         }
     }
 
-    private Qos0MessageDeliver newConsumerRecord(BrokerTopicImpl topic, TopicSubscription topicSubscription, long nextConsumerOffset) {
+    private AbstractMessageDeliver newConsumerRecord(BrokerTopicImpl topic, TopicSubscription topicSubscription, long nextConsumerOffset) {
         if (topicSubscription.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
-            return new Qos0MessageDeliver(topic, this, topicSubscription, nextConsumerOffset);
+            return new SimpleMessageDeliver(topic, this, topicSubscription, nextConsumerOffset);
         } else {
-            return new Qos12MessageDeliver(topic, this, topicSubscription, nextConsumerOffset);
+            return new AdvancedMessageDeliver(topic, this, topicSubscription, nextConsumerOffset);
         }
     }
 

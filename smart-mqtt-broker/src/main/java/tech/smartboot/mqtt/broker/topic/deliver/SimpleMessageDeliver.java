@@ -48,10 +48,10 @@ import tech.smartboot.mqtt.plugin.spec.PublishBuilder;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/25
  */
-public class Qos0MessageDeliver extends AbstractMessageDeliver {
+public class SimpleMessageDeliver extends AbstractMessageDeliver {
 
 
-    public Qos0MessageDeliver(BrokerTopicImpl topic, MqttSessionImpl session, TopicSubscription topicSubscription, long nextConsumerOffset) {
+    public SimpleMessageDeliver(BrokerTopicImpl topic, MqttSessionImpl session, TopicSubscription topicSubscription, long nextConsumerOffset) {
         super(topic, session, topicSubscription, nextConsumerOffset);
     }
 

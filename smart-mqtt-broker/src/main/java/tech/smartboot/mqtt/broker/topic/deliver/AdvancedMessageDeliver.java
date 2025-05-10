@@ -31,12 +31,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/25
  */
-public class Qos12MessageDeliver extends Qos0MessageDeliver {
+public class AdvancedMessageDeliver extends SimpleMessageDeliver {
 
     private final AtomicBoolean semaphore = new AtomicBoolean(false);
 
 
-    public Qos12MessageDeliver(BrokerTopicImpl topic, MqttSessionImpl session, TopicSubscription topicSubscription, long nextConsumerOffset) {
+    public AdvancedMessageDeliver(BrokerTopicImpl topic, MqttSessionImpl session, TopicSubscription topicSubscription, long nextConsumerOffset) {
         super(topic, session, topicSubscription, nextConsumerOffset);
         ValidateUtils.isTrue(topicSubscription.getMqttQoS() != MqttQoS.AT_MOST_ONCE, "invalid qos");
     }
