@@ -306,6 +306,8 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
                 LOGGER.info("clear topic: {} message queue", brokerTopic.getTopicFilter());
                 brokerTopic.getMessageQueue().clear();
             }
+            //正常情况下，当前session中维护的订阅关系与BrokerTopic中的订阅关系是一致的
+            //如果不一致，说明可能存在bug
             if (subscriber == consumerRecord) {
                 mqttContext.getEventBus().publish(EventType.UNSUBSCRIBE_TOPIC, consumerRecord);
                 LOGGER.debug("remove subscriber:{} success!", brokerTopic.getTopicFilter());

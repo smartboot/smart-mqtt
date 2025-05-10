@@ -69,7 +69,7 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
      * 共享订阅允许多个订阅者以负载均衡的方式接收消息，适用于集群环境。
      * </p>
      */
-    private final Map<String, DeliverGroup> sharedGroup = new ConcurrentHashMap<>();
+    private final Map<String, SharedDeliverGroup> sharedGroup = new ConcurrentHashMap<>();
     /**
      * 消息推送控制信号量，用于确保消息推送的并发控制。
      * <p>

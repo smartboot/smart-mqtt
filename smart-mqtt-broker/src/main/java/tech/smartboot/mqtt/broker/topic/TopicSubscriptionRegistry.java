@@ -10,12 +10,10 @@
 
 package tech.smartboot.mqtt.broker.topic;
 
-import tech.smartboot.mqtt.broker.BrokerContextImpl;
 import tech.smartboot.mqtt.broker.MqttSessionImpl;
 import tech.smartboot.mqtt.broker.TopicSubscription;
 import tech.smartboot.mqtt.common.TopicToken;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
-import tech.smartboot.mqtt.plugin.spec.MqttSession;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -70,11 +68,7 @@ public class TopicSubscriptionRegistry {
      * </p>
      */
     private final ConcurrentHashMap<String, TopicSubscriptionRegistry> subNode = new ConcurrentHashMap<>();
-    private BrokerContextImpl brokerContext;
 
-    public TopicSubscriptionRegistry(BrokerContextImpl brokerContext) {
-        this.brokerContext = brokerContext;
-    }
 
     /**
      * 将客户端的主题订阅注册到订阅树中。
@@ -83,14 +77,14 @@ public class TopicSubscriptionRegistry {
      * 并在最终的叶子节点上保存会话的订阅关系。支持通配符（+和#）和共享订阅。
      * </p>
      *
-     * @param session 要注册订阅的MQTT客户端会话
+     * @param session    要注册订阅的MQTT客户端会话
      * @param subscriber 包含主题过滤器和QoS等订阅信息的对象
      */
     public void subscribeTopic(MqttSessionImpl session, TopicSubscription subscriber) {
         TopicSubscriptionRegistry treeNode = this;
         TopicToken token = subscriber.getTopicFilterToken();
         do {
-            treeNode = treeNode.subNode.computeIfAbsent(token.getNode(), n -> new TopicSubscriptionRegistry(brokerContext));
+            treeNode = treeNode.subNode.computeIfAbsent(token.getNode(), n -> new TopicSubscriptionRegistry());
         } while ((token = token.getNextNode()) != null);
         treeNode.subscribers.put(session, subscriber);
     }
@@ -102,10 +96,10 @@ public class TopicSubscriptionRegistry {
      * 注意：该方法只移除订阅关系，不会删除空的节点。
      * </p>
      *
-     * @param session 要取消订阅的MQTT客户端会话
+     * @param session    要取消订阅的MQTT客户端会话
      * @param subscriber 包含要取消订阅的主题过滤器信息的对象
      */
-    public void unsubscribe(MqttSession session, TopicSubscription subscriber) {
+    public void unsubscribe(MqttSessionImpl session, TopicSubscription subscriber) {
         TopicSubscriptionRegistry subscribeTree = this;
         TopicToken topicToken = subscriber.getTopicFilterToken();
         while (true) {
@@ -125,10 +119,9 @@ public class TopicSubscriptionRegistry {
      * 并触发相应的订阅成功回调。这个过程确保了新主题的消息能够正确地推送给所有匹配的订阅者。
      * </p>
      *
-     * @param topicToken 新创建的主题对象
+     * @param brokerTopic 新创建的主题对象
      */
-    public void refreshWhenTopicCreated(String topicToken) {
-        BrokerTopicImpl brokerTopic = brokerContext.getOrCreateTopic(topicToken);
+    public void refreshWhenTopicCreated(BrokerTopicImpl brokerTopic) {
         BiConsumer<MqttSessionImpl, TopicSubscription> consumer = (session, topicSubscription) -> {
             session.subscribeSuccess(topicSubscription, brokerTopic);
         };
@@ -153,7 +146,7 @@ public class TopicSubscriptionRegistry {
      * </p>
      *
      * @param topicToken 要匹配的主题标记
-     * @param consumer 对匹配的订阅者执行的操作
+     * @param consumer   对匹配的订阅者执行的操作
      */
     private void match0(TopicToken topicToken, BiConsumer<MqttSessionImpl, TopicSubscription> consumer) {
         //精确匹配

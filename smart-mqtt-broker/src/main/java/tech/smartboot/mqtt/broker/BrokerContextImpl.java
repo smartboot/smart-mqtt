@@ -132,7 +132,7 @@ public class BrokerContextImpl implements BrokerContext {
      * </ul>
      * </p>
      */
-    private final TopicSubscriptionRegistry subscribeTopicTree = new TopicSubscriptionRegistry(this);
+    private final TopicSubscriptionRegistry subscribeTopicTree = new TopicSubscriptionRegistry();
 
     /**
      * Keep-Alive定时器，用于监控客户端连接状态。
@@ -394,7 +394,7 @@ public class BrokerContextImpl implements BrokerContext {
             session.idleConnectTimer = null;
         });
 
-        eventBus.subscribe(EventType.TOPIC_CREATE, (eventType, brokerTopic) -> subscribeTopicTree.refreshWhenTopicCreated(brokerTopic));
+        eventBus.subscribe(EventType.TOPIC_CREATE, (eventType, brokerTopic) -> subscribeTopicTree.refreshWhenTopicCreated(getOrCreateTopic(brokerTopic)));
     }
 
     /**
