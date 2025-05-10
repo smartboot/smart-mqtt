@@ -28,7 +28,7 @@ import java.util.List;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/4/4
  */
-public class MessageBusImpl implements MessageBus {
+class MessageBusImpl implements MessageBus {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageBusImpl.class);
     /**
      * 消息总线消费者

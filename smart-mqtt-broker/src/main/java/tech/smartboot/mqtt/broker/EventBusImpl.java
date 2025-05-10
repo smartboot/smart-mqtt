@@ -26,7 +26,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/6/29
  */
-public class EventBusImpl implements EventBus {
+class EventBusImpl implements EventBus {
     private static final Logger LOGGER = LoggerFactory.getLogger(EventBusImpl.class);
 
     private final Map<EventType, List<EventBusConsumer>> map = new ConcurrentHashMap<>();
