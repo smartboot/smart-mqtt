@@ -28,7 +28,7 @@ import java.util.concurrent.Semaphore;
 /**
  * 顺序共享订阅
  */
-public class SharedOrderedMessageDeliver extends BaseMessageDeliver implements Runnable {
+class SharedOrderedMessageDeliver extends BaseMessageDeliver implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(SharedOrderedMessageDeliver.class);
     /**
      * 共享订阅者队列
@@ -38,7 +38,7 @@ public class SharedOrderedMessageDeliver extends BaseMessageDeliver implements R
     private final Semaphore semaphore = new Semaphore(1);
 
     public SharedOrderedMessageDeliver(BrokerTopicImpl topic) {
-        super(topic, null, null, topic.getMessageQueue().getLatestOffset() + 1);
+        super(topic, null, topic.getMessageQueue().getLatestOffset() + 1);
         //将共享订阅者加入 BrokerTopic 的推送列表中
         topic.registerMessageDeliver(this);
     }

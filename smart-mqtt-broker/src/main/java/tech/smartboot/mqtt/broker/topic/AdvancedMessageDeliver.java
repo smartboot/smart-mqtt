@@ -10,7 +10,6 @@
 
 package tech.smartboot.mqtt.broker.topic;
 
-import tech.smartboot.mqtt.broker.MqttSessionImpl;
 import tech.smartboot.mqtt.broker.SessionSubscribeRelation;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
 import tech.smartboot.mqtt.common.enums.MqttVersion;
@@ -30,13 +29,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/25
  */
-public class AdvancedMessageDeliver extends BaseMessageDeliver {
+class AdvancedMessageDeliver extends BaseMessageDeliver {
 
     private final AtomicBoolean semaphore = new AtomicBoolean(false);
 
 
-    public AdvancedMessageDeliver(BrokerTopicImpl topic, MqttSessionImpl session, SessionSubscribeRelation sessionSubscribeRelation, long nextConsumerOffset) {
-        super(topic, session, sessionSubscribeRelation, nextConsumerOffset);
+    public AdvancedMessageDeliver(BrokerTopicImpl topic, SessionSubscribeRelation sessionSubscribeRelation, long nextConsumerOffset) {
+        super(topic, sessionSubscribeRelation, nextConsumerOffset);
         ValidateUtils.isTrue(sessionSubscribeRelation.getMqttQoS() != MqttQoS.AT_MOST_ONCE, "invalid qos");
     }
 

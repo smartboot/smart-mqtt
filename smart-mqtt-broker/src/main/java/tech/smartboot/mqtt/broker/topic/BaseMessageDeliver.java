@@ -79,11 +79,7 @@ public class BaseMessageDeliver implements MessageDeliver, Runnable {
      * </p>
      */
     private final SessionSubscribeRelation subscribeRelation;
-    /**
-     * MQTT客户端会话对象，维护与订阅客户端的连接状态和通信通道。
-     * 用于消息推送和会话状态检查。
-     */
-    private final MqttSessionImpl mqttSession;
+
     /**
      * 消费者状态标志。
      * <p>
@@ -94,9 +90,8 @@ public class BaseMessageDeliver implements MessageDeliver, Runnable {
     protected boolean enable = true;
 
 
-    public BaseMessageDeliver(BrokerTopicImpl topic, MqttSessionImpl session, SessionSubscribeRelation subscribeRelation, long nextConsumerOffset) {
+    public BaseMessageDeliver(BrokerTopicImpl topic, SessionSubscribeRelation subscribeRelation, long nextConsumerOffset) {
         this.topic = topic;
-        this.mqttSession = session;
         this.subscribeRelation = subscribeRelation;
         this.nextConsumerOffset = nextConsumerOffset;
     }
@@ -112,7 +107,7 @@ public class BaseMessageDeliver implements MessageDeliver, Runnable {
 
     @Override
     public MqttSessionImpl getMqttSession() {
-        return mqttSession;
+        return subscribeRelation.getMqttSession();
     }
 
     public final long getLatestSubscribeTime() {
@@ -138,5 +133,13 @@ public class BaseMessageDeliver implements MessageDeliver, Runnable {
 
     boolean isEnable() {
         return enable;
+    }
+
+    public static BaseMessageDeliver newMessageDeliver(BrokerTopicImpl topic, SessionSubscribeRelation sessionSubscribeRelation, long nextConsumerOffset) {
+        if (sessionSubscribeRelation.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
+            return new SimpleMessageDeliver(topic, sessionSubscribeRelation, nextConsumerOffset);
+        } else {
+            return new AdvancedMessageDeliver(topic, sessionSubscribeRelation, nextConsumerOffset);
+        }
     }
 }

@@ -10,7 +10,6 @@
 
 package tech.smartboot.mqtt.broker.topic;
 
-import tech.smartboot.mqtt.broker.MqttSessionImpl;
 import tech.smartboot.mqtt.broker.SessionSubscribeRelation;
 import tech.smartboot.mqtt.common.enums.MqttVersion;
 import tech.smartboot.mqtt.common.message.variable.properties.PublishProperties;
@@ -47,11 +46,11 @@ import tech.smartboot.mqtt.plugin.spec.PublishBuilder;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/25
  */
-public class SimpleMessageDeliver extends BaseMessageDeliver {
+class SimpleMessageDeliver extends BaseMessageDeliver {
 
 
-    public SimpleMessageDeliver(BrokerTopicImpl topic, MqttSessionImpl session, SessionSubscribeRelation sessionSubscribeRelation, long nextConsumerOffset) {
-        super(topic, session, sessionSubscribeRelation, nextConsumerOffset);
+    public SimpleMessageDeliver(BrokerTopicImpl topic, SessionSubscribeRelation sessionSubscribeRelation, long nextConsumerOffset) {
+        super(topic, sessionSubscribeRelation, nextConsumerOffset);
     }
 
     /**
