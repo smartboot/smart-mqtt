@@ -194,8 +194,8 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
         }
         SessionSubscribeRelation relation = new SessionSubscribeRelation(this, topicToken, mqttQoS);
         ValidateUtils.isTrue(subscribers.put(topicFilter, relation) == null, "duplicate topic filter");
-        mqttContext.getTopicSubscribeTree().add(relation);
-        mqttContext.getPublishTopicTree().match(relation, topic -> subscribeSuccess(relation, topic));
+        mqttContext.getRelationMatcher().add(relation);
+        mqttContext.getTopicMatcher().match(relation, topic -> subscribeSuccess(relation, topic));
     }
 
     public void subscribeSuccess(SessionSubscribeRelation sessionSubscribeRelation, BrokerTopicImpl topic) {
@@ -272,7 +272,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
     }
 
     public void resubscribe() {
-        subscribers.values().stream().filter(subscriber -> subscriber.getTopicFilterToken().isWildcards()).forEach(subscriber -> mqttContext.getPublishTopicTree().match(subscriber, topic -> subscribeSuccess(subscriber, topic)));
+        subscribers.values().stream().filter(subscriber -> subscriber.getTopicFilterToken().isWildcards()).forEach(subscriber -> mqttContext.getTopicMatcher().match(subscriber, topic -> subscribeSuccess(subscriber, topic)));
     }
 
     public void unsubscribe(String topicFilter) {
@@ -300,7 +300,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
                 LOGGER.error("remove subscriber:{} error!", subscriberGroup);
             }
         });
-        mqttContext.getTopicSubscribeTree().remove(filterSubscriber);
+        mqttContext.getRelationMatcher().remove(filterSubscriber);
     }
 
 

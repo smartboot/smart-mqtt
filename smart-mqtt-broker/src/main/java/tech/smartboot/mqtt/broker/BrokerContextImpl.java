@@ -539,11 +539,11 @@ public class BrokerContextImpl implements BrokerContext {
         return providers;
     }
 
-    BrokerTopicMatcher getPublishTopicTree() {
+    BrokerTopicMatcher getTopicMatcher() {
         return topicMatcher;
     }
 
-    SubscribeRelationMatcher getTopicSubscribeTree() {
+    SubscribeRelationMatcher getRelationMatcher() {
         return subscribeTopicTree;
     }
 
