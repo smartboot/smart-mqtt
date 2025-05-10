@@ -12,6 +12,7 @@ package tech.smartboot.mqtt.broker.topic;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tech.smartboot.mqtt.broker.topic.deliver.BaseMessageDeliver;
 import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.TopicToken;
 import tech.smartboot.mqtt.common.message.MqttCodecUtil;
@@ -131,7 +132,6 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
     private final ConcurrentLinkedQueue<Runnable> queue = new ConcurrentLinkedQueue<>();
 
     private static final Runnable BREAK = () -> {
-        throw new UnsupportedOperationException();
     };
 
     public BrokerTopicImpl(String topic) {
@@ -171,7 +171,16 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
         return sharedGroup.size() + defaultGroup.count();
     }
 
-    public void addSubscriber(Runnable subscriber) {
+    /**
+     * 注册一个新的消息推送任务。
+     * <p>
+     * 该方法将一个新的消息推送任务添加到当前主题的推送队列中。
+     * 推送任务通常是一个Runnable对象，包含了具体的消息推送逻辑。
+     * </p>
+     *
+     * @param subscriber 要添加的消息推送任务
+     */
+    public void registerMessageDeliver(BaseMessageDeliver subscriber) {
         queue.offer(subscriber);
     }
 

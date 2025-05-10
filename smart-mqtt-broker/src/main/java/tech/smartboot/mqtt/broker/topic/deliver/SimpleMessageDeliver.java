@@ -48,7 +48,7 @@ import tech.smartboot.mqtt.plugin.spec.PublishBuilder;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/25
  */
-public class SimpleMessageDeliver extends AbstractMessageDeliver implements Runnable {
+public class SimpleMessageDeliver extends BaseMessageDeliver {
 
 
     public SimpleMessageDeliver(BrokerTopicImpl topic, MqttSessionImpl session, TopicSubscription topicSubscription, long nextConsumerOffset) {
@@ -74,7 +74,7 @@ public class SimpleMessageDeliver extends AbstractMessageDeliver implements Runn
         int i = 0;
         while (push0()) {
             if (i++ > 100) {
-                topic.addSubscriber(this);
+                topic.registerMessageDeliver(this);
                 topic.addVersion();
                 break;
             }
@@ -99,7 +99,7 @@ public class SimpleMessageDeliver extends AbstractMessageDeliver implements Runn
     private boolean push0() {
         Message message = topic.getMessageQueue().get(nextConsumerOffset);
         if (message == null) {
-            topic.addSubscriber(this);
+            topic.registerMessageDeliver(this);
             return false;
         }
 

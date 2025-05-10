@@ -40,7 +40,7 @@ import tech.smartboot.mqtt.plugin.spec.MessageDeliver;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/25
  */
-public abstract class AbstractMessageDeliver implements MessageDeliver {
+public class BaseMessageDeliver implements MessageDeliver, Runnable {
     /**
      * 消息主题对象，维护主题的订阅关系和消息存储。
      * <p>
@@ -95,13 +95,17 @@ public abstract class AbstractMessageDeliver implements MessageDeliver {
     protected boolean enable = true;
 
 
-    public AbstractMessageDeliver(BrokerTopicImpl topic, MqttSessionImpl session, TopicSubscription topicFilterToken, long nextConsumerOffset) {
+    public BaseMessageDeliver(BrokerTopicImpl topic, MqttSessionImpl session, TopicSubscription topicFilterToken, long nextConsumerOffset) {
         this.topic = topic;
         this.mqttSession = session;
         this.topicFilterToken = topicFilterToken;
         this.nextConsumerOffset = nextConsumerOffset;
     }
 
+    @Override
+    public void run() {
+        throw new IllegalStateException();
+    }
 
     public final BrokerTopicImpl getTopic() {
         return topic;

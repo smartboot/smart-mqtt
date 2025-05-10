@@ -29,22 +29,22 @@ import java.util.concurrent.Semaphore;
 /**
  * 顺序共享订阅
  */
-public class SharedOrderedMessageDeliver extends AbstractMessageDeliver implements Runnable {
+public class SharedOrderedMessageDeliver extends BaseMessageDeliver implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(SharedOrderedMessageDeliver.class);
     /**
      * 共享订阅者队列
      */
-    private final ConcurrentLinkedQueue<AbstractMessageDeliver> queue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<BaseMessageDeliver> queue = new ConcurrentLinkedQueue<>();
 
     private final Semaphore semaphore = new Semaphore(1);
 
     public SharedOrderedMessageDeliver(BrokerTopicImpl topic) {
         super(topic, null, null, topic.getMessageQueue().getLatestOffset() + 1);
         //将共享订阅者加入 BrokerTopic 的推送列表中
-        topic.addSubscriber(this);
+        topic.registerMessageDeliver(this);
     }
 
-    public ConcurrentLinkedQueue<AbstractMessageDeliver> getQueue() {
+    public ConcurrentLinkedQueue<BaseMessageDeliver> getQueue() {
         return queue;
     }
 
@@ -61,7 +61,7 @@ public class SharedOrderedMessageDeliver extends AbstractMessageDeliver implemen
             } finally {
                 semaphore.release();
             }
-            topic.addSubscriber(this);
+            topic.registerMessageDeliver(this);
             if (topic.getMessageQueue().get(nextConsumerOffset) != null && !queue.isEmpty()) {
                 //触发下一轮推送
                 topic.addVersion();
@@ -76,7 +76,7 @@ public class SharedOrderedMessageDeliver extends AbstractMessageDeliver implemen
             if (message == null) {
                 return;
             }
-            AbstractMessageDeliver record = queue.poll();
+            BaseMessageDeliver record = queue.poll();
             //共享订阅列表无可用通道
             if (record == null) {
                 return;

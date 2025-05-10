@@ -16,8 +16,8 @@ import org.smartboot.socket.timer.TimerTask;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import tech.smartboot.mqtt.broker.topic.DeliverGroup;
-import tech.smartboot.mqtt.broker.topic.deliver.AbstractMessageDeliver;
 import tech.smartboot.mqtt.broker.topic.deliver.AdvancedMessageDeliver;
+import tech.smartboot.mqtt.broker.topic.deliver.BaseMessageDeliver;
 import tech.smartboot.mqtt.broker.topic.deliver.SimpleMessageDeliver;
 import tech.smartboot.mqtt.common.AbstractSession;
 import tech.smartboot.mqtt.common.AsyncTask;
@@ -210,12 +210,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
 //            MessageDeliver messageDeliver = group.getSubscriber(this);
 //            TopicToken preToken = messageDeliver.getTopicFilterToken();
 //            ValidateUtils.isTrue(preToken.getTopicFilter().equals(topicSubscription.getTopicFilterToken().getTopicFilter()), "invalid subscriber");
-            AbstractMessageDeliver record = new SimpleMessageDeliver(topic, MqttSessionImpl.this, topicSubscription, topic.getMessageQueue().getLatestOffset() + 1) {
-                @Override
-                public void run() {
-                    throw new IllegalStateException();
-                }
-            };
+            BaseMessageDeliver record = new BaseMessageDeliver(topic, MqttSessionImpl.this, topicSubscription, topic.getMessageQueue().getLatestOffset() + 1);
             group.addMessageDeliver(record);
             subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, record);
             return;
@@ -223,7 +218,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
         //从 BrokerTopic 中获取当前连接的MessageDeliver
         MessageDeliver messageDeliver = group.getMessageDeliver(this);
         if (messageDeliver == null) {
-            SimpleMessageDeliver deliver = newConsumerRecord(topic, topicSubscription, topic.getMessageQueue().getLatestOffset() + 1);
+            BaseMessageDeliver deliver = newConsumerRecord(topic, topicSubscription, topic.getMessageQueue().getLatestOffset() + 1);
             //加入推送队列
             addSubscriber(topic, deliver);
             //将 deliver 添加到 topic 的订阅组
@@ -237,13 +232,13 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
         //此前为统配订阅，则更新订阅关系
         if (preToken.isWildcards() && (!topicToken.isWildcards() || topicToken.getTopicFilter().length() > preToken.getTopicFilter().length())) {
             //解除旧的订阅关系
-            AbstractMessageDeliver preRecord = subscribers.get(preToken.getTopicFilter()).getTopicSubscribers().remove(topic);
+            BaseMessageDeliver preRecord = subscribers.get(preToken.getTopicFilter()).getTopicSubscribers().remove(topic);
             ValidateUtils.isTrue(preRecord == messageDeliver, "invalid messageDeliver");
             preRecord.disable();
 
             //绑定新的订阅关系
-            SimpleMessageDeliver record = newConsumerRecord(topic, topicSubscription, preRecord.getNextConsumerOffset());
-            topic.addSubscriber(record);
+            BaseMessageDeliver record = newConsumerRecord(topic, topicSubscription, preRecord.getNextConsumerOffset());
+            topic.registerMessageDeliver(record);
             group.addMessageDeliver(record);
             //更新订阅关系
             subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, record);
@@ -252,10 +247,10 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
     }
 
     //一个新的订阅建立时，对每个匹配的主题名，如果存在最近保留的消息，它必须被发送给这个订阅者
-    private void addSubscriber(BrokerTopicImpl topic, SimpleMessageDeliver deliver) {
+    private void addSubscriber(BrokerTopicImpl topic, BaseMessageDeliver deliver) {
         Message retainMessage = topic.getRetainMessage();
         if (retainMessage == null || retainMessage.getCreateTime() > deliver.getLatestSubscribeTime()) {
-            topic.addSubscriber(deliver);
+            topic.registerMessageDeliver(deliver);
             return;
         }
 
@@ -266,19 +261,19 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
         // Qos0不走飞行窗口
         if (deliver.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
             write(publishBuilder.build());
-            topic.addSubscriber(deliver);
+            topic.registerMessageDeliver(deliver);
             return;
         }
         // retain消息逐个推送
         CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = inflightQueue.offer(publishBuilder);
         future.whenComplete((mqttPacketIdentifierMessage, throwable) -> {
             LOGGER.info("publish retain to client:{} success  ", getClientId());
-            topic.addSubscriber(deliver);
+            topic.registerMessageDeliver(deliver);
         });
         flush();
     }
 
-    private SimpleMessageDeliver newConsumerRecord(BrokerTopicImpl topic, TopicSubscription topicSubscription, long nextConsumerOffset) {
+    private BaseMessageDeliver newConsumerRecord(BrokerTopicImpl topic, TopicSubscription topicSubscription, long nextConsumerOffset) {
         if (topicSubscription.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
             return new SimpleMessageDeliver(topic, this, topicSubscription, nextConsumerOffset);
         } else {
@@ -300,7 +295,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
         //移除关联Broker中的映射关系
         filterSubscriber.getTopicSubscribers().forEach((brokerTopic, subscriber) -> {
             DeliverGroup subscriberGroup = brokerTopic.getSubscriberGroup(filterSubscriber.getTopicFilterToken());
-            AbstractMessageDeliver consumerRecord = subscriberGroup.removeMessageDeliver(this);
+            BaseMessageDeliver consumerRecord = subscriberGroup.removeMessageDeliver(this);
             //移除后，如果BrokerTopic没有订阅者，则清除消息队列
             if (brokerTopic.subscribeCount() == 0) {
                 LOGGER.info("clear topic: {} message queue", brokerTopic.getTopicFilter());

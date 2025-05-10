@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/25
  */
-public class AdvancedMessageDeliver extends SimpleMessageDeliver {
+public class AdvancedMessageDeliver extends BaseMessageDeliver {
 
     private final AtomicBoolean semaphore = new AtomicBoolean(false);
 
@@ -59,7 +59,7 @@ public class AdvancedMessageDeliver extends SimpleMessageDeliver {
         //消息队列已消费至最新点位
         if (message == null) {
             if (semaphore.compareAndSet(true, false)) {
-                topic.addSubscriber(this);
+                topic.registerMessageDeliver(this);
                 if (topic.getMessageQueue().get(nextConsumerOffset) != null) {
                     topic.push();
                 }
@@ -70,7 +70,7 @@ public class AdvancedMessageDeliver extends SimpleMessageDeliver {
         //当前连接的飞行窗口已满
         if (available == 0) {
             if (semaphore.compareAndSet(true, false)) {
-                topic.addSubscriber(this);
+                topic.registerMessageDeliver(this);
                 if (getMqttSession().getInflightQueue().available() > 0) {
                     topic.push();
                 }

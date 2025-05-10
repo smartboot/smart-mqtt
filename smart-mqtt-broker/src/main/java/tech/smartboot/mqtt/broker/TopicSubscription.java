@@ -11,7 +11,7 @@
 package tech.smartboot.mqtt.broker;
 
 import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
-import tech.smartboot.mqtt.broker.topic.deliver.AbstractMessageDeliver;
+import tech.smartboot.mqtt.broker.topic.deliver.BaseMessageDeliver;
 import tech.smartboot.mqtt.common.TopicToken;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
 
@@ -71,13 +71,13 @@ public class TopicSubscription {
      * 此Map在主题匹配时动态维护，随着主题的发布和取消订阅而更新。
      * </p>
      */
-    private final Map<BrokerTopicImpl, AbstractMessageDeliver> topicSubscribers = new HashMap<>();
+    private final Map<BrokerTopicImpl, BaseMessageDeliver> topicSubscribers = new HashMap<>();
 
     /**
      * 创建主题订阅关系实例。
      *
      * @param topicFilterToken 主题过滤器的Token解析结果
-     * @param mqttQoS 订阅的QoS级别
+     * @param mqttQoS          订阅的QoS级别
      */
     public TopicSubscription(TopicToken topicFilterToken, MqttQoS mqttQoS) {
         this.topicFilterToken = topicFilterToken;
@@ -123,7 +123,7 @@ public class TopicSubscription {
      *
      * @return 主题与消费记录的映射关系
      */
-    public Map<BrokerTopicImpl, AbstractMessageDeliver> getTopicSubscribers() {
+    public Map<BrokerTopicImpl, BaseMessageDeliver> getTopicSubscribers() {
         return topicSubscribers;
     }
 }
