@@ -14,11 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.socket.timer.TimerTask;
 import org.smartboot.socket.transport.AioSession;
+import tech.smartboot.mqtt.broker.topic.AdvancedMessageDeliver;
+import tech.smartboot.mqtt.broker.topic.BaseMessageDeliver;
 import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import tech.smartboot.mqtt.broker.topic.DeliverGroup;
-import tech.smartboot.mqtt.broker.topic.deliver.AdvancedMessageDeliver;
-import tech.smartboot.mqtt.broker.topic.deliver.BaseMessageDeliver;
-import tech.smartboot.mqtt.broker.topic.deliver.SimpleMessageDeliver;
+import tech.smartboot.mqtt.broker.topic.SimpleMessageDeliver;
 import tech.smartboot.mqtt.common.AbstractSession;
 import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.MqttWriter;
@@ -234,7 +234,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
             //解除旧的订阅关系
             BaseMessageDeliver preRecord = subscribers.get(preToken.getTopicFilter()).getTopicSubscribers().remove(topic);
             ValidateUtils.isTrue(preRecord == messageDeliver, "invalid messageDeliver");
-            preRecord.disable();
+            group.removeMessageDeliver(this);
 
             //绑定新的订阅关系
             BaseMessageDeliver record = newConsumerRecord(topic, topicSubscription, preRecord.getNextConsumerOffset());

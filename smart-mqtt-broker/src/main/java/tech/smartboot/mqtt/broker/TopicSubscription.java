@@ -10,8 +10,8 @@
 
 package tech.smartboot.mqtt.broker;
 
+import tech.smartboot.mqtt.broker.topic.BaseMessageDeliver;
 import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
-import tech.smartboot.mqtt.broker.topic.deliver.BaseMessageDeliver;
 import tech.smartboot.mqtt.common.TopicToken;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
 

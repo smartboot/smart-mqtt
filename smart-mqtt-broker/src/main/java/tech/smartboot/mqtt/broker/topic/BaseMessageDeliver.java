@@ -8,12 +8,11 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.mqtt.broker.topic.deliver;
+package tech.smartboot.mqtt.broker.topic;
 
 
 import tech.smartboot.mqtt.broker.MqttSessionImpl;
 import tech.smartboot.mqtt.broker.TopicSubscription;
-import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import tech.smartboot.mqtt.common.TopicToken;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
 import tech.smartboot.mqtt.plugin.spec.MessageDeliver;
@@ -133,11 +132,11 @@ public class BaseMessageDeliver implements MessageDeliver, Runnable {
         return nextConsumerOffset;
     }
 
-    public final void disable() {
+    final void disable() {
         this.enable = false;
     }
 
-    public boolean isEnable() {
+    boolean isEnable() {
         return enable;
     }
 }

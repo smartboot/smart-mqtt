@@ -12,7 +12,6 @@ package tech.smartboot.mqtt.broker.topic;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import tech.smartboot.mqtt.broker.topic.deliver.BaseMessageDeliver;
 import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.TopicToken;
 import tech.smartboot.mqtt.common.message.MqttCodecUtil;

@@ -8,11 +8,10 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.mqtt.broker.topic.deliver;
+package tech.smartboot.mqtt.broker.topic;
 
 import tech.smartboot.mqtt.broker.MqttSessionImpl;
 import tech.smartboot.mqtt.broker.TopicSubscription;
-import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
 import tech.smartboot.mqtt.common.enums.MqttVersion;
 import tech.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
