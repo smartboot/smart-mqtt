@@ -12,7 +12,7 @@ package tech.smartboot.mqtt.broker.topic;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import tech.smartboot.mqtt.broker.topic.deliver.AbstractMessageDeliver;
+import tech.smartboot.mqtt.broker.topic.deliver.Push;
 import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.TopicToken;
 import tech.smartboot.mqtt.common.message.MqttCodecUtil;
@@ -88,7 +88,7 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
     private final AsyncTask asyncTask = new AsyncTask() {
         @Override
         public void execute() {
-            AbstractMessageDeliver subscriber;
+            Push subscriber;
             queue.offer(BREAK);
             int mark = version;
             while ((subscriber = queue.poll()) != BREAK) {
@@ -129,14 +129,10 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
      * 在多线程环境下的安全访问。订阅者按照FIFO顺序处理。
      * </p>
      */
-    private final ConcurrentLinkedQueue<AbstractMessageDeliver> queue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Push> queue = new ConcurrentLinkedQueue<>();
 
-    private static final AbstractMessageDeliver BREAK = new AbstractMessageDeliver(null, null, null, -1) {
-
-        @Override
-        public void pushToClient() {
-            throw new UnsupportedOperationException();
-        }
+    private static final Push BREAK = () -> {
+        throw new UnsupportedOperationException();
     };
 
     public BrokerTopicImpl(String topic) {
@@ -176,7 +172,7 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
         return shareSubscribers.size() + defaultGroup.count();
     }
 
-    public void addSubscriber(AbstractMessageDeliver subscriber) {
+    public void addSubscriber(Push subscriber) {
         queue.offer(subscriber);
     }
 

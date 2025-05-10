@@ -12,6 +12,7 @@ package tech.smartboot.mqtt.broker.topic;
 
 import tech.smartboot.mqtt.broker.topic.deliver.AbstractMessageDeliver;
 import tech.smartboot.mqtt.broker.topic.deliver.SharedOrderedMessageDeliver;
+import tech.smartboot.mqtt.plugin.spec.MessageDeliver;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 
 class SharedDeliverGroup extends DeliverGroup {
@@ -22,24 +23,24 @@ class SharedDeliverGroup extends DeliverGroup {
     }
 
     @Override
-    public AbstractMessageDeliver getSubscriber(MqttSession session) {
-        return record;
+    public MessageDeliver getMessageDeliver(MqttSession session) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public void addSubscriber(AbstractMessageDeliver subscriber) {
-        super.addSubscriber(subscriber);
+    public void addMessageDeliver(AbstractMessageDeliver subscriber) {
+        super.addMessageDeliver(subscriber);
         record.getQueue().offer(subscriber);
     }
 
     @Override
-    public AbstractMessageDeliver removeSubscriber(MqttSession session) {
-        AbstractMessageDeliver consumerRecord = super.removeSubscriber(session);
+    public AbstractMessageDeliver removeMessageDeliver(MqttSession session) {
+        AbstractMessageDeliver messageDeliver = super.removeMessageDeliver(session);
         if (subscribers.isEmpty()) {
             record.disable();
-            record.getTopic().removeShareGroup(consumerRecord.getTopicFilterToken().getTopicFilter());
+            record.getTopic().removeShareGroup(messageDeliver.getTopicFilterToken().getTopicFilter());
         }
-        return consumerRecord;
+        return messageDeliver;
     }
 
     public boolean isShared() {

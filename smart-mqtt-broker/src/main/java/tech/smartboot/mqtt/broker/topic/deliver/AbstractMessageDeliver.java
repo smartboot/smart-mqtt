@@ -102,19 +102,6 @@ public abstract class AbstractMessageDeliver implements MessageDeliver {
         this.nextConsumerOffset = nextConsumerOffset;
     }
 
-    /**
-     * 将消息推送到客户端的抽象方法。
-     * <p>
-     * 具体的消息推送逻辑由子类实现，可能包括：
-     * <ul>
-     *   <li>消息的QoS处理</li>
-     *   <li>消息的重传机制</li>
-     *   <li>消息的确认机制</li>
-     *   <li>消息的过滤规则</li>
-     * </ul>
-     * </p>
-     */
-    public abstract void pushToClient();
 
     public final BrokerTopicImpl getTopic() {
         return topic;

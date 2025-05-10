@@ -29,7 +29,7 @@ import java.util.concurrent.Semaphore;
 /**
  * 顺序共享订阅
  */
-public class SharedOrderedMessageDeliver extends AbstractMessageDeliver {
+public class SharedOrderedMessageDeliver extends AbstractMessageDeliver implements Push {
     private static final Logger LOGGER = LoggerFactory.getLogger(SharedOrderedMessageDeliver.class);
     /**
      * 共享订阅者队列

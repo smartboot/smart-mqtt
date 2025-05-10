@@ -24,17 +24,24 @@ import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.MqttWriter;
 import tech.smartboot.mqtt.common.TopicToken;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
+import tech.smartboot.mqtt.common.enums.MqttVersion;
 import tech.smartboot.mqtt.common.message.MqttMessage;
+import tech.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
 import tech.smartboot.mqtt.common.message.MqttPublishMessage;
+import tech.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import tech.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
+import tech.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
+import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MessageDeliver;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
+import tech.smartboot.mqtt.plugin.spec.PublishBuilder;
 import tech.smartboot.mqtt.plugin.spec.bus.EventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 import tech.smartboot.mqtt.plugin.spec.provider.SessionState;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -200,43 +207,74 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
         }
         DeliverGroup group = topic.getSubscriberGroup(topicToken);
         if (group.isShared()) {
-//            MessageDeliver consumerRecord = group.getSubscriber(this);
-//            TopicToken preToken = consumerRecord.getTopicFilterToken();
+//            MessageDeliver messageDeliver = group.getSubscriber(this);
+//            TopicToken preToken = messageDeliver.getTopicFilterToken();
 //            ValidateUtils.isTrue(preToken.getTopicFilter().equals(topicSubscription.getTopicFilterToken().getTopicFilter()), "invalid subscriber");
-            SimpleMessageDeliver record = new SimpleMessageDeliver(topic, MqttSessionImpl.this, topicSubscription, topic.getMessageQueue().getLatestOffset() + 1) {
+            AbstractMessageDeliver record = new SimpleMessageDeliver(topic, MqttSessionImpl.this, topicSubscription, topic.getMessageQueue().getLatestOffset() + 1) {
                 @Override
                 public void pushToClient() {
                     throw new IllegalStateException();
                 }
             };
-            group.addSubscriber(record);
+            group.addMessageDeliver(record);
             subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, record);
             return;
         }
-        MessageDeliver consumerRecord = group.getSubscriber(this);
-        if (consumerRecord == null) {
-            AbstractMessageDeliver deliver = newConsumerRecord(topic, topicSubscription, topic.getMessageQueue().getLatestOffset() + 1);
-            mqttContext.getEventBus().publish(EventType.SUBSCRIBE_TOPIC, EventObject.newEventObject(this, deliver));
-            group.addSubscriber(deliver);
+        MessageDeliver messageDeliver = group.getMessageDeliver(this);
+        if (messageDeliver == null) {
+            SimpleMessageDeliver deliver = newConsumerRecord(topic, topicSubscription, topic.getMessageQueue().getLatestOffset() + 1);
+            //加入推送队列
+            addSubscriber(topic, deliver);
+            group.addMessageDeliver(deliver);
             subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, deliver);
+            mqttContext.getEventBus().publish(EventType.SUBSCRIBE_TOPIC, EventObject.newEventObject(this, deliver));
             return;
         }
-        TopicToken preToken = consumerRecord.getTopicFilterToken();
+        TopicToken preToken = messageDeliver.getTopicFilterToken();
         //此前为统配订阅，则更新订阅关系
         if (preToken.isWildcards() && (!topicToken.isWildcards() || topicToken.getTopicFilter().length() > preToken.getTopicFilter().length())) {
             //解除旧的订阅关系
             AbstractMessageDeliver preRecord = subscribers.get(preToken.getTopicFilter()).getTopicSubscribers().remove(topic);
-            ValidateUtils.isTrue(preRecord == consumerRecord, "invalid consumerRecord");
+            ValidateUtils.isTrue(preRecord == messageDeliver, "invalid messageDeliver");
             preRecord.disable();
 
             //绑定新的订阅关系
-            AbstractMessageDeliver record = newConsumerRecord(topic, topicSubscription, preRecord.getNextConsumerOffset());
+            SimpleMessageDeliver record = newConsumerRecord(topic, topicSubscription, preRecord.getNextConsumerOffset());
+            topic.addSubscriber(record);
+            group.addMessageDeliver(record);
             subscribers.get(topicToken.getTopicFilter()).getTopicSubscribers().put(topic, record);
             mqttContext.getEventBus().publish(EventType.SUBSCRIBE_REFRESH_TOPIC, record);
         }
     }
 
-    private AbstractMessageDeliver newConsumerRecord(BrokerTopicImpl topic, TopicSubscription topicSubscription, long nextConsumerOffset) {
+    //一个新的订阅建立时，对每个匹配的主题名，如果存在最近保留的消息，它必须被发送给这个订阅者
+    private void addSubscriber(BrokerTopicImpl topic, SimpleMessageDeliver deliver) {
+        Message retainMessage = topic.getRetainMessage();
+        if (retainMessage == null || retainMessage.getCreateTime() > deliver.getLatestSubscribeTime()) {
+            topic.addSubscriber(deliver);
+            return;
+        }
+
+        PublishBuilder publishBuilder = PublishBuilder.builder().payload(retainMessage.getPayload()).qos(deliver.getMqttQoS()).topic(retainMessage.getTopic());
+        if (getMqttVersion() == MqttVersion.MQTT_5) {
+            publishBuilder.publishProperties(new PublishProperties());
+        }
+        // Qos0不走飞行窗口
+        if (deliver.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
+            write(publishBuilder.build());
+            topic.addSubscriber(deliver);
+            return;
+        }
+        // retain消息逐个推送
+        CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = inflightQueue.offer(publishBuilder);
+        future.whenComplete((mqttPacketIdentifierMessage, throwable) -> {
+            LOGGER.info("publish retain to client:{} success  ", getClientId());
+            topic.addSubscriber(deliver);
+        });
+        flush();
+    }
+
+    private SimpleMessageDeliver newConsumerRecord(BrokerTopicImpl topic, TopicSubscription topicSubscription, long nextConsumerOffset) {
         if (topicSubscription.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
             return new SimpleMessageDeliver(topic, this, topicSubscription, nextConsumerOffset);
         } else {
@@ -258,14 +296,13 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
         //移除关联Broker中的映射关系
         filterSubscriber.getTopicSubscribers().forEach((brokerTopic, subscriber) -> {
             DeliverGroup subscriberGroup = brokerTopic.getSubscriberGroup(filterSubscriber.getTopicFilterToken());
-            AbstractMessageDeliver consumerRecord = subscriberGroup.removeSubscriber(this);
+            AbstractMessageDeliver consumerRecord = subscriberGroup.removeMessageDeliver(this);
             //移除后，如果BrokerTopic没有订阅者，则清除消息队列
             if (brokerTopic.subscribeCount() == 0) {
                 LOGGER.info("clear topic: {} message queue", brokerTopic.getTopicFilter());
                 brokerTopic.getMessageQueue().clear();
             }
             if (subscriber == consumerRecord) {
-                consumerRecord.disable();
                 mqttContext.getEventBus().publish(EventType.UNSUBSCRIBE_TOPIC, consumerRecord);
                 LOGGER.debug("remove subscriber:{} success!", brokerTopic.getTopicFilter());
             } else {

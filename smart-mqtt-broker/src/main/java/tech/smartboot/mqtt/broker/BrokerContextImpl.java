@@ -25,15 +25,7 @@ import tech.smartboot.mqtt.broker.bus.message.RetainPersistenceConsumer;
 import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import tech.smartboot.mqtt.broker.topic.BrokerTopicRegistry;
 import tech.smartboot.mqtt.broker.topic.TopicSubscriptionRegistry;
-import tech.smartboot.mqtt.broker.topic.deliver.AbstractMessageDeliver;
-import tech.smartboot.mqtt.common.AsyncTask;
-import tech.smartboot.mqtt.common.InflightQueue;
 import tech.smartboot.mqtt.common.MqttProtocol;
-import tech.smartboot.mqtt.common.enums.MqttQoS;
-import tech.smartboot.mqtt.common.enums.MqttVersion;
-import tech.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
-import tech.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
-import tech.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import tech.smartboot.mqtt.common.util.MqttUtil;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
@@ -42,7 +34,6 @@ import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
 import tech.smartboot.mqtt.plugin.spec.PluginRegistry;
-import tech.smartboot.mqtt.plugin.spec.PublishBuilder;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 import tech.smartboot.mqtt.plugin.spec.provider.Providers;
 
@@ -54,7 +45,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ServiceLoader;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -403,40 +393,6 @@ public class BrokerContextImpl implements BrokerContext {
             session.idleConnectTimer.cancel();
             session.idleConnectTimer = null;
         });
-
-        //一个新的订阅建立时，对每个匹配的主题名，如果存在最近保留的消息，它必须被发送给这个订阅者
-        eventBus.subscribe(EventType.SUBSCRIBE_TOPIC, (eventType, eventObject) -> retainPushThreadPool.execute(new AsyncTask() {
-            @Override
-            public void execute() {
-                AbstractMessageDeliver consumerRecord = (AbstractMessageDeliver) eventObject.getObject();
-                BrokerTopicImpl topic = getOrCreateTopic(consumerRecord.getTopic().getTopic());
-                Message retainMessage = topic.getRetainMessage();
-                if (retainMessage == null || retainMessage.getCreateTime() > consumerRecord.getLatestSubscribeTime()) {
-                    topic.addSubscriber(consumerRecord);
-                    return;
-                }
-                MqttSessionImpl session = (MqttSessionImpl) (eventObject.getSession());
-
-                PublishBuilder publishBuilder = PublishBuilder.builder().payload(retainMessage.getPayload()).qos(consumerRecord.getMqttQoS()).topic(retainMessage.getTopic());
-                if (session.getMqttVersion() == MqttVersion.MQTT_5) {
-                    publishBuilder.publishProperties(new PublishProperties());
-                }
-                // Qos0不走飞行窗口
-                if (consumerRecord.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
-                    session.write(publishBuilder.build());
-                    topic.addSubscriber(consumerRecord);
-                    return;
-                }
-                InflightQueue inflightQueue = session.getInflightQueue();
-                // retain消息逐个推送
-                CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = inflightQueue.offer(publishBuilder);
-                future.whenComplete((mqttPacketIdentifierMessage, throwable) -> {
-                    LOGGER.info("publish retain to client:{} success  ", session.getClientId());
-                    topic.addSubscriber(consumerRecord);
-                });
-                session.flush();
-            }
-        }));
 
         eventBus.subscribe(EventType.TOPIC_CREATE, (eventType, brokerTopic) -> subscribeTopicTree.refreshWhenTopicCreated(brokerTopic));
     }

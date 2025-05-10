@@ -68,7 +68,7 @@ public class DeliverGroup {
      * @param session MQTT客户端会话
      * @return 返回该会话对应的消费者记录，如果不存在则返回null
      */
-    public MessageDeliver getSubscriber(MqttSession session) {
+    public MessageDeliver getMessageDeliver(MqttSession session) {
         return subscribers.get(session);
     }
 
@@ -78,8 +78,12 @@ public class DeliverGroup {
      * @param session 要移除订阅的MQTT客户端会话
      * @return 返回被移除的消费者记录，如果不存在则返回null
      */
-    public AbstractMessageDeliver removeSubscriber(MqttSession session) {
-        return subscribers.remove(session);
+    public AbstractMessageDeliver removeMessageDeliver(MqttSession session) {
+        AbstractMessageDeliver deliver = subscribers.remove(session);
+        if (deliver != null) {
+            deliver.disable();
+        }
+        return deliver;
     }
 
     /**
@@ -87,7 +91,7 @@ public class DeliverGroup {
      *
      * @param subscriber 要添加的主题消费者记录，包含会话信息和订阅配置
      */
-    public void addSubscriber(AbstractMessageDeliver subscriber) {
+    public void addMessageDeliver(AbstractMessageDeliver subscriber) {
         subscribers.put(subscriber.getMqttSession(), subscriber);
     }
 
