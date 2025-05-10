@@ -40,7 +40,7 @@ import java.util.Map;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/7/13
  */
-public class TopicSubscription {
+public class SessionSubscribeRelation {
     /**
      * 主题过滤器的Token解析结果。
      * <p>
@@ -72,6 +72,7 @@ public class TopicSubscription {
      * </p>
      */
     private final Map<BrokerTopicImpl, BaseMessageDeliver> topicSubscribers = new HashMap<>();
+    private final MqttSessionImpl mqttSession;
 
     /**
      * 创建主题订阅关系实例。
@@ -79,7 +80,8 @@ public class TopicSubscription {
      * @param topicFilterToken 主题过滤器的Token解析结果
      * @param mqttQoS          订阅的QoS级别
      */
-    public TopicSubscription(TopicToken topicFilterToken, MqttQoS mqttQoS) {
+    SessionSubscribeRelation(MqttSessionImpl mqttSession, TopicToken topicFilterToken, MqttQoS mqttQoS) {
+        this.mqttSession = mqttSession;
         this.topicFilterToken = topicFilterToken;
         this.mqttQoS = mqttQoS;
     }
@@ -123,8 +125,12 @@ public class TopicSubscription {
      *
      * @return 主题与消费记录的映射关系
      */
-    public Map<BrokerTopicImpl, BaseMessageDeliver> getTopicSubscribers() {
+    Map<BrokerTopicImpl, BaseMessageDeliver> getTopicSubscribers() {
         return topicSubscribers;
+    }
+
+    public MqttSessionImpl getMqttSession() {
+        return mqttSession;
     }
 }
 

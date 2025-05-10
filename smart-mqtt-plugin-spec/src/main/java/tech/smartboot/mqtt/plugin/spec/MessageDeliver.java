@@ -23,7 +23,7 @@ public interface MessageDeliver {
     BrokerTopic getTopic();
 
 
-    TopicToken getTopicFilterToken();
+    TopicToken getSubscribeRelation();
 
     MqttQoS getMqttQoS();
 

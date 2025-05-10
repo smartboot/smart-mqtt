@@ -23,8 +23,6 @@ import org.yaml.snakeyaml.Yaml;
 import tech.smartboot.mqtt.broker.bus.event.KeepAliveMonitorSubscriber;
 import tech.smartboot.mqtt.broker.bus.message.RetainPersistenceConsumer;
 import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
-import tech.smartboot.mqtt.broker.topic.BrokerTopicRegistry;
-import tech.smartboot.mqtt.broker.topic.TopicSubscriptionRegistry;
 import tech.smartboot.mqtt.common.MqttProtocol;
 import tech.smartboot.mqtt.common.util.MqttUtil;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
@@ -119,7 +117,7 @@ public class BrokerContextImpl implements BrokerContext {
      * 用于在消息发布时快速找到匹配的订阅者。
      * </p>
      */
-    private final BrokerTopicRegistry topicRegistry = new BrokerTopicRegistry();
+    private final BrokerTopicMatcher topicMatcher = new BrokerTopicMatcher();
 
     /**
      * 主题订阅树，用于管理客户端的订阅关系。
@@ -132,7 +130,7 @@ public class BrokerContextImpl implements BrokerContext {
      * </ul>
      * </p>
      */
-    private final TopicSubscriptionRegistry subscribeTopicTree = new TopicSubscriptionRegistry();
+    private final SubscribeRelationMatcher subscribeTopicTree = new SubscribeRelationMatcher();
 
     /**
      * Keep-Alive定时器，用于监控客户端连接状态。
@@ -388,7 +386,7 @@ public class BrokerContextImpl implements BrokerContext {
             session.idleConnectTimer = null;
         });
 
-        eventBus.subscribe(EventType.TOPIC_CREATE, (eventType, brokerTopic) -> subscribeTopicTree.refreshWhenTopicCreated(getOrCreateTopic(brokerTopic)));
+        eventBus.subscribe(EventType.TOPIC_CREATE, (eventType, brokerTopic) -> subscribeTopicTree.match(getOrCreateTopic(brokerTopic)));
     }
 
     /**
@@ -488,7 +486,7 @@ public class BrokerContextImpl implements BrokerContext {
                     ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topic), "invalid topicName: " + topic);
                     brokerTopic = new BrokerTopicImpl(topic, options.getMaxMessageQueueLength(), pushThreadPool);
                     LOGGER.info("create topic: {} capacity is {}", topic, brokerTopic.getMessageQueue().capacity());
-                    topicRegistry.registerTopic(brokerTopic);
+                    topicMatcher.registerTopic(brokerTopic);
                     topicMap.put(topic, brokerTopic);
                     eventBus.publish(EventType.TOPIC_CREATE, topic);
                 }
@@ -535,11 +533,11 @@ public class BrokerContextImpl implements BrokerContext {
         return providers;
     }
 
-    public BrokerTopicRegistry getPublishTopicTree() {
-        return topicRegistry;
+    BrokerTopicMatcher getPublishTopicTree() {
+        return topicMatcher;
     }
 
-    public TopicSubscriptionRegistry getTopicSubscribeTree() {
+    SubscribeRelationMatcher getTopicSubscribeTree() {
         return subscribeTopicTree;
     }
 

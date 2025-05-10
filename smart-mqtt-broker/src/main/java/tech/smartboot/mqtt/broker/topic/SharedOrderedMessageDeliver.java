@@ -94,7 +94,7 @@ public class SharedOrderedMessageDeliver extends BaseMessageDeliver implements R
                 topic.getMessageQueue().commit(nextConsumerOffset++);
                 record.getMqttSession().write(publishBuilder.build());
                 queue.offer(record);
-                LOGGER.debug("publish share subscribe:{} to {}", record.getTopicFilterToken().getTopicFilter(), record.getMqttSession().getClientId());
+                LOGGER.debug("publish share subscribe:{} to {}", record.getSubscribeRelation().getTopicFilter(), record.getMqttSession().getClientId());
                 continue;
             }
 

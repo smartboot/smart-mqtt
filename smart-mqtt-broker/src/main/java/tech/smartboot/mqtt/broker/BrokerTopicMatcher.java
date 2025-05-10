@@ -8,9 +8,9 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.mqtt.broker.topic;
+package tech.smartboot.mqtt.broker;
 
-import tech.smartboot.mqtt.broker.TopicSubscription;
+import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import tech.smartboot.mqtt.common.TopicToken;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,7 +52,7 @@ import java.util.function.Consumer;
  * @see <a href="http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718106">MQTT 3.1.1 主题匹配规范</a>
  * @see <a href="http://docs.oasis-open.org/mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html#_Toc3901131">MQTT 5.0 共享订阅规范</a>
  */
-public class BrokerTopicRegistry {
+class BrokerTopicMatcher {
     /**
      * 存储当前节点的主题对象，包含主题的详细信息和消息队列。
      * <p>
@@ -69,7 +69,7 @@ public class BrokerTopicRegistry {
      * 使用ConcurrentHashMap保证在多线程环境下的线程安全性。
      * </p>
      */
-    private final ConcurrentHashMap<String, BrokerTopicRegistry> subNode = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, BrokerTopicMatcher> subNode = new ConcurrentHashMap<>();
 
     /**
      * 将一个主题添加到发布树中。
@@ -94,9 +94,9 @@ public class BrokerTopicRegistry {
      */
     public void registerTopic(BrokerTopicImpl brokerTopic) {
         TopicToken topicToken = brokerTopic;
-        BrokerTopicRegistry treeNode = this;
+        BrokerTopicMatcher treeNode = this;
         while (true) {
-            treeNode = treeNode.subNode.computeIfAbsent(topicToken.getNode(), n -> new BrokerTopicRegistry());
+            treeNode = treeNode.subNode.computeIfAbsent(topicToken.getNode(), n -> new BrokerTopicMatcher());
             if (topicToken.getNextNode() == null) {
                 break;
             } else {
@@ -131,10 +131,10 @@ public class BrokerTopicRegistry {
      * </p>
      *
      * @param subscription 包含主题过滤器和订阅信息的对象
-     * @param consumer 对匹配到的主题执行的操作
+     * @param consumer     对匹配到的主题执行的操作
      * @see #match 实际执行匹配的核心方法
      */
-    public void matchSubscriptionToTopics(TopicSubscription subscription, Consumer<BrokerTopicImpl> consumer) {
+    public void match(SessionSubscribeRelation subscription, Consumer<BrokerTopicImpl> consumer) {
         if (subscription.getTopicFilterToken().isShared()) {
             match(this, subscription.getTopicFilterToken().getNextNode().getNextNode(), consumer);
         } else {
@@ -166,12 +166,12 @@ public class BrokerTopicRegistry {
      * 使用ConcurrentHashMap保证线程安全，允许多线程并发匹配。
      * </p>
      *
-     * @param treeNode 当前匹配的树节点
+     * @param treeNode   当前匹配的树节点
      * @param topicToken 要匹配的主题标记
-     * @param consumer 对匹配到的主题执行的操作
+     * @param consumer   对匹配到的主题执行的操作
      * @see #subscribeChildren 处理#通配符的递归匹配
      */
-    private void match(BrokerTopicRegistry treeNode, TopicToken topicToken, Consumer<BrokerTopicImpl> consumer) {
+    private void match(BrokerTopicMatcher treeNode, TopicToken topicToken, Consumer<BrokerTopicImpl> consumer) {
         //匹配结束
         if (topicToken == null) {
             if (treeNode.brokerTopic != null) {
@@ -189,7 +189,7 @@ public class BrokerTopicRegistry {
                 match(node, topicToken.getNextNode(), consumer);
             });
         } else {
-            BrokerTopicRegistry node = treeNode.subNode.get(topicToken.getNode());
+            BrokerTopicMatcher node = treeNode.subNode.get(topicToken.getNode());
             if (node != null) {
                 match(node, topicToken.getNextNode(), consumer);
             }
@@ -206,7 +206,7 @@ public class BrokerTopicRegistry {
      * @param treeNode 要遍历的树节点
      * @param consumer 对找到的主题执行的操作
      */
-    private void subscribeChildren(BrokerTopicRegistry treeNode, Consumer<BrokerTopicImpl> consumer) {
+    private void subscribeChildren(BrokerTopicMatcher treeNode, Consumer<BrokerTopicImpl> consumer) {
         BrokerTopicImpl brokerTopic = treeNode.brokerTopic;
         if (brokerTopic != null) {
             consumer.accept(brokerTopic);

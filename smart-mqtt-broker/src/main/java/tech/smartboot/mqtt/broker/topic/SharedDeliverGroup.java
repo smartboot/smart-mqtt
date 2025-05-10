@@ -36,7 +36,7 @@ class SharedDeliverGroup extends DeliverGroup {
         BaseMessageDeliver messageDeliver = super.removeMessageDeliver(session);
         if (subscribers.isEmpty()) {
             record.disable();
-            record.getTopic().removeShareGroup(messageDeliver.getTopicFilterToken().getTopicFilter());
+            record.getTopic().removeShareGroup(messageDeliver.getSubscribeRelation().getTopicFilter());
         }
         return messageDeliver;
     }

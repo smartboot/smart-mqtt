@@ -11,7 +11,7 @@
 package tech.smartboot.mqtt.broker.topic;
 
 import tech.smartboot.mqtt.broker.MqttSessionImpl;
-import tech.smartboot.mqtt.broker.TopicSubscription;
+import tech.smartboot.mqtt.broker.SessionSubscribeRelation;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
 import tech.smartboot.mqtt.common.enums.MqttVersion;
 import tech.smartboot.mqtt.common.message.MqttPacketIdentifierMessage;
@@ -35,9 +35,9 @@ public class AdvancedMessageDeliver extends BaseMessageDeliver {
     private final AtomicBoolean semaphore = new AtomicBoolean(false);
 
 
-    public AdvancedMessageDeliver(BrokerTopicImpl topic, MqttSessionImpl session, TopicSubscription topicSubscription, long nextConsumerOffset) {
-        super(topic, session, topicSubscription, nextConsumerOffset);
-        ValidateUtils.isTrue(topicSubscription.getMqttQoS() != MqttQoS.AT_MOST_ONCE, "invalid qos");
+    public AdvancedMessageDeliver(BrokerTopicImpl topic, MqttSessionImpl session, SessionSubscribeRelation sessionSubscribeRelation, long nextConsumerOffset) {
+        super(topic, session, sessionSubscribeRelation, nextConsumerOffset);
+        ValidateUtils.isTrue(sessionSubscribeRelation.getMqttQoS() != MqttQoS.AT_MOST_ONCE, "invalid qos");
     }
 
     /**

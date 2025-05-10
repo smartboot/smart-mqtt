@@ -12,7 +12,7 @@ package tech.smartboot.mqtt.broker.topic;
 
 
 import tech.smartboot.mqtt.broker.MqttSessionImpl;
-import tech.smartboot.mqtt.broker.TopicSubscription;
+import tech.smartboot.mqtt.broker.SessionSubscribeRelation;
 import tech.smartboot.mqtt.common.TopicToken;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
 import tech.smartboot.mqtt.plugin.spec.MessageDeliver;
@@ -78,7 +78,7 @@ public class BaseMessageDeliver implements MessageDeliver, Runnable {
      * 用于消息投递时的服务质量控制。
      * </p>
      */
-    private final TopicSubscription topicFilterToken;
+    private final SessionSubscribeRelation subscribeRelation;
     /**
      * MQTT客户端会话对象，维护与订阅客户端的连接状态和通信通道。
      * 用于消息推送和会话状态检查。
@@ -94,10 +94,10 @@ public class BaseMessageDeliver implements MessageDeliver, Runnable {
     protected boolean enable = true;
 
 
-    public BaseMessageDeliver(BrokerTopicImpl topic, MqttSessionImpl session, TopicSubscription topicFilterToken, long nextConsumerOffset) {
+    public BaseMessageDeliver(BrokerTopicImpl topic, MqttSessionImpl session, SessionSubscribeRelation subscribeRelation, long nextConsumerOffset) {
         this.topic = topic;
         this.mqttSession = session;
-        this.topicFilterToken = topicFilterToken;
+        this.subscribeRelation = subscribeRelation;
         this.nextConsumerOffset = nextConsumerOffset;
     }
 
@@ -119,13 +119,13 @@ public class BaseMessageDeliver implements MessageDeliver, Runnable {
         return latestSubscribeTime;
     }
 
-    public final TopicToken getTopicFilterToken() {
-        return topicFilterToken.getTopicFilterToken();
+    public final TopicToken getSubscribeRelation() {
+        return subscribeRelation.getTopicFilterToken();
     }
 
     @Override
     public MqttQoS getMqttQoS() {
-        return topicFilterToken.getMqttQoS();
+        return subscribeRelation.getMqttQoS();
     }
 
     public final long getNextConsumerOffset() {
