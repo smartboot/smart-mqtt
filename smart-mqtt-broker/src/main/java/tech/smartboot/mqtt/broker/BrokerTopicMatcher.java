@@ -92,7 +92,7 @@ class BrokerTopicMatcher {
      * @throws NullPointerException 如果brokerTopic为null
      * @see TopicToken 用于解析主题层级结构
      */
-    public void registerTopic(BrokerTopicImpl brokerTopic) {
+    public void add(BrokerTopicImpl brokerTopic) {
         TopicToken topicToken = brokerTopic;
         BrokerTopicMatcher treeNode = this;
         while (true) {

@@ -196,7 +196,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
         }
         SessionSubscribeRelation relation = new SessionSubscribeRelation(this, topicToken, mqttQoS);
         ValidateUtils.isTrue(subscribers.put(topicFilter, relation) == null, "duplicate topic filter");
-        mqttContext.getTopicSubscribeTree().addRelation(relation);
+        mqttContext.getTopicSubscribeTree().add(relation);
         mqttContext.getPublishTopicTree().match(relation, topic -> subscribeSuccess(relation, topic));
     }
 

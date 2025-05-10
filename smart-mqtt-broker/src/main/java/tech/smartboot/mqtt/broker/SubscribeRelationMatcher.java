@@ -78,7 +78,7 @@ class SubscribeRelationMatcher {
      *
      * @param subscriber 包含主题过滤器和QoS等订阅信息的对象
      */
-    public void addRelation(SessionSubscribeRelation subscriber) {
+    public void add(SessionSubscribeRelation subscriber) {
         SubscribeRelationMatcher treeNode = this;
         TopicToken token = subscriber.getTopicFilterToken();
         do {
