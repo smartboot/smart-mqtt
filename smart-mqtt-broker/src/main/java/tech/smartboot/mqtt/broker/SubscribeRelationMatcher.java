@@ -164,7 +164,7 @@ class SubscribeRelationMatcher {
             if (topicToken.getNextNode() == null) {
                 subscribers.forEach(consumer);
             } else {
-                subscribeTree.subNode.values().forEach(t -> match0(topicToken.getNextNode(), consumer));
+                subscribeTree.match0(topicToken.getNextNode(), consumer);
             }
         }
     }
