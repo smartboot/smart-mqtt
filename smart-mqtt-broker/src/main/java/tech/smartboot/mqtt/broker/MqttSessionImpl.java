@@ -252,7 +252,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
             return;
         }
 
-        PublishBuilder publishBuilder = PublishBuilder.builder().payload(retainMessage.getPayload()).qos(deliver.getMqttQoS()).topic(retainMessage.getTopic());
+        PublishBuilder publishBuilder = PublishBuilder.builder().payload(retainMessage.getPayload()).qos(deliver.getMqttQoS()).topic(retainMessage.getTopic()).retained(true);
         if (getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());
         }
