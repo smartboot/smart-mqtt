@@ -164,16 +164,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
     }
 
 
-    public MqttQoS subscribe(String topicFilter, MqttQoS mqttQoS) {
-        if (mqttContext.getProviders().getSubscribeProvider().subscribeTopic(topicFilter, this)) {
-            subscribe0(topicFilter, mqttQoS);
-            return mqttQoS;
-        } else {
-            return MqttQoS.FAILURE;
-        }
-    }
-
-    private void subscribe0(String topicFilter, MqttQoS mqttQoS) {
+    public void subscribe(String topicFilter, MqttQoS mqttQoS) {
         SessionSubscribeRelation preSubscriber = subscribers.get(topicFilter);
         //订阅topic已存在，可能只是更新了Qos
         if (preSubscriber != null) {

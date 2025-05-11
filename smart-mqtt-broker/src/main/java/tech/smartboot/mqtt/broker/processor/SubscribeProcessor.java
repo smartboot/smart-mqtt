@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tech.smartboot.mqtt.broker.BrokerContextImpl;
 import tech.smartboot.mqtt.broker.MqttSessionImpl;
+import tech.smartboot.mqtt.common.enums.MqttQoS;
 import tech.smartboot.mqtt.common.enums.MqttVersion;
 import tech.smartboot.mqtt.common.message.MqttSubAckMessage;
 import tech.smartboot.mqtt.common.message.MqttSubscribeMessage;
@@ -23,6 +24,9 @@ import tech.smartboot.mqtt.common.message.variable.MqttReasonVariableHeader;
 import tech.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
 import tech.smartboot.mqtt.plugin.spec.bus.EventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 客户端订阅消息
@@ -39,9 +43,14 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
         // 返回码的顺序必须和 SUBSCRIBE 报文中主题过滤器的顺序相同
         int[] qosArray = new int[mqttSubscribeMessage.getPayload().getTopicSubscriptions().size()];
         int i = 0;
+        List<MqttTopicSubscription> subscriptions = new ArrayList<>();
         for (MqttTopicSubscription mqttTopicSubscription : mqttSubscribeMessage.getPayload().getTopicSubscriptions()) {
-            qosArray[i++] = session.subscribe(mqttTopicSubscription.getTopicFilter(), mqttTopicSubscription.getQualityOfService()).value();
-            context.getEventBus().publish(EventType.SUBSCRIBE_ACCEPT, EventObject.newEventObject(session, mqttTopicSubscription));
+            if (context.getProviders().getSubscribeProvider().subscribeTopic(mqttTopicSubscription.getTopicFilter(), session)) {
+                subscriptions.add(mqttTopicSubscription);
+                qosArray[i++] = mqttTopicSubscription.getQualityOfService().value();
+            } else {
+                qosArray[i++] = MqttQoS.FAILURE.value();
+            }
         }
 
 
@@ -61,5 +70,10 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
         // 返回码的顺序必须和 SUBSCRIBE 报文中主题过滤器的顺序相同
         mqttSubAckMessage.setPayload(new MqttSubAckPayload(qosArray));
         session.write(mqttSubAckMessage, false);
+
+        subscriptions.forEach(mqttTopicSubscription -> {
+            session.subscribe(mqttTopicSubscription.getTopicFilter(), mqttTopicSubscription.getQualityOfService());
+            context.getEventBus().publish(EventType.SUBSCRIBE_ACCEPT, EventObject.newEventObject(session, mqttTopicSubscription));
+        });
     }
 }
