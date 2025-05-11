@@ -522,4 +522,104 @@ public class MqttSpecComplianceTest {
     }
 
     // TODO: Add test for broker disconnecting client if PINGREQ not received (harder to test from client side without specific hooks)
+
+    @Test
+    public void testMessageOrdering_QoS1() throws InterruptedException, ExecutionException, TimeoutException {
+        MqttClient publisher = new MqttClient(host, port);
+        MqttClient subscriber = new MqttClient(host, port);
+
+        String topic = "test/ordering_qos1";
+        int numMessages = 5;
+        List<String> sentMessages = new ArrayList<>();
+        List<String> receivedMessages = new ArrayList<>();
+        CompletableFuture<Void> allMessagesReceived = new CompletableFuture<>();
+
+        CompletableFuture<Void> pubConnectFuture = new CompletableFuture<>();
+        publisher.connect(connAck -> pubConnectFuture.complete(null));
+        pubConnectFuture.get(5, TimeUnit.SECONDS);
+
+        subscriber.connect(connAck -> {
+            subscriber.subscribe(topic, MqttQoS.AT_LEAST_ONCE, (client, msg) -> {
+                String payload = new String(msg.getPayload().getPayload());
+                LOGGER.info("Subscriber received message: {}", payload);
+                synchronized (receivedMessages) {
+                    receivedMessages.add(payload);
+                    if (receivedMessages.size() == numMessages) {
+                        allMessagesReceived.complete(null);
+                    }
+                }
+            });
+        });
+
+        Thread.sleep(500); // Ensure subscription is active
+
+        for (int i = 0; i < numMessages; i++) {
+            String message = "message_" + i;
+            sentMessages.add(message);
+            CompletableFuture<Integer> pubAckFuture = new CompletableFuture<>();
+            LOGGER.info("Publisher sending message: {}", message);
+            publisher.publish(topic, MqttQoS.AT_LEAST_ONCE, message.getBytes(), pubAckFuture::complete);
+            pubAckFuture.get(5, TimeUnit.SECONDS); // Wait for PUBACK for each message
+        }
+
+        allMessagesReceived.get(10, TimeUnit.SECONDS); // Wait for all messages to be received
+
+        Assert.assertEquals("Number of sent and received messages should match", sentMessages.size(), receivedMessages.size());
+        for (int i = 0; i < sentMessages.size(); i++) {
+            Assert.assertEquals("Message content and order should match for message " + i, sentMessages.get(i), receivedMessages.get(i));
+        }
+
+        publisher.disconnect();
+        subscriber.disconnect();
+    }
+
+    @Test
+    public void testMessageOrdering_QoS2() throws InterruptedException, ExecutionException, TimeoutException {
+        MqttClient publisher = new MqttClient(host, port);
+        MqttClient subscriber = new MqttClient(host, port);
+
+        String topic = "test/ordering_qos2";
+        int numMessages = 5;
+        List<String> sentMessages = new ArrayList<>();
+        List<String> receivedMessages = new ArrayList<>();
+        CompletableFuture<Void> allMessagesReceived = new CompletableFuture<>();
+
+        CompletableFuture<Void> pubConnectFuture = new CompletableFuture<>();
+        publisher.connect(connAck -> pubConnectFuture.complete(null));
+        pubConnectFuture.get(5, TimeUnit.SECONDS);
+
+        subscriber.connect(connAck -> {
+            subscriber.subscribe(topic, MqttQoS.EXACTLY_ONCE, (client, msg) -> {
+                String payload = new String(msg.getPayload().getPayload());
+                LOGGER.info("Subscriber received message: {}", payload);
+                synchronized (receivedMessages) {
+                    receivedMessages.add(payload);
+                    if (receivedMessages.size() == numMessages) {
+                        allMessagesReceived.complete(null);
+                    }
+                }
+            });
+        });
+
+        Thread.sleep(500); // Ensure subscription is active
+
+        for (int i = 0; i < numMessages; i++) {
+            String message = "message_qos2_" + i;
+            sentMessages.add(message);
+            CompletableFuture<Integer> pubCompFuture = new CompletableFuture<>();
+            LOGGER.info("Publisher sending message: {}", message);
+            publisher.publish(topic, MqttQoS.EXACTLY_ONCE, message.getBytes(), pubCompFuture::complete);
+            pubCompFuture.get(5, TimeUnit.SECONDS); // Wait for PUBCOMP for each message
+        }
+
+        allMessagesReceived.get(10, TimeUnit.SECONDS); // Wait for all messages to be received
+
+        Assert.assertEquals("Number of sent and received messages should match for QoS 2", sentMessages.size(), receivedMessages.size());
+        for (int i = 0; i < sentMessages.size(); i++) {
+            Assert.assertEquals("Message content and order should match for QoS 2 message " + i, sentMessages.get(i), receivedMessages.get(i));
+        }
+
+        publisher.disconnect();
+        subscriber.disconnect();
+    }
 }
