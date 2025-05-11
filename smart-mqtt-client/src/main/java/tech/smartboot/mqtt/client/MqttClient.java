@@ -132,6 +132,7 @@ public class MqttClient extends AbstractSession {
         options.setPort(NumberUtils.toInt(array[2]));
         opt.accept(options);
         this.clientId = options.getClientId();
+        setMqttVersion(options.getMqttVersion());
     }
 
 
@@ -161,10 +162,10 @@ public class MqttClient extends AbstractSession {
 
             //todo
             ConnectProperties properties = null;
-            if (options.getMqttVersion() == MqttVersion.MQTT_5) {
+            if (getMqttVersion() == MqttVersion.MQTT_5) {
                 properties = new ConnectProperties();
             }
-            MqttConnectVariableHeader variableHeader = new MqttConnectVariableHeader(options.getMqttVersion(), StringUtils.isNotBlank(options.getUserName()), options.getPassword() != null, options.getWillMessage(), options.isCleanSession(), options.getKeepAliveInterval(), properties);
+            MqttConnectVariableHeader variableHeader = new MqttConnectVariableHeader(getMqttVersion(), StringUtils.isNotBlank(options.getUserName()), options.getPassword() != null, options.getWillMessage(), options.isCleanSession(), options.getKeepAliveInterval(), properties);
             MqttConnectPayload payload = new MqttConnectPayload(clientId, options.getWillMessage(), options.getUserName(), options.getPassword());
 
             MqttConnectMessage connectMessage = new MqttConnectMessage(variableHeader, payload);
@@ -257,7 +258,7 @@ public class MqttClient extends AbstractSession {
         unsubscribedTopics.forEach(unsubscribeBuilder::addTopicFilter);
 
         //todo
-        if (options.getMqttVersion() == MqttVersion.MQTT_5) {
+        if (getMqttVersion() == MqttVersion.MQTT_5) {
             ReasonProperties properties = new ReasonProperties();
             unsubscribeBuilder.properties(properties);
         }
@@ -308,7 +309,7 @@ public class MqttClient extends AbstractSession {
             subscribeBuilder.addSubscription(qos[i], topic[i]);
         }
         //todo
-        if (options.getMqttVersion() == MqttVersion.MQTT_5) {
+        if (getMqttVersion() == MqttVersion.MQTT_5) {
             subscribeBuilder.subscribeProperties(new SubscribeProperties());
         }
         MqttSubscribeMessage subscribeMessage = subscribeBuilder.build();
@@ -394,7 +395,7 @@ public class MqttClient extends AbstractSession {
     public void publish(String topic, MqttQoS qos, byte[] payload, boolean retain, Consumer<Integer> consumer, boolean autoFlush) {
         PublishBuilder publishBuilder = PublishBuilder.builder().topicName(topic).qos(qos).payload(payload).retained(retain);
         //todo
-        if (options.getMqttVersion() == MqttVersion.MQTT_5) {
+        if (getMqttVersion() == MqttVersion.MQTT_5) {
             publishBuilder.publishProperties(new PublishProperties());
         }
         if (connected) {
@@ -501,7 +502,7 @@ public class MqttClient extends AbstractSession {
         }
         //DISCONNECT 报文是客户端发给服务端的最后一个控制报文。表示客户端正常断开连接。
         try {
-            if (options.getMqttVersion() == MqttVersion.MQTT_5) {
+            if (getMqttVersion() == MqttVersion.MQTT_5) {
                 MqttDisconnectVariableHeader variableHeader = new MqttDisconnectVariableHeader(MqttDisConnectReturnCode.NORMAL_DISCONNECT, new DisConnectProperties());
                 MqttDisconnectMessage message = new MqttDisconnectMessage(variableHeader);
                 write(message);
