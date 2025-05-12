@@ -68,9 +68,9 @@ jobs:
 
       ## 构建企业版插件
       - name: Build smart-mqtt-enterprise
-        run: mvn -B -f smart-mqtt/smart-mqtt-plugin-enterprise/pom.xml clean package -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+        run: mvn -B -f smart-mqtt/plugins/smart-mqtt-plugin-enterprise/pom.xml clean package -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Copy smart-mqtt-enterprise
-        run: cp smart-mqtt/smart-mqtt-plugin-enterprise/target/smart-mqtt-plugin-enterprise-*.jar  smart-mqtt-enterprise/deploy/plugins
+        run: cp smart-mqtt/plugins/smart-mqtt-plugin-enterprise/target/smart-mqtt-plugin-enterprise-*.jar  smart-mqtt-enterprise/deploy/plugins
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v3
