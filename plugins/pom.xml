@@ -13,51 +13,107 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>io.github.smartboot.mqtt</groupId>
-        <artifactId>smart-mqtt</artifactId>
-        <version>1.1.1</version>
-        <relativePath>../pom.xml</relativePath>
-    </parent>
+    <groupId>tech.smartboot.mqtt</groupId>
+    <version>1.1.1</version>
     <packaging>pom</packaging>
-
     <artifactId>plugins</artifactId>
+    <properties>
+        <feat.version>0.9.2</feat.version>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+    <modules>
+        <module>smart-mqtt-plugin-enterprise</module>
+    </modules>
+
     <dependencies>
         <dependency>
-            <groupId>io.github.smartboot.mqtt</groupId>
-            <artifactId>smart-mqtt-broker</artifactId>
+            <groupId>tech.smartboot.mqtt</groupId>
+            <artifactId>smart-mqtt-plugin-spec</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>io.github.smartboot.mqtt</groupId>
-                <artifactId>smart-mqtt-data-persistence</artifactId>
-                <version>${project.parent.version}</version>
+                <groupId>tech.smartboot.feat</groupId>
+                <artifactId>feat-cloud-starter</artifactId>
+                <version>${feat.version}</version>
             </dependency>
-            
-            <!--数据持久化所需库-->
             <dependency>
-                <groupId>io.lettuce</groupId>
-                <artifactId>lettuce-core</artifactId>
-                <version>5.1.8.RELEASE</version>
+                <groupId>tech.smartboot.mqtt</groupId>
+                <artifactId>smart-mqtt-plugin-enterprise</artifactId>
+                <version>${project.version}</version>
             </dependency>
-            
             <dependency>
-                <groupId>org.apache.kafka</groupId>
-                <artifactId>kafka-clients</artifactId>
-                <version>3.0.0</version>
+                <groupId>tech.smartboot.mqtt</groupId>
+                <artifactId>smart-mqtt-client</artifactId>
+                <version>${project.version}</version>
             </dependency>
-    
             <dependency>
-                <groupId>cn.hutool</groupId>
-                <artifactId>hutool-all</artifactId>
-                <version>5.8.10</version>
+                <groupId>tech.smartboot.mqtt</groupId>
+                <artifactId>smart-mqtt-plugin-spec</artifactId>
+                <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.10.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <debug>false</debug>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <filters>
+                                <!-- 排除 fastjson2 依赖 -->
+                                <filter>
+                                    <artifact>com.alibaba.fastjson2:*</artifact>
+                                    <excludes>
+                                        <exclude>**/*</exclude>
+                                    </excludes>
+                                </filter>
+                                <!--排除smart-socket依赖-->
+                                <filter>
+                                    <artifact>io.github.smartboot.socket:*</artifact>
+                                    <excludes>
+                                        <exclude>**/*</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <transformers>
+                                <!-- 采用追加的方式 -->
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/services/tech.smartboot.mqtt.broker.plugin.Plugin</resource>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>tech.smartboot.mqtt</groupId>
+                <artifactId>smart-mqtt-maven-plugin</artifactId>
+                <version>0.0.0</version>
+            </plugin>
+        </plugins>
+    </build>
 
-    <modules>
-        <module>smart-mqtt-data-persistence</module>
-    </modules>
 </project>
