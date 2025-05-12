@@ -242,6 +242,7 @@ public class BrokerContextImpl implements BrokerContext {
      * @throws Throwable 如果初始化过程中发生任何错误
      */
     public void init() throws Throwable {
+        long start = System.currentTimeMillis();
         updateBrokerConfigure();
 
         subscribeEventBus();
@@ -274,9 +275,9 @@ public class BrokerContextImpl implements BrokerContext {
         System.out.println("Document: https://smartboot.tech/smart-mqtt");
         System.out.println("Support: zhengjunweimail@163.com");
         if (StringUtils.isBlank(options.getHost())) {
-            System.out.println("\uD83C\uDF89start smart-mqtt success! [port:" + options.getPort() + "]");
+            System.out.println("\uD83C\uDF89start smart-mqtt success, cost: " + (System.currentTimeMillis() - start) + "ms ! [port:" + options.getPort() + "]");
         } else {
-            System.out.println("\uD83C\uDF89start smart-mqtt success! [host:" + options.getHost() + " port:" + options.getPort() + "]");
+            System.out.println("\uD83C\uDF89start smart-mqtt success, cost: " + (System.currentTimeMillis() - start) + "ms ! [host:" + options.getHost() + " port:" + options.getPort() + "]");
         }
     }
 

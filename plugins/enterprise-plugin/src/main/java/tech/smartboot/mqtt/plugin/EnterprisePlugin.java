@@ -53,14 +53,12 @@ public class EnterprisePlugin extends Plugin {
             }
         });
 
-
         httpServer = FeatCloud.cloudServer(serverOptions -> serverOptions
                 .addExternalBean("brokerContext", brokerContext)
                 .addExternalBean("pluginConfig", config)
                 .addExternalBean("storage", storage())
                 .debug(false).bannerEnabled(false).threadNum(4).readBufferSize(1024 * 8).writeBufferSize(8 * 1024).group(asynchronousChannelGroup));
         httpServer.listen(config.getHttpConfig().getHost(), config.getHttpConfig().getPort());
-        LOGGER.debug("openapi server start success!");
         System.out.println("openapi server start success!");
     }
 
