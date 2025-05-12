@@ -35,18 +35,12 @@ public class VersionController {
 
     @PostConstruct
     public void init() throws ExecutionException, InterruptedException {
-        getVersion();
-        HashedWheelTimer.DEFAULT_TIMER.schedule(new AsyncTask() {
+        HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(new AsyncTask() {
             @Override
             public void execute() {
-                try {
-                    getVersion();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
+                version = null;
             }
-        }, 1, TimeUnit.HOURS);
-
+        }, 1, TimeUnit.DAYS);
     }
 
     private void getVersion() {
@@ -68,8 +62,7 @@ public class VersionController {
     @RequestMapping(OpenApi.SYSTEM_VERSION)
     public RestResult<VersionTO> getLatestVersion() {
         if (version == null) {
-            version = new VersionTO();
-            version.setTagName(version.getCurrent());
+            getVersion();
         }
         return RestResult.ok(version);
     }
