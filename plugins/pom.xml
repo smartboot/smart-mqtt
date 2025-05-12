@@ -18,7 +18,7 @@
     <packaging>pom</packaging>
     <artifactId>plugins</artifactId>
     <properties>
-        <feat.version>0.9.2</feat.version>
+        <feat.version>0.9.3</feat.version>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
