@@ -16,6 +16,7 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.nio.file.Files;
 
 /**
@@ -51,12 +52,21 @@ public abstract class Plugin {
      */
     public final void install(BrokerContext brokerContext) throws Throwable {
         checkSate();
+        PrintStream out = System.out;
         try {
+            System.setOut(new PrintStream(out) {
+                @Override
+                public void print(String x) {
+                    super.print("[" + pluginName() + "] " + x);
+                }
+            });
             initPlugin(brokerContext);
             installed = true;
         } catch (Throwable e) {
             throwable = e;
             throw e;
+        } finally {
+            System.setOut(out);
         }
     }
 
@@ -79,7 +89,18 @@ public abstract class Plugin {
      * 卸载插件,在容器服务停止前调用
      */
     public final void uninstall() {
-        destroyPlugin();
+        PrintStream out = System.out;
+        try {
+            System.setOut(new PrintStream(out) {
+                @Override
+                public void print(String x) {
+                    super.print("[" + pluginName() + "] " + x);
+                }
+            });
+            destroyPlugin();
+        } finally {
+            System.setOut(out);
+        }
     }
 
     /**
