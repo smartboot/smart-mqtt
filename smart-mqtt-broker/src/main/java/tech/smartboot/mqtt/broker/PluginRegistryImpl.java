@@ -20,6 +20,7 @@ import tech.smartboot.mqtt.plugin.spec.PluginRegistry;
 import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -76,6 +77,43 @@ class PluginRegistryImpl implements PluginRegistry {
                 LOGGER.error("registryPlugin install plugin:{} exception", file.getName(), e);
             }
         }
+
+        dumpPluginList();
+    }
+
+    private void dumpPluginList() {
+        // 计算最长插件名长度
+        int maxNameLength = plugins.values().stream().mapToInt(p -> p.plugin.pluginName().length()).max().orElse(16);
+        maxNameLength = Math.max(maxNameLength, 16); // 最小保持16字符宽度
+
+        // 动态生成表格边框
+        String topBorder = "╔" + repeat("═", maxNameLength + 2) + "╤════════════╗";
+        String headerBorder = "╠" + repeat("═", maxNameLength + 2) + "╪════════════╣";
+        String bottomBorder = "╚" + repeat("═", maxNameLength + 2) + "╧════════════╝";
+
+        System.out.println(topBorder);
+        System.out.printf("║ %-" + maxNameLength + "s │ Status     ║%n", "Plugin Name");
+        System.out.println(headerBorder);
+
+        int finalMaxNameLength = maxNameLength;
+        plugins.values().stream().sorted(Comparator.comparingInt(o -> o.plugin.id())).forEach(pluginUnit -> {
+            String status;
+            if (pluginUnit.plugin.isInstalled()) {
+                status = "\033[32m✓ success\033[0m"; // 绿色
+            } else {
+                status = "\033[31m✗ fail\033[0m";    // 红色
+            }
+            System.out.printf("║ %-" + finalMaxNameLength + "s │ %-10s  ║%n", pluginUnit.plugin.pluginName(), status);
+        });
+        System.out.println(bottomBorder);
+    }
+
+    private String repeat(String s, int times) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < times; i++) {
+            sb.append(s);
+        }
+        return sb.toString();
     }
 
     public void stopPlugin(int pluginId) {
