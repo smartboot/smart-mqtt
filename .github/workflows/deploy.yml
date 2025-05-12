@@ -108,7 +108,7 @@ jobs:
       - name: 上传插件包
         uses: actions/upload-artifact@v4
         with:
-          name: smart-mqtt-plugins-${{ github.ref_name }}
+          name: plugins-${{ github.ref_name }}
           compression-level: 0
           path: smart-mqtt-enterprise/deploy/plugins
 
