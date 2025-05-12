@@ -8,10 +8,11 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.mqtt.broker.topic;
+package org.smartboot.mqtt.test;
 
 import org.junit.Assert;
 import org.junit.Test;
+import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import tech.smartboot.mqtt.common.TopicToken;
 import tech.smartboot.mqtt.common.util.MqttUtil;
 
