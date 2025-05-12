@@ -101,7 +101,7 @@ class PluginRegistryImpl implements PluginRegistry {
             if (pluginUnit.plugin.isInstalled()) {
                 status = "\033[32m✓ success\033[0m"; // 绿色
             } else {
-                status = "\033[31m✗ fail\033[0m";    // 红色
+                status = "\033[31m✗ fail   \033[0m";    // 红色
             }
             System.out.printf("║ %-" + finalMaxNameLength + "s │ %-10s  ║%n", pluginUnit.plugin.pluginName(), status);
         });
