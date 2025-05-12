@@ -57,7 +57,7 @@ public class VersionController {
                     .addQueryParam("per_page", "1")
                     .addQueryParam("direction", "desc")
                     .onFailure(Throwable::printStackTrace).submit().get();
-            LOGGER.info("response:{}", response.body());
+//            LOGGER.info("response:{}", response.body());
             JSONArray array = JSONArray.parseArray(response.body());
             version = array.getJSONObject(0).to(VersionTO.class);
         } catch (Throwable throwable) {

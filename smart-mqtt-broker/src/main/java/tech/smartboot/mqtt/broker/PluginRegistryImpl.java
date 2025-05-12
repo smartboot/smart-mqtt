@@ -68,7 +68,6 @@ class PluginRegistryImpl implements PluginRegistry {
             }
             URLClassLoader classLoader = new URLClassLoader(new URL[]{file.toURI().toURL()}, PluginRegistry.class.getClassLoader());
             PluginContainer pluginContainer = new PluginContainer(classLoader, baseStorage);
-            LOGGER.info("registryPlugin load plugin:{}", pluginContainer.pluginName());
             // 插件目录下可能存在无效的插件
             try {
                 plugins.put(pluginContainer.id(), new PluginUnit(pluginContainer, file));

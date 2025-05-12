@@ -40,6 +40,7 @@ import tech.smartboot.mqtt.plugin.spec.provider.Providers;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -556,8 +557,9 @@ public class BrokerContextImpl implements BrokerContext {
             inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("smart-mqtt.yaml");
             LOGGER.info("load smart-mqtt.yaml from classpath.");
         } else {
-            inputStream = Files.newInputStream(Paths.get(brokerConfig));
-            LOGGER.info("load external yaml config.");
+            Path path = Paths.get(brokerConfig);
+            inputStream = Files.newInputStream(path);
+            LOGGER.info("load external yaml config:{}.", path.toAbsolutePath().toString());
         }
         if (inputStream == null) {
             LOGGER.warn("smart-mqtt.yaml not found.");

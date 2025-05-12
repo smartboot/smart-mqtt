@@ -33,7 +33,6 @@ class PluginContainer extends Plugin {
     public PluginContainer(ClassLoader classLoader, File baseStorage) {
         this.classLoader = classLoader;
         ServiceLoader<Plugin> serviceLoader = ServiceLoader.load(Plugin.class, classLoader);
-        System.out.println("Plugin container loaded!" + serviceLoader);
         List<Plugin> plugins = new ArrayList<>();
         serviceLoader.forEach(p -> {
             if (p.getClass().getClassLoader() == classLoader) {
