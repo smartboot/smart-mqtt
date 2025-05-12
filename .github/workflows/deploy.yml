@@ -50,7 +50,7 @@ jobs:
       - name: 编译 smart-mqtt broker 模块
         run: mvn -B install --file smart-mqtt/smart-mqtt-broker/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: 构建 MQTT Broker社区版
-        run: mvn -B -f smart-mqtt-enterprise/poms/community.xml clean package -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+        run: mvn -B -f smart-mqtt-enterprise/poms/pom.xml clean package -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
 
       - name: deploy dir
         run: |
