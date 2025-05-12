@@ -24,7 +24,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <modules>
-        <module>smart-mqtt-plugin-enterprise</module>
+        <module>enterprise-plugin</module>
     </modules>
 
     <dependencies>
@@ -43,7 +43,7 @@
             </dependency>
             <dependency>
                 <groupId>tech.smartboot.mqtt</groupId>
-                <artifactId>smart-mqtt-plugin-enterprise</artifactId>
+                <artifactId>enterprise-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
