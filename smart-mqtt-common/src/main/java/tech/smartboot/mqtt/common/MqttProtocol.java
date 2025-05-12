@@ -10,8 +10,6 @@
 
 package tech.smartboot.mqtt.common;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartboot.socket.Protocol;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.mqtt.common.message.MqttMessage;
@@ -23,7 +21,6 @@ import java.nio.ByteBuffer;
  * @version V1.0 , 2018/4/22
  */
 public class MqttProtocol implements Protocol<MqttMessage> {
-    private static final Logger logger = LoggerFactory.getLogger(MqttProtocol.class);
     static final Decoder FINISH_DECODER = (byteBuffer, session) -> null;
     /**
      * websocket负载数据读取成功

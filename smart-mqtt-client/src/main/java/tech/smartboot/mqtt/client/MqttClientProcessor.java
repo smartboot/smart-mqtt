@@ -10,8 +10,6 @@
 
 package tech.smartboot.mqtt.client;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.mqtt.client.processor.MqttAckProcessor;
@@ -38,7 +36,6 @@ import java.util.Map;
  * @version V1.0 , 2018/4/24
  */
 public class MqttClientProcessor extends MqttMessageProcessor {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MqttClientProcessor.class);
     private static final Map<Class<? extends MqttMessage>, MqttProcessor<? extends MqttMessage>> processors = new HashMap<>();
 
     static {
@@ -60,7 +57,7 @@ public class MqttClientProcessor extends MqttMessageProcessor {
         if (processor != null) {
             processor.process(client, msg);
         } else {
-            LOGGER.error("unknown msg:{}", msg);
+            throw new IllegalStateException("unsupported message type: " + msg.getClass().getSimpleName());
         }
     }
 
@@ -68,7 +65,8 @@ public class MqttClientProcessor extends MqttMessageProcessor {
     public void stateEvent0(AioSession session, StateMachineEnum stateMachineEnum, Throwable throwable) {
         switch (stateMachineEnum) {
             case DECODE_EXCEPTION:
-                LOGGER.error("decode exception", throwable);
+                System.err.println("decodeException");
+                throwable.printStackTrace();
                 break;
             case SESSION_CLOSED:
                 MqttClient client = session.getAttachment();
@@ -76,7 +74,8 @@ public class MqttClientProcessor extends MqttMessageProcessor {
                 break;
             case PROCESS_EXCEPTION:
                 if (throwable instanceof MqttException) {
-                    LOGGER.warn("process exception", throwable);
+                    System.err.println("processException");
+                    throwable.printStackTrace();
                     ((MqttException) throwable).getCallback().run();
                 }
                 break;

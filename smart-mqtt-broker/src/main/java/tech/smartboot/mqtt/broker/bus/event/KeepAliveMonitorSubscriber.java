@@ -10,8 +10,8 @@
 
 package tech.smartboot.mqtt.broker.bus.event;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import tech.smartboot.feat.core.common.logging.Logger;
+import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;

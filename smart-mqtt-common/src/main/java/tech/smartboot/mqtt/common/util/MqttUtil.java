@@ -11,10 +11,7 @@
 package tech.smartboot.mqtt.common.util;
 
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartboot.socket.timer.HashedWheelTimer;
-import tech.smartboot.mqtt.common.AbstractSession;
 import tech.smartboot.mqtt.common.TopicToken;
 import tech.smartboot.mqtt.common.exception.MqttException;
 
@@ -27,7 +24,6 @@ import java.util.concurrent.TimeUnit;
  * @version V1.0 , 2022/3/29
  */
 public class MqttUtil {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MqttUtil.class);
     /**
      * Topic 通配符
      */
@@ -59,14 +55,14 @@ public class MqttUtil {
         return UUID.randomUUID().toString().replace("-", "");
     }
 
-    public static String getRemoteAddress(AbstractSession session) {
-        try {
-            return session.getRemoteAddress().toString();
-        } catch (Exception e) {
-            LOGGER.error("getRemoteAddress exception", e);
-            return "";
-        }
-    }
+//    public static String getRemoteAddress(AbstractSession session) {
+//        try {
+//            return session.getRemoteAddress().toString();
+//        } catch (Exception e) {
+//            LOGGER.error("getRemoteAddress exception", e);
+//            return "";
+//        }
+//    }
 
     public static boolean match(TopicToken pubTopicToken, TopicToken subTopicToken) {
         if (subTopicToken == null) {

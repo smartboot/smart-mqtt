@@ -10,8 +10,6 @@
 
 package tech.smartboot.mqtt.common;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartboot.socket.timer.Timer;
 import tech.smartboot.mqtt.common.enums.MqttMessageType;
 import tech.smartboot.mqtt.common.enums.MqttVersion;
@@ -39,7 +37,6 @@ import java.util.concurrent.TimeUnit;
 public class InflightQueue {
     public static final Runnable EMPTY_RUNNABLE = () -> {
     };
-    private static final Logger LOGGER = LoggerFactory.getLogger(InflightQueue.class);
     private static final int TIMEOUT = 30;
     private final InflightMessage[] queue;
     private int takeIndex;
@@ -129,17 +126,17 @@ public class InflightQueue {
                     return;
                 }
                 if (session.session.isInvalid()) {
-                    LOGGER.debug("session is disconnect , pause qos monitor.");
+//                    LOGGER.debug("session is disconnect , pause qos monitor.");
                     return;
                 }
                 long delay = TimeUnit.SECONDS.toMillis(TIMEOUT) - MqttUtil.currentTimeMillis() + inflightMessage.getLatestTime();
                 if (delay > 0) {
-                    LOGGER.info("the time is not up, try again in {} milliseconds ", delay);
+//                    LOGGER.info("the time is not up, try again in {} milliseconds ", delay);
                     timer.schedule(this, delay, TimeUnit.MILLISECONDS);
                     return;
                 }
                 inflightMessage.setLatestTime(MqttUtil.currentTimeMillis());
-                LOGGER.info("message:{} time out,retry...", inflightMessage.getExpectMessageType());
+//                LOGGER.info("message:{} time out,retry...", inflightMessage.getExpectMessageType());
                 switch (inflightMessage.getExpectMessageType()) {
                     case PUBACK:
                     case PUBREC:
@@ -180,7 +177,7 @@ public class InflightQueue {
     public void notify(MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> message) {
         InflightMessage inflightMessage = queue[(message.getVariableHeader().getPacketId() - 1) % queue.length];
         if (inflightMessage == null) {
-            LOGGER.info("ignore duplicate message");
+//            LOGGER.info("ignore duplicate message");
             return;
         }
         switch (message.getFixedHeader().getMessageType()) {
@@ -189,8 +186,8 @@ public class InflightQueue {
             case PUBACK:
             case PUBCOMP: {
                 if (message.getFixedHeader().getMessageType() != inflightMessage.getExpectMessageType() || message.getVariableHeader().getPacketId() != inflightMessage.getAssignedPacketId()) {
-                    LOGGER.info("maybe dup ack,message:{} {} ,except:{} {}", message.getFixedHeader().getMessageType(), message.getVariableHeader().getPacketId(),
-                            inflightMessage.getExpectMessageType(), inflightMessage.getAssignedPacketId());
+//                    LOGGER.info("maybe dup ack,message:{} {} ,except:{} {}", message.getFixedHeader().getMessageType(), message.getVariableHeader().getPacketId(),
+//                            inflightMessage.getExpectMessageType(), inflightMessage.getAssignedPacketId());
                     break;
                 }
                 inflightMessage.setResponseMessage(message);

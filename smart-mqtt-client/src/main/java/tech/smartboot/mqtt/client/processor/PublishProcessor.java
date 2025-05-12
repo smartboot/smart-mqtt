@@ -10,8 +10,6 @@
 
 package tech.smartboot.mqtt.client.processor;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import tech.smartboot.mqtt.client.MqttClient;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
 import tech.smartboot.mqtt.common.enums.MqttVersion;
@@ -28,7 +26,6 @@ import tech.smartboot.mqtt.common.message.variable.properties.ReasonProperties;
  * @version V1.0 , 2018/4/25
  */
 public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PublishProcessor.class);
 
     @Override
     public void process(MqttClient session, MqttPublishMessage mqttPublishMessage) {
@@ -44,8 +41,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
                 processQos2(session, mqttPublishMessage);
                 break;
             default:
-                LOGGER.warn("unSupport mqttQos:{}", mqttQoS);
-                break;
+                throw new IllegalStateException("unsupported qos level: " + mqttQoS);
         }
 
     }

@@ -10,8 +10,6 @@
 
 package tech.smartboot.mqtt.broker.topic;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import tech.smartboot.mqtt.plugin.spec.MessageDeliver;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 
@@ -47,7 +45,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author 三刀（zhengjunweimail@163.com）
  */
 public class DeliverGroup {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DeliverGroup.class);
 
     /**
      * 订阅者映射表，存储会话与消费者记录的对应关系。

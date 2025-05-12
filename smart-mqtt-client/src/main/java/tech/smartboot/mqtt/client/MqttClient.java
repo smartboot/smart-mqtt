@@ -12,8 +12,6 @@ package tech.smartboot.mqtt.client;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.timer.TimerTask;
@@ -68,7 +66,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class MqttClient extends AbstractSession {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MqttClient.class);
     private static final Consumer<Integer> IGNORE = integer -> {
     };
     private static final HashedWheelTimer TIMER = new HashedWheelTimer(r -> new Thread(r, "client-timer"), 50, 1024);
@@ -209,7 +206,7 @@ public class MqttClient extends AbstractSession {
                 }, keepAliveInterval, TimeUnit.MILLISECONDS);
             }
         } catch (IOException e) {
-            LOGGER.error(e.getMessage(), e);
+            e.getMessage();
             release();
         }
     }
@@ -250,7 +247,7 @@ public class MqttClient extends AbstractSession {
         }
 
         if (unsubscribedTopics.isEmpty()) {
-            LOGGER.warn("empty unsubscribe topics detected!");
+            System.err.println("empty unsubscribe topics detected!");
             return;
         }
 
@@ -334,7 +331,7 @@ public class MqttClient extends AbstractSession {
                         wildcardsToken.add(topicToken);
                     }
                 } else {
-                    LOGGER.error("subscribe topic:{} fail", subscription.getTopicFilter());
+                    System.err.println("subscribe topic:" + subscription.getTopicFilter() + " fail");
                 }
                 mapping.clear();
                 subAckConsumer.accept(MqttClient.this, minQos);
@@ -524,7 +521,7 @@ public class MqttClient extends AbstractSession {
             client = null;
         }
         if (options.isAutomaticReconnect()) {
-            LOGGER.warn("mqtt client:{} is disconnect, try to reconnect...", clientId);
+            System.err.println("mqtt client:" + clientId + " is disconnect, try to reconnect...");
             TIMER.schedule(() -> connect(options.reconnectConsumer() == null ? connectConsumer : options.reconnectConsumer()), options.getMaxReconnectDelay(), TimeUnit.MILLISECONDS);
         }
     }

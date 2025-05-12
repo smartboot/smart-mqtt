@@ -10,8 +10,6 @@
 
 package tech.smartboot.mqtt.common;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import tech.smartboot.mqtt.common.exception.MqttException;
 
 /**
@@ -19,7 +17,6 @@ import tech.smartboot.mqtt.common.exception.MqttException;
  * @version V1.0 , 2022/4/17
  */
 public abstract class AsyncTask implements Runnable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AsyncTask.class);
 
     @Override
     public final void run() {
@@ -29,10 +26,12 @@ public abstract class AsyncTask implements Runnable {
             if (e.getCallback() != null) {
                 e.getCallback().run();
             } else {
-                LOGGER.error("execute async task exception", e);
+                System.err.println("execute async task exception");
+                e.getMessage();
             }
         } catch (Throwable throwable) {
-            LOGGER.error("execute async task exception", throwable);
+            System.err.println("execute async task exception");
+            throwable.getMessage();
         }
     }
 

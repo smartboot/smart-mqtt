@@ -11,8 +11,6 @@
 package tech.smartboot.mqtt.plugin.spec;
 
 import com.alibaba.fastjson2.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.ByteArrayOutputStream;
@@ -25,7 +23,6 @@ import java.nio.file.Files;
  * @version V1.0 , 2022/4/1
  */
 public abstract class Plugin {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Plugin.class);
     public static final String CONFIG_FILE_NAME = "plugin.yaml";
 
     private File storage;
@@ -75,7 +72,7 @@ public abstract class Plugin {
      * 初始化插件
      */
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
-        LOGGER.info("plugin:[" + pluginName() + "] do nothing when initPlugin!");
+//        LOGGER.info("plugin:[" + pluginName() + "] do nothing when initPlugin!");
     }
 
     /**
@@ -89,7 +86,7 @@ public abstract class Plugin {
      * 销毁插件
      */
     protected void destroyPlugin() {
-        LOGGER.info("plugin:[" + pluginName() + "] do nothing when destroyPlugin!");
+//        LOGGER.info("plugin:[" + pluginName() + "] do nothing when destroyPlugin!");
     }
 
     private void checkSate() {
@@ -134,7 +131,7 @@ public abstract class Plugin {
             }
             return byteArrayOutputStream.toString();
         } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
+            e.printStackTrace();
         }
         return "readme.md not found";
     }
@@ -167,7 +164,7 @@ public abstract class Plugin {
             }
             return byteArrayOutputStream.toString("UTF-8");
         } catch (Exception e) {
-            LOGGER.error("get plugin config error", e);
+            e.printStackTrace();
             return null;
         }
     }

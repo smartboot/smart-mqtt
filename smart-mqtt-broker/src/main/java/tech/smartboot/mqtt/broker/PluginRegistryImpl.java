@@ -10,8 +10,8 @@
 
 package tech.smartboot.mqtt.broker;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import tech.smartboot.feat.core.common.logging.Logger;
+import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
 import tech.smartboot.mqtt.plugin.spec.PluginException;

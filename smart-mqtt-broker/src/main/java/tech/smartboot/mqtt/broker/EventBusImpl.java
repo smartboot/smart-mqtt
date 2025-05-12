@@ -10,8 +10,6 @@
 
 package tech.smartboot.mqtt.broker;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import tech.smartboot.mqtt.plugin.spec.bus.DisposableEventBusSubscriber;
 import tech.smartboot.mqtt.plugin.spec.bus.EventBus;
 import tech.smartboot.mqtt.plugin.spec.bus.EventBusConsumer;
@@ -27,7 +25,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @version V1.0 , 2022/6/29
  */
 class EventBusImpl implements EventBus {
-    private static final Logger LOGGER = LoggerFactory.getLogger(EventBusImpl.class);
 
     private final Map<EventType, List<EventBusConsumer>> map = new ConcurrentHashMap<>();
 
@@ -37,7 +34,6 @@ class EventBusImpl implements EventBus {
 
 
     public <T> void subscribe(EventType<T> type, EventBusConsumer<T> subscriber) {
-        LOGGER.debug("subscribe eventbus, type: {} ,subscriber: {}", type, subscriber);
         if (type.isOnce() && !(subscriber instanceof DisposableEventBusSubscriber)) {
             getSubscribers(type).add(new DisposableEventBusSubscriber<T>() {
                 @Override

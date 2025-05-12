@@ -10,8 +10,6 @@
 
 package tech.smartboot.mqtt.broker.processor;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import tech.smartboot.mqtt.broker.BrokerContextImpl;
 import tech.smartboot.mqtt.broker.MqttSessionImpl;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
@@ -35,7 +33,6 @@ import java.util.List;
  * @version V1.0 , 2018/4/25
  */
 public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMessage> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SubscribeProcessor.class);
 
     @Override
     public void process0(BrokerContextImpl context, MqttSessionImpl session, MqttSubscribeMessage mqttSubscribeMessage) {

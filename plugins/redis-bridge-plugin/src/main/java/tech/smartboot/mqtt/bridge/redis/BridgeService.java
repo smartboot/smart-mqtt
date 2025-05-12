@@ -5,8 +5,6 @@ import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.StringCodec;
 import org.redisson.config.Config;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import tech.smartboot.mqtt.common.enums.PayloadEncodeEnum;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Message;
@@ -14,7 +12,6 @@ import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.bus.MessageBusConsumer;
 
 class BridgeService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BridgeService.class);
     private final BridgeConfig.RedisConfig config;
     private RedissonClient redissonClient;
     private final BrokerContext context;
@@ -31,7 +28,6 @@ class BridgeService {
         Config c = new Config();
         c.useSingleServer().setAddress(config.getAddress()).setDatabase(config.getDatabase()).setPassword(config.getPassword());
         redissonClient = Redisson.create(c);
-        LOGGER.info("start redis bridge");
         PayloadEncodeEnum encodeEnum = PayloadEncodeEnum.getEnumByCode(config.getEncode());
         context.getMessageBus().consumer(new MessageBusConsumer() {
             @Override
