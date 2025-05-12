@@ -10,7 +10,6 @@
 
 package tech.smartboot.mqtt.common.util;
 
-import org.apache.commons.lang.StringUtils;
 import tech.smartboot.mqtt.common.exception.MqttException;
 
 import java.util.Collection;
@@ -29,10 +28,11 @@ public class ValidateUtils {
     }
 
     public static void notBlank(String parameter, String message, Runnable callback) {
-        if (StringUtils.isBlank(parameter)) {
+        if (MqttUtil.isBlank(parameter)) {
             throwException(message, callback);
         }
     }
+
 
     public static void notNull(Object parameter, String message) {
         notNull(parameter, message, DEFAULT_RUNNABLE);

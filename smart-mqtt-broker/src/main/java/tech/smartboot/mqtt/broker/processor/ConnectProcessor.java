@@ -10,7 +10,6 @@
 
 package tech.smartboot.mqtt.broker.processor;
 
-import org.apache.commons.lang.StringUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.broker.BrokerContextImpl;
@@ -142,14 +141,14 @@ public class ConnectProcessor implements MqttProcessor<BrokerContextImpl, MqttCo
         //客户端标识符 (ClientId) 必须存在而且必须是 CONNECT 报文有效载荷的第一个字段
         //服务端必须允许 1 到 23 个字节长的 UTF-8 编码的客户端标识符，客户端标识符只能包含这些字符：
         //“0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ”（大写字母，小写字母和数字）
-        boolean invalidClient = StringUtils.isNotBlank(clientId) && (mqttVersion == MqttVersion.MQTT_3_1 && clientId.length() > MAX_CLIENT_ID_LENGTH);
+        boolean invalidClient = MqttUtil.isNotBlank(clientId) && (mqttVersion == MqttVersion.MQTT_3_1 && clientId.length() > MAX_CLIENT_ID_LENGTH);
         ValidateUtils.isTrue(!invalidClient, "", () -> {
             MqttSession.connFailAck(CONNECTION_REFUSED_IDENTIFIER_REJECTED, session);
             LOGGER.error("The MQTT client ID cannot be empty. Username={}", payload.userName());
         });
         //如果客户端提供的 ClientId 为零字节且清理会话标志为 0，
         // 服务端必须发送返回码为 0x02（表示标识符不合格）的 CONNACK 报文响应客户端的 CONNECT 报文，然后关闭网络连接
-        ValidateUtils.isTrue(connectVariableHeader.isCleanSession() || !StringUtils.isBlank(clientId), "", () -> {
+        ValidateUtils.isTrue(connectVariableHeader.isCleanSession() || !MqttUtil.isBlank(clientId), "", () -> {
             MqttSession.connFailAck(CONNECTION_REFUSED_IDENTIFIER_REJECTED, session);
             LOGGER.error("The MQTT client ID cannot be empty. Username={}", payload.userName());
         });

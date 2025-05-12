@@ -10,7 +10,6 @@
 
 package tech.smartboot.mqtt.plugin.openapi.controller;
 
-import org.apache.commons.lang.StringUtils;
 import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.extension.plugins.AbstractPlugin;
 import org.smartboot.socket.transport.AioSession;
@@ -24,6 +23,7 @@ import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.multipart.Part;
+import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.license.client.License;

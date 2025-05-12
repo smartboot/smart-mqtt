@@ -10,8 +10,6 @@
 
 package tech.smartboot.mqtt.client;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.math.NumberUtils;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.timer.TimerTask;
@@ -126,7 +124,7 @@ public class MqttClient extends AbstractSession {
         } else {
             throw new IllegalStateException("invalid URI Scheme, uri: " + uri);
         }
-        options.setPort(NumberUtils.toInt(array[2]));
+        options.setPort(MqttUtil.toInt(array[2]));
         opt.accept(options);
         this.clientId = options.getClientId();
         setMqttVersion(options.getMqttVersion());
@@ -162,7 +160,7 @@ public class MqttClient extends AbstractSession {
             if (getMqttVersion() == MqttVersion.MQTT_5) {
                 properties = new ConnectProperties();
             }
-            MqttConnectVariableHeader variableHeader = new MqttConnectVariableHeader(getMqttVersion(), StringUtils.isNotBlank(options.getUserName()), options.getPassword() != null, options.getWillMessage(), options.isCleanSession(), options.getKeepAliveInterval(), properties);
+            MqttConnectVariableHeader variableHeader = new MqttConnectVariableHeader(getMqttVersion(), MqttUtil.isNotBlank(options.getUserName()), options.getPassword() != null, options.getWillMessage(), options.isCleanSession(), options.getKeepAliveInterval(), properties);
             MqttConnectPayload payload = new MqttConnectPayload(clientId, options.getWillMessage(), options.getUserName(), options.getPassword());
 
             MqttConnectMessage connectMessage = new MqttConnectMessage(variableHeader, payload);
@@ -269,7 +267,7 @@ public class MqttClient extends AbstractSession {
             ValidateUtils.isTrue(message instanceof MqttUnsubAckMessage, "uncorrected message type.");
             for (String unsubscribedTopic : unsubscribedTopics) {
                 subscribes.remove(unsubscribedTopic);
-                wildcardsToken.removeIf(topicToken -> StringUtils.equals(unsubscribedTopic, topicToken.getTopicFilter()));
+                wildcardsToken.removeIf(topicToken -> unsubscribedTopic.equals(topicToken.getTopicFilter()));
             }
             mapping.clear();
             consumeTask();

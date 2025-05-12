@@ -12,7 +12,6 @@ package tech.smartboot.mqtt.plugin.openapi.controller;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
-import org.apache.commons.lang.StringUtils;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -25,6 +24,7 @@ import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
+import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
 import tech.smartboot.mqtt.common.util.ValidateUtils;

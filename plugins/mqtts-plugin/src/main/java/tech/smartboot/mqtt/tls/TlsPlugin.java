@@ -1,6 +1,5 @@
 package tech.smartboot.mqtt.tls;
 
-import org.apache.commons.lang.StringUtils;
 import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.extension.plugins.SslPlugin;
 import org.smartboot.socket.extension.ssl.factory.PemServerSSLContextFactory;
@@ -9,6 +8,7 @@ import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.mqtt.common.MqttMessageProcessor;
 import tech.smartboot.mqtt.common.MqttProtocol;
 import tech.smartboot.mqtt.common.message.MqttMessage;
+import tech.smartboot.mqtt.common.util.MqttUtil;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
@@ -48,7 +48,7 @@ public class TlsPlugin extends Plugin {
         server.start(options.getChannelGroup());
 
         System.out.println(Options.BANNER + "\r\n ::smart-mqtt broker" + "::\t(" + Options.VERSION + ")");
-        if (StringUtils.isBlank(options.getHost())) {
+        if (MqttUtil.isBlank(options.getHost())) {
             System.out.println("\uD83C\uDF89start smart-mqtt tls/ssl success! [port:" + pluginConfig.getPort() + "]");
         } else {
             System.out.println("\uD83C\uDF89start smart-mqtt tls/ssl success! [host:" + options.getHost() + " port:" + pluginConfig.getPort() + "]");

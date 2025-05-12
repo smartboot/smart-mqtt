@@ -10,9 +10,9 @@
 
 package tech.smartboot.mqtt.bench;
 
-import org.apache.commons.lang.math.NumberUtils;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import tech.smartboot.mqtt.client.MqttClient;
+import tech.smartboot.mqtt.common.util.MqttUtil;
 
 import java.io.IOException;
 import java.nio.channels.AsynchronousChannelGroup;
@@ -36,7 +36,7 @@ public class AbstractBench {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        int count = NumberUtils.toInt(System.getProperty("connect"), 1000);
+        int count = MqttUtil.toInt(System.getProperty("connect"), 1000);
         boolean lowMemory = Boolean.parseBoolean(System.getenv("BROKER_LOWMEMORY"));
         System.out.println("lowMemory: " + lowMemory);
         AsynchronousChannelGroup channelGroup = new EnhanceAsynchronousChannelProvider(lowMemory).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
@@ -58,7 +58,7 @@ public class AbstractBench {
 
     public MqttClient newClient(AsynchronousChannelGroup channelGroup) {
         String host = System.getProperty("host");
-        int port = NumberUtils.toInt(System.getProperty("port"), 1883);
+        int port = MqttUtil.toInt(System.getProperty("port"), 1883);
         MqttClient client = new MqttClient(host, port, opt -> opt.setGroup(channelGroup).setKeepAliveInterval(30).setAutomaticReconnect(true));
         return client;
     }

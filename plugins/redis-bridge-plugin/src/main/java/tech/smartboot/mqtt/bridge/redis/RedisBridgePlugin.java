@@ -1,7 +1,7 @@
 package tech.smartboot.mqtt.bridge.redis;
 
 
-import org.apache.commons.lang.StringUtils;
+import tech.smartboot.mqtt.common.util.MqttUtil;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
@@ -21,7 +21,7 @@ public class RedisBridgePlugin extends Plugin {
         BridgeConfig config = loadPluginConfig(BridgeConfig.class);
 
         for (BridgeConfig.RedisConfig redis : config.getRedis()) {
-            if (StringUtils.isBlank(redis.getAddress())) {
+            if (MqttUtil.isBlank(redis.getAddress())) {
                 System.err.println("redis address is blank");
                 continue;
             }

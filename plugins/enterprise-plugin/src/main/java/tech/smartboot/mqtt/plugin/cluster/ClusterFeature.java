@@ -12,16 +12,17 @@ package tech.smartboot.mqtt.plugin.cluster;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.sun.management.OperatingSystemMXBean;
-import org.apache.commons.lang.StringUtils;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
+import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.mqtt.client.MqttClient;
 import tech.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import tech.smartboot.mqtt.common.message.payload.MqttConnectPayload;
+import tech.smartboot.mqtt.common.util.MqttUtil;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.PluginConfig;
 import tech.smartboot.mqtt.plugin.dao.mapper.BrokerNodeMapper;
@@ -79,7 +80,7 @@ public class ClusterFeature {
 
     @PostConstruct
     public void init() throws Exception {
-        if (StringUtils.isBlank(pluginConfig.getNodeType())) {
+        if (MqttUtil.isBlank(pluginConfig.getNodeType())) {
             pluginConfig.setNodeType(BrokerNodeTypeEnum.CORE_NODE.getCode());
             LOGGER.error("broker.nodeType is blank, set default config: core");
         }

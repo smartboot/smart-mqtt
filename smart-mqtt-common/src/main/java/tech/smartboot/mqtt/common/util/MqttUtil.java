@@ -10,7 +10,6 @@
 
 package tech.smartboot.mqtt.common.util;
 
-import org.apache.commons.lang.StringUtils;
 import org.smartboot.socket.timer.HashedWheelTimer;
 import tech.smartboot.mqtt.common.TopicToken;
 import tech.smartboot.mqtt.common.exception.MqttException;
@@ -75,7 +74,7 @@ public class MqttUtil {
         if ("+".equals(subTopicToken.getNode())) {
             return pubTopicToken != null && match(pubTopicToken.getNextNode(), subTopicToken.getNextNode());
         }
-        if (pubTopicToken == null || !StringUtils.equals(pubTopicToken.getNode(), subTopicToken.getNode())) {
+        if (pubTopicToken == null || !pubTopicToken.getNode().equals(subTopicToken.getNode())) {
             return false;
         }
         return match(pubTopicToken.getNextNode(), subTopicToken.getNextNode());
@@ -107,5 +106,47 @@ public class MqttUtil {
             throw new MqttException("update config exception", throwable);
         }
 
+    }
+
+    public static int toInt(String str) {
+        return toInt(str, 0);
+    }
+
+    public static int toInt(String str, int defaultValue) {
+        if (str == null) {
+            return defaultValue;
+        } else {
+            try {
+                return Integer.parseInt(str);
+            } catch (NumberFormatException var3) {
+                return defaultValue;
+            }
+        }
+    }
+
+
+    public static boolean isNotBlank(final CharSequence cs) {
+        return !isBlank(cs);
+    }
+
+    public static boolean isBlank(final CharSequence cs) {
+        int strLen;
+        if (cs == null || (strLen = cs.length()) == 0) {
+            return true;
+        }
+        for (int i = 0; i < strLen; i++) {
+            if (!Character.isWhitespace(cs.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static String defaultString(String str) {
+        return defaultString(str, "");
+    }
+
+    public static String defaultString(String str, String defaultStr) {
+        return str == null ? defaultStr : str;
     }
 }

@@ -10,12 +10,12 @@
 
 package tech.smartboot.mqtt.plugin.dao;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.jdbc.ScriptRunner;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import tech.smartboot.feat.cloud.annotation.Bean;
+import tech.smartboot.mqtt.common.util.MqttUtil;
 import tech.smartboot.mqtt.plugin.PluginConfig;
 
 import java.io.File;
@@ -43,7 +43,7 @@ public class MybatisSessionFactory {
         if (dataBaseConfig == null) {
             dataBaseConfig = new PluginConfig.DataBaseConfig();
         }
-        if (StringUtils.isBlank(dataBaseConfig.getDbType())) {
+        if (MqttUtil.isBlank(dataBaseConfig.getDbType())) {
             dataBaseConfig.setDbType(DB_TYPE_H2_MEM);
         }
         if (DB_TYPE_H2.equals(dataBaseConfig.getDbType())) {
@@ -52,11 +52,11 @@ public class MybatisSessionFactory {
 
         String resource = "mybatis/mybatis-config.xml";
         Properties properties = new Properties();
-        properties.setProperty(CONFIG_JDBC_URL, StringUtils.defaultString(dataBaseConfig.getUrl()));
-        properties.setProperty(CONFIG_JDBC_USERNAME, StringUtils.defaultString(dataBaseConfig.getUsername()));
-        properties.setProperty(CONFIG_JDBC_PASSWORD, StringUtils.defaultString(dataBaseConfig.getPassword()));
+        properties.setProperty(CONFIG_JDBC_URL, MqttUtil.defaultString(dataBaseConfig.getUrl()));
+        properties.setProperty(CONFIG_JDBC_USERNAME, MqttUtil.defaultString(dataBaseConfig.getUsername()));
+        properties.setProperty(CONFIG_JDBC_PASSWORD, MqttUtil.defaultString(dataBaseConfig.getPassword()));
         InputStream inputStream = Resources.getResourceAsStream(resource);
-        SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(inputStream, StringUtils.defaultString(dataBaseConfig.getDbType(), "h2_mem"), properties);
+        SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(inputStream, MqttUtil.defaultString(dataBaseConfig.getDbType(), "h2_mem"), properties);
         ScriptRunner runner = new ScriptRunner(sessionFactory.openSession().getConnection());
         runner.setLogWriter(null);
         runner.runScript(Resources.getResourceAsReader("mybatis/ddl/schema.sql"));

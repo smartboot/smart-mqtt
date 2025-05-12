@@ -10,9 +10,9 @@
 
 package tech.smartboot.mqtt.bench;
 
-import org.apache.commons.lang.math.NumberUtils;
 import tech.smartboot.mqtt.client.MqttClient;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
+import tech.smartboot.mqtt.common.util.MqttUtil;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -33,13 +33,13 @@ public class Publish extends AbstractBench {
 //        System.setProperty("host", "127.0.0.1");
 //        System.setProperty("count", "10");
 //        System.setProperty("connect", "2000");
-        int size = NumberUtils.toInt(System.getProperty("payload"), 1024);
-        int topic = NumberUtils.toInt(System.getProperty("topic"), 128);
-        int publishCount = NumberUtils.toInt(System.getProperty("count"), 1);
-        int qos = NumberUtils.toInt(System.getProperty("qos"), 0);
-        int period=NumberUtils.toInt(System.getProperty("period"), 1);
-        if(period<1){
-            period=1;
+        int size = MqttUtil.toInt(System.getProperty("payload"), 1024);
+        int topic = MqttUtil.toInt(System.getProperty("topic"), 128);
+        int publishCount = MqttUtil.toInt(System.getProperty("count"), 1);
+        int qos = MqttUtil.toInt(System.getProperty("qos"), 0);
+        int period = MqttUtil.toInt(System.getProperty("period"), 1);
+        if (period < 1) {
+            period = 1;
         }
 
         Publish connect = new Publish();

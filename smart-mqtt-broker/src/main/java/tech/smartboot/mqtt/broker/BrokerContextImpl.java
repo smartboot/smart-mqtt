@@ -11,7 +11,6 @@
 package tech.smartboot.mqtt.broker;
 
 import com.alibaba.fastjson2.JSONObject;
-import org.apache.commons.lang.StringUtils;
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import org.smartboot.socket.timer.HashedWheelTimer;
@@ -20,6 +19,7 @@ import org.smartboot.socket.transport.AioQuickServer;
 import org.yaml.snakeyaml.Yaml;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
+import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.mqtt.broker.bus.event.KeepAliveMonitorSubscriber;
 import tech.smartboot.mqtt.broker.bus.message.RetainPersistenceConsumer;
 import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
@@ -517,7 +517,7 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     public MqttSession removeSession(String clientId) {
-        if (StringUtils.isBlank(clientId)) {
+        if (MqttUtil.isBlank(clientId)) {
             LOGGER.warn("clientId is blank, ignore remove grantSession");
             return null;
         }
@@ -548,7 +548,7 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     private void loadYamlConfig() throws IOException {
-        String brokerConfig = StringUtils.defaultString(System.getProperty(Options.SystemProperty.BrokerConfig), System.getenv(Options.SystemProperty.BrokerConfig));
+        String brokerConfig = MqttUtil.defaultString(System.getProperty(Options.SystemProperty.BrokerConfig), System.getenv(Options.SystemProperty.BrokerConfig));
 
         InputStream inputStream;
 
