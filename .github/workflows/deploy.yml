@@ -62,7 +62,7 @@ jobs:
       - name: 上传 smart-mqtt 制品
         uses: actions/upload-artifact@v4
         with:
-          name: smart-mqtt-${{ github.ref_name }}
+          name: smart-mqtt-community-${{ github.ref_name }}
           compression-level: 0
           path: smart-mqtt-enterprise/deploy
 
@@ -93,6 +93,13 @@ jobs:
           tags: smartboot/smart-mqtt:latest,smartboot/smart-mqtt:${{ github.ref_name }}
           platforms: linux/amd64,linux/arm64
 
+      - name: 上传 smart-mqtt-enterprise 制品
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-mqtt-enterprise-${{ github.ref_name }}
+          compression-level: 0
+          path: smart-mqtt-enterprise/deploy
+
       ## 构建所有插件
       - name: Build smart-mqtt-plugin
         run: |
@@ -104,3 +111,10 @@ jobs:
           name: smart-mqtt-plugins-${{ github.ref_name }}
           compression-level: 0
           path: smart-mqtt-enterprise/deploy/plugins
+
+      - name: 上传 smart-mqtt-full 制品
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-mqtt-full-${{ github.ref_name }}
+          compression-level: 0
+          path: smart-mqtt-enterprise/deploy
