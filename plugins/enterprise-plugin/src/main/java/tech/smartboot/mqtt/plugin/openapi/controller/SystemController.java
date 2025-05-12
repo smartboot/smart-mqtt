@@ -19,7 +19,6 @@ import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.InterceptorMapping;
 import tech.smartboot.feat.cloud.annotation.Param;
-import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -42,7 +41,6 @@ import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.utils.SecureUtil;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -55,27 +53,12 @@ public class SystemController {
     @Autowired
     private UserMapper userMapper;
 
-    private boolean licenseExpire;
 
     @Autowired
     private SystemConfigMapper systemConfigMapper;
 
     @Autowired
     private BrokerContext brokerContext;
-
-    @PostConstruct
-    public void init() {
-        brokerContext.getTimer().scheduleWithFixedDelay(new Runnable() {
-            @Override
-            public void run() {
-                String value = systemConfigMapper.getConfig("license");
-                if (StringUtils.isBlank(value)) {
-                    licenseExpire = true;
-                }
-            }
-        }, 5, TimeUnit.SECONDS);
-
-    }
 
 //    @Interceptor(patterns = {"/**"})
 //    public void cross(HttpRequest request, HttpResponse response) {

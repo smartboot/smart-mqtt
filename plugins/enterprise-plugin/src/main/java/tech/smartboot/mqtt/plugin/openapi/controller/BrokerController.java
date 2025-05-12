@@ -19,7 +19,6 @@ import tech.smartboot.mqtt.plugin.dao.mapper.BrokerNodeMapper;
 import tech.smartboot.mqtt.plugin.dao.model.BrokerNodeDO;
 import tech.smartboot.mqtt.plugin.openapi.OpenApi;
 import tech.smartboot.mqtt.plugin.openapi.to.BrokerNodeTO;
-import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 
 import java.util.List;
 
@@ -31,9 +30,6 @@ import java.util.List;
 public class BrokerController {
 
     @Autowired
-    private BrokerContext brokerContext;
-
-    @Autowired
     private BrokerNodeMapper brokerNodeMapper;
 
     @RequestMapping(OpenApi.BROKERS)
@@ -41,10 +37,6 @@ public class BrokerController {
         List<BrokerNodeDO> list = brokerNodeMapper.selectAll();
 
         return RestResult.ok(NodeConvert.convert(list));
-    }
-
-    public void setBrokerContext(BrokerContext brokerContext) {
-        this.brokerContext = brokerContext;
     }
 
     public void setBrokerNodeMapper(BrokerNodeMapper brokerNodeMapper) {
