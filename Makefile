@@ -8,4 +8,4 @@ clean:
 	mvn clean
 	mvn -f smart-mqtt-broker/pom.xml clean
 	mvn -f smart-mqtt-maven-plugin/pom.xml clean
-	mvn -f smart-mqtt-plugin-enterprise/pom.xml clean
+	mvn -f plugins/pom.xml clean
