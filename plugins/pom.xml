@@ -25,6 +25,11 @@
     </properties>
     <modules>
         <module>enterprise-plugin</module>
+        <module>memory-session-plugin</module>
+        <module>mqtts-plugin</module>
+        <module>redis-bridge-plugin</module>
+        <module>simple-auth-plugin</module>
+        <module>websocket-plugin</module>
     </modules>
 
     <dependencies>
@@ -38,12 +43,42 @@
         <dependencies>
             <dependency>
                 <groupId>tech.smartboot.feat</groupId>
+                <artifactId>feat-core</artifactId>
+                <version>${feat.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>tech.smartboot.feat</groupId>
                 <artifactId>feat-cloud-starter</artifactId>
                 <version>${feat.version}</version>
             </dependency>
             <dependency>
                 <groupId>tech.smartboot.mqtt</groupId>
                 <artifactId>enterprise-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>tech.smartboot.mqtt</groupId>
+                <artifactId>memory-session-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>tech.smartboot.mqtt</groupId>
+                <artifactId>mqtts-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>tech.smartboot.mqtt</groupId>
+                <artifactId>redis-bridge-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>tech.smartboot.mqtt</groupId>
+                <artifactId>simple-auth-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>tech.smartboot.mqtt</groupId>
+                <artifactId>websocket-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

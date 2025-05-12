@@ -1,0 +1,7 @@
+redis:
+  # redis://ip:port
+  - address: redis://localhost:6379
+    database: 0
+    password:
+    # 消息持久化编码方式：bytes,string,base64
+    encode: "string"
