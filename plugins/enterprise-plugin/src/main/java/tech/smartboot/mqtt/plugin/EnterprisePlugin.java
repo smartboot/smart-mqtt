@@ -92,5 +92,8 @@ public class EnterprisePlugin extends Plugin {
         return "smart-mqtt 企业版";
     }
 
-
+    @Override
+    public String pluginName() {
+        return "enterprise-plugin";
+    }
 }
