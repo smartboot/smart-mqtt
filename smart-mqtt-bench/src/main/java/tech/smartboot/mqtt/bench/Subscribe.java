@@ -69,10 +69,14 @@ public class Subscribe extends AbstractBench {
             MqttClient publish = subscribe.newClient(channelGroup);
             publish.connect();
             executorService.scheduleWithFixedDelay(() -> {
-                for (int j = 0; j < publishCount; j++) {
-                    publish.publish("topic_" + random + "_" + (index.incrementAndGet() % topic), MqttQoS.AT_MOST_ONCE, payload, false, false);
+                try {
+                    for (int j = 0; j < publishCount; j++) {
+                        publish.publish("topic_" + random + "_" + (index.incrementAndGet() % topic), MqttQoS.AT_MOST_ONCE, payload, false, false);
+                    }
+                    publish.flush();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                publish.flush();
             }, period, period, TimeUnit.MILLISECONDS);
         }
     }

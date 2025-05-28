@@ -62,7 +62,6 @@ public class Publish extends AbstractBench {
                         }, false);
                     } catch (Exception e) {
                         e.printStackTrace();
-                        System.exit(1);
                     }
                 }
                 mqttClient.flush();
