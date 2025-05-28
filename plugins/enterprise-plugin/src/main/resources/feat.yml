@@ -1,0 +1,6 @@
+server:
+  debug: false
+  bannerEnabled: false
+  threadNum: 4
+  readBufferSize: 1024 * 8
+  writeBufferSize: 1024 * 8

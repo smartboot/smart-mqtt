@@ -57,7 +57,7 @@ public class EnterprisePlugin extends Plugin {
                 .addExternalBean("brokerContext", brokerContext)
                 .addExternalBean("pluginConfig", config)
                 .addExternalBean("storage", storage())
-                .debug(false).bannerEnabled(false).threadNum(4).readBufferSize(1024 * 8).writeBufferSize(8 * 1024).group(asynchronousChannelGroup));
+                .group(asynchronousChannelGroup));
         httpServer.listen(config.getHttpConfig().getHost(), config.getHttpConfig().getPort());
         System.out.println("openapi server start success!");
     }
