@@ -138,6 +138,10 @@
                                         implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/services/tech.smartboot.mqtt.broker.plugin.Plugin</resource>
                                 </transformer>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/services/tech.smartboot.feat.cloud.CloudService</resource>
+                                </transformer>
                             </transformers>
                         </configuration>
                     </execution>
