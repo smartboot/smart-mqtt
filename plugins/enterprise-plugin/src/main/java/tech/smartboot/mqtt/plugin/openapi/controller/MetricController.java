@@ -21,9 +21,9 @@ import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.common.utils.CollectionUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.mqtt.common.message.MqttConnAckMessage;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
@@ -281,7 +281,7 @@ public class MetricController {
     public RestResult<Collection<BrokerNodeTO>> nodes() {
         //broker节点
         List<BrokerNodeDO> nodes = brokerNodeMapper.selectAll();
-        if (CollectionUtils.isEmpty(nodes)) {
+        if (FeatUtils.isEmpty(nodes)) {
             nodes = Collections.emptyList();
         }
         List<BrokerNodeTO> list = NodeConvert.convert(nodes);
@@ -306,7 +306,7 @@ public class MetricController {
 
     @RequestMapping("/api/cluster/metrics")
     public RestResult<JSONObject> clusterMetrics(@Param("nodeId") String nodeId, @Param("metrics") List<String> metrics, @Param("startTime") Date startTime, @Param("endTime") Date endTime) throws IOException {
-        if (CollectionUtils.isEmpty(metrics)) {
+        if (FeatUtils.isEmpty(metrics)) {
             return RestResult.ok(new JSONObject());
         }
         long step = ((endTime.getTime() - startTime.getTime()) / 1000 / 60);

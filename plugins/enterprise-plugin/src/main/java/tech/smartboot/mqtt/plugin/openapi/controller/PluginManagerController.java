@@ -25,8 +25,6 @@ import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.multipart.Part;
-import tech.smartboot.feat.core.common.utils.CollectionUtils;
-import tech.smartboot.feat.core.common.utils.NumberUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.upgrade.sse.SSEUpgrade;
@@ -122,8 +120,8 @@ public class PluginManagerController {
 
     @RequestMapping("/:id/config")
     public RestResult<String> config(@PathParam("id") String id) {
-        List<Plugin> plugins = localPlugins.get(NumberUtils.toInt(id, 0));
-        if (CollectionUtils.isEmpty(plugins)) {
+        List<Plugin> plugins = localPlugins.get(FeatUtils.toInt(id, 0));
+        if (FeatUtils.isEmpty(plugins)) {
             return RestResult.fail("插件不存在");
         }
         Plugin plugin = plugins.get(0);
@@ -144,8 +142,8 @@ public class PluginManagerController {
         if (StringUtils.isBlank(config)) {
             return RestResult.fail("配置内容为空");
         }
-        List<Plugin> plugins = localPlugins.get(NumberUtils.toInt(id, 0));
-        if (CollectionUtils.isEmpty(plugins)) {
+        List<Plugin> plugins = localPlugins.get(FeatUtils.toInt(id, 0));
+        if (FeatUtils.isEmpty(plugins)) {
             return RestResult.fail("插件不存在");
         }
         Plugin plugin = plugins.get(0);
@@ -184,7 +182,7 @@ public class PluginManagerController {
             result.forEach(pluginItem -> {
                 pluginItem.setStatus(PluginStatusEnum.UNINSTALLED.getCode());
                 List<Plugin> plugins = localPlugins.get(pluginItem.getId());
-                if (CollectionUtils.isNotEmpty(plugins)) {
+                if (FeatUtils.isNotEmpty(plugins)) {
                     setPluginStatus(plugins.get(0), pluginItem);
                 }
             });
@@ -322,7 +320,7 @@ public class PluginManagerController {
             return RestResult.fail("请先停用该插件");
         }
         List<Plugin> plugins = this.localPlugins.remove(id);
-        if (CollectionUtils.isEmpty(plugins)) {
+        if (FeatUtils.isEmpty(plugins)) {
             return RestResult.fail("该插件不存在");
         }
         Plugin plugin = plugins.get(0);
@@ -350,7 +348,7 @@ public class PluginManagerController {
     @RequestMapping("/disable")
     public RestResult<Void> disable(@Param("id") int id) {
         List<Plugin> p = localPlugins.get(id);
-        if (CollectionUtils.isEmpty(p)) {
+        if (FeatUtils.isEmpty(p)) {
             return RestResult.fail("无法停用非本地仓库插件");
         }
         Plugin plugin = p.get(0);
