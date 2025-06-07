@@ -85,7 +85,7 @@ public class InflightQueue {
         InflightMessage inflightMessage = null;
         boolean flush;
         synchronized (this) {
-            if (count == queue.length || session.session.writeBuffer().chunkCount() == Math.min(queue.length, 16)) {
+            if (count == queue.length) {
                 int i = putIndex - 1;
                 if (i < 0) {
                     i = queue.length - 1;
