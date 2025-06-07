@@ -55,15 +55,22 @@ public class InflightQueue {
         this.timer = timer;
     }
 
-    public synchronized CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> put(MessageBuilder publishBuilder) {
+    public CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> put(MessageBuilder publishBuilder) {
+        InflightMessage inflightMessage;
+        boolean flush;
         try {
-            while (count == queue.length) {
-                this.wait();
+            synchronized (this) {
+                while (count == queue.length) {
+                    this.wait();
+                }
+                inflightMessage = enqueue(publishBuilder);
+                flush = count == queue.length;
             }
-            return enqueue(publishBuilder);
         } catch (Exception e) {
             throw new MqttException("put message into inflight queue exception", e);
         }
+        session.write(inflightMessage.getOriginalMessage(), flush);
+        return inflightMessage.getFuture();
     }
 
     public CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> offer(MessageBuilder publishBuilder) {
@@ -74,21 +81,30 @@ public class InflightQueue {
         return queue.length - count;
     }
 
-    public synchronized CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> offer(MessageBuilder publishBuilder, Runnable runnable) {
-        if (count == queue.length) {
-            int i = putIndex - 1;
-            if (i < 0) {
-                i = queue.length - 1;
+    public CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> offer(MessageBuilder publishBuilder, Runnable runnable) {
+        InflightMessage inflightMessage = null;
+        boolean flush;
+        synchronized (this) {
+            if (count == queue.length) {
+                int i = putIndex - 1;
+                if (i < 0) {
+                    i = queue.length - 1;
+                }
+                queue[i].getFuture().thenRun(runnable);
+            } else {
+                inflightMessage = enqueue(publishBuilder);
             }
-            queue[i].getFuture().thenRun(runnable);
-            return null;
-        } else {
-            return enqueue(publishBuilder);
+            flush = count == queue.length;
         }
+        if (inflightMessage != null) {
+            session.write(inflightMessage.getOriginalMessage(), flush);
+            return inflightMessage.getFuture();
+        }
+        return null;
     }
 
 
-    private CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> enqueue(MessageBuilder publishBuilder) {
+    private InflightMessage enqueue(MessageBuilder publishBuilder) {
         int id = ++packetId;
         // 16位无符号最大值65535
         if (id > 65535) {
@@ -107,8 +123,7 @@ public class InflightQueue {
         if (count == 1) {
             retry(inflightMessage);
         }
-        session.write(inflightMessage.getOriginalMessage(), count == queue.length);
-        return inflightMessage.getFuture();
+        return inflightMessage;
     }
 
     /**
@@ -141,8 +156,7 @@ public class InflightQueue {
                     case PUBACK:
                     case PUBREC:
                         MqttPublishMessage mqttMessage = (MqttPublishMessage) inflightMessage.getOriginalMessage();
-                        MqttFixedHeader mqttFixedHeader = MqttFixedHeader.getInstance(mqttMessage.getFixedHeader().getMessageType(), true, mqttMessage.getFixedHeader().getQosLevel().value(),
-                                mqttMessage.getFixedHeader().isRetain());
+                        MqttFixedHeader mqttFixedHeader = MqttFixedHeader.getInstance(mqttMessage.getFixedHeader().getMessageType(), true, mqttMessage.getFixedHeader().getQosLevel().value(), mqttMessage.getFixedHeader().isRetain());
                         MqttPublishMessage dupMessage = new MqttPublishMessage(mqttFixedHeader, mqttMessage.getVariableHeader(), mqttMessage.getPayload().getPayload());
                         session.write(dupMessage);
                         break;
@@ -222,8 +236,7 @@ public class InflightQueue {
 
     private synchronized void commit(InflightMessage inflightMessage) {
         MqttVariableMessage<? extends MqttPacketIdVariableHeader> originalMessage = inflightMessage.getOriginalMessage();
-        ValidateUtils.isTrue(originalMessage.getFixedHeader().getQosLevel().value() == 0 || originalMessage.getVariableHeader().getPacketId() == inflightMessage.getAssignedPacketId(), "invalid " +
-                "message");
+        ValidateUtils.isTrue(originalMessage.getFixedHeader().getQosLevel().value() == 0 || originalMessage.getVariableHeader().getPacketId() == inflightMessage.getAssignedPacketId(), "invalid " + "message");
         inflightMessage.setCommit(true);
 
         if ((inflightMessage.getAssignedPacketId() - 1) % queue.length != takeIndex) {
