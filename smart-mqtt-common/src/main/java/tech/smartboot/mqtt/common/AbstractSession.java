@@ -77,7 +77,6 @@ public abstract class AbstractSession {
     public void write(MqttMessage mqttMessage, boolean autoFlush) {
         try {
             if (session.isInvalid()) {
-//                this.disconnect();
                 ValidateUtils.isTrue(false, "已断开连接,无法发送消息");
             }
             mqttMessage.setVersion(mqttVersion);

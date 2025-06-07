@@ -79,6 +79,11 @@ class ProxyWriteBuffer implements WriteBuffer {
     }
 
     @Override
+    public int chunkCount() {
+        return 0;
+    }
+
+    @Override
     public void close() {
         flush();
         response.close();
