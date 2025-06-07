@@ -123,7 +123,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
         }
     }
 
-    public synchronized void disconnect() {
+    public void disconnect() {
         if (isDisconnect()) {
             return;
         }

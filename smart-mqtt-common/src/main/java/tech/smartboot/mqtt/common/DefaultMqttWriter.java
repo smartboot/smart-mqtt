@@ -53,7 +53,7 @@ public class DefaultMqttWriter implements MqttWriter {
     }
 
     @Override
-    public synchronized void write(byte[] data) throws IOException {
+    public void write(byte[] data) throws IOException {
         ValidateUtils.isTrue(size != 0, "error: writeShort can't write data, because writer is empty");
         size += data.length;
         writeBuffer.write(data);

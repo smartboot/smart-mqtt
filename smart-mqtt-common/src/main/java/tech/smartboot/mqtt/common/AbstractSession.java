@@ -74,14 +74,17 @@ public abstract class AbstractSession {
     protected abstract void accepted(MqttPublishMessage mqttMessage);
 
 
-    public synchronized void write(MqttMessage mqttMessage, boolean autoFlush) {
+    public void write(MqttMessage mqttMessage, boolean autoFlush) {
         try {
             if (disconnect) {
 //                this.disconnect();
                 ValidateUtils.isTrue(false, "已断开连接,无法发送消息");
             }
             mqttMessage.setVersion(mqttVersion);
-            mqttMessage.write(mqttWriter);
+            synchronized (mqttWriter) {
+                mqttMessage.write(mqttWriter);
+            }
+
             if (autoFlush) {
                 mqttWriter.flush();
             }
@@ -95,7 +98,7 @@ public abstract class AbstractSession {
         write(mqttMessage, true);
     }
 
-    public final synchronized void flush() {
+    public final void flush() {
         if (!disconnect) {
             mqttWriter.flush();
         }
