@@ -16,11 +16,6 @@
             <groupId>tech.smartboot.feat</groupId>
             <artifactId>feat-core</artifactId>
         </dependency>
-        <dependency>
-            <groupId>io.github.smartboot.socket</groupId>
-            <artifactId>aio-pro</artifactId>
-            <version>1.5.66-SNAPSHOT</version>
-        </dependency>
     </dependencies>
 
 </project>
