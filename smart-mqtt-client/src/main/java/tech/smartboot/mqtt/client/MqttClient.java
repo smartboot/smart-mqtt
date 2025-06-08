@@ -171,7 +171,7 @@ public class MqttClient extends AbstractSession {
                 @Override
                 public void execute() {
                     if (!connected) {
-                        session.close(true);
+                        session.close();
                     }
                 }
             }, options.getConnectAckTimeout(), TimeUnit.SECONDS);
@@ -186,7 +186,7 @@ public class MqttClient extends AbstractSession {
                         // 它应该关闭到服务端的网络连接。
                         if (pingTimeout >= 3) {
                             pingTimeout = 0;
-                            session.close(true);
+                            session.close();
                             return;
                         }
                         long delay = System.currentTimeMillis() - latestSendMessageTime - keepAliveInterval;
