@@ -153,7 +153,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
         LOGGER.debug("remove mqttSession success:{}", removeSession);
         disconnect = true;
         try {
-            session.close(false);
+            session.close(true);
         } finally {
             mqttContext.getEventBus().publish(EventType.DISCONNECT, this);
         }
