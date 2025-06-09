@@ -11,6 +11,7 @@ smart-mqtt 底层通信采用了异步非阻塞通信框架 smart-socket，现�
 - 2019~2021年，项目基本处于停更状态，期间重心在于提升底层通信框架 smart-socket 的性能。
 - 2022年，重启 smart-mqtt。基本完成 mqtt  broker 和 client 的功能开发。
 - 2023年，smart-mqtt企业版立项。
+- 2025年，smart-mqtt企业版功能全面开源。
 
 ## 产品特色
 
