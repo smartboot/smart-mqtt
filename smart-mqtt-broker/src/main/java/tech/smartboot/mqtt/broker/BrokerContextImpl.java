@@ -149,6 +149,19 @@ public class BrokerContextImpl implements BrokerContext {
     private final Timer timer = new HashedWheelTimer(r -> new Thread(r, "broker-timer"), 50, 1024);
 
     /**
+     * InflightQueue定时器，用于处理MQTT消息的QoS等级。
+     * <p>
+     * 基于HashedWheelTimer实现的高效定时器，用于：
+     * <ul>
+     *   <li>处理QoS等级为1的消息的ACK确认</li>
+     *   <li>处理QoS等级为2的消息的ACK确认</li>
+     *   <li>处理QoS等级为2的消息的REC/PUB消息处理</li>
+     * </ul>
+     * </p>
+     */
+    private final Timer inflightQueueTimer = new HashedWheelTimer(r -> new Thread(r, "broker-inflight-timer"), 50, 1024);
+
+    /**
      * 消息总线，处理MQTT消息的内部传递和分发。
      * <p>
      * 提供了消息的异步处理和解耦，支持：
@@ -536,6 +549,10 @@ public class BrokerContextImpl implements BrokerContext {
         return timer;
     }
 
+    public Timer getInflightQueueTimer() {
+        return inflightQueueTimer;
+    }
+
     @Override
     public Providers getProviders() {
         return providers;
@@ -594,6 +611,7 @@ public class BrokerContextImpl implements BrokerContext {
         }
         options.getChannelGroup().shutdown();
         timer.shutdown();
+        inflightQueueTimer.shutdown();
 
         bufferPagePool.release();
         pluginRegistry.destroy();

@@ -90,7 +90,7 @@ public class ConnectProcessor implements MqttProcessor<BrokerContextImpl, MqttCo
         } else {
             receiveMaximum = context.Options().getMaxInflight();
         }
-        session.setInflightQueue(new InflightQueue(session, receiveMaximum, context.getTimer()));
+        session.setInflightQueue(new InflightQueue(session, receiveMaximum, context.getInflightQueueTimer()));
 
         //如果服务端收到清理会话（CleanSession）标志为 1 的连接，除了将 CONNACK 报文中的返回码设置为 0 之外，
         // 还必须将 CONNACK 报文中的当前会话设置（Session Present）标志为 0。
