@@ -41,10 +41,6 @@ class ProxySession extends AioSession {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public void close() {
-        session.close();
-    }
 
     @Override
     public void awaitRead() {
@@ -54,6 +50,11 @@ class ProxySession extends AioSession {
     @Override
     public void signalRead() {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void close(boolean immediate) {
+        session.close(immediate);
     }
 
     @Override
