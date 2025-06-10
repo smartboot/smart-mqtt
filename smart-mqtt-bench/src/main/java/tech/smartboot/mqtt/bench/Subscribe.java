@@ -76,6 +76,11 @@ public class Subscribe extends AbstractBench {
                     publish.flush();
                 } catch (Exception e) {
                     e.printStackTrace();
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ex) {
+                        ex.printStackTrace();
+                    }
                 }
             }, period, period, TimeUnit.MILLISECONDS);
         }
