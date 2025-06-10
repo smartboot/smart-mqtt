@@ -258,7 +258,7 @@ public class BrokerContextImpl implements BrokerContext {
         try {
             options.getPlugins().forEach(processor::addPlugin);
             server = new AioQuickServer(options.getHost(), options.getPort(), new MqttProtocol(options.getMaxPacketSize()), processor);
-            server.setBannerEnabled(false).setReadBufferSize(options.getBufferSize()).setWriteBuffer(options.getBufferSize(), options.getMaxInflight()).setBufferPagePool(bufferPagePool).setThreadNum(Math.max(2, options.getThreadNum()));
+            server.setBannerEnabled(false).setReadBufferSize(options.getBufferSize()).setWriteBuffer(options.getBufferSize(), Math.min(options.getMaxInflight(), 16)).setBufferPagePool(bufferPagePool).setThreadNum(Math.max(2, options.getThreadNum()));
             if (!options.isLowMemory()) {
                 server.disableLowMemory();
             }
