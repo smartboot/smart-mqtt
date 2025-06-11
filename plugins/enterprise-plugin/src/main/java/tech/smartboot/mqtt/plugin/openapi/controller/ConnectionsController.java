@@ -83,7 +83,10 @@ public class ConnectionsController {
 //        });
 
         brokerContext.getEventBus().subscribe(EventType.DISCONNECT, (eventType, object) -> {
-            int r = connectionMapper.updateStatus(object.getClientId(), ConnectionStatusEnum.DIS_CONNECT.getStatus());
+            consumers.offer(session -> {
+                ConnectionMapper connectionMapper = session.getMapper(ConnectionMapper.class);
+                connectionMapper.updateStatus(object.getClientId(), ConnectionStatusEnum.DIS_CONNECT.getStatus());
+            });
         });
         brokerContext.getEventBus().subscribe(EventType.CONNECT, (eventType, object) -> {
             consumers.offer(session -> {
@@ -154,7 +157,8 @@ public class ConnectionsController {
                             LOGGER.error("batch consume  exception", throwable);
                         }
                     }
-                    session.commit();
+                    session.commit(true);
+                    LOGGER.debug("batch consume {} records", i);
                 }
             }
         }, 1000, TimeUnit.MILLISECONDS);
