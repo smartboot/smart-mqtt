@@ -26,7 +26,6 @@ import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.mqtt.common.AsyncTask;
-import tech.smartboot.mqtt.common.message.MqttConnectMessage;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.convert.ConnectionConvert;
 import tech.smartboot.mqtt.plugin.dao.mapper.ConnectionMapper;
@@ -89,35 +88,35 @@ public class ConnectionsController {
             });
         });
         brokerContext.getEventBus().subscribe(EventType.CONNECT, (eventType, object) -> {
+            ConnectionDO connectionDO = new ConnectionDO();
+            connectionDO.setClientId(object.getSession().getClientId());
+            connectionDO.setUsername(object.getObject().getPayload().userName());
+            connectionDO.setNodeId(brokerContext.Options().getNodeId());
+            try {
+                connectionDO.setIpAddress(object.getSession().getRemoteAddress().getHostString());
+                String region = IpUtil.search(connectionDO.getIpAddress());
+                String[] array = StringUtils.split(region, "|");
+                if (array.length == 5) {
+                    connectionDO.setCountry(array[0]);
+                    connectionDO.setRegion(array[1]);
+                    connectionDO.setProvince(array[2]);
+                    connectionDO.setCity(array[3]);
+                    connectionDO.setIsp(array[4]);
+                } else {
+                    LOGGER.error("unexpected ip:{} region: {}", connectionDO.getIpAddress(), region);
+                }
+            } catch (IOException e) {
+                connectionDO.setIpAddress("-");
+                LOGGER.error(e.getMessage());
+            }
+            connectionDO.setStatus(object.getSession().isDisconnect() ? ConnectionStatusEnum.DIS_CONNECT.getStatus() : ConnectionStatusEnum.CONNECTED.getStatus());
+            connectionDO.setKeepalive(object.getObject().getVariableHeader().keepAliveTimeSeconds());
+            connectionDO.setConnectTime(new Date());
+
             consumers.offer(session -> {
                 SubscriberMapper subscriberMapper = session.getMapper(SubscriberMapper.class);
-                subscriberMapper.deleteById(object.getSession().getClientId());
-                MqttConnectMessage message = object.getObject();
+                subscriberMapper.deleteById(connectionDO.getClientId());
                 ConnectionMapper mapper = session.getMapper(ConnectionMapper.class);
-                ConnectionDO connectionDO = new ConnectionDO();
-                connectionDO.setClientId(object.getSession().getClientId());
-                connectionDO.setUsername(message.getPayload().userName());
-                connectionDO.setNodeId(brokerContext.Options().getNodeId());
-                try {
-                    connectionDO.setIpAddress(object.getSession().getRemoteAddress().getHostString());
-                    String region = IpUtil.search(connectionDO.getIpAddress());
-                    String[] array = StringUtils.split(region, "|");
-                    if (array.length == 5) {
-                        connectionDO.setCountry(array[0]);
-                        connectionDO.setRegion(array[1]);
-                        connectionDO.setProvince(array[2]);
-                        connectionDO.setCity(array[3]);
-                        connectionDO.setIsp(array[4]);
-                    } else {
-                        LOGGER.error("unexpected ip:{} region: {}", connectionDO.getIpAddress(), region);
-                    }
-                } catch (IOException e) {
-                    connectionDO.setIpAddress("-");
-                    LOGGER.error(e.getMessage());
-                }
-                connectionDO.setStatus(object.getSession().isDisconnect() ? ConnectionStatusEnum.DIS_CONNECT.getStatus() : ConnectionStatusEnum.CONNECTED.getStatus());
-                connectionDO.setKeepalive(message.getVariableHeader().keepAliveTimeSeconds());
-                connectionDO.setConnectTime(new Date());
                 mapper.deleteById(connectionDO.getClientId());
                 int r = mapper.insert(connectionDO);
 //                int i = 1000;
