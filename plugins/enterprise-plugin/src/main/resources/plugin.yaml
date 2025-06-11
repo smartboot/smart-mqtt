@@ -3,7 +3,7 @@ http:
   port: 18083
   host: 0.0.0.0
 database:
-  dbType: h2_mem
+  dbType: h2
   url: ""
   username: ""
   password: ""
