@@ -3,6 +3,8 @@ http:
   port: 18083
   host: 0.0.0.0
 database:
+  #  h2,h2_mem, mysql
+  # h2和h2_mem无需设置url，username，password
   dbType: h2
   url: ""
   username: ""
