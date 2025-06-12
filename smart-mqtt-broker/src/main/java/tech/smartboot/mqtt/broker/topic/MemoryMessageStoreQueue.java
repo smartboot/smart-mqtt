@@ -22,33 +22,39 @@ import java.util.concurrent.atomic.AtomicLong;
  * @version V1.0 , 2018/5/3
  */
 public class MemoryMessageStoreQueue implements MessageQueue {
+    private static final Message[] EMPTY_MESSAGE_ARRAY = new Message[0];
     private static final Logger LOGGER = LoggerFactory.getLogger(MemoryMessageStoreQueue.class);
     private final int capacity;
-    private Message[] store;
+    private volatile Message[] store = EMPTY_MESSAGE_ARRAY;
     private final int mask;
 
     private final AtomicLong putOffset = new AtomicLong(-1);
-
-    public MemoryMessageStoreQueue() {
-        this(1 << 7);
-    }
 
     public MemoryMessageStoreQueue(int maxMessageQueueLength) {
         this.capacity = Integer.highestOneBit(maxMessageQueueLength);
         if (this.capacity != maxMessageQueueLength) {
             LOGGER.warn("maxMessageQueueLength:{} is not power of 2, use {} instead", maxMessageQueueLength, this.capacity);
         }
-        this.store = new Message[capacity];
         mask = capacity - 1;
     }
 
     public void put(Message message) {
+        if (store == EMPTY_MESSAGE_ARRAY) {
+            synchronized (this) {
+                if (store == EMPTY_MESSAGE_ARRAY) {
+                    store = new Message[capacity];
+                }
+            }
+        }
         message.setOffset(putOffset.incrementAndGet());
 //        LOGGER.info("store message, offset:{}", message.getOffset());
         store[(int) (message.getOffset() & mask)] = message;
     }
 
     public Message get(long offset) {
+        if (store == EMPTY_MESSAGE_ARRAY) {
+            return null;
+        }
 //        System.out.println("offset:" + offset);
         Message storedMessage = store[(int) (offset & mask)];
         if (storedMessage != null && storedMessage.getOffset() == offset) {
@@ -79,7 +85,7 @@ public class MemoryMessageStoreQueue implements MessageQueue {
     }
 
     public void clear() {
-        store = new Message[capacity];
+        store = EMPTY_MESSAGE_ARRAY;
     }
 
     @Override

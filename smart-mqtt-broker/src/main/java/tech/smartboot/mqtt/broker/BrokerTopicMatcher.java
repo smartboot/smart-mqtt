@@ -136,9 +136,9 @@ class BrokerTopicMatcher {
      */
     public void match(SessionSubscribeRelation subscription, Consumer<BrokerTopicImpl> consumer) {
         if (subscription.getTopicFilterToken().isShared()) {
-            match(this, subscription.getTopicFilterToken().getNextNode().getNextNode(), consumer);
+            match0(subscription.getTopicFilterToken().getNextNode().getNextNode(), consumer);
         } else {
-            match(this, subscription.getTopicFilterToken(), consumer);
+            match0(subscription.getTopicFilterToken(), consumer);
         }
     }
 
@@ -166,32 +166,31 @@ class BrokerTopicMatcher {
      * 使用ConcurrentHashMap保证线程安全，允许多线程并发匹配。
      * </p>
      *
-     * @param treeNode   当前匹配的树节点
      * @param topicToken 要匹配的主题标记
      * @param consumer   对匹配到的主题执行的操作
      * @see #subscribeChildren 处理#通配符的递归匹配
      */
-    private void match(BrokerTopicMatcher treeNode, TopicToken topicToken, Consumer<BrokerTopicImpl> consumer) {
+    private void match0(TopicToken topicToken, Consumer<BrokerTopicImpl> consumer) {
         //匹配结束
         if (topicToken == null) {
-            if (treeNode.brokerTopic != null) {
-                consumer.accept(treeNode.brokerTopic);
+            if (brokerTopic != null) {
+                consumer.accept(brokerTopic);
             }
             return;
         }
         //合法的#通配符必然存在于末端
         if ("#".equals(topicToken.getNode())) {
-            treeNode.subNode.values().forEach(node -> {
-                subscribeChildren(node, consumer);
+            subNode.values().forEach(node -> {
+                node.subscribeChildren(consumer);
             });
         } else if ("+".equals(topicToken.getNode())) {
-            treeNode.subNode.values().forEach(node -> {
-                match(node, topicToken.getNextNode(), consumer);
+            subNode.values().forEach(node -> {
+                node.match0(topicToken.getNextNode(), consumer);
             });
         } else {
-            BrokerTopicMatcher node = treeNode.subNode.get(topicToken.getNode());
+            BrokerTopicMatcher node = subNode.get(topicToken.getNode());
             if (node != null) {
-                match(node, topicToken.getNextNode(), consumer);
+                node.match0(topicToken.getNextNode(), consumer);
             }
         }
     }
@@ -203,16 +202,14 @@ class BrokerTopicMatcher {
      * 并对每个找到的主题执行指定的操作。
      * </p>
      *
-     * @param treeNode 要遍历的树节点
      * @param consumer 对找到的主题执行的操作
      */
-    private void subscribeChildren(BrokerTopicMatcher treeNode, Consumer<BrokerTopicImpl> consumer) {
-        BrokerTopicImpl brokerTopic = treeNode.brokerTopic;
+    private void subscribeChildren(Consumer<BrokerTopicImpl> consumer) {
         if (brokerTopic != null) {
             consumer.accept(brokerTopic);
         }
         //递归订阅Topic
-        treeNode.subNode.values().forEach(subNode -> subscribeChildren(subNode, consumer));
+        subNode.values().forEach(subNode -> subNode.subscribeChildren(consumer));
     }
 
     /**

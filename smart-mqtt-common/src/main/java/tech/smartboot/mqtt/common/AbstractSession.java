@@ -78,7 +78,7 @@ public abstract class AbstractSession {
         ValidateUtils.isTrue(!session.isInvalid(), "已断开连接,无法发送消息");
         try {
             mqttMessage.setVersion(mqttVersion);
-            synchronized (mqttWriter) {
+            synchronized (session.writeBuffer()) {
                 mqttMessage.write(mqttWriter);
             }
 
