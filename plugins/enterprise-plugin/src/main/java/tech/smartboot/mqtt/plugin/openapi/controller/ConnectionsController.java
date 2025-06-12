@@ -148,7 +148,7 @@ public class ConnectionsController {
                 int i = 0;
                 try (SqlSession session = sessionFactory.openSession(ExecutorType.BATCH, true)) {
                     Consumer<SqlSession> consumer;
-                    while (i++ < 100 && (consumer = consumers.poll()) != null) {
+                    while (i++ < 500 && (consumer = consumers.poll()) != null) {
                         try {
                             consumer.accept(session);
                         } catch (Throwable throwable) {
