@@ -240,6 +240,13 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
         this.enabled = false;
     }
 
+    public void clear() {
+        messageQueue.clear();
+        //清除无效的订阅关系
+        addVersion();
+        push();
+    }
+
     public void dump() {
 //        System.out.println("默认订阅：");
 //        defaultGroup.subscribers.forEach((session, topicConsumerRecord) -> {

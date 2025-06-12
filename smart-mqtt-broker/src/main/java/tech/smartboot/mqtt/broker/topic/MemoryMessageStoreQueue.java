@@ -84,7 +84,7 @@ public class MemoryMessageStoreQueue implements MessageQueue {
         return putOffset.get();
     }
 
-    public void clear() {
+    void clear() {
         store = EMPTY_MESSAGE_ARRAY;
     }
 
