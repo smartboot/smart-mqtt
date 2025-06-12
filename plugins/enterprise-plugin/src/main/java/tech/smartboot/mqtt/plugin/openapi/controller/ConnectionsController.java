@@ -44,7 +44,6 @@ import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 import tech.smartboot.mqtt.plugin.utils.IpUtil;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
@@ -105,9 +104,9 @@ public class ConnectionsController {
                 } else {
                     LOGGER.error("unexpected ip:{} region: {}", connectionDO.getIpAddress(), region);
                 }
-            } catch (IOException e) {
+            } catch (Throwable e) {
                 connectionDO.setIpAddress("-");
-                LOGGER.error(e.getMessage());
+                LOGGER.error("decode ip exception", e);
             }
             connectionDO.setStatus(object.getSession().isDisconnect() ? ConnectionStatusEnum.DIS_CONNECT.getStatus() : ConnectionStatusEnum.CONNECTED.getStatus());
             connectionDO.setKeepalive(object.getObject().getVariableHeader().keepAliveTimeSeconds());
