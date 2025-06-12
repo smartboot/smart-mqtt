@@ -95,7 +95,7 @@ public class ConnectionsController {
                 connectionDO.setIpAddress(object.getSession().getRemoteAddress().getHostString());
                 String region = IpUtil.search(connectionDO.getIpAddress());
                 String[] array = StringUtils.split(region, "|");
-                if (array.length == 5) {
+                if (array != null && array.length == 5) {
                     connectionDO.setCountry(array[0]);
                     connectionDO.setRegion(array[1]);
                     connectionDO.setProvince(array[2]);
