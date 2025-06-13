@@ -17,9 +17,9 @@ import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.timer.Timer;
 import org.smartboot.socket.transport.AioQuickServer;
 import org.yaml.snakeyaml.Yaml;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.mqtt.broker.bus.event.KeepAliveMonitorSubscriber;
 import tech.smartboot.mqtt.broker.bus.message.RetainPersistenceConsumer;
 import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
@@ -287,7 +287,7 @@ public class BrokerContextImpl implements BrokerContext {
         System.out.println("Github: https://github.com/smartboot/smart-mqtt");
         System.out.println("Document: https://smartboot.tech/smart-mqtt");
         System.out.println("Support: zhengjunweimail@163.com");
-        if (StringUtils.isBlank(options.getHost())) {
+        if (FeatUtils.isBlank(options.getHost())) {
             System.out.println("\uD83C\uDF89start smart-mqtt success, cost: " + (System.currentTimeMillis() - start) + "ms ! [port:" + options.getPort() + "]");
         } else {
             System.out.println("\uD83C\uDF89start smart-mqtt success, cost: " + (System.currentTimeMillis() - start) + "ms ! [host:" + options.getHost() + " port:" + options.getPort() + "]");
@@ -571,7 +571,7 @@ public class BrokerContextImpl implements BrokerContext {
 
         InputStream inputStream;
 
-        if (StringUtils.isBlank(brokerConfig)) {
+        if (FeatUtils.isBlank(brokerConfig)) {
             inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("smart-mqtt.yaml");
             LOGGER.info("load smart-mqtt.yaml from classpath.");
         } else {

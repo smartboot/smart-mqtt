@@ -20,10 +20,10 @@ import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.InterceptorMapping;
 import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.Session;
 import tech.smartboot.feat.router.Interceptor;
@@ -70,7 +70,7 @@ public class SystemController {
     public Interceptor sessionCheck() {
         return (context, completableFuture, chain) -> {
             String uri = context.Request.getRequestURI();
-            if (StringUtils.equals(uri, OpenApi.USER_LOGIN)) {
+            if (FeatUtils.equals(uri, OpenApi.USER_LOGIN)) {
                 chain.proceed(context, completableFuture);
                 return;
             }
@@ -164,7 +164,7 @@ public class SystemController {
         jsonObject.keySet().forEach(key -> {
             String oldValue = systemConfigMapper.getConfig(key);
             String newValue = jsonObject.getString(key);
-            if (StringUtils.isBlank(jsonObject.getString(key))) {
+            if (FeatUtils.isBlank(jsonObject.getString(key))) {
                 newValue = "";
             }
             if (oldValue == null) {

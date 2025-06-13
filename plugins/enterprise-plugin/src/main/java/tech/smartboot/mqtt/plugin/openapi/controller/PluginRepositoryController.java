@@ -16,9 +16,9 @@ import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
-import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.mqtt.plugin.openapi.to.PluginTO;
 import tech.smartboot.mqtt.plugin.openapi.to.RepositoryPlugin;
@@ -84,7 +84,7 @@ public class PluginRepositoryController {
                     }
                 }
             }
-            if (StringUtils.isNotBlank(item.getName())) {
+            if (FeatUtils.isNotBlank(item.getName())) {
                 pluginMarket.getPlugins().add(item);
             }
         }

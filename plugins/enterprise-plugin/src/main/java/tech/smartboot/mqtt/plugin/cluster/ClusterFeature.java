@@ -16,9 +16,9 @@ import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.PreDestroy;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.mqtt.client.MqttClient;
 import tech.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import tech.smartboot.mqtt.common.message.payload.MqttConnectPayload;
@@ -100,8 +100,8 @@ public class ClusterFeature {
 
             brokerNodeMapper.insert(nodeDO);
         } else {
-            ValidateUtils.isTrue(StringUtils.equals(nodeDO.getNodeType(), pluginConfig.getNodeType()), "nodeType is different from before.");
-            if (StringUtils.equals(nodeDO.getStatus(), BrokerStatueEnum.RUNNING.getCode())) {
+            ValidateUtils.isTrue(FeatUtils.equals(nodeDO.getNodeType(), pluginConfig.getNodeType()), "nodeType is different from before.");
+            if (FeatUtils.equals(nodeDO.getStatus(), BrokerStatueEnum.RUNNING.getCode())) {
                 LOGGER.warn("This node did not exit normally previously.");
             }
 
@@ -111,7 +111,7 @@ public class ClusterFeature {
         }
         int count = brokerNodeMapper.count();
 //        ValidateUtils.isTrue(count <= limit, "");
-        if (StringUtils.equals(BrokerNodeTypeEnum.WORKER_NODE.getCode(), nodeDO.getNodeType())) {
+        if (FeatUtils.equals(BrokerNodeTypeEnum.WORKER_NODE.getCode(), nodeDO.getNodeType())) {
             initWorkerNode(nodeDO);
         } else {
             initCoreNode(nodeDO);
@@ -135,7 +135,7 @@ public class ClusterFeature {
         nodeDO.setStatus(BrokerStatueEnum.RUNNING.getCode());
         nodeDO.setPort(brokerContext.Options().getPort());
         nodeDO.setStartTime(new Date());
-        if (StringUtils.isBlank(nodeDO.getClusterEndpoint())) {
+        if (FeatUtils.isBlank(nodeDO.getClusterEndpoint())) {
             nodeDO.setStatus(BrokerStatueEnum.UNHEALTHY.getCode());
         }
     }
@@ -199,7 +199,7 @@ public class ClusterFeature {
 
     private void connectBroker(BrokerNodeDO currentNode, BrokerNodeDO clusterNode) {
         ValidateUtils.notBlank(clusterNode.getClusterEndpoint(), "clusterEndpoint is blank");
-        ValidateUtils.isTrue(!StringUtils.equals(currentNode.getNodeId(), clusterNode.getNodeId()), "invalid cluster config");
+        ValidateUtils.isTrue(!FeatUtils.equals(currentNode.getNodeId(), clusterNode.getNodeId()), "invalid cluster config");
         MqttClient mqttClient = new MqttClient(clusterNode.getClusterEndpoint(), options -> {
             options.setGroup(brokerContext.Options().getChannelGroup())
                     .setAutomaticReconnect(true)
@@ -232,7 +232,7 @@ public class ClusterFeature {
                 return;
             }
             //来源非core节点
-            if (!StringUtils.equals(BrokerNodeTypeEnum.CORE_NODE.getCode(), nodeDO.getNodeType())) {
+            if (!FeatUtils.equals(BrokerNodeTypeEnum.CORE_NODE.getCode(), nodeDO.getNodeType())) {
                 LOGGER.error("invalid node connection!");
                 MqttSession.connFailAck(MqttConnectReturnCode.IMPLEMENTATION_SPECIFIC_ERROR, session);
                 return;
@@ -305,8 +305,8 @@ public class ClusterFeature {
             }
 
             //工作节点
-            if (StringUtils.equals(BrokerNodeTypeEnum.WORKER_NODE.getCode(), nodeDO.getNodeType())) {
-                ValidateUtils.isTrue(StringUtils.equals(currentNode.getNodeId(), nodeDO.getCoreNodeId()), "invalid worker node connection!");
+            if (FeatUtils.equals(BrokerNodeTypeEnum.WORKER_NODE.getCode(), nodeDO.getNodeType())) {
+                ValidateUtils.isTrue(FeatUtils.equals(currentNode.getNodeId(), nodeDO.getCoreNodeId()), "invalid worker node connection!");
                 LOGGER.info("{} node: {} connect success!", nodeDO.getNodeType(), nodeDO.getNodeId());
                 workerSessions.put(object.getSession(), nodeDO.getNodeId());
             } else {
@@ -336,7 +336,7 @@ public class ClusterFeature {
             } else {
                 String workerNodeId = workerSessions.get(mqttSession);
                 connectedNodes.forEach((nodeId, session) -> {
-                    if (StringUtils.equals(nodeId, workerNodeId)) {
+                    if (FeatUtils.equals(nodeId, workerNodeId)) {
                         LOGGER.info("ignore dispatch...");
                         return;
                     }

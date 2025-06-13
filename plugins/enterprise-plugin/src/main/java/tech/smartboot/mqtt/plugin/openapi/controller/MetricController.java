@@ -24,7 +24,6 @@ import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.mqtt.common.message.MqttConnAckMessage;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
 import tech.smartboot.mqtt.common.message.MqttMessage;
@@ -297,10 +296,10 @@ public class MetricController {
     @RequestMapping("/api/cluster/metricCodes")
     public RestResult<List<String>> metrics() throws IOException {
         String showMetrics = systemConfigMapper.getConfig(SystemConfigEnum.SHOW_METRICS.getCode());
-        if (StringUtils.isBlank(showMetrics)) {
+        if (FeatUtils.isBlank(showMetrics)) {
             return RestResult.ok(Collections.emptyList());
         } else {
-            return RestResult.ok(Arrays.asList(StringUtils.split(showMetrics, ",")));
+            return RestResult.ok(Arrays.asList(FeatUtils.split(showMetrics, ",")));
         }
     }
 

@@ -22,9 +22,9 @@ import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.convert.ConnectionConvert;
@@ -94,7 +94,7 @@ public class ConnectionsController {
             try {
                 connectionDO.setIpAddress(object.getSession().getRemoteAddress().getHostString());
                 String region = IpUtil.search(connectionDO.getIpAddress());
-                String[] array = StringUtils.split(region, "|");
+                String[] array = FeatUtils.split(region, "|");
                 if (array != null && array.length == 5) {
                     connectionDO.setCountry(array[0]);
                     connectionDO.setRegion(array[1]);

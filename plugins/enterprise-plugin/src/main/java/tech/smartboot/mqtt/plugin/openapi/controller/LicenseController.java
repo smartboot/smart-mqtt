@@ -19,11 +19,11 @@ import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.multipart.Part;
-import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.license.client.License;
@@ -83,7 +83,7 @@ public class LicenseController {
     @PostConstruct
     public void init() {
         String value = systemConfigMapper.getConfig(SystemConfigEnum.LICENSE.getCode());
-        if (StringUtils.isBlank(value)) {
+        if (FeatUtils.isBlank(value)) {
             LOGGER.error("none valid license");
             return;
         }

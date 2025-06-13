@@ -25,7 +25,6 @@ import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.multipart.Part;
-import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.upgrade.sse.SSEUpgrade;
 import tech.smartboot.feat.core.server.upgrade.sse.SseEmitter;
@@ -139,7 +138,7 @@ public class PluginManagerController {
 
     @RequestMapping("/:id/config/save")
     public RestResult<Void> config(@PathParam("id") String id, @Param("config") String config) throws Throwable {
-        if (StringUtils.isBlank(config)) {
+        if (FeatUtils.isBlank(config)) {
             return RestResult.fail("配置内容为空");
         }
         List<Plugin> plugins = localPlugins.get(FeatUtils.toInt(id, 0));
@@ -169,7 +168,7 @@ public class PluginManagerController {
     @RequestMapping("/market")
     public AsyncResponse market() {
         AsyncResponse asyncResponse = new AsyncResponse();
-        if (StringUtils.isBlank(pluginConfig.getRegistry())) {
+        if (FeatUtils.isBlank(pluginConfig.getRegistry())) {
             asyncResponse.complete(RestResult.fail("registry is empty"));
             return asyncResponse;
         }
