@@ -93,7 +93,7 @@ public class MetricController {
     private SystemConfigMapper systemConfigMapper;
 
     @Autowired
-    private SqlSessionFactory sqlSessionFactory;
+    private SqlSessionFactory sessionFactory;
 
     private final Map<MqttMetricEnum, MetricItemTO> metrics = new HashMap<>();
     private boolean h2;
@@ -127,7 +127,7 @@ public class MetricController {
 
 
             LOGGER.debug("reset period metric...");
-            try (SqlSession session = sqlSessionFactory.openSession(true)) {
+            try (SqlSession session = sessionFactory.openSession(true)) {
                 MetricMapper metricMapper = session.getMapper(MetricMapper.class);
                 for (Map.Entry<MqttMetricEnum, MetricItemTO> entry : metrics.entrySet()) {
                     MqttMetricEnum metric = entry.getKey();
@@ -411,7 +411,7 @@ public class MetricController {
         this.pluginConfig = pluginConfig;
     }
 
-    public void setSqlSessionFactory(SqlSessionFactory sqlSessionFactory) {
-        this.sqlSessionFactory = sqlSessionFactory;
+    public void setSessionFactory(SqlSessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
     }
 }
