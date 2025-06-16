@@ -410,4 +410,8 @@ public class MetricController {
     public void setPluginConfig(PluginConfig pluginConfig) {
         this.pluginConfig = pluginConfig;
     }
+
+    public void setSqlSessionFactory(SqlSessionFactory sqlSessionFactory) {
+        this.sqlSessionFactory = sqlSessionFactory;
+    }
 }
