@@ -12,6 +12,8 @@ package tech.smartboot.mqtt.plugin.openapi.controller;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
 import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.extension.plugins.AbstractPlugin;
 import org.smartboot.socket.transport.AioSession;
@@ -90,6 +92,9 @@ public class MetricController {
     @Autowired
     private SystemConfigMapper systemConfigMapper;
 
+    @Autowired
+    private SqlSessionFactory sqlSessionFactory;
+
     private final Map<MqttMetricEnum, MetricItemTO> metrics = new HashMap<>();
     private boolean h2;
 
@@ -122,31 +127,34 @@ public class MetricController {
 
 
             LOGGER.debug("reset period metric...");
-            for (Map.Entry<MqttMetricEnum, MetricItemTO> entry : metrics.entrySet()) {
-                MqttMetricEnum metric = entry.getKey();
-                MetricItemTO value = entry.getValue();
-                MetricDO metricDO = new MetricDO();
-                metricDO.setNodeName(brokerContext.Options().getNodeId());
-                metricDO.setObjectType("node");
-                metricDO.setObjectId(brokerContext.Options().getNodeId());
-                metricDO.setCode(metric.getCode());
-                long currentValue = value.getValue();
-                if (metric.isPeriodRest()) {
-                    metricDO.setValue(currentValue - value.getLatestValue());
-                } else {
-                    metricDO.setValue(currentValue);
-                }
-                value.setLatestValue(currentValue);
-//                LOGGER.info("insert metric:{} value:{}", metricDO.getCode(), metricDO.getValue());
-                if (recordTypeEnum == RecordTypeEnum.DB) {
-                    metricMapper.insert(metricDO);
-                } else {
-                    List<MetricDO> list = metricMap.computeIfAbsent(entry.getKey(), mqttMetricEnum -> new LinkedList<>());
-                    if (list.size() >= 16) {
-                        list.remove(0);
+            try (SqlSession session = sqlSessionFactory.openSession(true)) {
+                MetricMapper metricMapper = session.getMapper(MetricMapper.class);
+                for (Map.Entry<MqttMetricEnum, MetricItemTO> entry : metrics.entrySet()) {
+                    MqttMetricEnum metric = entry.getKey();
+                    MetricItemTO value = entry.getValue();
+                    MetricDO metricDO = new MetricDO();
+                    metricDO.setNodeName(brokerContext.Options().getNodeId());
+                    metricDO.setObjectType("node");
+                    metricDO.setObjectId(brokerContext.Options().getNodeId());
+                    metricDO.setCode(metric.getCode());
+                    long currentValue = value.getValue();
+                    if (metric.isPeriodRest()) {
+                        metricDO.setValue(currentValue - value.getLatestValue());
+                    } else {
+                        metricDO.setValue(currentValue);
                     }
-                    metricDO.setCreateTime(new Date(System.currentTimeMillis() / 5000 * 5000));
-                    list.add(metricDO);
+                    value.setLatestValue(currentValue);
+//                LOGGER.info("insert metric:{} value:{}", metricDO.getCode(), metricDO.getValue());
+                    if (recordTypeEnum == RecordTypeEnum.DB) {
+                        metricMapper.insert(metricDO);
+                    } else {
+                        List<MetricDO> list = metricMap.computeIfAbsent(entry.getKey(), mqttMetricEnum -> new LinkedList<>());
+                        if (list.size() >= 16) {
+                            list.remove(0);
+                        }
+                        metricDO.setCreateTime(new Date(System.currentTimeMillis() / 5000 * 5000));
+                        list.add(metricDO);
+                    }
                 }
             }
             if (recordTypeEnum == RecordTypeEnum.DB) {
@@ -372,8 +380,7 @@ public class MetricController {
             //# TYPE mqtt2_mqtt_hello_bytes_created gauge
             //mqtt2_mqtt_hello_bytes_created{node="node",ip="ip",} 1.685426524877E9
 
-            sb.append("# HELP ").append(metricEnum.getCode()).append("_total ").append(metric.getDesc()).append("\n").append("# TYPE ").append(metricEnum.getCode()).append("_total ").append(
-                    "counter\n").append(metricEnum.getCode()).append("_total ").append("{").append("node=\"").append(brokerContext.Options().getNodeId()).append("\"").append(",ip=\"").append(brokerContext.Options().getHost()).append("\",} ").append(metric.getValue()).append("\n").append("# HELP ").append(metricEnum.getCode()).append("_created ").append(metric.getDesc()).append("\n").append("# TYPE ").append(metricEnum.getCode()).append("_created ").append("gauge\n").append(metricEnum.getCode()).append("_created ").append("{").append("node=\"").append(brokerContext.Options().getNodeId()).append("\"").append(",ip=\"").append(brokerContext.Options().getHost()).append("\",} ").append(metric.getCreated().getTime()).append("\n");
+            sb.append("# HELP ").append(metricEnum.getCode()).append("_total ").append(metric.getDesc()).append("\n").append("# TYPE ").append(metricEnum.getCode()).append("_total ").append("counter\n").append(metricEnum.getCode()).append("_total ").append("{").append("node=\"").append(brokerContext.Options().getNodeId()).append("\"").append(",ip=\"").append(brokerContext.Options().getHost()).append("\",} ").append(metric.getValue()).append("\n").append("# HELP ").append(metricEnum.getCode()).append("_created ").append(metric.getDesc()).append("\n").append("# TYPE ").append(metricEnum.getCode()).append("_created ").append("gauge\n").append(metricEnum.getCode()).append("_created ").append("{").append("node=\"").append(brokerContext.Options().getNodeId()).append("\"").append(",ip=\"").append(brokerContext.Options().getHost()).append("\",} ").append(metric.getCreated().getTime()).append("\n");
         }
 
 
