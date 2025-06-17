@@ -12,6 +12,7 @@ package tech.smartboot.mqtt.plugin.openapi.controller;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
+import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.smartboot.socket.StateMachineEnum;
@@ -127,7 +128,7 @@ public class MetricController {
 
 
             LOGGER.debug("reset period metric...");
-            try (SqlSession session = sessionFactory.openSession(true)) {
+            try (SqlSession session = sessionFactory.openSession(ExecutorType.BATCH, true)) {
                 MetricMapper metricMapper = session.getMapper(MetricMapper.class);
                 for (Map.Entry<MqttMetricEnum, MetricItemTO> entry : metrics.entrySet()) {
                     MqttMetricEnum metric = entry.getKey();
