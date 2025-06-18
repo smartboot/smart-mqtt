@@ -15,6 +15,7 @@ clean:
 # 当需要升级版本时，执行该命令
 version=1.2.0
 update_version:
+	sed -i  '' 's/public static final String VERSION = ".*";/public static final String VERSION = "v${version}";/' smart-mqtt-plugin-spec/src/main/java/tech/smartboot/mqtt/plugin/spec/Options.java
 	mvn versions:set -DnewVersion=${version} versions:commit
 	mvn -f smart-mqtt-broker/pom.xml versions:set -DnewVersion=${version} versions:commit
 	mvn -f smart-mqtt-bench/pom.xml versions:set -DnewVersion=${version} versions:commit
