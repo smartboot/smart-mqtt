@@ -17,7 +17,7 @@ import tech.smartboot.mqtt.common.util.ValidateUtils;
  * @version V1.0 , 2022/4/3
  */
 public class TopicToken {
-    private final String node;
+    private final TopicNode node;
     private final String topicFilter;
     private final TopicToken nextNode;
 
@@ -25,27 +25,40 @@ public class TopicToken {
         this(node, 0);
     }
 
-    TopicToken(String node, int offset) {
-        int index = node.indexOf('/', offset);
+    TopicToken(final String topic, final int offset) {
+        int index = topic.indexOf('/', offset);
         if (index == -1) {
-            this.node = node.substring(offset);
-            ValidateUtils.isTrue(this.node.indexOf('#') == -1 || this.node.length() == 1, "invalid topic filter");
-            ValidateUtils.isTrue(this.node.indexOf('+') == -1 || this.node.length() == 1, "invalid topic filter");
+            this.node = updateNode(new TopicNode(offset, topic.length(), topic));
+            ValidateUtils.isTrue(!this.node.contains('#') || this.node.length() == 1, "invalid topic filter");
+            ValidateUtils.isTrue(!this.node.contains('+') || this.node.length() == 1, "invalid topic filter");
             this.nextNode = null;
         } else {
-            this.node = node.substring(offset, index);
-            ValidateUtils.isTrue(this.node.indexOf('#') == -1, "invalid topic filter");
-            ValidateUtils.isTrue(this.node.indexOf('+') == -1 || this.node.length() == 1, "invalid topic filter");
-            this.nextNode = new TopicToken(node, index + 1);
+            this.node = updateNode(new TopicNode(offset, index, topic));
+            ValidateUtils.isTrue(!this.node.contains('#'), "invalid topic filter");
+            ValidateUtils.isTrue(!this.node.contains('+') || this.node.length() == 1, "invalid topic filter");
+            this.nextNode = new TopicToken(topic, index + 1);
         }
         if (offset == 0) {
-            this.topicFilter = node;
+            this.topicFilter = topic;
         } else {
             this.topicFilter = null;
         }
     }
 
-    public String getNode() {
+    private TopicNode updateNode(TopicNode node) {
+        if (node.equals(TopicNode.SHARE_NODE)) {
+            return TopicNode.SHARE_NODE;
+        }
+        if (node.equals(TopicNode.WILDCARD_PLUS_NODE)) {
+            return TopicNode.WILDCARD_PLUS_NODE;
+        }
+        if (node.equals(TopicNode.WILDCARD_HASH_NODE)) {
+            return TopicNode.WILDCARD_HASH_NODE;
+        }
+        return node;
+    }
+
+    public TopicNode getNode() {
         return node;
     }
 
@@ -58,13 +71,13 @@ public class TopicToken {
     }
 
     public boolean isWildcards() {
-        if (this.node.equals("+") || this.node.equals("#")) {
+        if (this.node == TopicNode.WILDCARD_HASH_NODE || this.node == TopicNode.WILDCARD_PLUS_NODE) {
             return true;
         }
         return nextNode != null && nextNode.isWildcards();
     }
 
     public boolean isShared() {
-        return this.node.equals("$share");
+        return this.node == TopicNode.SHARE_NODE;
     }
 }

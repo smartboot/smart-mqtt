@@ -11,10 +11,12 @@
 package tech.smartboot.mqtt.broker;
 
 import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
+import tech.smartboot.mqtt.common.TopicNode;
 import tech.smartboot.mqtt.common.TopicToken;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -46,6 +48,7 @@ import java.util.function.Consumer;
  */
 class SubscribeRelationMatcher {
     private static final Set<SessionSubscribeRelation> EMPTY_SUBSCRIBERS = Collections.emptySet();
+    private static final Map<TopicNode, SubscribeRelationMatcher> EMPTY_MAP = Collections.emptyMap();
     /**
      * 存储当前节点的订阅关系映射。
      * <p>
@@ -68,7 +71,7 @@ class SubscribeRelationMatcher {
      * </ul>
      * </p>
      */
-    private final ConcurrentHashMap<String, SubscribeRelationMatcher> subNode = new ConcurrentHashMap<>();
+    private volatile Map<TopicNode, SubscribeRelationMatcher> subNode = EMPTY_MAP;
 
 
     /**
@@ -84,6 +87,13 @@ class SubscribeRelationMatcher {
         SubscribeRelationMatcher treeNode = this;
         TopicToken token = subscriber.getTopicFilterToken();
         do {
+            if (treeNode.subNode == EMPTY_MAP) {
+                synchronized (treeNode) {
+                    if (treeNode.subNode == EMPTY_MAP) {
+                        treeNode.subNode = new ConcurrentHashMap<>();
+                    }
+                }
+            }
             treeNode = treeNode.subNode.computeIfAbsent(token.getNode(), n -> new SubscribeRelationMatcher());
         } while ((token = token.getNextNode()) != null);
         treeNode.add0(subscriber);
@@ -137,7 +147,7 @@ class SubscribeRelationMatcher {
     public void match(BrokerTopicImpl brokerTopic) {
         Consumer<SessionSubscribeRelation> consumer = (topicSubscription) -> topicSubscription.getMqttSession().subscribeSuccess(topicSubscription, brokerTopic);
         //遍历共享订阅
-        SubscribeRelationMatcher shareTree = subNode.get("$share");
+        SubscribeRelationMatcher shareTree = subNode.get(TopicNode.SHARE_NODE);
         if (shareTree != null) {
             shareTree.subNode.values().forEach(tree -> tree.match0(brokerTopic, consumer));
         }
@@ -169,13 +179,13 @@ class SubscribeRelationMatcher {
                 subscribeTree.match0(topicToken.getNextNode(), consumer);
             }
         }
-        subscribeTree = subNode.get("#");
+        subscribeTree = subNode.get(TopicNode.WILDCARD_HASH_NODE);
         if (subscribeTree != null) {
             ValidateUtils.isTrue(subscribeTree.subNode.isEmpty(), "'#' node must be empty");
             subscribeTree.subscribers.forEach(consumer);
         }
 
-        subscribeTree = subNode.get("+");
+        subscribeTree = subNode.get(TopicNode.WILDCARD_PLUS_NODE);
         if (subscribeTree != null) {
             if (topicToken.getNextNode() == null) {
                 subscribers.forEach(consumer);

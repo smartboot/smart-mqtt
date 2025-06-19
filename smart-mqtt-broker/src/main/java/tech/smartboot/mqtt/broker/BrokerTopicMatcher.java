@@ -11,6 +11,7 @@
 package tech.smartboot.mqtt.broker;
 
 import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
+import tech.smartboot.mqtt.common.TopicNode;
 import tech.smartboot.mqtt.common.TopicToken;
 
 import java.util.Collections;
@@ -55,7 +56,7 @@ import java.util.function.Consumer;
  * @see <a href="http://docs.oasis-open.org/mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html#_Toc3901131">MQTT 5.0 共享订阅规范</a>
  */
 class BrokerTopicMatcher {
-    private static final Map<String, BrokerTopicMatcher> EMPTY_MAP = Collections.emptyMap();
+    private static final Map<TopicNode, BrokerTopicMatcher> EMPTY_MAP = Collections.emptyMap();
     /**
      * 存储当前节点的主题对象，包含主题的详细信息和消息队列。
      * <p>
@@ -72,7 +73,7 @@ class BrokerTopicMatcher {
      * 使用ConcurrentHashMap保证在多线程环境下的线程安全性。
      * </p>
      */
-    private Map<String, BrokerTopicMatcher> subNode = EMPTY_MAP;
+    private Map<TopicNode, BrokerTopicMatcher> subNode = EMPTY_MAP;
 
     /**
      * 将一个主题添加到发布树中。
@@ -185,11 +186,11 @@ class BrokerTopicMatcher {
             return;
         }
         //合法的#通配符必然存在于末端
-        if ("#".equals(topicToken.getNode())) {
+        if (TopicNode.WILDCARD_HASH_NODE.equals(topicToken.getNode())) {
             subNode.values().forEach(node -> {
                 node.subscribeChildren(consumer);
             });
-        } else if ("+".equals(topicToken.getNode())) {
+        } else if (TopicNode.WILDCARD_PLUS_NODE.equals(topicToken.getNode())) {
             subNode.values().forEach(node -> {
                 node.match0(topicToken.getNextNode(), consumer);
             });

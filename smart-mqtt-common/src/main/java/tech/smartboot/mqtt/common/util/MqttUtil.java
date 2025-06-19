@@ -11,6 +11,7 @@
 package tech.smartboot.mqtt.common.util;
 
 import org.smartboot.socket.timer.HashedWheelTimer;
+import tech.smartboot.mqtt.common.TopicNode;
 import tech.smartboot.mqtt.common.TopicToken;
 import tech.smartboot.mqtt.common.exception.MqttException;
 
@@ -68,10 +69,10 @@ public class MqttUtil {
             return pubTopicToken == null;
         }
         //合法的#通配符必然存在于末端
-        if ("#".equals(subTopicToken.getNode())) {
+        if (TopicNode.WILDCARD_HASH_NODE.equals(subTopicToken.getNode())) {
             return true;
         }
-        if ("+".equals(subTopicToken.getNode())) {
+        if (TopicNode.WILDCARD_PLUS_NODE.equals(subTopicToken.getNode())) {
             return pubTopicToken != null && match(pubTopicToken.getNextNode(), subTopicToken.getNextNode());
         }
         if (pubTopicToken == null || !pubTopicToken.getNode().equals(subTopicToken.getNode())) {
