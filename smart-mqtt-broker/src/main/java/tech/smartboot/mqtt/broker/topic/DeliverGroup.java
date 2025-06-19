@@ -13,6 +13,7 @@ package tech.smartboot.mqtt.broker.topic;
 import tech.smartboot.mqtt.plugin.spec.MessageDeliver;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -45,7 +46,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author 三刀（zhengjunweimail@163.com）
  */
 public class DeliverGroup {
-
+    private static final Map<MqttSession, BaseMessageDeliver> INITIAL_SUBSCRIBERS = Collections.emptyMap();
     /**
      * 订阅者映射表，存储会话与消费者记录的对应关系。
      * <p>
@@ -56,7 +57,7 @@ public class DeliverGroup {
      * </ul>
      * </p>
      */
-    protected final Map<MqttSession, BaseMessageDeliver> subscribers = new ConcurrentHashMap<>();
+    protected volatile Map<MqttSession, BaseMessageDeliver> subscribers = INITIAL_SUBSCRIBERS;
 
     /**
      * 获取指定会话的订阅者记录。
@@ -74,10 +75,14 @@ public class DeliverGroup {
      * @param session 要移除订阅的MQTT客户端会话
      * @return 返回被移除的消费者记录，如果不存在则返回null
      */
-    public BaseMessageDeliver removeMessageDeliver(MqttSession session) {
+    public synchronized BaseMessageDeliver removeMessageDeliver(MqttSession session) {
         BaseMessageDeliver deliver = subscribers.remove(session);
         if (deliver != null) {
             deliver.disable();
+        }
+        // 如果当前订阅组已空，则将订阅组对象重置为初始状态
+        if (subscribers.isEmpty()) {
+            subscribers = INITIAL_SUBSCRIBERS;
         }
         return deliver;
     }
@@ -87,7 +92,10 @@ public class DeliverGroup {
      *
      * @param subscriber 要添加的主题消费者记录，包含会话信息和订阅配置
      */
-    public void addMessageDeliver(BaseMessageDeliver subscriber) {
+    public synchronized void addMessageDeliver(BaseMessageDeliver subscriber) {
+        if (subscribers == INITIAL_SUBSCRIBERS) {
+            subscribers = new ConcurrentHashMap<>();
+        }
         subscribers.put(subscriber.getMqttSession(), subscriber);
     }
 

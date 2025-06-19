@@ -18,6 +18,7 @@ import tech.smartboot.mqtt.common.message.MqttCodecUtil;
 import tech.smartboot.mqtt.plugin.spec.BrokerTopic;
 import tech.smartboot.mqtt.plugin.spec.Message;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -52,7 +53,7 @@ import java.util.concurrent.Semaphore;
  */
 public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
     private static final Logger LOGGER = LoggerFactory.getLogger(BrokerTopicImpl.class);
-
+    private static final Map<String, SharedDeliverGroup> INITIAL_SUBSCRIBERS = Collections.emptyMap();
     /**
      * 默认订阅组，用于管理普通的主题订阅。
      * <p>
@@ -68,7 +69,7 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
      * 共享订阅允许多个订阅者以负载均衡的方式接收消息，适用于集群环境。
      * </p>
      */
-    private final Map<String, SharedDeliverGroup> sharedGroup = new ConcurrentHashMap<>();
+    private volatile Map<String, SharedDeliverGroup> sharedGroup = INITIAL_SUBSCRIBERS;
     /**
      * 消息推送控制信号量，用于确保消息推送的并发控制。
      * <p>
@@ -147,14 +148,23 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
 
     public DeliverGroup getSubscriberGroup(TopicToken topicToken) {
         if (topicToken.isShared()) {
-            return sharedGroup.computeIfAbsent(topicToken.getTopicFilter(), s -> new SharedDeliverGroup(BrokerTopicImpl.this));
+            synchronized (this) {
+                if (sharedGroup == INITIAL_SUBSCRIBERS) {
+                    sharedGroup = new ConcurrentHashMap<>();
+                }
+                return sharedGroup.computeIfAbsent(topicToken.getTopicFilter(), s -> new SharedDeliverGroup(BrokerTopicImpl.this));
+            }
+
         } else {
             return defaultGroup;
         }
     }
 
-    public void removeShareGroup(String topicFilter) {
+    public synchronized void removeShareGroup(String topicFilter) {
         sharedGroup.remove(topicFilter);
+        if (sharedGroup.isEmpty()) {
+            sharedGroup = INITIAL_SUBSCRIBERS;
+        }
     }
 
     /**
