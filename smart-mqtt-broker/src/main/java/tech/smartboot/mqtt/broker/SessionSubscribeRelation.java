@@ -71,7 +71,7 @@ public class SessionSubscribeRelation {
      * 此Map在主题匹配时动态维护，随着主题的发布和取消订阅而更新。
      * </p>
      */
-    private final Map<BrokerTopicImpl, BaseMessageDeliver> topicSubscribers = new HashMap<>();
+    private final Map<BrokerTopicImpl, BaseMessageDeliver> topicSubscribers;
     private final MqttSessionImpl mqttSession;
 
     /**
@@ -84,6 +84,11 @@ public class SessionSubscribeRelation {
         this.mqttSession = mqttSession;
         this.topicFilterToken = topicFilterToken;
         this.mqttQoS = mqttQoS;
+        if (topicFilterToken.isWildcards()) {
+            topicSubscribers = new HashMap<>();
+        } else {
+            topicSubscribers = new HashMap<>(1, 1);
+        }
     }
 
     /**
