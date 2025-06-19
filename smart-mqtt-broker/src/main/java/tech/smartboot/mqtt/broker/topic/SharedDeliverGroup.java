@@ -41,7 +41,4 @@ class SharedDeliverGroup extends DeliverGroup {
         return messageDeliver;
     }
 
-    public boolean isShared() {
-        return true;
-    }
 }

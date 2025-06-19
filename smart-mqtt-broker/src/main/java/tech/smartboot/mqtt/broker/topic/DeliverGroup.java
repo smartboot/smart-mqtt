@@ -108,7 +108,4 @@ public class DeliverGroup {
         return subscribers.size();
     }
 
-    public boolean isShared() {
-        return false;
-    }
 }

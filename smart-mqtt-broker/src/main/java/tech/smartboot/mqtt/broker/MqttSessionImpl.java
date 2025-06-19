@@ -195,7 +195,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
             return;
         }
         DeliverGroup group = topic.getSubscriberGroup(topicToken);
-        if (group.isShared()) {
+        if (topicToken.isShared()) {
 //            MessageDeliver messageDeliver = group.getSubscriber(this);
 //            TopicToken preToken = messageDeliver.getTopicFilterToken();
 //            ValidateUtils.isTrue(preToken.getTopicFilter().equals(topicSubscription.getTopicFilterToken().getTopicFilter()), "invalid subscriber");
