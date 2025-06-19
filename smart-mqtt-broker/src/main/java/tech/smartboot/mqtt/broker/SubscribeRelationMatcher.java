@@ -14,6 +14,7 @@ import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import tech.smartboot.mqtt.common.TopicToken;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 
+import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -44,6 +45,7 @@ import java.util.function.Consumer;
  * @version V1.0 , 5/28/23
  */
 class SubscribeRelationMatcher {
+    private static final Set<SessionSubscribeRelation> EMPTY_SUBSCRIBERS = Collections.emptySet();
     /**
      * 存储当前节点的订阅关系映射。
      * <p>
@@ -51,7 +53,7 @@ class SubscribeRelationMatcher {
      * 使用ConcurrentHashMap保证在多线程环境下的线程安全性。
      * </p>
      */
-    private final Set<SessionSubscribeRelation> subscribers = ConcurrentHashMap.newKeySet();
+    private Set<SessionSubscribeRelation> subscribers = EMPTY_SUBSCRIBERS;
 
     /**
      * 存储子节点的订阅树映射。
@@ -84,7 +86,14 @@ class SubscribeRelationMatcher {
         do {
             treeNode = treeNode.subNode.computeIfAbsent(token.getNode(), n -> new SubscribeRelationMatcher());
         } while ((token = token.getNextNode()) != null);
-        treeNode.subscribers.add(subscriber);
+        treeNode.add0(subscriber);
+    }
+
+    private synchronized void add0(SessionSubscribeRelation subscriber) {
+        if (subscribers == EMPTY_SUBSCRIBERS) {
+            subscribers = ConcurrentHashMap.newKeySet();
+        }
+        subscribers.add(subscriber);
     }
 
     /**
@@ -106,7 +115,14 @@ class SubscribeRelationMatcher {
             }
             topicToken = topicToken.getNextNode();
         }
-        subscribeTree.subscribers.remove(subscriber);
+        subscribeTree.remove0(subscriber);
+    }
+
+    private synchronized void remove0(SessionSubscribeRelation subscriber) {
+        subscribers.remove(subscriber);
+        if (subscribers.isEmpty()) {
+            subscribers = EMPTY_SUBSCRIBERS;
+        }
     }
 
     /**

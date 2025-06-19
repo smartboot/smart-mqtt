@@ -13,6 +13,8 @@ package tech.smartboot.mqtt.broker;
 import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import tech.smartboot.mqtt.common.TopicToken;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
@@ -53,6 +55,7 @@ import java.util.function.Consumer;
  * @see <a href="http://docs.oasis-open.org/mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html#_Toc3901131">MQTT 5.0 共享订阅规范</a>
  */
 class BrokerTopicMatcher {
+    private static final Map<String, BrokerTopicMatcher> EMPTY_MAP = Collections.emptyMap();
     /**
      * 存储当前节点的主题对象，包含主题的详细信息和消息队列。
      * <p>
@@ -69,7 +72,7 @@ class BrokerTopicMatcher {
      * 使用ConcurrentHashMap保证在多线程环境下的线程安全性。
      * </p>
      */
-    private final ConcurrentHashMap<String, BrokerTopicMatcher> subNode = new ConcurrentHashMap<>();
+    private Map<String, BrokerTopicMatcher> subNode = EMPTY_MAP;
 
     /**
      * 将一个主题添加到发布树中。
@@ -96,6 +99,9 @@ class BrokerTopicMatcher {
         TopicToken topicToken = brokerTopic;
         BrokerTopicMatcher treeNode = this;
         while (true) {
+            if (treeNode.subNode == EMPTY_MAP) {
+                treeNode.subNode = new ConcurrentHashMap<>();
+            }
             treeNode = treeNode.subNode.computeIfAbsent(topicToken.getNode(), n -> new BrokerTopicMatcher());
             if (topicToken.getNextNode() == null) {
                 break;
