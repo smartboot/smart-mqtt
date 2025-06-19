@@ -65,6 +65,7 @@ class BrokerTopicMatcher {
      * </p>
      */
     private BrokerTopicImpl brokerTopic;
+    private final TopicNode topicNode;
 
     /**
      * 存储子节点的发布树映射。
@@ -74,6 +75,10 @@ class BrokerTopicMatcher {
      * </p>
      */
     private Map<TopicNode, BrokerTopicMatcher> subNode = EMPTY_MAP;
+
+    public BrokerTopicMatcher(TopicNode topicNode) {
+        this.topicNode = topicNode;
+    }
 
     /**
      * 将一个主题添加到发布树中。
@@ -103,7 +108,11 @@ class BrokerTopicMatcher {
             if (treeNode.subNode == EMPTY_MAP) {
                 treeNode.subNode = new ConcurrentHashMap<>();
             }
-            treeNode = treeNode.subNode.computeIfAbsent(topicToken.getNode(), n -> new BrokerTopicMatcher());
+            treeNode = treeNode.subNode.computeIfAbsent(topicToken.getNode(), BrokerTopicMatcher::new);
+            //复用subNode中的topicNode，以释放topicToken中的node对象
+            if (treeNode.topicNode != topicToken.getNode()) {
+                topicToken.setNode(treeNode.topicNode);
+            }
             if (topicToken.getNextNode() == null) {
                 break;
             } else {
@@ -197,6 +206,10 @@ class BrokerTopicMatcher {
         } else {
             BrokerTopicMatcher node = subNode.get(topicToken.getNode());
             if (node != null) {
+                //复用subNode中的topicNode，以释放topicToken中的node对象,并提示重订阅的性能
+                if (node.topicNode != topicToken.getNode()) {
+                    topicToken.setNode(node.topicNode);
+                }
                 node.match0(topicToken.getNextNode(), consumer);
             }
         }

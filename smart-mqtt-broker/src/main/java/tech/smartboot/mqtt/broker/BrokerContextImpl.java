@@ -122,7 +122,7 @@ public class BrokerContextImpl implements BrokerContext {
      * 用于在消息发布时快速找到匹配的订阅者。
      * </p>
      */
-    private final BrokerTopicMatcher topicMatcher = new BrokerTopicMatcher();
+    private final BrokerTopicMatcher topicMatcher = new BrokerTopicMatcher(null);
 
     /**
      * 主题订阅树，用于管理客户端的订阅关系。

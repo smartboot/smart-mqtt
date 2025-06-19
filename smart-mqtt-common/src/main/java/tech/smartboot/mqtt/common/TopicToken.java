@@ -17,7 +17,7 @@ import tech.smartboot.mqtt.common.util.ValidateUtils;
  * @version V1.0 , 2022/4/3
  */
 public class TopicToken {
-    private final TopicNode node;
+    private TopicNode node;
     private final String topicFilter;
     private final TopicToken nextNode;
 
@@ -60,6 +60,10 @@ public class TopicToken {
 
     public TopicNode getNode() {
         return node;
+    }
+
+    public void setNode(TopicNode node) {
+        this.node = node;
     }
 
     public String getTopicFilter() {
