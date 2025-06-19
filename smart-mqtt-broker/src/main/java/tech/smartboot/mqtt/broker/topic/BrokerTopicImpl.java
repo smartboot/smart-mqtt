@@ -51,9 +51,9 @@ import java.util.concurrent.ExecutorService;
  * @version V1.0 , 2018/5/3
  */
 public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
-    private static final int FLAG_ENABLED = 1 << 31;
-    private static final int FLAG_LOCK = 1 << 30;
-    private static final int FLAG_UPDATE = 1;
+    private static final int FLAG_ENABLED = 1 << 1;
+    private static final int FLAG_LOCK = 1 << 2;
+    private static final int FLAG_UPDATE = 1 << 3;
     private static final Logger LOGGER = LoggerFactory.getLogger(BrokerTopicImpl.class);
     private static final Map<String, SharedDeliverGroup> INITIAL_SUBSCRIBERS = Collections.emptyMap();
     /**
