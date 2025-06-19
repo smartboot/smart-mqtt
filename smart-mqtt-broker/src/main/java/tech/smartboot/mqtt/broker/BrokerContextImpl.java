@@ -106,7 +106,9 @@ public class BrokerContextImpl implements BrokerContext {
      * 主题对象包含该主题的订阅者信息、消息队列和保留消息等。
      * </p>
      */
-    private final ConcurrentMap<String, BrokerTopicImpl> topicMap = new ConcurrentHashMap<>();
+    private ConcurrentMap<String, BrokerTopicImpl> topicMap;
+
+    private ConcurrentHashMap<String, BrokerTopicImpl>[] topicPartitions;
 
     /**
      * Broker配置选项，包含服务器端口、最大连接数等配置参数。
@@ -257,6 +259,15 @@ public class BrokerContextImpl implements BrokerContext {
     public void init() throws Throwable {
         long start = System.currentTimeMillis();
         updateBrokerConfigure();
+
+        if (options.getTopicPartitions() > 1) {
+            topicPartitions = new ConcurrentHashMap[options.getTopicPartitions()];
+            for (int i = 0; i < options.getTopicPartitions(); i++) {
+                topicPartitions[i] = new ConcurrentHashMap<>();
+            }
+        } else {
+            topicMap = new ConcurrentHashMap<>();
+        }
 
         subscribeEventBus();
 
@@ -495,6 +506,16 @@ public class BrokerContextImpl implements BrokerContext {
 
     @Override
     public BrokerTopicImpl getOrCreateTopic(String topic) {
+        ConcurrentMap<String, BrokerTopicImpl> topicMap;
+        if (options.getTopicPartitions() > 1) {
+            int hash = topic.hashCode();
+            if (hash < 0) {
+                hash = -hash;
+            }
+            topicMap = topicPartitions[(hash % options.getTopicPartitions())];
+        } else {
+            topicMap = this.topicMap;
+        }
         BrokerTopicImpl brokerTopic = topicMap.get(topic);
         if (brokerTopic == null) {
             synchronized (this) {
@@ -604,7 +625,15 @@ public class BrokerContextImpl implements BrokerContext {
     public void destroy() {
         LOGGER.info("destroy broker...");
         eventBus.publish(EventType.BROKER_DESTROY, this);
-        topicMap.values().forEach(BrokerTopicImpl::disable);
+        if (topicMap != null) {
+            topicMap.values().forEach(BrokerTopicImpl::disable);
+        }
+        if (topicPartitions != null) {
+            for (ConcurrentMap<String, BrokerTopicImpl> topicPartition : topicPartitions) {
+                topicPartition.values().forEach(BrokerTopicImpl::disable);
+            }
+        }
+
         pushThreadPool.shutdown();
         if (server != null) {
             server.shutdown();

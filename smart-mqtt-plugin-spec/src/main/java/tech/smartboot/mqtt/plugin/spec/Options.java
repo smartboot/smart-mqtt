@@ -308,6 +308,12 @@ public class Options extends ToString {
      */
     private boolean lowMemory = false;
 
+    /**
+     * Topic分区数。
+     * 海量的Topic场景下，合理的分区数有利于改善服务稳定性。
+     */
+    private int topicPartitions;
+
     private MqttMessageProcessor processor;
 
     public int getPort() {
@@ -396,6 +402,14 @@ public class Options extends ToString {
 
     public void setNodeId(String nodeId) {
         this.nodeId = nodeId;
+    }
+
+    public int getTopicPartitions() {
+        return topicPartitions;
+    }
+
+    public void setTopicPartitions(int topicPartitions) {
+        this.topicPartitions = topicPartitions;
     }
 
     public Options addPlugin(Plugin<MqttMessage> plugin) {
