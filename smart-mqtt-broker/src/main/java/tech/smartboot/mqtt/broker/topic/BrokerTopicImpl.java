@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Semaphore;
 
 /**
  * MQTT Broker端的主题管理类，负责处理主题的订阅、消息分发和共享订阅等功能。
@@ -52,6 +51,9 @@ import java.util.concurrent.Semaphore;
  * @version V1.0 , 2018/5/3
  */
 public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
+    private static final int FLAG_ENABLED = 1 << 31;
+    private static final int FLAG_LOCK = 1 << 30;
+    private static final int FLAG_UPDATE = 1;
     private static final Logger LOGGER = LoggerFactory.getLogger(BrokerTopicImpl.class);
     private static final Map<String, SharedDeliverGroup> INITIAL_SUBSCRIBERS = Collections.emptyMap();
     /**
@@ -70,19 +72,9 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
      * </p>
      */
     private volatile Map<String, SharedDeliverGroup> sharedGroup = INITIAL_SUBSCRIBERS;
-    /**
-     * 消息推送控制信号量，用于确保消息推送的并发控制。
-     * <p>
-     * 使用信号量机制确保同一时刻只有一个推送任务在执行，
-     * 防止消息重复推送和资源竞争。
-     * </p>
-     */
-    private final Semaphore semaphore = new Semaphore(1);
     private final ExecutorService executorService;
 
-    private boolean enabled = true;
-
-    private int version = 0;
+    private int flag;
     private final byte[] encodedTopic;
 
     private final AsyncTask asyncTask = new AsyncTask() {
@@ -90,7 +82,7 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
         public void execute() {
             Runnable subscriber;
             queue.offer(BREAK);
-            int mark = version;
+            unsetFlag(FLAG_UPDATE);
             while ((subscriber = queue.poll()) != BREAK) {
                 try {
                     subscriber.run();
@@ -98,8 +90,8 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
                     LOGGER.error("batch publish exception:{}", e.getMessage(), e);
                 }
             }
-            semaphore.release();
-            if (mark != version && !queue.isEmpty()) {
+            unsetFlag(FLAG_LOCK);
+            if (hasFlag(FLAG_UPDATE) && !queue.isEmpty()) {
                 push();
             }
         }
@@ -143,6 +135,7 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
         this.executorService = executorService;
         this.messageQueue = new MemoryMessageStoreQueue(queueLength);
         this.encodedTopic = MqttCodecUtil.encodeUTF8(topic);
+        setFlag(FLAG_ENABLED);
     }
 
 
@@ -236,18 +229,40 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
      * </p>
      */
     public void push() {
-        if (enabled && semaphore.tryAcquire()) {
+        if (hasFlag(FLAG_ENABLED) && !hasFlag(FLAG_LOCK)) {
             //已加入推送队列
+            synchronized (executorService) {
+                if (hasFlag(FLAG_LOCK)) {
+                    return;
+                }
+                setFlag(FLAG_LOCK);
+            }
             executorService.execute(asyncTask);
         }
     }
 
     public void addVersion() {
-        version++;
+        if (hasFlag(FLAG_UPDATE)) {
+            return;
+        }
+        setFlag(FLAG_UPDATE);
     }
 
     public void disable() {
-        this.enabled = false;
+        unsetFlag(FLAG_ENABLED);
+    }
+
+    public synchronized void setFlag(int v) {
+        this.flag = this.flag | v;
+    }
+
+    public boolean hasFlag(int v) {
+        return (this.flag & v) == v;
+    }
+
+
+    public synchronized void unsetFlag(int v) {
+        this.flag = this.flag & ~v;
     }
 
     public void clear() {
