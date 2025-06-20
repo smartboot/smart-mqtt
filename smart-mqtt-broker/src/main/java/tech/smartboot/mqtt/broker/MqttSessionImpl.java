@@ -280,7 +280,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
             BaseMessageDeliver consumerRecord = subscriberGroup.removeMessageDeliver(this);
             //移除后，如果BrokerTopic没有订阅者，则清除消息队列
             if (brokerTopic.subscribeCount() == 0) {
-                LOGGER.info("clear topic: {} message queue", brokerTopic.getTopicFilter());
+                LOGGER.debug("clear topic: {} message queue", brokerTopic.getTopicFilter());
                 brokerTopic.clear();
             }
             //正常情况下，当前session中维护的订阅关系与BrokerTopic中的订阅关系是一致的

@@ -532,7 +532,7 @@ public class BrokerContextImpl implements BrokerContext {
                 if (brokerTopic == null) {
                     ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topic), "invalid topicName: " + topic);
                     brokerTopic = new BrokerTopicImpl(topic, options.getMaxMessageQueueLength(), pushThreadPool);
-                    LOGGER.info("create topic: {} capacity is {}", topic, brokerTopic.getMessageQueue().capacity());
+                    LOGGER.debug("create topic: {} capacity is {}", topic, brokerTopic.getMessageQueue().capacity());
                     topicMatcher.add(brokerTopic);
                     topicMap.put(topic, brokerTopic);
                     eventBus.publish(EventType.TOPIC_CREATE, topic);

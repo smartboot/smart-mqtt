@@ -194,7 +194,7 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic, Runnable
     public void push() {
         if ((this.flag & (FLAG_ENABLED | FLAG_LOCK)) == FLAG_ENABLED) {
             //已加入推送队列
-            synchronized (executorService) {
+            synchronized (encodedTopic) {
                 if (hasFlag(FLAG_LOCK)) {
                     return;
                 }
