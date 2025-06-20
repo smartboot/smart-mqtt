@@ -73,7 +73,7 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic, Runnable
     private volatile Map<String, SharedDeliverGroup> sharedGroup = INITIAL_SUBSCRIBERS;
     private final ExecutorService executorService;
 
-    private int flag;
+    private volatile int flag;
     private final byte[] encodedTopic;
 
 
