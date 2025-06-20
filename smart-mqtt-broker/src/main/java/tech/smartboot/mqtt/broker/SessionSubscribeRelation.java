@@ -14,9 +14,11 @@ import tech.smartboot.mqtt.broker.topic.BaseMessageDeliver;
 import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import tech.smartboot.mqtt.common.TopicToken;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
+import tech.smartboot.mqtt.common.util.ValidateUtils;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 /**
  * MQTT客户端的主题订阅关系类，支持精确匹配和通配符订阅。
@@ -40,7 +42,7 @@ import java.util.Map;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/7/13
  */
-public class SessionSubscribeRelation {
+public abstract class SessionSubscribeRelation {
     /**
      * 主题过滤器的Token解析结果。
      * <p>
@@ -63,15 +65,6 @@ public class SessionSubscribeRelation {
      */
     private MqttQoS mqttQoS;
 
-    /**
-     * 客户端订阅所匹配的具体主题集合。
-     * <p>
-     * 对于通配符订阅，一个主题过滤器可能匹配多个实际的主题。
-     * Key为实际的主题对象（BrokerTopic），Value为该主题的消费记录。
-     * 此Map在主题匹配时动态维护，随着主题的发布和取消订阅而更新。
-     * </p>
-     */
-    private final Map<BrokerTopicImpl, BaseMessageDeliver> topicSubscribers;
     private final MqttSessionImpl mqttSession;
 
     /**
@@ -84,11 +77,6 @@ public class SessionSubscribeRelation {
         this.mqttSession = mqttSession;
         this.topicFilterToken = topicFilterToken;
         this.mqttQoS = mqttQoS;
-        if (topicFilterToken.isWildcards()) {
-            topicSubscribers = new HashMap<>();
-        } else {
-            topicSubscribers = new HashMap<>(1, 1);
-        }
     }
 
     /**
@@ -121,21 +109,94 @@ public class SessionSubscribeRelation {
         this.mqttQoS = mqttQoS;
     }
 
-    /**
-     * 获取订阅匹配的具体主题集合。
-     * <p>
-     * 返回当前主题过滤器匹配的所有实际主题及其消费记录。
-     * 对于通配符订阅，此集合可能包含多个匹配的主题。
-     * </p>
-     *
-     * @return 主题与消费记录的映射关系
-     */
-    Map<BrokerTopicImpl, BaseMessageDeliver> getTopicSubscribers() {
-        return topicSubscribers;
-    }
+    public abstract void register(BrokerTopicImpl topic, BaseMessageDeliver deliver);
+
+    public abstract BaseMessageDeliver deregister(BrokerTopicImpl topic);
+
+    public abstract void forEach(BiConsumer<BrokerTopicImpl, BaseMessageDeliver> action);
 
     public MqttSessionImpl getMqttSession() {
         return mqttSession;
+    }
+
+    public static class WildcardTopicRelation extends SessionSubscribeRelation {
+
+        /**
+         * 客户端订阅所匹配的具体主题集合。
+         * <p>
+         * 对于通配符订阅，一个主题过滤器可能匹配多个实际的主题。
+         * Key为实际的主题对象（BrokerTopic），Value为该主题的消费记录。
+         * 此Map在主题匹配时动态维护，随着主题的发布和取消订阅而更新。
+         * </p>
+         */
+        private final Map<BrokerTopicImpl, BaseMessageDeliver> topicSubscribers;
+
+        /**
+         * 创建主题订阅关系实例。
+         *
+         * @param mqttSession
+         * @param topicFilterToken 主题过滤器的Token解析结果
+         * @param mqttQoS          订阅的QoS级别
+         */
+        WildcardTopicRelation(MqttSessionImpl mqttSession, TopicToken topicFilterToken, MqttQoS mqttQoS) {
+            super(mqttSession, topicFilterToken, mqttQoS);
+            topicSubscribers = new HashMap<>();
+        }
+
+        @Override
+        public void register(BrokerTopicImpl topic, BaseMessageDeliver deliver) {
+            topicSubscribers.put(topic, deliver);
+        }
+
+        @Override
+        public BaseMessageDeliver deregister(BrokerTopicImpl topic) {
+            return topicSubscribers.remove(topic);
+        }
+
+        @Override
+        public void forEach(BiConsumer<BrokerTopicImpl, BaseMessageDeliver> action) {
+            topicSubscribers.forEach(action);
+        }
+    }
+
+
+    public static class SpecificTopicRelation extends SessionSubscribeRelation {
+        private BrokerTopicImpl topic;
+        private BaseMessageDeliver deliver;
+
+        /**
+         * 创建主题订阅关系实例。
+         *
+         * @param mqttSession
+         * @param topicFilterToken 主题过滤器的Token解析结果
+         * @param mqttQoS          订阅的QoS级别
+         */
+        SpecificTopicRelation(MqttSessionImpl mqttSession, TopicToken topicFilterToken, MqttQoS mqttQoS) {
+            super(mqttSession, topicFilterToken, mqttQoS);
+        }
+
+        @Override
+        public void register(BrokerTopicImpl topic, BaseMessageDeliver deliver) {
+            ValidateUtils.isTrue(this.topic == null, "invalid topic");
+            this.topic = topic;
+            this.deliver = deliver;
+        }
+
+        @Override
+        public BaseMessageDeliver deregister(BrokerTopicImpl topic) {
+            ValidateUtils.isTrue(topic == this.topic, "invalid topic");
+            BaseMessageDeliver tmp = this.deliver;
+            this.topic = null;
+            this.deliver = null;
+            return tmp;
+        }
+
+        @Override
+        public void forEach(BiConsumer<BrokerTopicImpl, BaseMessageDeliver> action) {
+            if (deliver != null) {
+                action.accept(topic, deliver);
+            }
+        }
     }
 }
 

@@ -27,11 +27,11 @@ public abstract class AsyncTask implements Runnable {
                 e.getCallback().run();
             } else {
                 System.err.println("execute async task exception");
-                e.getMessage();
+                e.printStackTrace();
             }
         } catch (Throwable throwable) {
             System.err.println("execute async task exception");
-            throwable.getMessage();
+            throwable.printStackTrace();
         }
     }
 
