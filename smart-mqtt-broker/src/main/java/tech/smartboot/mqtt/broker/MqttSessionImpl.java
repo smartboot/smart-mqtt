@@ -77,6 +77,8 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
      */
     private long latestReceiveMessageTime;
 
+    private TimerTask keepAliveTimer;
+
 
     public MqttSessionImpl(BrokerContextImpl mqttContext, AioSession session, MqttWriter mqttWriter) {
         this.mqttContext = mqttContext;
@@ -92,6 +94,10 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
             }
         }, mqttContext.Options().getNoConnectIdleTimeout(), TimeUnit.MILLISECONDS);
         mqttContext.getEventBus().publish(EventType.SESSION_CREATE, this);
+    }
+
+    public void setKeepAliveTimer(TimerTask keepAliveTimer) {
+        this.keepAliveTimer = keepAliveTimer;
     }
 
     public ConnectProperties getProperties() {
@@ -151,6 +157,9 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
             removeSession.disconnect();
         }
         LOGGER.debug("remove mqttSession success:{}", removeSession);
+        if (keepAliveTimer != null) {
+            keepAliveTimer.cancel();
+        }
         disconnect = true;
         try {
             session.close();

@@ -10,12 +10,13 @@
 
 package tech.smartboot.mqtt.broker.bus.event;
 
+import org.smartboot.socket.timer.TimerTask;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
+import tech.smartboot.mqtt.broker.MqttSessionImpl;
 import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
-import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.bus.EventBusConsumer;
 import tech.smartboot.mqtt.plugin.spec.bus.EventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
@@ -42,9 +43,9 @@ public class KeepAliveMonitorSubscriber implements EventBusConsumer<EventObject<
         if (timeout > 0) {
             timeout += timeout >> 1;
         }
-        MqttSession session = object.getSession();
+        MqttSessionImpl session = (MqttSessionImpl) object.getSession();
         final long finalTimeout = (timeout == 0 || timeout > context.Options().getMaxKeepAliveTime()) ? context.Options().getMaxKeepAliveTime() : timeout;
-        context.getTimer().schedule(new AsyncTask() {
+        TimerTask task = context.getTimer().schedule(new AsyncTask() {
             @Override
             public void execute() {
                 if (session.isDisconnect()) {
@@ -54,12 +55,13 @@ public class KeepAliveMonitorSubscriber implements EventBusConsumer<EventObject<
                 long remainingTime = finalTimeout + session.getLatestReceiveMessageTime() - System.currentTimeMillis();
                 if (remainingTime > 0) {
 //                    LOGGER.info("continue monitor, wait:{},current:{} latestReceiveTime:{} timeout:{}", remainingTime, System.currentTimeMillis(), session.getLatestReceiveMessageTime(), finalTimeout);
-                    context.getTimer().schedule(this, remainingTime, TimeUnit.MILLISECONDS);
+                    session.setKeepAliveTimer(context.getTimer().schedule(this, remainingTime, TimeUnit.MILLISECONDS));
                 } else {
                     LOGGER.info("session:{} keepalive timeout,current:{} latestReceiveTime:{} timeout:{}", session.getClientId(), System.currentTimeMillis(), session.getLatestReceiveMessageTime(), finalTimeout);
                     session.disconnect();
                 }
             }
         }, finalTimeout, TimeUnit.MILLISECONDS);
+        session.setKeepAliveTimer(task);
     }
 }
