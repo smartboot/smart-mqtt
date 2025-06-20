@@ -69,10 +69,10 @@ public class MqttUtil {
             return pubTopicToken == null;
         }
         //合法的#通配符必然存在于末端
-        if (TopicNode.WILDCARD_HASH_NODE.equals(subTopicToken.getNode())) {
+        if (TopicNode.WILDCARD_HASH_NODE == subTopicToken.getNode()) {
             return true;
         }
-        if (TopicNode.WILDCARD_PLUS_NODE.equals(subTopicToken.getNode())) {
+        if (TopicNode.WILDCARD_PLUS_NODE == subTopicToken.getNode()) {
             return pubTopicToken != null && match(pubTopicToken.getNextNode(), subTopicToken.getNextNode());
         }
         if (pubTopicToken == null || !pubTopicToken.getNode().equals(subTopicToken.getNode())) {

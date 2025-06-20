@@ -171,6 +171,7 @@ public class MqttClient extends AbstractSession {
                 @Override
                 public void execute() {
                     if (!connected) {
+                        System.out.println("connect timeout");
                         session.close();
                     }
                 }

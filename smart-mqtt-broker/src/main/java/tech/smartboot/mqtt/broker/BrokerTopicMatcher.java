@@ -195,11 +195,11 @@ class BrokerTopicMatcher {
             return;
         }
         //合法的#通配符必然存在于末端
-        if (TopicNode.WILDCARD_HASH_NODE.equals(topicToken.getNode())) {
+        if (TopicNode.WILDCARD_HASH_NODE == topicToken.getNode()) {
             subNode.values().forEach(node -> {
                 node.subscribeChildren(consumer);
             });
-        } else if (TopicNode.WILDCARD_PLUS_NODE.equals(topicToken.getNode())) {
+        } else if (TopicNode.WILDCARD_PLUS_NODE == topicToken.getNode()) {
             subNode.values().forEach(node -> {
                 node.match0(topicToken.getNextNode(), consumer);
             });
