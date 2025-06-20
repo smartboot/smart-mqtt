@@ -103,4 +103,4 @@ services:
 
     ## 百万连接
 #    command: java -Xmx300M -Xmn250M -XX:PretenureSizeThreshold=0 -cp smart-mqtt-bench.jar  -Dhost=mqtt-broker -Dconnect=25000 -Dqos=0 -Dpublisher=0 -Dtopic=2 -Dperiod=10000 tech.smartboot.mqtt.bench.Subscribe
-version: '3.7'
+#version: '3.7'
