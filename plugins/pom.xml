@@ -45,6 +45,12 @@
                 <groupId>tech.smartboot.feat</groupId>
                 <artifactId>feat-core</artifactId>
                 <version>${feat.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.github.smartboot.socket</groupId>
+                        <artifactId>aio-pro</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>tech.smartboot.feat</groupId>
