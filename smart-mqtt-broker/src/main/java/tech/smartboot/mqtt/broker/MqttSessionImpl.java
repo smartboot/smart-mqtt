@@ -237,7 +237,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
 
     //一个新的订阅建立时，对每个匹配的主题名，如果存在最近保留的消息，它必须被发送给这个订阅者
     private void addSubscriber(BrokerTopicImpl topic, BaseMessageDeliver deliver) {
-        Message retainMessage = topic.getRetainMessage();
+        Message retainMessage = mqttContext.getRetain(topic.getTopic());
         if (retainMessage == null || retainMessage.getCreateTime() > deliver.getLatestSubscribeTime()) {
             topic.registerMessageDeliver(deliver);
             return;

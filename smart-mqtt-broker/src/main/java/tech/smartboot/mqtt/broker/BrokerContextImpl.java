@@ -21,12 +21,13 @@ import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.broker.bus.event.KeepAliveMonitorSubscriber;
-import tech.smartboot.mqtt.broker.bus.message.RetainPersistenceConsumer;
 import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import tech.smartboot.mqtt.common.MqttProtocol;
+import tech.smartboot.mqtt.common.enums.MqttQoS;
 import tech.smartboot.mqtt.common.util.MqttUtil;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
+import tech.smartboot.mqtt.plugin.spec.BrokerTopic;
 import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.Options;
@@ -45,6 +46,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -106,9 +108,16 @@ public class BrokerContextImpl implements BrokerContext {
      * 主题对象包含该主题的订阅者信息、消息队列和保留消息等。
      * </p>
      */
-    private ConcurrentMap<String, BrokerTopicImpl> topicMap;
+    private final ConcurrentMap<String, BrokerTopicImpl> topicMap = new ConcurrentHashMap<>();
 
-    private ConcurrentHashMap<String, BrokerTopicImpl>[] topicPartitions;
+    /**
+     * 主题的保留消息。
+     * <p>
+     * 符合MQTT协议的保留消息机制，新订阅者会立即收到该主题的最新保留消息。
+     * 保留消息可以通过发布新消息更新，或通过发布空消息删除。
+     * </p>
+     */
+    private final Map<String, Message> retains = new ConcurrentHashMap<>();
 
     /**
      * Broker配置选项，包含服务器端口、最大连接数等配置参数。
@@ -260,15 +269,6 @@ public class BrokerContextImpl implements BrokerContext {
         long start = System.currentTimeMillis();
         updateBrokerConfigure();
 
-        if (options.getTopicPartitions() > 1) {
-            topicPartitions = new ConcurrentHashMap[options.getTopicPartitions()];
-            for (int i = 0; i < options.getTopicPartitions(); i++) {
-                topicPartitions[i] = new ConcurrentHashMap<>();
-            }
-        } else {
-            topicMap = new ConcurrentHashMap<>();
-        }
-
         subscribeEventBus();
 
         subscribeMessageBus();
@@ -374,7 +374,26 @@ public class BrokerContextImpl implements BrokerContext {
             }
         });
         //消费retain消息
-        messageBus.consumer(new RetainPersistenceConsumer(), Message::isRetained);
+        messageBus.consumer((session, message) -> {
+            BrokerTopic topic = message.getTopic();
+            //保留标志为 1 且有效载荷为零字节的 PUBLISH 报文会被服务端当作正常消息处理，它会被发送给订阅主题匹配的客户端。
+            // 此外，同一个主题下任何现存的保留消息必须被移除，因此这个主题之后的任何订阅者都不会收到一个保留消息。
+            if (message.getPayload().length == 0) {
+                LOGGER.info("clear topic:{} retained messages, because of current retained message's payload length is 0", topic.getTopic());
+                retains.remove(topic.getTopic());
+                return;
+            }
+            /*
+             * 如果服务端收到一条保留（RETAIN）标志为 1 的 QoS 0 消息，它必须丢弃之前为那个主题保留
+             * 的任何消息。它应该将这个新的 QoS 0 消息当作那个主题的新保留消息，但是任何时候都可以选择丢弃它
+             * 如果这种情况发生了，那个主题将没有保留消息
+             */
+            if (message.getQos() == MqttQoS.AT_MOST_ONCE) {
+                LOGGER.info("receive Qos0 retain message,clear topic:{} retained messages", topic.getTopic());
+                retains.remove(topic.getTopic());
+            }
+            retains.put(topic.getTopic(), message);
+        }, Message::isRetained);
     }
 
     /**
@@ -506,16 +525,6 @@ public class BrokerContextImpl implements BrokerContext {
 
     @Override
     public BrokerTopicImpl getOrCreateTopic(String topic) {
-        ConcurrentMap<String, BrokerTopicImpl> topicMap;
-        if (options.getTopicPartitions() > 1) {
-            int hash = topic.hashCode();
-            if (hash < 0) {
-                hash = -hash;
-            }
-            topicMap = topicPartitions[(hash % options.getTopicPartitions())];
-        } else {
-            topicMap = this.topicMap;
-        }
         BrokerTopicImpl brokerTopic = topicMap.get(topic);
         if (brokerTopic == null) {
             synchronized (this) {
@@ -568,6 +577,10 @@ public class BrokerContextImpl implements BrokerContext {
     @Override
     public Timer getTimer() {
         return timer;
+    }
+
+    public Message getRetain(String topic) {
+        return retains.get(topic);
     }
 
     public Timer getInflightQueueTimer() {
@@ -625,14 +638,8 @@ public class BrokerContextImpl implements BrokerContext {
     public void destroy() {
         LOGGER.info("destroy broker...");
         eventBus.publish(EventType.BROKER_DESTROY, this);
-        if (topicMap != null) {
-            topicMap.values().forEach(BrokerTopicImpl::disable);
-        }
-        if (topicPartitions != null) {
-            for (ConcurrentMap<String, BrokerTopicImpl> topicPartition : topicPartitions) {
-                topicPartition.values().forEach(BrokerTopicImpl::disable);
-            }
-        }
+        topicMap.values().forEach(BrokerTopicImpl::disable);
+        retains.clear();
 
         pushThreadPool.shutdown();
         if (server != null) {

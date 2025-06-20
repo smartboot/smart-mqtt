@@ -16,7 +16,6 @@ import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.TopicToken;
 import tech.smartboot.mqtt.common.message.MqttCodecUtil;
 import tech.smartboot.mqtt.plugin.spec.BrokerTopic;
-import tech.smartboot.mqtt.plugin.spec.Message;
 
 import java.util.Collections;
 import java.util.Map;
@@ -97,14 +96,6 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
         }
     };
 
-    /**
-     * 主题的保留消息。
-     * <p>
-     * 符合MQTT协议的保留消息机制，新订阅者会立即收到该主题的最新保留消息。
-     * 保留消息可以通过发布新消息更新，或通过发布空消息删除。
-     * </p>
-     */
-    private Message retainMessage;
 
     /**
      * 消息队列，用于存储待处理的消息。
@@ -197,14 +188,6 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
 
     public byte[] encodedTopicBytes() {
         return encodedTopic;
-    }
-
-    public Message getRetainMessage() {
-        return retainMessage;
-    }
-
-    public void setRetainMessage(Message retainMessage) {
-        this.retainMessage = retainMessage;
     }
 
     public MemoryMessageStoreQueue getMessageQueue() {
