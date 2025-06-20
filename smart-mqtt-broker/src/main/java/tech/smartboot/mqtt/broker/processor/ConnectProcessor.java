@@ -104,7 +104,7 @@ public class ConnectProcessor implements MqttProcessor<BrokerContextImpl, MqttCo
         }
         MqttConnAckMessage mqttConnAckMessage = MqttSession.connAck(MqttConnectReturnCode.CONNECTION_ACCEPTED, !mqttConnectMessage.getVariableHeader().isCleanSession(), properties);
 
-        session.write(mqttConnAckMessage);
+        session.write(mqttConnAckMessage, false);
 
 
         LOGGER.debug("CONNECT message processed CId={}", session.getClientId());
