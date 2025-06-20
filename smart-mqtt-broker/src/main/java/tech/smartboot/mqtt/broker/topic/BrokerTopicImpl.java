@@ -12,8 +12,8 @@ package tech.smartboot.mqtt.broker.topic;
 
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.TopicToken;
+import tech.smartboot.mqtt.common.exception.MqttException;
 import tech.smartboot.mqtt.common.message.MqttCodecUtil;
 import tech.smartboot.mqtt.plugin.spec.BrokerTopic;
 
@@ -49,7 +49,7 @@ import java.util.concurrent.ExecutorService;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2018/5/3
  */
-public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
+public class BrokerTopicImpl extends TopicToken implements BrokerTopic, Runnable {
     private static final int FLAG_ENABLED = 1 << 1;
     private static final int FLAG_LOCK = 1 << 2;
     private static final int FLAG_UPDATE = 1 << 3;
@@ -75,26 +75,6 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
 
     private int flag;
     private final byte[] encodedTopic;
-
-    private final AsyncTask asyncTask = new AsyncTask() {
-        @Override
-        public void execute() {
-            Runnable subscriber;
-            queue.offer(BREAK);
-            unsetFlag(FLAG_UPDATE);
-            while ((subscriber = queue.poll()) != BREAK) {
-                try {
-                    subscriber.run();
-                } catch (Exception e) {
-                    LOGGER.error("batch publish exception:{}", e.getMessage(), e);
-                }
-            }
-            unsetFlag(FLAG_LOCK);
-            if (hasFlag(FLAG_UPDATE) && !queue.isEmpty()) {
-                push();
-            }
-        }
-    };
 
 
     /**
@@ -220,7 +200,7 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
                 }
                 setFlag(FLAG_LOCK);
             }
-            executorService.execute(asyncTask);
+            executorService.execute(this);
         }
     }
 
@@ -267,5 +247,33 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic {
 //                System.out.println("  " + session.getClientId());
 //            });
 //        });
+    }
+
+    @Override
+    public void run() {
+        try {
+            Runnable subscriber;
+            queue.offer(BREAK);
+            unsetFlag(FLAG_UPDATE);
+            while ((subscriber = queue.poll()) != BREAK) {
+                try {
+                    subscriber.run();
+                } catch (Exception e) {
+                    LOGGER.error("batch publish exception:{}", e.getMessage(), e);
+                }
+            }
+            unsetFlag(FLAG_LOCK);
+            if (hasFlag(FLAG_UPDATE) && !queue.isEmpty()) {
+                push();
+            }
+        } catch (MqttException e) {
+            if (e.getCallback() != null) {
+                e.getCallback().run();
+            } else {
+                LOGGER.error("execute async task exception", e);
+            }
+        } catch (Throwable throwable) {
+            LOGGER.error("execute async task exception", throwable);
+        }
     }
 }

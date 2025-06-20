@@ -180,7 +180,8 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
                     mqttContext.getOrCreateTopic(array[2]);
                 }
             } else {
-                mqttContext.getOrCreateTopic(topicFilter);
+                //复用BrokerTopic,节省内存
+                topicToken = mqttContext.getOrCreateTopic(topicFilter);
             }
         }
         SessionSubscribeRelation relation = topicToken.isWildcards() ? new SessionSubscribeRelation.WildcardTopicRelation(this, topicToken, mqttQoS) : new SessionSubscribeRelation.SpecificTopicRelation(this, topicToken, mqttQoS);
