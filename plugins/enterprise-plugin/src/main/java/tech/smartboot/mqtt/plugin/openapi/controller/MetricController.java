@@ -27,6 +27,7 @@ import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
+import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.message.MqttConnAckMessage;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
 import tech.smartboot.mqtt.common.message.MqttMessage;
@@ -113,58 +114,61 @@ public class MetricController {
         initMetric(brokerContext);
         recordTypeEnum = RecordTypeEnum.getByCode(systemConfigMapper.getConfig(SystemConfigEnum.METRIC_RECORD.getCode()));
         //周期性重置指标值
-        brokerContext.getTimer().scheduleWithFixedDelay(() -> {
-            //推送成功率
-            long sent = metrics.get(MqttMetricEnum.PACKETS_PUBLISH_SENT).getValue() - metrics.get(MqttMetricEnum.PACKETS_PUBLISH_SENT).getLatestValue();
-            long expect = metrics.get(MqttMetricEnum.PACKETS_EXPECT_PUBLISH_SENT).getValue() - metrics.get(MqttMetricEnum.PACKETS_EXPECT_PUBLISH_SENT).getLatestValue();
-            if (expect > 0 && sent < expect) {
-                long rate = sent * 1000 / expect;
+        brokerContext.getTimer().scheduleWithFixedDelay(new AsyncTask() {
+            @Override
+            public void execute() {
+                //推送成功率
+                long sent = metrics.get(MqttMetricEnum.PACKETS_PUBLISH_SENT).getValue() - metrics.get(MqttMetricEnum.PACKETS_PUBLISH_SENT).getLatestValue();
+                long expect = metrics.get(MqttMetricEnum.PACKETS_EXPECT_PUBLISH_SENT).getValue() - metrics.get(MqttMetricEnum.PACKETS_EXPECT_PUBLISH_SENT).getLatestValue();
+                if (expect > 0 && sent < expect) {
+                    long rate = sent * 1000 / expect;
 //                System.out.println("push success rate:" + (rate) + " , expect:" + expect + " ,sent:" + sent);
-                metrics.get(MqttMetricEnum.PACKETS_PUBLISH_RATE).setValue(rate);
-            } else {
+                    metrics.get(MqttMetricEnum.PACKETS_PUBLISH_RATE).setValue(rate);
+                } else {
 //                System.out.println("none push,sent: " + sent);
-                metrics.get(MqttMetricEnum.PACKETS_PUBLISH_RATE).setValue(1000);
-            }
-
-
-            LOGGER.debug("reset period metric...");
-            try (SqlSession session = sessionFactory.openSession(ExecutorType.BATCH, true)) {
-                MetricMapper metricMapper = session.getMapper(MetricMapper.class);
-                for (Map.Entry<MqttMetricEnum, MetricItemTO> entry : metrics.entrySet()) {
-                    MqttMetricEnum metric = entry.getKey();
-                    MetricItemTO value = entry.getValue();
-                    MetricDO metricDO = new MetricDO();
-                    metricDO.setNodeName(brokerContext.Options().getNodeId());
-                    metricDO.setObjectType("node");
-                    metricDO.setObjectId(brokerContext.Options().getNodeId());
-                    metricDO.setCode(metric.getCode());
-                    long currentValue = value.getValue();
-                    if (metric.isPeriodRest()) {
-                        metricDO.setValue(currentValue - value.getLatestValue());
-                    } else {
-                        metricDO.setValue(currentValue);
-                    }
-                    value.setLatestValue(currentValue);
-//                LOGGER.info("insert metric:{} value:{}", metricDO.getCode(), metricDO.getValue());
-                    if (recordTypeEnum == RecordTypeEnum.DB) {
-                        metricMapper.insert(metricDO);
-                    } else {
-                        List<MetricDO> list = metricMap.computeIfAbsent(entry.getKey(), mqttMetricEnum -> new LinkedList<>());
-                        if (list.size() >= 16) {
-                            list.remove(0);
-                        }
-                        metricDO.setCreateTime(new Date(System.currentTimeMillis() / 5000 * 5000));
-                        list.add(metricDO);
-                    }
+                    metrics.get(MqttMetricEnum.PACKETS_PUBLISH_RATE).setValue(1000);
                 }
-                session.commit(true);
-            }
-            if (recordTypeEnum == RecordTypeEnum.DB) {
-                //定期清除3天前的数据
-                int count = metricMapper.deleteBefore(new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(3)));
-                LOGGER.debug("clean {} metric data", count);
-                count = metricMapper.clearBefore(new Date(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(3)));
-                LOGGER.debug("clean {} metric data", count);
+
+
+                LOGGER.debug("reset period metric...");
+                try (SqlSession session = sessionFactory.openSession(ExecutorType.BATCH, true)) {
+                    MetricMapper metricMapper = session.getMapper(MetricMapper.class);
+                    for (Map.Entry<MqttMetricEnum, MetricItemTO> entry : metrics.entrySet()) {
+                        MqttMetricEnum metric = entry.getKey();
+                        MetricItemTO value = entry.getValue();
+                        MetricDO metricDO = new MetricDO();
+                        metricDO.setNodeName(brokerContext.Options().getNodeId());
+                        metricDO.setObjectType("node");
+                        metricDO.setObjectId(brokerContext.Options().getNodeId());
+                        metricDO.setCode(metric.getCode());
+                        long currentValue = value.getValue();
+                        if (metric.isPeriodRest()) {
+                            metricDO.setValue(currentValue - value.getLatestValue());
+                        } else {
+                            metricDO.setValue(currentValue);
+                        }
+                        value.setLatestValue(currentValue);
+//                LOGGER.info("insert metric:{} value:{}", metricDO.getCode(), metricDO.getValue());
+                        if (recordTypeEnum == RecordTypeEnum.DB) {
+                            metricMapper.insert(metricDO);
+                        } else {
+                            List<MetricDO> list = metricMap.computeIfAbsent(entry.getKey(), mqttMetricEnum -> new LinkedList<>());
+                            if (list.size() >= 16) {
+                                list.remove(0);
+                            }
+                            metricDO.setCreateTime(new Date(System.currentTimeMillis() / 5000 * 5000));
+                            list.add(metricDO);
+                        }
+                    }
+                    session.commit(true);
+                }
+                if (recordTypeEnum == RecordTypeEnum.DB) {
+                    //定期清除3天前的数据
+                    int count = metricMapper.deleteBefore(new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(3)));
+                    LOGGER.debug("clean {} metric data", count);
+                    count = metricMapper.clearBefore(new Date(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(3)));
+                    LOGGER.debug("clean {} metric data", count);
+                }
             }
         }, 5, TimeUnit.SECONDS);
     }
