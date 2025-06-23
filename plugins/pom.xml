@@ -30,6 +30,7 @@
         <module>redis-bridge-plugin</module>
         <module>simple-auth-plugin</module>
         <module>websocket-plugin</module>
+        <module>cluster-plugin</module>
     </modules>
 
     <dependencies>
