@@ -135,7 +135,7 @@ public class ClusterPlugin extends Plugin {
     }
 
     private void initClusterMessageConsumer(BrokerContext brokerContext) {
-        clientId = "internal-" + UUID.randomUUID();
+        clientId = "internal-" + System.nanoTime();
         final String userName = UUID.randomUUID().toString();
         final byte[] password = UUID.randomUUID().toString().getBytes();
 
@@ -203,7 +203,11 @@ public class ClusterPlugin extends Plugin {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        mqttClient.disconnect();
+        if (mqttClient != null) {
+            mqttClient.disconnect();
+            mqttClient = null;
+        }
+
     }
 
 
