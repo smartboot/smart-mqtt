@@ -1,11 +1,14 @@
 package tech.smartboot.mqtt.plugin.cluster;
 
+import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.Session;
+import tech.smartboot.mqtt.client.MqttClient;
+import tech.smartboot.mqtt.common.enums.MqttQoS;
 import tech.smartboot.mqtt.plugin.cluster.upgrade.BinarySSEUpgrade;
 import tech.smartboot.mqtt.plugin.cluster.upgrade.SseEmitter;
 
@@ -22,6 +25,8 @@ public class ClusterController {
 
     public static final String HEADER_TOPIC = "topic";
     public static final String HEADER_RETAIN = "retain";
+    @Autowired
+    private MqttClient mqttClient;
 
     private Map<String, SseEmitter> coreNodes = new ConcurrentHashMap<>();
     private Map<String, SseEmitter> workerNodes = new ConcurrentHashMap<>();
@@ -53,6 +58,8 @@ public class ClusterController {
             }
             emitter.send(bytes);
         });
+        //推送给自己
+        mqttClient.publish(message.getTopic(), MqttQoS.AT_MOST_ONCE, message.getPayload(), message.isRetained(), true);
     }
 
     /**
@@ -65,6 +72,9 @@ public class ClusterController {
         MqttMessage message = parseMessage(request);
         byte[] bytes = message.toBytes();
         workerNodes.forEach((nodeId, emitter) -> emitter.send(bytes));
+
+        //推送给自己
+        mqttClient.publish(message.getTopic(), MqttQoS.AT_MOST_ONCE, message.getPayload(), message.isRetained(), true);
         return true;
     }
 
@@ -98,4 +108,7 @@ public class ClusterController {
         });
     }
 
+    public void setMqttClient(MqttClient mqttClient) {
+        this.mqttClient = mqttClient;
+    }
 }

@@ -51,7 +51,9 @@ public class ClusterPlugin extends Plugin {
     private int queuePolicy;
 
     private HttpServer httpServer;
-    private String clientId;
+    private final String clientId = "internal-" + System.nanoTime();
+    final String userName = UUID.randomUUID().toString().substring(0, 16);
+    final byte[] password = UUID.randomUUID().toString().getBytes();
     private final List<ClientUnit> clients = new ArrayList<>();
     private final HashedWheelTimer timer = new HashedWheelTimer(r -> new Thread(r, "cluster-plugin-health-checker"));
     private BrokerContext brokerContext;
@@ -79,9 +81,29 @@ public class ClusterPlugin extends Plugin {
         queue = new ArrayBlockingQueue<>(length);
 
 
+        //启动内部MqttClient，推送从集群接收到的数据
+        mqttClient = new MqttClient("0.0.0.0", brokerContext.Options().getPort(), options -> options.setClientId(clientId).setUserName(userName).setPassword(password));
+        mqttClient.connect();
+        new Thread(() -> {
+            while (enabled) {
+                try {
+                    MqttMessage message = queue.take();
+                    do {
+                        if (SHUTDOWN_MESSAGE == message) {
+                            break;
+                        }
+                        mqttClient.publish(message.getTopic(), MqttQoS.AT_MOST_ONCE, message.getPayload(), message.isRetained(), false);
+                    } while ((message = queue.poll()) != null);
+                    mqttClient.flush();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, "cluster-plugin-client").start();
+
         //启动核心节点服务监听
         if (pluginConfig.isCore()) {
-            httpServer = FeatCloud.cloudServer(cloudOptions -> cloudOptions.host(pluginConfig.getHost()).port(pluginConfig.getPort()).debug(true)).listen();
+            httpServer = FeatCloud.cloudServer(cloudOptions -> cloudOptions.registerBean("mqttClient", mqttClient).host(pluginConfig.getHost()).port(pluginConfig.getPort()).debug(true)).listen();
         }
 
         if (FeatUtils.isNotEmpty(pluginConfig.getClusters())) {
@@ -135,9 +157,7 @@ public class ClusterPlugin extends Plugin {
     }
 
     private void initClusterMessageConsumer(BrokerContext brokerContext) {
-        clientId = "internal-" + System.nanoTime();
-        final String userName = UUID.randomUUID().toString().substring(0, 16);
-        final byte[] password = UUID.randomUUID().toString().getBytes();
+
 
         //动态注入内部Client认证策略
         brokerContext.getEventBus().subscribe(EventType.CONNECT, new EventBusConsumer<EventObject<MqttConnectMessage>>() {
@@ -161,25 +181,6 @@ public class ClusterPlugin extends Plugin {
             }
         });
 
-        //启动内部MqttClient，推送从集群接收到的数据
-        mqttClient = new MqttClient("0.0.0.0", brokerContext.Options().getPort(), options -> options.setClientId(clientId).setUserName(userName).setPassword(password));
-        mqttClient.connect();
-        new Thread(() -> {
-            while (enabled) {
-                try {
-                    MqttMessage message = queue.take();
-                    do {
-                        if (SHUTDOWN_MESSAGE == message) {
-                            break;
-                        }
-                        mqttClient.publish(message.getTopic(), MqttQoS.AT_MOST_ONCE, message.getPayload(), message.isRetained(), false);
-                    } while ((message = queue.poll()) != null);
-                    mqttClient.flush();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }, "cluster-plugin-client").start();
     }
 
     @Override
@@ -193,8 +194,12 @@ public class ClusterPlugin extends Plugin {
 
         //中断集群数据监听
         clients.forEach(clientUnit -> {
-            clientUnit.sseClient.close();
-            clientUnit.httpClient.close();
+            if (clientUnit.sseClient != null) {
+                clientUnit.sseClient.close();
+            }
+            if (clientUnit.httpClient != null) {
+                clientUnit.httpClient.close();
+            }
         });
 
         try {
