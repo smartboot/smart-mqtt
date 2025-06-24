@@ -1,6 +1,7 @@
 package tech.smartboot.mqtt.plugin.cluster;
 
 import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
@@ -82,9 +83,8 @@ public class ClusterController {
     /**
      * work节点订阅集群消息
      */
-    @RequestMapping("/subscribe")
-    public void subscribeMessage(HttpRequest request) throws IOException {
-        String nodeType = request.getHeader("node_type");
+    @RequestMapping("/subscribe/:nodeType")
+    public void subscribeMessage(HttpRequest request, @PathParam("nodeType") String nodeType) throws IOException {
         request.upgrade(new BinarySSEUpgrade() {
             @Override
             public void onOpen(SseEmitter sseEmitter) throws IOException {

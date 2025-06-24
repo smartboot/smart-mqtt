@@ -102,7 +102,7 @@ public class ClusterPlugin extends Plugin {
                     if (clientUnit.httpEnable) {
                         if (workerClient == null) {
                             workerClient = clientUnit;
-                            initSSE(clientUnit);
+                            initSSE(clientUnit, pluginConfig.isCore());
                         } else if (!workerClient.sseEnable) { // 释放workerClient，重新分配
                             workerClient.sseClient.close();
                             workerClient = null;
@@ -243,7 +243,7 @@ public class ClusterPlugin extends Plugin {
         });
     }
 
-    private void initSSE(ClientUnit clientUnit) {
+    private void initSSE(ClientUnit clientUnit, boolean core) {
         if (clientUnit.sseEnable) {
             return;
         }
@@ -255,7 +255,7 @@ public class ClusterPlugin extends Plugin {
         clientUnit.sseClient = new HttpClient(clientUnit.baseURL);
         clientUnit.sseClient.options().group(brokerContext.Options().getChannelGroup());
         //订阅集群推送过来的消息，并投递至总线
-        clientUnit.sseClient.post("/cluster/subscribe").onResponseBody(new BinaryServerSentEventStream() {
+        clientUnit.sseClient.post(core ? "/cluster/subscribe/core" : "/cluster/subscribe/worker").onResponseBody(new BinaryServerSentEventStream() {
 
             @Override
             public void onEvent(HttpResponse httpResponse, MqttMessage event) {
