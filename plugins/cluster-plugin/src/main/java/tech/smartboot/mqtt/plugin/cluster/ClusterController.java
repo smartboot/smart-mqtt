@@ -24,13 +24,18 @@ public class ClusterController {
     private Map<String, SseEmitter> coreNodes;
     private Map<String, SseEmitter> workerNodes;
 
+    @RequestMapping("/status")
+    public boolean status() {
+        return true;
+    }
+
     /**
      * 接受到来自worker节点的消息，
      * 推送给集群各节点和直连的worker
      *
      * @param request
      */
-    @RequestMapping("/put/work/{topic}")
+    @RequestMapping("/put/work")
     public void putMessage(HttpRequest request, Session session) throws IOException {
         String sessionId = session.getSessionId();
         MqttMessage message = parseMessage(request);
@@ -48,6 +53,18 @@ public class ClusterController {
         });
     }
 
+    /**
+     * 核心节点推送过来的消息只发生给worker
+     *
+     * @param request
+     */
+    @RequestMapping("/put/core")
+    public void putCoreMessage(HttpRequest request) throws IOException {
+        MqttMessage message = parseMessage(request);
+        byte[] bytes = message.toBytes();
+        workerNodes.forEach((nodeId, emitter) -> emitter.send(bytes));
+    }
+
     private MqttMessage parseMessage(HttpRequest request) throws IOException {
         String topic = request.getHeader(HEADER_TOPIC);
         String retain = request.getHeader(HEADER_RETAIN);
@@ -59,17 +76,6 @@ public class ClusterController {
         return message;
     }
 
-    /**
-     * 核心节点推送过来的消息只发生给worker
-     *
-     * @param request
-     */
-    @RequestMapping("/put/core/{topic}/{qos}")
-    public void putCoreMessage(HttpRequest request) throws IOException {
-        MqttMessage message = parseMessage(request);
-        byte[] bytes = message.toBytes();
-        workerNodes.forEach((nodeId, emitter) -> emitter.send(bytes));
-    }
 
     /**
      * work节点订阅集群消息

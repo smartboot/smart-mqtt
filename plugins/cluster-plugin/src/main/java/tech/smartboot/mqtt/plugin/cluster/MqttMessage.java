@@ -1,7 +1,6 @@
 package tech.smartboot.mqtt.plugin.cluster;
 
 import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
-import tech.smartboot.mqtt.common.enums.MqttQoS;
 
 /**
  * @author 三刀
@@ -20,8 +19,6 @@ public class MqttMessage {
 
     private boolean retained;
 
-
-    private MqttQoS qos;
 
     public byte[] getPayload() {
         return payload;
@@ -45,14 +42,6 @@ public class MqttMessage {
 
     public void setRetained(boolean retained) {
         this.retained = retained;
-    }
-
-    public MqttQoS getQos() {
-        return qos;
-    }
-
-    public void setQos(MqttQoS qos) {
-        this.qos = qos;
     }
 
     public byte[] toBytes() {
