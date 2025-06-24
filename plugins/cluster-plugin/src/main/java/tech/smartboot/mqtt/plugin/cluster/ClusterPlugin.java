@@ -257,7 +257,7 @@ public class ClusterPlugin extends Plugin {
         }
         clientUnit.sseEnable = true;
         clientUnit.sseClient = new HttpClient(clientUnit.baseURL);
-        clientUnit.sseClient.options().group(brokerContext.Options().getChannelGroup());
+        clientUnit.sseClient.options().debug(true).group(brokerContext.Options().getChannelGroup());
         //订阅集群推送过来的消息，并投递至总线
         clientUnit.sseClient.post(core ? "/cluster/subscribe/core" : "/cluster/subscribe/worker").onResponseBody(new BinaryServerSentEventStream() {
 
