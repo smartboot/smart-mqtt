@@ -10,6 +10,7 @@ import tech.smartboot.mqtt.plugin.cluster.upgrade.SseEmitter;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author 三刀
@@ -21,8 +22,8 @@ public class ClusterController {
     public static final String HEADER_TOPIC = "topic";
     public static final String HEADER_RETAIN = "retain";
 
-    private Map<String, SseEmitter> coreNodes;
-    private Map<String, SseEmitter> workerNodes;
+    private Map<String, SseEmitter> coreNodes = new ConcurrentHashMap<>();
+    private Map<String, SseEmitter> workerNodes = new ConcurrentHashMap<>();
 
     @RequestMapping("/status")
     public boolean status() {
@@ -59,10 +60,11 @@ public class ClusterController {
      * @param request
      */
     @RequestMapping("/put/core")
-    public void putCoreMessage(HttpRequest request) throws IOException {
+    public boolean putCoreMessage(HttpRequest request) throws IOException {
         MqttMessage message = parseMessage(request);
         byte[] bytes = message.toBytes();
         workerNodes.forEach((nodeId, emitter) -> emitter.send(bytes));
+        return true;
     }
 
     private MqttMessage parseMessage(HttpRequest request) throws IOException {

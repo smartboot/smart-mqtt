@@ -81,7 +81,7 @@ public class ClusterPlugin extends Plugin {
 
         //启动核心节点服务监听
         if (pluginConfig.isCore()) {
-            httpServer = FeatCloud.cloudServer(cloudOptions -> cloudOptions.host(pluginConfig.getHost()).port(pluginConfig.getPort())).listen();
+            httpServer = FeatCloud.cloudServer(cloudOptions -> cloudOptions.host(pluginConfig.getHost()).port(pluginConfig.getPort()).debug(true)).listen();
         }
 
         if (FeatUtils.isNotEmpty(pluginConfig.getClusters())) {
@@ -221,14 +221,14 @@ public class ClusterPlugin extends Plugin {
                     for (ClientUnit clientUnit : clients) {
                         if (clientUnit.httpEnable) {
                             //core节点分发消息至集群其他core节点
-                            clientUnit.httpClient.post("/put/core").header(header -> header.setContentLength(message.getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getPayload())).onFailure(throwable -> {
+                            clientUnit.httpClient.post("/cluster/put/core").header(header -> header.setContentLength(message.getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getPayload())).onFailure(throwable -> {
                                 clientUnit.httpEnable = false;
                                 LOGGER.error("send message to cluster error", throwable);
                             }).submit();
                         }
                     }
                 } else if (workerClient != null) {
-                    workerClient.httpClient.post("/put/worker").header(header -> header.setContentLength(message.getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getPayload())).onFailure(throwable -> {
+                    workerClient.httpClient.post("/cluster/put/worker").header(header -> header.setContentLength(message.getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getPayload())).onFailure(throwable -> {
                         workerClient.httpEnable = false;
                         LOGGER.error("send message to cluster error", throwable);
                     }).submit();
