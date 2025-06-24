@@ -37,7 +37,7 @@ public class ClusterController {
      *
      * @param request
      */
-    @RequestMapping("/put/work")
+    @RequestMapping("/put/worker")
     public void putMessage(HttpRequest request, Session session) throws IOException {
         String sessionId = session.getSessionId();
         MqttMessage message = parseMessage(request);

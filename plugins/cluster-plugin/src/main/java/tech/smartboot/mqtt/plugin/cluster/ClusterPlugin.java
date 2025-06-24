@@ -136,7 +136,7 @@ public class ClusterPlugin extends Plugin {
 
     private void initClusterMessageConsumer(BrokerContext brokerContext) {
         clientId = "internal-" + System.nanoTime();
-        final String userName = UUID.randomUUID().toString();
+        final String userName = UUID.randomUUID().toString().substring(0, 16);
         final byte[] password = UUID.randomUUID().toString().getBytes();
 
         //动态注入内部Client认证策略
