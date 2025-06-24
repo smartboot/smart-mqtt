@@ -50,7 +50,6 @@ import java.util.stream.Collectors;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 6/6/23
  */
-@Bean
 public class ClusterFeature {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClusterFeature.class);
 
