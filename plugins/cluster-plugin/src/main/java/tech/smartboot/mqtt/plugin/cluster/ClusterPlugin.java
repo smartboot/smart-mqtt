@@ -4,6 +4,7 @@ import org.smartboot.socket.timer.HashedWheelTimer;
 import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.HttpServer;
@@ -83,8 +84,10 @@ public class ClusterPlugin extends Plugin {
             httpServer = FeatCloud.cloudServer(cloudOptions -> cloudOptions.host(pluginConfig.getHost()).port(pluginConfig.getPort())).listen();
         }
 
-        for (String cluster : pluginConfig.getClusters()) {
-            clients.add(new ClientUnit(cluster));
+        if (FeatUtils.isNotEmpty(pluginConfig.getClusters())) {
+            for (String cluster : pluginConfig.getClusters()) {
+                clients.add(new ClientUnit(cluster));
+            }
         }
         initClusterClient(brokerContext, pluginConfig.isCore());
 

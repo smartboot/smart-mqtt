@@ -1,6 +1,7 @@
 package tech.smartboot.mqtt.plugin.cluster;
 
-import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 /**
  * @author 三刀
@@ -44,8 +45,8 @@ public class MqttMessage {
         this.retained = retained;
     }
 
-    public byte[] toBytes() {
-        ByteOutputStream byteOutputStream = new ByteOutputStream(payload.length + 32);
+    public byte[] toBytes() throws IOException {
+        ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream(payload.length + 32);
         byteOutputStream.write(BinaryServerSentEventStream.TAG_TOPIC);
         byteOutputStream.write(':');
         byteOutputStream.write(topic.getBytes());

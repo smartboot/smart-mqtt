@@ -1,4 +1,4 @@
-coreNode: true # core or worker
+core: true # core or worker
 host: 0.0.0.0
 port: 8884
 # 队列长度，达到该阈值会触发queue_policy策略
@@ -7,6 +7,5 @@ queue_length: 1024
 queue_memory_limit: 16777216
 # 队列数据丢弃策略：0 默认,丢弃最新数据，1 丢弃最早的数据
 queue_discard_policy: 0
-cluster:
-  - 0.0.0.0:8884
-  - 0.0.0.0:8885
+clusters:
+  - http://0.0.0.0:8884
