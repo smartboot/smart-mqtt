@@ -115,7 +115,7 @@ public class ClusterPlugin extends Plugin {
                         clientUnit.httpClient = null;
                     }
                     clientUnit.httpClient = new HttpClient(clientUnit.baseURL);
-                    clientUnit.httpClient.options().group(brokerContext.Options().getChannelGroup());
+                    clientUnit.httpClient.options().connectTimeout(5000).group(brokerContext.Options().getChannelGroup());
                     clientUnit.checkPending = true;
                     clientUnit.httpClient.get("/cluster/status").onSuccess(httpResponse -> {
                         clientUnit.httpEnable = true;
