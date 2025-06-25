@@ -12,6 +12,7 @@ package tech.smartboot.mqtt.plugin.openapi.controller;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
+import com.sun.management.OperatingSystemMXBean;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -23,6 +24,7 @@ import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
+import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -32,7 +34,9 @@ import tech.smartboot.mqtt.common.message.MqttConnAckMessage;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
 import tech.smartboot.mqtt.common.message.MqttMessage;
 import tech.smartboot.mqtt.common.message.MqttPublishMessage;
+import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.PluginConfig;
+import tech.smartboot.mqtt.plugin.cluster.NodeProcessInfo;
 import tech.smartboot.mqtt.plugin.convert.NodeConvert;
 import tech.smartboot.mqtt.plugin.dao.mapper.BrokerNodeMapper;
 import tech.smartboot.mqtt.plugin.dao.mapper.ConnectionMapper;
@@ -51,6 +55,7 @@ import tech.smartboot.mqtt.plugin.openapi.to.MetricItemTO;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
+import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.bus.EventBus;
 import tech.smartboot.mqtt.plugin.spec.bus.EventBusConsumer;
 import tech.smartboot.mqtt.plugin.spec.bus.EventObject;
@@ -58,6 +63,7 @@ import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 import tech.smartboot.mqtt.plugin.spec.bus.MessageBusConsumer;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -171,6 +177,72 @@ public class MetricController {
                 }
             }
         }, 5, TimeUnit.SECONDS);
+
+        ValidateUtils.notNull(brokerContext.Options().getNodeId(), "broker.nodeId is null");
+        BrokerNodeDO nodeDO = brokerNodeMapper.selectById(brokerContext.Options().getNodeId());
+        if (nodeDO == null) {
+            nodeDO = new BrokerNodeDO();
+            nodeDO.setNodeId(brokerContext.Options().getNodeId());
+            nodeDO.setNodeType(pluginConfig.getNodeType());
+
+            setNodeDO(nodeDO, pluginConfig);
+
+            brokerNodeMapper.insert(nodeDO);
+        } else {
+            ValidateUtils.isTrue(FeatUtils.equals(nodeDO.getNodeType(), pluginConfig.getNodeType()), "nodeType is different from before.");
+            if (FeatUtils.equals(nodeDO.getStatus(), BrokerStatueEnum.RUNNING.getCode())) {
+                LOGGER.warn("This node did not exit normally previously.");
+            }
+
+            setNodeDO(nodeDO, pluginConfig);
+
+            brokerNodeMapper.update(nodeDO);
+        }
+        brokerContext.getTimer().schedule(new Runnable() {
+            @Override
+            public void run() {
+                BrokerNodeDO node = new BrokerNodeDO();
+                node.setNodeId(brokerContext.Options().getNodeId());
+                node.setProcess(JSONObject.toJSONString(getCurrentNode()));
+                brokerNodeMapper.update(node);
+                brokerContext.getTimer().schedule(this, 5, TimeUnit.SECONDS);
+            }
+        }, 5, TimeUnit.SECONDS);
+    }
+
+    private void setNodeDO(BrokerNodeDO nodeDO, PluginConfig config) {
+        nodeDO.setCoreNodeId(config.getCoreNodeId());
+        nodeDO.setClusterEndpoint(config.getClusterEndpoint());
+        nodeDO.setIpAddress(brokerContext.Options().getHost());
+        nodeDO.setStatus(BrokerStatueEnum.RUNNING.getCode());
+        nodeDO.setPort(brokerContext.Options().getPort());
+        nodeDO.setStartTime(new Date());
+        if (FeatUtils.isBlank(nodeDO.getClusterEndpoint())) {
+            nodeDO.setStatus(BrokerStatueEnum.UNHEALTHY.getCode());
+        }
+    }
+
+    private NodeProcessInfo getCurrentNode() {
+        NodeProcessInfo info = new NodeProcessInfo();
+        info.setVersion(Options.VERSION);
+        info.setVmVendor(System.getProperty("java.vendor"));
+        info.setVmVersion(System.getProperty("java.version"));
+        info.setOsName(System.getProperty("os.name"));
+        info.setOsArch(System.getProperty("os.arch"));
+        info.setOsVersion(System.getProperty("os.name") + " " + System.getProperty("os.version"));
+        info.setHostName(System.getProperty("user.name"));
+
+        OperatingSystemMXBean systemMXBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+        info.setCpuUsage((int) (systemMXBean.getSystemCpuLoad() * 100));
+        // 获取运行时对象
+        Runtime runtime = Runtime.getRuntime();
+
+        // 获取总内存（以字节为单位）
+        long totalMemory = runtime.totalMemory();
+        // 计算内存使用率（以百分比表示）
+        info.setMemoryLimit(totalMemory);
+        info.setMemUsage(totalMemory - runtime.freeMemory());
+        return info;
     }
 
     private void initMetric(BrokerContext context) {
@@ -391,6 +463,15 @@ public class MetricController {
 
 
         return sb.toString();
+    }
+
+    @PreDestroy
+    public void destroy() {
+        LOGGER.info("destroy node: {}...", brokerContext.Options().getNodeId());
+        BrokerNodeDO node = new BrokerNodeDO();
+        node.setNodeId(brokerContext.Options().getNodeId());
+        node.setStatus(BrokerStatueEnum.STOPPED.getCode());
+        brokerNodeMapper.update(node);
     }
 
     public void setBrokerContext(BrokerContext brokerContext) {
