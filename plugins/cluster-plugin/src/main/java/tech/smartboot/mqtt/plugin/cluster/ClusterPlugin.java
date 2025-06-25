@@ -45,7 +45,7 @@ public class ClusterPlugin extends Plugin {
 
 
     private boolean enabled = true;
-    private ArrayBlockingQueue<Message> queue;
+    private ArrayBlockingQueue<Message> receiveQueue;
     private int queuePolicy;
 
     private HttpServer httpServer;
@@ -58,6 +58,7 @@ public class ClusterPlugin extends Plugin {
     private ClientUnit workerClient;
     private final ClusterMqttSession mqttSession = new ClusterMqttSession(clientId);
     private static final String ACCESS_TOKEN = UUID.randomUUID().toString();
+    private ArrayBlockingQueue<Message> distributeQueue;
 
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
@@ -78,19 +79,19 @@ public class ClusterPlugin extends Plugin {
         } else if (length > Short.MAX_VALUE) {
             length = Short.MAX_VALUE;
         }
-        queue = new ArrayBlockingQueue<>(length);
-
+        receiveQueue = new ArrayBlockingQueue<>(length);
+        distributeQueue = new ArrayBlockingQueue<>(length);
 
         new Thread(() -> {
             while (enabled) {
                 try {
-                    Message message = queue.take();
+                    Message message = receiveQueue.take();
                     do {
                         if (SHUTDOWN_MESSAGE == message) {
                             break;
                         }
                         brokerContext.getMessageBus().publish(mqttSession, message);
-                    } while ((message = queue.poll()) != null);
+                    } while ((message = receiveQueue.poll()) != null);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -134,9 +135,10 @@ public class ClusterPlugin extends Plugin {
                         clientUnit.httpClient = null;
                     }
                     clientUnit.httpClient = new HttpClient(clientUnit.baseURL);
-                    clientUnit.httpClient.options().connectTimeout(5000).group(brokerContext.Options().getChannelGroup());
+                    clientUnit.httpClient.options().debug(true).connectTimeout(5000).group(brokerContext.Options().getChannelGroup());
                     clientUnit.checkPending = true;
                     clientUnit.httpClient.get("/cluster/status").onSuccess(httpResponse -> {
+                        LOGGER.info("check node status success.");
                         clientUnit.httpEnable = true;
                         clientUnit.checkPending = false;
 
@@ -200,8 +202,15 @@ public class ClusterPlugin extends Plugin {
         });
 
         try {
-            while (queue.poll() != null) ;
-            queue.put(SHUTDOWN_MESSAGE);
+            while (receiveQueue.poll() != null) ;
+            receiveQueue.put(SHUTDOWN_MESSAGE);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
+            while (distributeQueue.poll() != null) ;
+            distributeQueue.put(SHUTDOWN_MESSAGE);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -217,27 +226,19 @@ public class ClusterPlugin extends Plugin {
                 if (session.getClientId().equals(clientId)) {
                     return;
                 }
-                //分发给各节点
-                if (core) {
-                    for (ClientUnit clientUnit : clients) {
-                        if (clientUnit.httpEnable) {
-                            LOGGER.info("send message to cluster");
-                            //core节点分发消息至集群其他core节点
-                            clientUnit.httpClient.post("/cluster/put/core").header(header -> header.set("access_token", ACCESS_TOKEN).setContentLength(message.getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getPayload())).onFailure(throwable -> {
-                                clientUnit.httpEnable = false;
-                                LOGGER.error("send message to cluster error", throwable);
-                            }).submit();
-                        } else {
-                            LOGGER.error("send message to cluster error");
+                if (queuePolicy == QUEUE_POLICY_DISCARD_NEWEST) {
+                    boolean suc = distributeQueue.offer(message);
+                    if (!suc) {
+                        LOGGER.warn("queue is full, discard message: {}", message);
+                    }
+                } else {
+                    while (!receiveQueue.offer(message)) {
+                        Message discard = distributeQueue.poll();
+                        if (discard != null) {
+                            LOGGER.warn("queue is full, discard message: {}", discard);
                         }
                     }
-                } else if (workerClient != null) {
-                    workerClient.httpClient.post("/cluster/put/worker").header(header -> header.set("access_token", ACCESS_TOKEN).setContentLength(message.getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getPayload())).onFailure(throwable -> {
-                        workerClient.httpEnable = false;
-                        LOGGER.error("send message to cluster error", throwable);
-                    }).submit();
                 }
-
             }
 
             @Override
@@ -245,6 +246,43 @@ public class ClusterPlugin extends Plugin {
                 return enabled;
             }
         });
+        new Thread(() -> {
+            while (enabled) {
+                try {
+                    Message nextMessage = distributeQueue.take();
+                    do {
+                        if (SHUTDOWN_MESSAGE == nextMessage) {
+                            break;
+                        }
+                        //分发给各节点
+                        final Message message = nextMessage;
+                        if (core) {
+                            for (ClientUnit clientUnit : clients) {
+                                if (clientUnit.httpEnable) {
+                                    LOGGER.info("send message to cluster");
+                                    //core节点分发消息至集群其他core节点
+                                    clientUnit.httpClient.post("/cluster/put/core").header(header -> header.keepalive(true).set("access_token", ACCESS_TOKEN).setContentLength(message.getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getPayload())).onFailure(throwable -> {
+                                        clientUnit.httpEnable = false;
+                                        LOGGER.error("send message to cluster error", throwable);
+                                    }).onSuccess(httpResponse -> {
+                                        LOGGER.info("send message to cluster success");
+                                    }).submit();
+                                } else {
+                                    LOGGER.error("send message to cluster error");
+                                }
+                            }
+                        } else if (workerClient != null) {
+                            workerClient.httpClient.post("/cluster/put/worker").header(header -> header.keepalive(true).set("access_token", ACCESS_TOKEN).setContentLength(message.getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getPayload())).onFailure(throwable -> {
+                                workerClient.httpEnable = false;
+                                LOGGER.error("send message to cluster error", throwable);
+                            }).submit();
+                        }
+                    } while ((nextMessage = receiveQueue.poll()) != null);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, "cluster-plugin-distributer").start();
     }
 
     private void initSSE(ClientUnit clientUnit, boolean core) {
@@ -268,10 +306,16 @@ public class ClusterPlugin extends Plugin {
                 }
                 Message message = new Message(brokerContext.getOrCreateTopic(topic), MqttQoS.AT_MOST_ONCE, payload, retained);
                 if (queuePolicy == QUEUE_POLICY_DISCARD_NEWEST) {
-                    queue.offer(message);
+                    boolean suc = receiveQueue.offer(message);
+                    if (!suc) {
+                        LOGGER.warn("queue is full, discard message: {}", message);
+                    }
                 } else {
-                    while (!queue.offer(message)) {
-                        queue.poll();
+                    while (!receiveQueue.offer(message)) {
+                        Message discard = receiveQueue.poll();
+                        if (discard != null) {
+                            LOGGER.warn("queue is full, discard message: {}", discard);
+                        }
                     }
                 }
             }

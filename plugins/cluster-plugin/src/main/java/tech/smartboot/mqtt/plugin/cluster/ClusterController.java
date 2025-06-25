@@ -77,10 +77,12 @@ public class ClusterController {
     public boolean putCoreMessage(HttpRequest request) throws IOException {
         Message message = parseMessage(request);
         byte[] bytes = toBytes(message);
+        System.out.println("receive cluster message...");
         workerNodes.forEach((nodeId, emitter) -> emitter.send(bytes));
 
         //推送给自己
         brokerContext.getMessageBus().publish(mqttSession, message);
+        System.out.println("receive cluster done...");
         return true;
     }
 
