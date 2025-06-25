@@ -1,5 +1,8 @@
 package tech.smartboot.mqtt.plugin.cluster.upgrade;
 
+import org.smartboot.socket.util.StringUtils;
+import tech.smartboot.feat.core.common.logging.Logger;
+import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.impl.Upgrade;
@@ -12,6 +15,7 @@ import java.nio.ByteBuffer;
  * @version v1.0 6/23/25
  */
 public abstract class BinarySSEUpgrade extends Upgrade {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BinarySSEUpgrade.class);
     SseEmitter sseEmitter;
 
     @Override
@@ -29,7 +33,9 @@ public abstract class BinarySSEUpgrade extends Upgrade {
 
     @Override
     public void onBodyStream(ByteBuffer buffer) {
-
+        byte[] bytes = new byte[buffer.remaining()];
+        buffer.get(bytes);
+        LOGGER.error("BinarySSEUpgrade.onBodyStream:{}", StringUtils.toHexString(bytes));
     }
 
     public abstract void onOpen(SseEmitter sseEmitter) throws IOException;

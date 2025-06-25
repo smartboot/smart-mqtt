@@ -5,6 +5,7 @@ import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
@@ -66,6 +67,8 @@ public class ClusterController {
         });
         //推送给自己
         brokerContext.getMessageBus().publish(mqttSession, message);
+        request.getResponse().setHttpStatus(HttpStatus.ACCEPTED);
+        request.getResponse().getOutputStream().disableChunked();
     }
 
     /**
@@ -74,7 +77,7 @@ public class ClusterController {
      * @param request
      */
     @RequestMapping("/put/core")
-    public boolean putCoreMessage(HttpRequest request) throws IOException {
+    public void putCoreMessage(HttpRequest request) throws IOException {
         Message message = parseMessage(request);
         byte[] bytes = toBytes(message);
         System.out.println("receive cluster message...");
@@ -83,7 +86,8 @@ public class ClusterController {
         //推送给自己
         brokerContext.getMessageBus().publish(mqttSession, message);
         System.out.println("receive cluster done...");
-        return true;
+        request.getResponse().setHttpStatus(HttpStatus.ACCEPTED);
+        request.getResponse().getOutputStream().disableChunked();
     }
 
     private Message parseMessage(HttpRequest request) throws IOException {
