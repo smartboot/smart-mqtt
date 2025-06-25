@@ -258,11 +258,11 @@ public class ClusterPlugin extends Plugin {
         clientUnit.sseClient.post(core ? "/cluster/subscribe/core/" + ACCESS_TOKEN : "/cluster/subscribe/worker/" + ACCESS_TOKEN).onResponseBody(new BinaryServerSentEventStream() {
 
             @Override
-            public void onEvent(HttpResponse httpResponse, MqttMessage event) {
+            public void onEvent(HttpResponse httpResponse, String topic, byte[] payload, boolean retained) {
                 if (!enabled) {
                     return;
                 }
-                Message message = new Message(brokerContext.getOrCreateTopic(event.getTopic()), MqttQoS.AT_MOST_ONCE, event.getPayload(), event.isRetained());
+                Message message = new Message(brokerContext.getOrCreateTopic(topic), MqttQoS.AT_MOST_ONCE, payload, retained);
                 if (queuePolicy == QUEUE_POLICY_DISCARD_NEWEST) {
                     queue.offer(message);
                 } else {

@@ -24,7 +24,17 @@ public abstract class BinaryServerSentEventStream implements Stream {
     public static final byte TAG_PAYLOAD = 'p';
     public static final byte TAG_RETAIN = 'r';
     private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    private MqttMessage message = new MqttMessage();
+    /**
+     * 负载数据
+     */
+    private byte[] payload;
+
+    /**
+     * 主题
+     */
+    private String topic;
+
+    private boolean retained;
 
     @Override
     public void stream(HttpResponse response, byte[] bytes, boolean end) throws IOException {
@@ -70,14 +80,14 @@ public abstract class BinaryServerSentEventStream implements Stream {
                     break;
                 case STATE_TAG_TOPIC:
                     if (b == '\n') {
-                        message.setTopic(new String(bytes, valuePos, i - valuePos));
+                        topic = new String(bytes, valuePos, i - valuePos);
                         state = STATE_END_CHECK;
                         pos = i + 1;
                     }
                     break;
                 case STATE_TAG_RETAIN:
                     if (b == '\n') {
-                        message.setRetained(true);
+                        retained = true;
                         state = STATE_END_CHECK;
                         pos = i + 1;
                     }
@@ -91,7 +101,7 @@ public abstract class BinaryServerSentEventStream implements Stream {
                             }
                             byte[] payload = new byte[length];
                             System.arraycopy(bytes, i + 1, payload, 0, length);
-                            message.setPayload(payload);
+                            this.payload = payload;
                             i = i + length + 1;
                             state = STATE_END_CHECK;
                         } else {
@@ -105,8 +115,10 @@ public abstract class BinaryServerSentEventStream implements Stream {
                         pos = i + 1;
                         //结束
 //                        System.out.println(event);
-                        onEvent(response, message);
-                        message = new MqttMessage();
+                        onEvent(response, topic, payload, retained);
+                        topic = null;
+                        payload = null;
+                        retained = false;
                     } else {
                         state = STATE_TAG;
                     }
@@ -121,5 +133,5 @@ public abstract class BinaryServerSentEventStream implements Stream {
         }
     }
 
-    public abstract void onEvent(HttpResponse httpResponse, MqttMessage message);
+    public abstract void onEvent(HttpResponse httpResponse, String topic, byte[] payload, boolean retained);
 }
