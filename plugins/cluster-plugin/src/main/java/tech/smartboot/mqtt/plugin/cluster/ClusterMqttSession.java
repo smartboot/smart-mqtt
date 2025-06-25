@@ -12,6 +12,11 @@ import java.net.InetSocketAddress;
  * @version v1.0 6/25/25
  */
 class ClusterMqttSession implements MqttSession {
+    private final String clientId;
+
+    public ClusterMqttSession(String clientId) {
+        this.clientId = clientId;
+    }
 
     @Override
     public InetSocketAddress getRemoteAddress() throws IOException {
@@ -20,7 +25,7 @@ class ClusterMqttSession implements MqttSession {
 
     @Override
     public String getClientId() {
-        throw new UnsupportedOperationException();
+        return clientId;
     }
 
     @Override

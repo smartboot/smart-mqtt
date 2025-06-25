@@ -56,7 +56,7 @@ public class ClusterPlugin extends Plugin {
     private final HashedWheelTimer timer = new HashedWheelTimer(r -> new Thread(r, "cluster-plugin-health-checker"));
     private BrokerContext brokerContext;
     private ClientUnit workerClient;
-    private final ClusterMqttSession mqttSession = new ClusterMqttSession();
+    private final ClusterMqttSession mqttSession = new ClusterMqttSession(clientId);
     private static final String ACCESS_TOKEN = UUID.randomUUID().toString();
 
     @Override
@@ -115,6 +115,7 @@ public class ClusterPlugin extends Plugin {
             public void execute() {
                 clients.forEach(clientUnit -> {
                     if (clientUnit.checkPending) {
+                        LOGGER.info("check pending message for {}", clientUnit.baseURL);
                         return;
                     }
                     if (clientUnit.httpEnable) {
@@ -220,11 +221,14 @@ public class ClusterPlugin extends Plugin {
                 if (core) {
                     for (ClientUnit clientUnit : clients) {
                         if (clientUnit.httpEnable) {
+                            LOGGER.info("send message to cluster");
                             //core节点分发消息至集群其他core节点
                             clientUnit.httpClient.post("/cluster/put/core").header(header -> header.set("access_token", ACCESS_TOKEN).setContentLength(message.getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getPayload())).onFailure(throwable -> {
                                 clientUnit.httpEnable = false;
                                 LOGGER.error("send message to cluster error", throwable);
                             }).submit();
+                        } else {
+                            LOGGER.error("send message to cluster error");
                         }
                     }
                 } else if (workerClient != null) {
