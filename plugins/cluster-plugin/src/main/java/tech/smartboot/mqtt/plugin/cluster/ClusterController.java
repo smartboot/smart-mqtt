@@ -102,11 +102,14 @@ public class ClusterController {
             @Override
             public void onOpen(SseEmitter sseEmitter) throws IOException {
                 sseEmitter.setAccessToken(accessToken);
+                SseEmitter old = null;
                 if (ClusterPlugin.NODE_TYPE_CORE.equals(nodeType)) {
-                    coreNodes.put(accessToken, sseEmitter);
+                    old = coreNodes.put(accessToken, sseEmitter);
+                } else if (ClusterPlugin.NODE_TYPE_WORKER.equals(nodeType)) {
+                    old = workerNodes.put(accessToken, sseEmitter);
                 }
-                if (ClusterPlugin.NODE_TYPE_WORKER.equals(nodeType)) {
-                    workerNodes.put(accessToken, sseEmitter);
+                if (old != null) {
+                    old.complete();
                 }
             }
 
