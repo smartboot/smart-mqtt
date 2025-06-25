@@ -10,7 +10,9 @@
 
 package tech.smartboot.mqtt.plugin.spec.bus;
 
+import tech.smartboot.mqtt.common.message.MqttPublishMessage;
 import tech.smartboot.mqtt.plugin.spec.Message;
+import tech.smartboot.mqtt.plugin.spec.MqttSession;
 
 import java.util.function.Predicate;
 
@@ -40,4 +42,6 @@ public interface MessageBus {
             }
         });
     }
+
+    void publish(MqttSession mqttSession, MqttPublishMessage publishMessage);
 }

@@ -8,7 +8,6 @@ import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.mqtt.client.MqttClient;
 import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
@@ -19,6 +18,7 @@ import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
+import tech.smartboot.mqtt.plugin.spec.PublishBuilder;
 import tech.smartboot.mqtt.plugin.spec.bus.EventBusConsumer;
 import tech.smartboot.mqtt.plugin.spec.bus.EventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
@@ -45,7 +45,6 @@ public class ClusterPlugin extends Plugin {
     private static final int QUEUE_POLICY_DISCARD_OLDEST = 1;
 
 
-    private MqttClient mqttClient;
     private boolean enabled = true;
     private ArrayBlockingQueue<MqttMessage> queue;
     private int queuePolicy;
@@ -58,6 +57,8 @@ public class ClusterPlugin extends Plugin {
     private final HashedWheelTimer timer = new HashedWheelTimer(r -> new Thread(r, "cluster-plugin-health-checker"));
     private BrokerContext brokerContext;
     private ClientUnit workerClient;
+    private final ClusterMqttSession mqttSession = new ClusterMqttSession();
+    private static final String ACCESS_TOKEN = UUID.randomUUID().toString();
 
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
@@ -81,9 +82,6 @@ public class ClusterPlugin extends Plugin {
         queue = new ArrayBlockingQueue<>(length);
 
 
-        //启动内部MqttClient，推送从集群接收到的数据
-        mqttClient = new MqttClient("0.0.0.0", brokerContext.Options().getPort(), options -> options.setClientId(clientId).setUserName(userName).setPassword(password));
-        mqttClient.connect();
         new Thread(() -> {
             while (enabled) {
                 try {
@@ -92,9 +90,8 @@ public class ClusterPlugin extends Plugin {
                         if (SHUTDOWN_MESSAGE == message) {
                             break;
                         }
-                        mqttClient.publish(message.getTopic(), MqttQoS.AT_MOST_ONCE, message.getPayload(), message.isRetained(), false);
+                        publishMessageBus(brokerContext, mqttSession, message);
                     } while ((message = queue.poll()) != null);
-                    mqttClient.flush();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -103,7 +100,7 @@ public class ClusterPlugin extends Plugin {
 
         //启动核心节点服务监听
         if (pluginConfig.isCore()) {
-            httpServer = FeatCloud.cloudServer(cloudOptions -> cloudOptions.registerBean("mqttClient", mqttClient).host(pluginConfig.getHost()).port(pluginConfig.getPort()).debug(true)).listen();
+            httpServer = FeatCloud.cloudServer(cloudOptions -> cloudOptions.registerBean("mqttSession", mqttSession).registerBean("brokerContext", brokerContext).host(pluginConfig.getHost()).port(pluginConfig.getPort()).debug(true)).listen();
         }
 
         if (FeatUtils.isNotEmpty(pluginConfig.getClusters())) {
@@ -154,6 +151,10 @@ public class ClusterPlugin extends Plugin {
 
         initClusterMessageConsumer(brokerContext);
 
+    }
+
+    public static void publishMessageBus(BrokerContext brokerContext, MqttSession session, MqttMessage message) {
+        brokerContext.getMessageBus().publish(session, PublishBuilder.builder().retained(message.isRetained()).qos(MqttQoS.AT_MOST_ONCE).topic(brokerContext.getOrCreateTopic(message.getTopic())).payload(message.getPayload()).build());
     }
 
     private void initClusterMessageConsumer(BrokerContext brokerContext) {
@@ -208,11 +209,6 @@ public class ClusterPlugin extends Plugin {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        if (mqttClient != null) {
-            mqttClient.disconnect();
-            mqttClient = null;
-        }
-
     }
 
 
@@ -230,14 +226,14 @@ public class ClusterPlugin extends Plugin {
                     for (ClientUnit clientUnit : clients) {
                         if (clientUnit.httpEnable) {
                             //core节点分发消息至集群其他core节点
-                            clientUnit.httpClient.post("/cluster/put/core").header(header -> header.setContentLength(message.getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getPayload())).onFailure(throwable -> {
+                            clientUnit.httpClient.post("/cluster/put/core").header(header -> header.set("access_token", ACCESS_TOKEN).setContentLength(message.getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getPayload())).onFailure(throwable -> {
                                 clientUnit.httpEnable = false;
                                 LOGGER.error("send message to cluster error", throwable);
                             }).submit();
                         }
                     }
                 } else if (workerClient != null) {
-                    workerClient.httpClient.post("/cluster/put/worker").header(header -> header.setContentLength(message.getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getPayload())).onFailure(throwable -> {
+                    workerClient.httpClient.post("/cluster/put/worker").header(header -> header.set("access_token", ACCESS_TOKEN).setContentLength(message.getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getPayload())).onFailure(throwable -> {
                         workerClient.httpEnable = false;
                         LOGGER.error("send message to cluster error", throwable);
                     }).submit();
@@ -264,7 +260,7 @@ public class ClusterPlugin extends Plugin {
         clientUnit.sseClient = new HttpClient(clientUnit.baseURL);
         clientUnit.sseClient.options().debug(true).group(brokerContext.Options().getChannelGroup());
         //订阅集群推送过来的消息，并投递至总线
-        clientUnit.sseClient.post(core ? "/cluster/subscribe/core" : "/cluster/subscribe/worker").onResponseBody(new BinaryServerSentEventStream() {
+        clientUnit.sseClient.post(core ? "/cluster/subscribe/core/" + ACCESS_TOKEN : "/cluster/subscribe/worker/" + ACCESS_TOKEN).onResponseBody(new BinaryServerSentEventStream() {
 
             @Override
             public void onEvent(HttpResponse httpResponse, MqttMessage event) {

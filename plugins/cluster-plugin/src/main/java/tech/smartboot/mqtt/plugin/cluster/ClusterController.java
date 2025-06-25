@@ -6,11 +6,10 @@ import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
-import tech.smartboot.feat.core.server.Session;
-import tech.smartboot.mqtt.client.MqttClient;
-import tech.smartboot.mqtt.common.enums.MqttQoS;
 import tech.smartboot.mqtt.plugin.cluster.upgrade.BinarySSEUpgrade;
 import tech.smartboot.mqtt.plugin.cluster.upgrade.SseEmitter;
+import tech.smartboot.mqtt.plugin.spec.BrokerContext;
+import tech.smartboot.mqtt.plugin.spec.MqttSession;
 
 import java.io.IOException;
 import java.util.Map;
@@ -26,10 +25,13 @@ public class ClusterController {
     public static final String HEADER_TOPIC = "topic";
     public static final String HEADER_RETAIN = "retain";
     @Autowired
-    private MqttClient mqttClient;
+    private MqttSession mqttSession;
 
-    private Map<String, SseEmitter> coreNodes = new ConcurrentHashMap<>();
-    private Map<String, SseEmitter> workerNodes = new ConcurrentHashMap<>();
+    @Autowired
+    private BrokerContext brokerContext;
+
+    private final Map<String, SseEmitter> coreNodes = new ConcurrentHashMap<>();
+    private final Map<String, SseEmitter> workerNodes = new ConcurrentHashMap<>();
 
     @RequestMapping("/status")
     public boolean status() {
@@ -43,8 +45,8 @@ public class ClusterController {
      * @param request
      */
     @RequestMapping("/put/worker")
-    public void putMessage(HttpRequest request, Session session) throws IOException {
-        String sessionId = session.getSessionId();
+    public void putMessage(HttpRequest request) throws IOException {
+        String token = request.getHeader("access_token");
         MqttMessage message = parseMessage(request);
         byte[] bytes = message.toBytes();
         for (Map.Entry<String, SseEmitter> entry : coreNodes.entrySet()) {
@@ -52,14 +54,14 @@ public class ClusterController {
             value.send(bytes);
         }
 
-        workerNodes.forEach((nodeId, emitter) -> {
-            if (sessionId.equals(nodeId)) {
+        workerNodes.forEach((accessToken, emitter) -> {
+            if (token.equals(accessToken)) {
                 return;
             }
             emitter.send(bytes);
         });
         //推送给自己
-        mqttClient.publish(message.getTopic(), MqttQoS.AT_MOST_ONCE, message.getPayload(), message.isRetained(), true);
+        ClusterPlugin.publishMessageBus(brokerContext, mqttSession, message);
     }
 
     /**
@@ -74,7 +76,7 @@ public class ClusterController {
         workerNodes.forEach((nodeId, emitter) -> emitter.send(bytes));
 
         //推送给自己
-        mqttClient.publish(message.getTopic(), MqttQoS.AT_MOST_ONCE, message.getPayload(), message.isRetained(), true);
+        ClusterPlugin.publishMessageBus(brokerContext, mqttSession, message);
         return true;
     }
 
@@ -93,22 +95,35 @@ public class ClusterController {
     /**
      * work节点订阅集群消息
      */
-    @RequestMapping("/subscribe/:nodeType")
-    public void subscribeMessage(HttpRequest request, @PathParam("nodeType") String nodeType) throws IOException {
+    @RequestMapping("/subscribe/:nodeType/:access_token")
+    public void subscribeMessage(HttpRequest request, @PathParam("nodeType") String nodeType, @PathParam("access_token") String accessToken) throws IOException {
+
         request.upgrade(new BinarySSEUpgrade() {
             @Override
             public void onOpen(SseEmitter sseEmitter) throws IOException {
+                sseEmitter.setAccessToken(accessToken);
                 if (ClusterPlugin.NODE_TYPE_CORE.equals(nodeType)) {
-                    coreNodes.put("", sseEmitter);
+                    coreNodes.put(accessToken, sseEmitter);
                 }
                 if (ClusterPlugin.NODE_TYPE_WORKER.equals(nodeType)) {
-                    workerNodes.put("", sseEmitter);
+                    workerNodes.put(accessToken, sseEmitter);
                 }
+            }
+
+            @Override
+            public void destroy() {
+                super.destroy();
+                coreNodes.remove(accessToken);
+                workerNodes.remove(accessToken);
             }
         });
     }
 
-    public void setMqttClient(MqttClient mqttClient) {
-        this.mqttClient = mqttClient;
+    public void setMqttSession(MqttSession mqttSession) {
+        this.mqttSession = mqttSession;
+    }
+
+    public void setBrokerContext(BrokerContext brokerContext) {
+        this.brokerContext = brokerContext;
     }
 }

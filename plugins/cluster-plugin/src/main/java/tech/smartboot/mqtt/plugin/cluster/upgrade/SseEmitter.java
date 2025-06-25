@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.function.Consumer;
 
 public class SseEmitter {
+    private String accessToken;
     private final AioSession aioSession;
     private static final byte[] topic = new byte[]{BinaryServerSentEventStream.TAG_TOPIC, ':'};
     private static final byte[] retain = new byte[]{'\n', BinaryServerSentEventStream.TAG_RETAIN, ':'};
@@ -41,4 +42,11 @@ public class SseEmitter {
         aioSession.close();
     }
 
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
 }
