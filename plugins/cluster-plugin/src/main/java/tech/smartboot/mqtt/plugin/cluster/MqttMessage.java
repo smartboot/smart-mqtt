@@ -1,8 +1,5 @@
 package tech.smartboot.mqtt.plugin.cluster;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-
 /**
  * @author 三刀
  * @version v1.0 6/23/25
@@ -43,26 +40,5 @@ public class MqttMessage {
 
     public void setRetained(boolean retained) {
         this.retained = retained;
-    }
-
-    public byte[] toBytes() throws IOException {
-        ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream(payload.length + 32);
-        byteOutputStream.write(BinaryServerSentEventStream.TAG_TOPIC);
-        byteOutputStream.write(':');
-        byteOutputStream.write(topic.getBytes());
-        byteOutputStream.write('\n');
-
-        if (retained) {
-            byteOutputStream.write(BinaryServerSentEventStream.TAG_RETAIN);
-            byteOutputStream.write(':');
-            byteOutputStream.write('\n');
-        }
-        byteOutputStream.write(BinaryServerSentEventStream.TAG_PAYLOAD);
-        byteOutputStream.write(':');
-        byteOutputStream.write((payload.length + " ").getBytes());
-        byteOutputStream.write(payload);
-        byteOutputStream.write('\n');
-        byteOutputStream.write('\n');
-        return byteOutputStream.toByteArray();
     }
 }

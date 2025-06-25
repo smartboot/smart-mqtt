@@ -18,7 +18,6 @@ import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
-import tech.smartboot.mqtt.plugin.spec.PublishBuilder;
 import tech.smartboot.mqtt.plugin.spec.bus.EventBusConsumer;
 import tech.smartboot.mqtt.plugin.spec.bus.EventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
@@ -37,7 +36,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class ClusterPlugin extends Plugin {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClusterPlugin.class);
-    private static final MqttMessage SHUTDOWN_MESSAGE = new MqttMessage();
+    private static final Message SHUTDOWN_MESSAGE = new Message(null, null, null, false);
     public static final String NODE_TYPE_CORE = "core";
     public static final String NODE_TYPE_WORKER = "worker";
 
@@ -46,7 +45,7 @@ public class ClusterPlugin extends Plugin {
 
 
     private boolean enabled = true;
-    private ArrayBlockingQueue<MqttMessage> queue;
+    private ArrayBlockingQueue<Message> queue;
     private int queuePolicy;
 
     private HttpServer httpServer;
@@ -85,12 +84,12 @@ public class ClusterPlugin extends Plugin {
         new Thread(() -> {
             while (enabled) {
                 try {
-                    MqttMessage message = queue.take();
+                    Message message = queue.take();
                     do {
                         if (SHUTDOWN_MESSAGE == message) {
                             break;
                         }
-                        publishMessageBus(brokerContext, mqttSession, message);
+                        brokerContext.getMessageBus().publish(mqttSession, message);
                     } while ((message = queue.poll()) != null);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -151,10 +150,6 @@ public class ClusterPlugin extends Plugin {
 
         initClusterMessageConsumer(brokerContext);
 
-    }
-
-    public static void publishMessageBus(BrokerContext brokerContext, MqttSession session, MqttMessage message) {
-        brokerContext.getMessageBus().publish(session, PublishBuilder.builder().retained(message.isRetained()).qos(MqttQoS.AT_MOST_ONCE).topic(brokerContext.getOrCreateTopic(message.getTopic())).payload(message.getPayload()).build());
     }
 
     private void initClusterMessageConsumer(BrokerContext brokerContext) {
@@ -267,10 +262,11 @@ public class ClusterPlugin extends Plugin {
                 if (!enabled) {
                     return;
                 }
+                Message message = new Message(brokerContext.getOrCreateTopic(event.getTopic()), MqttQoS.AT_MOST_ONCE, event.getPayload(), event.isRetained());
                 if (queuePolicy == QUEUE_POLICY_DISCARD_NEWEST) {
-                    queue.offer(event);
+                    queue.offer(message);
                 } else {
-                    while (!queue.offer(event)) {
+                    while (!queue.offer(message)) {
                         queue.poll();
                     }
                 }

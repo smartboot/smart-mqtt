@@ -6,11 +6,15 @@ import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.mqtt.common.enums.MqttQoS;
+import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.cluster.upgrade.BinarySSEUpgrade;
 import tech.smartboot.mqtt.plugin.cluster.upgrade.SseEmitter;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
+import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,8 +51,8 @@ public class ClusterController {
     @RequestMapping("/put/worker")
     public void putMessage(HttpRequest request) throws IOException {
         String token = request.getHeader("access_token");
-        MqttMessage message = parseMessage(request);
-        byte[] bytes = message.toBytes();
+        Message message = parseMessage(request);
+        byte[] bytes = toBytes(message);
         for (Map.Entry<String, SseEmitter> entry : coreNodes.entrySet()) {
             SseEmitter value = entry.getValue();
             value.send(bytes);
@@ -61,7 +65,7 @@ public class ClusterController {
             emitter.send(bytes);
         });
         //推送给自己
-        ClusterPlugin.publishMessageBus(brokerContext, mqttSession, message);
+        brokerContext.getMessageBus().publish(mqttSession, message);
     }
 
     /**
@@ -71,33 +75,49 @@ public class ClusterController {
      */
     @RequestMapping("/put/core")
     public boolean putCoreMessage(HttpRequest request) throws IOException {
-        MqttMessage message = parseMessage(request);
-        byte[] bytes = message.toBytes();
+        Message message = parseMessage(request);
+        byte[] bytes = toBytes(message);
         workerNodes.forEach((nodeId, emitter) -> emitter.send(bytes));
 
         //推送给自己
-        ClusterPlugin.publishMessageBus(brokerContext, mqttSession, message);
+        brokerContext.getMessageBus().publish(mqttSession, message);
         return true;
     }
 
-    private MqttMessage parseMessage(HttpRequest request) throws IOException {
+    private Message parseMessage(HttpRequest request) throws IOException {
         String topic = request.getHeader(HEADER_TOPIC);
+        ValidateUtils.notBlank(topic, "topic is null");
         String retain = request.getHeader(HEADER_RETAIN);
         byte[] payload = FeatUtils.toByteArray(request.getInputStream());
-        MqttMessage message = new MqttMessage();
-        message.setTopic(topic);
-        message.setPayload(payload);
-        message.setRetained(retain != null);
-        return message;
+        return new Message(brokerContext.getOrCreateTopic(topic), MqttQoS.AT_MOST_ONCE, payload, retain != null);
     }
 
+    public byte[] toBytes(Message message) throws IOException {
+        ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream(message.getPayload().length + 32);
+        byteOutputStream.write(BinaryServerSentEventStream.TAG_TOPIC);
+        byteOutputStream.write(':');
+        byteOutputStream.write(message.getTopic().getTopic().getBytes());
+        byteOutputStream.write('\n');
+
+        if (message.isRetained()) {
+            byteOutputStream.write(BinaryServerSentEventStream.TAG_RETAIN);
+            byteOutputStream.write(':');
+            byteOutputStream.write('\n');
+        }
+        byteOutputStream.write(BinaryServerSentEventStream.TAG_PAYLOAD);
+        byteOutputStream.write(':');
+        byteOutputStream.write((message.getPayload().length + " ").getBytes());
+        byteOutputStream.write(message.getPayload());
+        byteOutputStream.write('\n');
+        byteOutputStream.write('\n');
+        return byteOutputStream.toByteArray();
+    }
 
     /**
      * work节点订阅集群消息
      */
     @RequestMapping("/subscribe/:nodeType/:access_token")
     public void subscribeMessage(HttpRequest request, @PathParam("nodeType") String nodeType, @PathParam("access_token") String accessToken) throws IOException {
-
         request.upgrade(new BinarySSEUpgrade() {
             @Override
             public void onOpen(SseEmitter sseEmitter) throws IOException {

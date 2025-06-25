@@ -552,10 +552,6 @@ public class BrokerContextImpl implements BrokerContext {
         return messageBus;
     }
 
-    MessageBusImpl getOriginalMessageBus() {
-        return messageBus;
-    }
-
     @Override
     public EventBus getEventBus() {
         return eventBus;

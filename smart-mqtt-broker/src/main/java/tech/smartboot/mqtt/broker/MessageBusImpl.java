@@ -12,7 +12,6 @@ package tech.smartboot.mqtt.broker;
 
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.mqtt.common.message.MqttPublishMessage;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
@@ -47,12 +46,8 @@ class MessageBusImpl implements MessageBus {
         messageBuses.add(consumer);
     }
 
-
-    /**
-     * 发布消息至总线触发消费
-     */
-    public void publish(MqttSession mqttSession, MqttPublishMessage publishMessage) {
-        Message message = new Message(publishMessage, brokerContext.getOrCreateTopic(publishMessage.getVariableHeader().getTopicName()));
+    @Override
+    public void publish(MqttSession mqttSession, Message message) {
         boolean remove = false;
         for (MessageBusConsumer messageConsumer : messageBuses) {
             try {

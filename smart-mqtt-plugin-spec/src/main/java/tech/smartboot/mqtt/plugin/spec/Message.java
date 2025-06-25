@@ -61,6 +61,13 @@ public final class Message extends ToString {
         this.qos = message.getFixedHeader().getQosLevel();
     }
 
+    public Message(BrokerTopic topic, MqttQoS qos, byte[] message, boolean retained) {
+        this.payload = message;
+        this.retained = retained;
+        this.topic = topic;
+        this.qos = qos;
+    }
+
     public byte[] getPayload() {
         return payload;
     }
