@@ -92,6 +92,10 @@ public class ClusterPlugin extends Plugin {
                         if (SHUTDOWN_MESSAGE == message) {
                             break;
                         }
+                        //对于core节点，需要将来自其他core节点推送过来的消息分发给woker节点
+                        if (pluginConfig.isCore()) {
+                            brokerContext.getEventBus().publish(CLIENT_DIRECT_TO_CORE_BROKER, message);
+                        }
                         brokerContext.getMessageBus().publish(mqttSession, message);
                     } while ((message = receiveQueue.poll()) != null);
                 } catch (InterruptedException e) {
@@ -273,6 +277,7 @@ public class ClusterPlugin extends Plugin {
                                     LOGGER.error("send message to cluster error");
                                 }
                             }
+                            //当客户端直接将消息发送给core节点，需要分发给相连的worker节点
                             brokerContext.getEventBus().publish(CLIENT_DIRECT_TO_CORE_BROKER, message);
                         } else if (workerClient != null) {
                             workerClient.httpClient.post("/cluster/put/worker").header(header -> header.keepalive(true).set("access_token", ACCESS_TOKEN).setContentLength(message.getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getPayload())).onFailure(throwable -> {
