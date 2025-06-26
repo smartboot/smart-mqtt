@@ -21,7 +21,6 @@ public abstract class BinarySSEUpgrade extends Upgrade {
     @Override
     public void init(HttpRequest request, HttpResponse response) throws IOException {
         response = request.getResponse();
-        response.getOutputStream().disableChunked();
         response.setHeader("Content-Type", "text/event-stream");
         response.setHeader("Cache-Control", "no-cache");
         response.setHeader("Connection", "keep-alive");

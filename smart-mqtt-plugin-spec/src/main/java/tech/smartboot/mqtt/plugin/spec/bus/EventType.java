@@ -97,16 +97,16 @@ public class EventType<T> {
     private final String name;
 
     /**
-     *一次性事件
+     * 一次性事件
      */
     private final boolean once;
 
-    EventType(String name, boolean once) {
+    public EventType(String name, boolean once) {
         this.name = name;
         this.once = once;
     }
 
-    EventType(String name) {
+    public EventType(String name) {
         this(name, false);
     }
 

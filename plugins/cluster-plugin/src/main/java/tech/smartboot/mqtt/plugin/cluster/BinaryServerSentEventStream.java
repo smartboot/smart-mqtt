@@ -49,7 +49,7 @@ public abstract class BinaryServerSentEventStream implements Stream {
         int state = STATE_TAG;
         byte tag = 0;
         for (int i = 0; i < bytes.length; i++) {
-            byte b = bytes[i];
+            final byte b = bytes[i];
             switch (state) {
                 case STATE_TAG:
                     tag = b;
@@ -95,16 +95,18 @@ public abstract class BinaryServerSentEventStream implements Stream {
                 case STATE_TAG_PAYLOAD:
                     if (b == ' ') {
                         int length = Integer.parseInt(new String(bytes, valuePos, i - valuePos));
-                        if (bytes.length - i > length) {
-                            if (bytes[i + length] != '\n') {
+                        if (bytes.length - i >= length + 1) {
+                            if (bytes[i + length + 1] != '\n') {
                                 throw new IllegalStateException("Unexpected value: " + tag);
                             }
                             byte[] payload = new byte[length];
                             System.arraycopy(bytes, i + 1, payload, 0, length);
                             this.payload = payload;
                             i = i + length + 1;
+                            pos = i + 1;
                             state = STATE_END_CHECK;
                         } else {
+                            //数据不足，终止解析
                             i = bytes.length;
                         }
                     }
@@ -120,7 +122,8 @@ public abstract class BinaryServerSentEventStream implements Stream {
                         payload = null;
                         retained = false;
                     } else {
-                        state = STATE_TAG;
+                        tag = b;
+                        state = STATE_COLON;
                     }
                     break;
                 default:

@@ -3,9 +3,12 @@ package tech.smartboot.mqtt.plugin.cluster;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.PathParam;
+import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HttpStatus;
+import tech.smartboot.feat.core.common.logging.Logger;
+import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
@@ -26,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Controller("cluster")
 public class ClusterController {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClusterController.class);
     public static final String HEADER_TOPIC = "topic";
     public static final String HEADER_RETAIN = "retain";
     @Autowired
@@ -37,6 +40,15 @@ public class ClusterController {
 
     private final Map<String, SseEmitter> coreNodes = new ConcurrentHashMap<>();
     private final Map<String, SseEmitter> workerNodes = new ConcurrentHashMap<>();
+
+    @PostConstruct
+    public void init() {
+        brokerContext.getEventBus().subscribe(ClusterPlugin.CLIENT_DIRECT_TO_CORE_BROKER, (eventType, message) -> {
+            byte[] bytes = toBytes(message);
+            LOGGER.info("receive cluster message, workerNodes:{}", ClusterController.this.workerNodes.size());
+            ClusterController.this.workerNodes.forEach((nodeId, emitter) -> emitter.send(bytes));
+        });
+    }
 
     @RequestMapping("/status")
     public boolean status() {
@@ -63,6 +75,7 @@ public class ClusterController {
             if (token.equals(accessToken)) {
                 return;
             }
+            LOGGER.info("分发消息至集群节点:{}", emitter.getAccessToken());
             emitter.send(bytes);
         });
         //推送给自己
@@ -98,24 +111,29 @@ public class ClusterController {
         return new Message(brokerContext.getOrCreateTopic(topic), MqttQoS.AT_MOST_ONCE, payload, retain != null);
     }
 
-    public byte[] toBytes(Message message) throws IOException {
+    public byte[] toBytes(Message message) {
         ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream(message.getPayload().length + 32);
-        byteOutputStream.write(BinaryServerSentEventStream.TAG_TOPIC);
-        byteOutputStream.write(':');
-        byteOutputStream.write(message.getTopic().getTopic().getBytes());
-        byteOutputStream.write('\n');
-
-        if (message.isRetained()) {
-            byteOutputStream.write(BinaryServerSentEventStream.TAG_RETAIN);
+        try {
+            byteOutputStream.write(BinaryServerSentEventStream.TAG_TOPIC);
             byteOutputStream.write(':');
+            byteOutputStream.write(message.getTopic().getTopic().getBytes());
             byteOutputStream.write('\n');
+
+            if (message.isRetained()) {
+                byteOutputStream.write(BinaryServerSentEventStream.TAG_RETAIN);
+                byteOutputStream.write(':');
+                byteOutputStream.write('\n');
+            }
+            byteOutputStream.write(BinaryServerSentEventStream.TAG_PAYLOAD);
+            byteOutputStream.write(':');
+            byteOutputStream.write((message.getPayload().length + " ").getBytes());
+            byteOutputStream.write(message.getPayload());
+            byteOutputStream.write('\n');
+            byteOutputStream.write('\n');
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        byteOutputStream.write(BinaryServerSentEventStream.TAG_PAYLOAD);
-        byteOutputStream.write(':');
-        byteOutputStream.write((message.getPayload().length + " ").getBytes());
-        byteOutputStream.write(message.getPayload());
-        byteOutputStream.write('\n');
-        byteOutputStream.write('\n');
+
         return byteOutputStream.toByteArray();
     }
 
@@ -130,11 +148,14 @@ public class ClusterController {
                 sseEmitter.setAccessToken(accessToken);
                 SseEmitter old = null;
                 if (ClusterPlugin.NODE_TYPE_CORE.equals(nodeType)) {
+                    LOGGER.info("接收来自core节点的订阅:{}", accessToken);
                     old = coreNodes.put(accessToken, sseEmitter);
                 } else if (ClusterPlugin.NODE_TYPE_WORKER.equals(nodeType)) {
+                    LOGGER.info("接收来自worker节点的订阅:{}", accessToken);
                     old = workerNodes.put(accessToken, sseEmitter);
                 }
                 if (old != null) {
+                    LOGGER.info("移除旧节点:{}", old.getAccessToken());
                     old.complete();
                 }
             }
@@ -144,6 +165,8 @@ public class ClusterController {
                 super.destroy();
                 coreNodes.remove(accessToken);
                 workerNodes.remove(accessToken);
+                LOGGER.info("移除节点:{}", accessToken);
+                new Throwable().printStackTrace();
             }
         });
     }

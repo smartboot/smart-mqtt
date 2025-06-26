@@ -60,6 +60,8 @@ public class ClusterPlugin extends Plugin {
     private static final String ACCESS_TOKEN = UUID.randomUUID().toString();
     private ArrayBlockingQueue<Message> distributeQueue;
 
+    public static final EventType<Message> CLIENT_DIRECT_TO_CORE_BROKER = new EventType<>("client_direct_to_core_broker");
+
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
         this.brokerContext = brokerContext;
@@ -222,7 +224,7 @@ public class ClusterPlugin extends Plugin {
         brokerContext.getMessageBus().consumer(new MessageBusConsumer() {
             @Override
             public void consume(MqttSession session, Message message) {
-                //忽略来自集群的消息
+                //忽略来自集群的消息,包括core和worker节点
                 if (session.getClientId().equals(clientId)) {
                     return;
                 }
@@ -271,6 +273,7 @@ public class ClusterPlugin extends Plugin {
                                     LOGGER.error("send message to cluster error");
                                 }
                             }
+                            brokerContext.getEventBus().publish(CLIENT_DIRECT_TO_CORE_BROKER, message);
                         } else if (workerClient != null) {
                             workerClient.httpClient.post("/cluster/put/worker").header(header -> header.keepalive(true).set("access_token", ACCESS_TOKEN).setContentLength(message.getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getPayload())).onFailure(throwable -> {
                                 workerClient.httpEnable = false;
