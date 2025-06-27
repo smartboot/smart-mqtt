@@ -77,7 +77,6 @@ public class SubscriptionController {
                 SubscriptionDO subscriptionDO = new SubscriptionDO();
                 subscriptionDO.setClientId(object.getSession().getClientId());
                 subscriptionDO.setTopic(object.getObject().getTopicFilter());
-                subscriptionDO.setNodeId(brokerContext.Options().getNodeId());
                 subscriptionDO.setQos(object.getObject().getQualityOfService().value());
                 mapper.insert(subscriptionDO);
             });

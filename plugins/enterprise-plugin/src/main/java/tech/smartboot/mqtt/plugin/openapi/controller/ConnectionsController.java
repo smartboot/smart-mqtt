@@ -77,7 +77,7 @@ public class ConnectionsController {
         }
         //可能因Broker异常退出导致原连接状态依旧处于Connected状态，启动时统一订正
 //        brokerContext.getEventBus().subscribe(EventType.BROKER_STARTED, (eventType, object) -> {
-        connectionMapper.updateStatusByBroker(brokerContext.Options().getNodeId(), ConnectionStatusEnum.DIS_CONNECT.getStatus());
+        connectionMapper.updateStatusByBroker("smart-mqtt", ConnectionStatusEnum.DIS_CONNECT.getStatus());
 //        });
 
         brokerContext.getEventBus().subscribe(EventType.DISCONNECT, (eventType, object) -> {
@@ -90,7 +90,7 @@ public class ConnectionsController {
             ConnectionDO connectionDO = new ConnectionDO();
             connectionDO.setClientId(object.getSession().getClientId());
             connectionDO.setUsername(object.getObject().getPayload().userName());
-            connectionDO.setNodeId(brokerContext.Options().getNodeId());
+            connectionDO.setNodeId("smart-mqtt");
             try {
                 connectionDO.setIpAddress(object.getSession().getRemoteAddress().getHostString());
                 String region = IpUtil.search(connectionDO.getIpAddress());
