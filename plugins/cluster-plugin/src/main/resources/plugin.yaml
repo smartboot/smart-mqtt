@@ -1,11 +1,13 @@
-core: true # core or worker
+# 是否为核心节点，true=核心节点，false=工作节点
+core: false
+# 集群服务监听地址，仅当core为true时有效
 host: 0.0.0.0
+# 集群服务监听端口，仅当core为true时有效
 port: 8884
 # 队列长度，达到该阈值会触发queue_policy策略
 queue_length: 1024
-# 队列内存总容量,达到该阈值会触发queue_policy策略
-queue_memory_limit: 16777216
 # 队列数据丢弃策略：0 默认,丢弃最新数据，1 丢弃最早的数据
 queue_discard_policy: 0
+# 集群节点地址列表
 clusters:
   - http://0.0.0.0:8884
