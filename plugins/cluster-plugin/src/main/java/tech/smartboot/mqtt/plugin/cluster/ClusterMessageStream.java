@@ -10,16 +10,14 @@ import java.io.IOException;
  * @author 三刀
  * @version v1.0 6/23/25
  */
-public abstract class BinaryServerSentEventStream implements Stream {
+public abstract class ClusterMessageStream implements Stream {
     private static final int STATE_TAG = 1;
     private static final int STATE_COLON = 2;
     private static final int STATE_COLON_RIGHT_TRIM = 3;
-    private static final int STATE_LF = 4;
-    private static final int STATE_END_CHECK = 5;
-    private static final int STATE_PAYLOAD_LENGTH = 6;
-    public static final int STATE_TAG_TOPIC = 7;
-    public static final int STATE_TAG_RETAIN = 8;
-    public static final int STATE_TAG_PAYLOAD = 9;
+    private static final int STATE_END_CHECK = 4;
+    public static final int STATE_TAG_TOPIC = 5;
+    public static final int STATE_TAG_RETAIN = 6;
+    public static final int STATE_TAG_PAYLOAD = 7;
     public static final byte TAG_TOPIC = 't';
     public static final byte TAG_PAYLOAD = 'p';
     public static final byte TAG_RETAIN = 'r';

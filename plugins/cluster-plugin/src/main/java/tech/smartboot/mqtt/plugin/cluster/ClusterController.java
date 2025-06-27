@@ -1,5 +1,8 @@
 package tech.smartboot.mqtt.plugin.cluster;
 
+import org.smartboot.socket.transport.AioSession;
+import org.smartboot.socket.transport.WriteBuffer;
+import org.smartboot.socket.util.StringUtils;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.PathParam;
@@ -10,16 +13,17 @@ import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.impl.Upgrade;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
-import tech.smartboot.mqtt.plugin.cluster.upgrade.BinarySSEUpgrade;
-import tech.smartboot.mqtt.plugin.cluster.upgrade.SseEmitter;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -29,6 +33,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Controller("cluster")
 public class ClusterController {
+    private static final String NODE_TYPE_CORE = "core";
+    private static final String NODE_TYPE_WORKER = "worker";
     private static final Logger LOGGER = LoggerFactory.getLogger(ClusterController.class);
     public static final String HEADER_TOPIC = "topic";
     public static final String HEADER_RETAIN = "retain";
@@ -114,17 +120,17 @@ public class ClusterController {
     public byte[] toBytes(Message message) {
         ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream(message.getPayload().length + 32);
         try {
-            byteOutputStream.write(BinaryServerSentEventStream.TAG_TOPIC);
+            byteOutputStream.write(ClusterMessageStream.TAG_TOPIC);
             byteOutputStream.write(':');
             byteOutputStream.write(message.getTopic().getTopic().getBytes());
             byteOutputStream.write('\n');
 
             if (message.isRetained()) {
-                byteOutputStream.write(BinaryServerSentEventStream.TAG_RETAIN);
+                byteOutputStream.write(ClusterMessageStream.TAG_RETAIN);
                 byteOutputStream.write(':');
                 byteOutputStream.write('\n');
             }
-            byteOutputStream.write(BinaryServerSentEventStream.TAG_PAYLOAD);
+            byteOutputStream.write(ClusterMessageStream.TAG_PAYLOAD);
             byteOutputStream.write(':');
             byteOutputStream.write((message.getPayload().length + " ").getBytes());
             byteOutputStream.write(message.getPayload());
@@ -142,15 +148,24 @@ public class ClusterController {
      */
     @RequestMapping("/subscribe/:nodeType/:access_token")
     public void subscribeMessage(HttpRequest request, @PathParam("nodeType") String nodeType, @PathParam("access_token") String accessToken) throws IOException {
-        request.upgrade(new BinarySSEUpgrade() {
+        request.upgrade(new Upgrade() {
+            SseEmitter sseEmitter;
+
             @Override
-            public void onOpen(SseEmitter sseEmitter) throws IOException {
+            public void init(HttpRequest request, HttpResponse response) throws IOException {
+                response.setHeader("Content-Type", "text/event-stream");
+                response.setHeader("Cache-Control", "no-cache");
+                response.setHeader("Connection", "keep-alive");
+                response.setHeader("Access-Control-Allow-Origin", "*");
+                response.getOutputStream().flush();
+
+                sseEmitter = new SseEmitter(this.request.getAioSession());
                 sseEmitter.setAccessToken(accessToken);
                 SseEmitter old = null;
-                if (ClusterPlugin.NODE_TYPE_CORE.equals(nodeType)) {
+                if (NODE_TYPE_CORE.equals(nodeType)) {
                     LOGGER.info("接收来自core节点的订阅:{}", accessToken);
                     old = coreNodes.put(accessToken, sseEmitter);
-                } else if (ClusterPlugin.NODE_TYPE_WORKER.equals(nodeType)) {
+                } else if (NODE_TYPE_WORKER.equals(nodeType)) {
                     LOGGER.info("接收来自worker节点的订阅:{}", accessToken);
                     old = workerNodes.put(accessToken, sseEmitter);
                 }
@@ -161,12 +176,20 @@ public class ClusterController {
             }
 
             @Override
+            public void onBodyStream(ByteBuffer buffer) {
+                byte[] bytes = new byte[buffer.remaining()];
+                buffer.get(bytes);
+                LOGGER.error("BinarySSEUpgrade.onBodyStream:{}", StringUtils.toHexString(bytes));
+            }
+
+            @Override
             public void destroy() {
-                super.destroy();
+                if (sseEmitter != null) {
+                    sseEmitter.complete();
+                }
                 coreNodes.remove(accessToken);
                 workerNodes.remove(accessToken);
                 LOGGER.info("移除节点:{}", accessToken);
-                new Throwable().printStackTrace();
             }
         });
     }
@@ -177,5 +200,36 @@ public class ClusterController {
 
     public void setBrokerContext(BrokerContext brokerContext) {
         this.brokerContext = brokerContext;
+    }
+
+    static class SseEmitter {
+        private String accessToken;
+        private final AioSession aioSession;
+
+        public SseEmitter(AioSession aioSession) {
+            this.aioSession = aioSession;
+        }
+
+        public void send(byte[] bytes) {
+            WriteBuffer buffer = aioSession.writeBuffer();
+            try {
+                buffer.write(bytes);
+                aioSession.writeBuffer().flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void complete() {
+            aioSession.close();
+        }
+
+        public String getAccessToken() {
+            return accessToken;
+        }
+
+        public void setAccessToken(String accessToken) {
+            this.accessToken = accessToken;
+        }
     }
 }

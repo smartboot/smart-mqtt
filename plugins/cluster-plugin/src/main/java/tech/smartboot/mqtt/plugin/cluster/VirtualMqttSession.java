@@ -4,22 +4,17 @@ import tech.smartboot.mqtt.common.enums.MqttVersion;
 import tech.smartboot.mqtt.common.message.MqttMessage;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 
 /**
  * @author 三刀
  * @version v1.0 6/25/25
  */
-class ClusterMqttSession implements MqttSession {
-    private final String clientId;
-
-    public ClusterMqttSession(String clientId) {
-        this.clientId = clientId;
-    }
+class VirtualMqttSession implements MqttSession {
+    private final String clientId = "internal-" + System.nanoTime();
 
     @Override
-    public InetSocketAddress getRemoteAddress() throws IOException {
+    public InetSocketAddress getRemoteAddress() {
         throw new UnsupportedOperationException();
     }
 
