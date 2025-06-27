@@ -63,18 +63,6 @@ public class Options extends ToString {
     public static final String VENDOR = "smart-mqtt";
 
     /**
-     * 节点ID，用于在MQTT集群中唯一标识当前broker节点。
-     * <p>
-     * 在集群部署场景下，每个节点必须配置唯一的nodeId，用于：
-     * <ul>
-     *   <li>集群节点识别和管理</li>
-     *   <li>会话跨节点迁移</li>
-     *   <li>消息路由转发</li>
-     * </ul>
-     * 默认值："smart-mqtt"
-     */
-    private String nodeId = "smart-mqtt";
-    /**
      * MQTT服务器监听地址。
      * <p>
      * 可选值：
@@ -388,14 +376,6 @@ public class Options extends ToString {
 
     public void setTopicLimit(int topicLimit) {
         this.topicLimit = topicLimit;
-    }
-
-    public String getNodeId() {
-        return nodeId;
-    }
-
-    public void setNodeId(String nodeId) {
-        this.nodeId = nodeId;
     }
 
     public Options addPlugin(Plugin<MqttMessage> plugin) {

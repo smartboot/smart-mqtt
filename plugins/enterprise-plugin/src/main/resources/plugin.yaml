@@ -10,6 +10,3 @@ database:
   username: ""
   password: ""
 registry: http://82.157.162.230:8083/
-
-nodeType: "core"
-clusterEndpoint: mqtt://127.0.0.1:1883

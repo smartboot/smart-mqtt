@@ -11,7 +11,6 @@
 package tech.smartboot.mqtt.plugin;
 
 import com.alibaba.fastjson2.annotation.JSONField;
-import tech.smartboot.mqtt.plugin.openapi.enums.BrokerNodeTypeEnum;
 
 /**
  * @author 三刀
@@ -25,20 +24,6 @@ public class PluginConfig {
     @JSONField(name = "database")
     private DataBaseConfig dataBase;
     private String registry;
-    /**
-     * @see BrokerNodeTypeEnum
-     */
-    private String nodeType;
-
-    /**
-     * 连接的核心节点ID
-     */
-    private String coreNodeId;
-
-    /**
-     * 作为协调节点开放的集群访问地址
-     */
-    private String clusterEndpoint;
 
     public HttpConfig getHttpConfig() {
         return httpConfig;
@@ -64,29 +49,6 @@ public class PluginConfig {
         this.registry = registry;
     }
 
-    public String getNodeType() {
-        return nodeType;
-    }
-
-    public void setNodeType(String nodeType) {
-        this.nodeType = nodeType;
-    }
-
-    public String getCoreNodeId() {
-        return coreNodeId;
-    }
-
-    public void setCoreNodeId(String coreNodeId) {
-        this.coreNodeId = coreNodeId;
-    }
-
-    public String getClusterEndpoint() {
-        return clusterEndpoint;
-    }
-
-    public void setClusterEndpoint(String clusterEndpoint) {
-        this.clusterEndpoint = clusterEndpoint;
-    }
 
     public DataBaseConfig getDataBase() {
         return dataBase;

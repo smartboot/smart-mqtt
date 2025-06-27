@@ -13,7 +13,6 @@ package tech.smartboot.mqtt.plugin.convert;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.mqtt.plugin.cluster.NodeProcessInfo;
 import tech.smartboot.mqtt.plugin.dao.model.BrokerNodeDO;
-import tech.smartboot.mqtt.plugin.openapi.enums.BrokerStatueEnum;
 import tech.smartboot.mqtt.plugin.openapi.to.BrokerNodeTO;
 
 import java.util.ArrayList;
@@ -46,9 +45,6 @@ public class NodeConvert {
         brokerNodeTO.setNodeId(nodeDO.getNodeId());
         brokerNodeTO.setLocalAddress(nodeDO.getNodeId());
         brokerNodeTO.setStatus(nodeDO.getStatus());
-        if (BrokerStatueEnum.RUNNING.getCode().equals(brokerNodeTO.getStatus()) && (System.currentTimeMillis() - nodeDO.getEditTime().getTime() > 10000)) {
-            brokerNodeTO.setStatus(BrokerStatueEnum.UNKNOWN.getCode());
-        }
         brokerNodeTO.setIpAddress(nodeDO.getIpAddress());
         brokerNodeTO.setPort(nodeDO.getPort());
         brokerNodeTO.setRuntime(getRuntime(nodeDO.getStartTime().getTime()));

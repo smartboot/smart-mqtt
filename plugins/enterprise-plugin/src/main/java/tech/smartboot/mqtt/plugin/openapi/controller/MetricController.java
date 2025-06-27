@@ -24,7 +24,6 @@ import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
-import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -34,18 +33,15 @@ import tech.smartboot.mqtt.common.message.MqttConnAckMessage;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
 import tech.smartboot.mqtt.common.message.MqttMessage;
 import tech.smartboot.mqtt.common.message.MqttPublishMessage;
-import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.PluginConfig;
 import tech.smartboot.mqtt.plugin.cluster.NodeProcessInfo;
 import tech.smartboot.mqtt.plugin.convert.NodeConvert;
-import tech.smartboot.mqtt.plugin.dao.mapper.BrokerNodeMapper;
 import tech.smartboot.mqtt.plugin.dao.mapper.ConnectionMapper;
 import tech.smartboot.mqtt.plugin.dao.mapper.MetricMapper;
 import tech.smartboot.mqtt.plugin.dao.mapper.SystemConfigMapper;
 import tech.smartboot.mqtt.plugin.dao.model.BrokerNodeDO;
 import tech.smartboot.mqtt.plugin.dao.model.MetricDO;
 import tech.smartboot.mqtt.plugin.dao.model.RegionDO;
-import tech.smartboot.mqtt.plugin.openapi.OpenApi;
 import tech.smartboot.mqtt.plugin.openapi.enums.BrokerStatueEnum;
 import tech.smartboot.mqtt.plugin.openapi.enums.MqttMetricEnum;
 import tech.smartboot.mqtt.plugin.openapi.enums.RecordTypeEnum;
@@ -95,9 +91,6 @@ public class MetricController {
     private ConnectionMapper connectionMapper;
 
     @Autowired
-    private BrokerNodeMapper brokerNodeMapper;
-
-    @Autowired
     private SystemConfigMapper systemConfigMapper;
 
     @Autowired
@@ -143,9 +136,9 @@ public class MetricController {
                         MqttMetricEnum metric = entry.getKey();
                         MetricItemTO value = entry.getValue();
                         MetricDO metricDO = new MetricDO();
-                        metricDO.setNodeName(brokerContext.Options().getNodeId());
+                        metricDO.setNodeName("smart-mqtt");
                         metricDO.setObjectType("node");
-                        metricDO.setObjectId(brokerContext.Options().getNodeId());
+                        metricDO.setObjectId("smart-mqtt");
                         metricDO.setCode(metric.getCode());
                         long currentValue = value.getValue();
                         if (metric.isPeriodRest()) {
@@ -178,48 +171,15 @@ public class MetricController {
             }
         }, 5, TimeUnit.SECONDS);
 
-        ValidateUtils.notNull(brokerContext.Options().getNodeId(), "broker.nodeId is null");
-        BrokerNodeDO nodeDO = brokerNodeMapper.selectById(brokerContext.Options().getNodeId());
-        if (nodeDO == null) {
-            nodeDO = new BrokerNodeDO();
-            nodeDO.setNodeId(brokerContext.Options().getNodeId());
-            nodeDO.setNodeType(pluginConfig.getNodeType());
-
-            setNodeDO(nodeDO, pluginConfig);
-
-            brokerNodeMapper.insert(nodeDO);
-        } else {
-            ValidateUtils.isTrue(FeatUtils.equals(nodeDO.getNodeType(), pluginConfig.getNodeType()), "nodeType is different from before.");
-            if (FeatUtils.equals(nodeDO.getStatus(), BrokerStatueEnum.RUNNING.getCode())) {
-                LOGGER.warn("This node did not exit normally previously.");
-            }
-
-            setNodeDO(nodeDO, pluginConfig);
-
-            brokerNodeMapper.update(nodeDO);
-        }
-        brokerContext.getTimer().schedule(new Runnable() {
-            @Override
-            public void run() {
-                BrokerNodeDO node = new BrokerNodeDO();
-                node.setNodeId(brokerContext.Options().getNodeId());
-                node.setProcess(JSONObject.toJSONString(getCurrentNode()));
-                brokerNodeMapper.update(node);
-                brokerContext.getTimer().schedule(this, 5, TimeUnit.SECONDS);
-            }
-        }, 5, TimeUnit.SECONDS);
     }
 
-    private void setNodeDO(BrokerNodeDO nodeDO, PluginConfig config) {
-        nodeDO.setCoreNodeId(config.getCoreNodeId());
-        nodeDO.setClusterEndpoint(config.getClusterEndpoint());
+    private void setNodeDO(BrokerNodeDO nodeDO) {
         nodeDO.setIpAddress(brokerContext.Options().getHost());
         nodeDO.setStatus(BrokerStatueEnum.RUNNING.getCode());
         nodeDO.setPort(brokerContext.Options().getPort());
-        nodeDO.setStartTime(new Date());
-        if (FeatUtils.isBlank(nodeDO.getClusterEndpoint())) {
-            nodeDO.setStatus(BrokerStatueEnum.UNHEALTHY.getCode());
-        }
+        nodeDO.setStartTime(new Date(START_TIME));
+        nodeDO.setNodeId("smart-mqtt");
+        nodeDO.setProcess(JSONObject.toJSONString(getCurrentNode()));
     }
 
     private NodeProcessInfo getCurrentNode() {
@@ -365,7 +325,10 @@ public class MetricController {
     @RequestMapping("/api/cluster/nodes")
     public RestResult<Collection<BrokerNodeTO>> nodes() {
         //broker节点
-        List<BrokerNodeDO> nodes = brokerNodeMapper.selectAll();
+        BrokerNodeDO node = new BrokerNodeDO();
+        setNodeDO(node);
+
+        List<BrokerNodeDO> nodes = Arrays.asList(node);
         if (FeatUtils.isEmpty(nodes)) {
             nodes = Collections.emptyList();
         }
@@ -435,45 +398,6 @@ public class MetricController {
         return RestResult.ok(list);
     }
 
-
-    @RequestMapping(OpenApi.BASE_API + "/metric/exported")
-    public Object exported(@Param("style") String style) {
-        if (style == null || style.trim().isEmpty()) {
-            style = "PROMETHEUS";
-        }
-
-        if (!Objects.equals(style, "PROMETHEUS")) {
-            return RestResult.fail("unsupported style " + style);
-        }
-
-        StringBuilder sb = new StringBuilder();
-        for (MqttMetricEnum metricEnum : MqttMetricEnum.values()) {
-            MetricItemTO metric = metrics.get(metricEnum);
-
-            // Single metric example.
-            //# HELP mqtt2_mqtt_hello_bytes_total test
-            //# TYPE mqtt2_mqtt_hello_bytes_total counter
-            //mqtt2_mqtt_hello_bytes_total{node="node",ip="ip",} 0.0
-            //# HELP mqtt2_mqtt_hello_bytes_created test
-            //# TYPE mqtt2_mqtt_hello_bytes_created gauge
-            //mqtt2_mqtt_hello_bytes_created{node="node",ip="ip",} 1.685426524877E9
-
-            sb.append("# HELP ").append(metricEnum.getCode()).append("_total ").append(metric.getDesc()).append("\n").append("# TYPE ").append(metricEnum.getCode()).append("_total ").append("counter\n").append(metricEnum.getCode()).append("_total ").append("{").append("node=\"").append(brokerContext.Options().getNodeId()).append("\"").append(",ip=\"").append(brokerContext.Options().getHost()).append("\",} ").append(metric.getValue()).append("\n").append("# HELP ").append(metricEnum.getCode()).append("_created ").append(metric.getDesc()).append("\n").append("# TYPE ").append(metricEnum.getCode()).append("_created ").append("gauge\n").append(metricEnum.getCode()).append("_created ").append("{").append("node=\"").append(brokerContext.Options().getNodeId()).append("\"").append(",ip=\"").append(brokerContext.Options().getHost()).append("\",} ").append(metric.getCreated().getTime()).append("\n");
-        }
-
-
-        return sb.toString();
-    }
-
-    @PreDestroy
-    public void destroy() {
-        LOGGER.info("destroy node: {}...", brokerContext.Options().getNodeId());
-        BrokerNodeDO node = new BrokerNodeDO();
-        node.setNodeId(brokerContext.Options().getNodeId());
-        node.setStatus(BrokerStatueEnum.STOPPED.getCode());
-        brokerNodeMapper.update(node);
-    }
-
     public void setBrokerContext(BrokerContext brokerContext) {
         this.brokerContext = brokerContext;
     }
@@ -484,10 +408,6 @@ public class MetricController {
 
     public void setConnectionMapper(ConnectionMapper connectionMapper) {
         this.connectionMapper = connectionMapper;
-    }
-
-    public void setBrokerNodeMapper(BrokerNodeMapper brokerNodeMapper) {
-        this.brokerNodeMapper = brokerNodeMapper;
     }
 
     public void setSystemConfigMapper(SystemConfigMapper systemConfigMapper) {
