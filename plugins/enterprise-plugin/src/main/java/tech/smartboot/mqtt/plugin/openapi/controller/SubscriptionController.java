@@ -78,6 +78,7 @@ public class SubscriptionController {
                 subscriptionDO.setClientId(object.getSession().getClientId());
                 subscriptionDO.setTopic(object.getObject().getTopicFilter());
                 subscriptionDO.setQos(object.getObject().getQualityOfService().value());
+                subscriptionDO.setNodeId("smart-mqtt");
                 mapper.insert(subscriptionDO);
             });
         });
