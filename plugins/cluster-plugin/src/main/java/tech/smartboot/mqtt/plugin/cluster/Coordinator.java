@@ -113,6 +113,17 @@ class Coordinator implements Runnable {
                         }).submit();
                     });
                 }
+                //中断集群数据监听
+                clients.forEach(clusterClient -> {
+                    if (clusterClient.sseClient != null) {
+                        clusterClient.sseEnable = false;
+                        clusterClient.sseClient.close();
+                    }
+                    if (clusterClient.httpClient != null) {
+                        clusterClient.httpEnable = false;
+                        clusterClient.httpClient.close();
+                    }
+                });
 
             }
         }, "cluster-plugin-health-checker").start();
@@ -136,18 +147,6 @@ class Coordinator implements Runnable {
 
     public void destroy() {
         enabled = false;
-        //中断集群数据监听
-        clients.forEach(clusterClient -> {
-            if (clusterClient.sseClient != null) {
-                clusterClient.sseEnable = false;
-                clusterClient.sseClient.close();
-            }
-            if (clusterClient.httpClient != null) {
-                clusterClient.httpEnable = false;
-                clusterClient.httpClient.close();
-            }
-        });
-
         if (receiver != null) {
             receiver.destroy();
         }
