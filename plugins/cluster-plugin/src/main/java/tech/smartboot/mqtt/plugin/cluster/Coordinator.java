@@ -140,9 +140,11 @@ class Coordinator implements Runnable {
         //中断集群数据监听
         clients.forEach(clusterClient -> {
             if (clusterClient.sseClient != null) {
+                clusterClient.sseEnable = false;
                 clusterClient.sseClient.close();
             }
             if (clusterClient.httpClient != null) {
+                clusterClient.httpEnable = false;
                 clusterClient.httpClient.close();
             }
         });
@@ -206,7 +208,7 @@ class Coordinator implements Runnable {
 
                 @Override
                 public void onEvent(HttpResponse httpResponse, String topic, byte[] payload, boolean retained) {
-                    if (!Coordinator.this.enabled) {
+                    if (!enabled) {
                         LOGGER.warn("cluster-plugin-consume-message-error");
                         return;
                     }
