@@ -201,7 +201,7 @@ class Coordinator implements Runnable {
 
                 @Override
                 public void onEvent(HttpResponse httpResponse, String topic, byte[] payload, boolean retained) {
-                    if (!enabled) {
+                    if (!Coordinator.this.enabled) {
                         LOGGER.warn("cluster-plugin-consume-message-error");
                         return;
                     }
