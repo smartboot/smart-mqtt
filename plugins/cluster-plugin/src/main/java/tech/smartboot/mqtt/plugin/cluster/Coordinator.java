@@ -1,6 +1,7 @@
 package tech.smartboot.mqtt.plugin.cluster;
 
 import org.smartboot.socket.timer.HashedWheelTimer;
+import org.smartboot.socket.timer.TimerTask;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.FeatUtils;
@@ -40,6 +41,7 @@ class Coordinator implements Runnable {
     private ClusterClient workerClient;
     private boolean enabled = true;
     private final int queueLength;
+    private TimerTask timerTask;
 
     public Coordinator(PluginConfig pluginConfig, BrokerContext brokerContext) {
         this.pluginConfig = pluginConfig;
@@ -69,7 +71,7 @@ class Coordinator implements Runnable {
                 clients.add(new ClusterClient(cluster));
             }
         }
-        timer.scheduleWithFixedDelay(new AsyncTask() {
+        timerTask = timer.scheduleWithFixedDelay(new AsyncTask() {
             @Override
             public void execute() {
                 clients.forEach(clusterClient -> {
@@ -131,6 +133,9 @@ class Coordinator implements Runnable {
 
     public void destroy() {
         enabled = false;
+        if (timerTask != null) {
+            timerTask.cancel();
+        }
         timer.shutdown();
         //中断集群数据监听
         clients.forEach(clusterClient -> {
