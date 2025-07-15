@@ -132,11 +132,11 @@ class Coordinator implements Runnable {
     }
 
     public void destroy() {
-        enabled = false;
         if (timerTask != null) {
             timerTask.cancel();
         }
         timer.shutdown();
+        enabled = false;
         //中断集群数据监听
         clients.forEach(clusterClient -> {
             if (clusterClient.sseClient != null) {
