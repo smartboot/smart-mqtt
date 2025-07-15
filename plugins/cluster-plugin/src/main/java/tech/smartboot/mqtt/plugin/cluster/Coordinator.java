@@ -1,7 +1,5 @@
 package tech.smartboot.mqtt.plugin.cluster;
 
-import org.smartboot.socket.timer.HashedWheelTimer;
-import org.smartboot.socket.timer.TimerTask;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.FeatUtils;
@@ -19,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 class Coordinator implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(Coordinator.class);
@@ -30,7 +27,6 @@ class Coordinator implements Runnable {
     private final PluginConfig pluginConfig;
     private final BrokerContext brokerContext;
     private final List<ClusterClient> clients = new ArrayList<>();
-    private final HashedWheelTimer timer = new HashedWheelTimer(r -> new Thread(r, "cluster-plugin-health-checker"));
     final VirtualMqttSession mqttSession = new VirtualMqttSession();
     private final Distributor distributor;
 
@@ -41,7 +37,6 @@ class Coordinator implements Runnable {
     private ClusterClient workerClient;
     private boolean enabled = true;
     private final int queueLength;
-    private TimerTask timerTask;
 
     public Coordinator(PluginConfig pluginConfig, BrokerContext brokerContext) {
         this.pluginConfig = pluginConfig;
@@ -71,48 +66,56 @@ class Coordinator implements Runnable {
                 clients.add(new ClusterClient(cluster));
             }
         }
-        timerTask = timer.scheduleWithFixedDelay(new AsyncTask() {
+        new Thread(new AsyncTask() {
             @Override
             public void execute() {
-                clients.forEach(clusterClient -> {
-                    if (clusterClient.checkPending) {
-                        LOGGER.info("check pending message for {}", clusterClient.baseURL);
-                        return;
+                while (enabled) {
+                    try {
+                        Thread.sleep(1000L);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
                     }
-                    if (clusterClient.httpEnable) {
-                        if (pluginConfig.isCore()) {
-                            // core节点需要同集群各core节点进行数据同步
-                            receiver.receiveClusterMessage(clusterClient);
-                        } else if (workerClient == null) {
-                            workerClient = clusterClient;
-                            receiver.receiveClusterMessage(clusterClient);
-                        } else if (!workerClient.sseEnable) { // 释放workerClient，重新分配
-                            workerClient.sseClient.close();
-                            workerClient = null;
+                    clients.forEach(clusterClient -> {
+                        if (clusterClient.checkPending) {
+                            LOGGER.info("check pending message for {}", clusterClient.baseURL);
+                            return;
                         }
-                        return;
-                    }
-                    //release old client
-                    if (clusterClient.httpClient != null) {
-                        clusterClient.httpClient.close();
-                        clusterClient.httpClient = null;
-                    }
-                    clusterClient.httpClient = new HttpClient(clusterClient.baseURL);
-                    clusterClient.httpClient.options().debug(true).connectTimeout(5000).group(brokerContext.Options().getChannelGroup());
-                    clusterClient.checkPending = true;
-                    clusterClient.httpClient.get("/cluster/status").onSuccess(httpResponse -> {
-                        LOGGER.info("check node status success.");
-                        clusterClient.httpEnable = true;
-                        clusterClient.checkPending = false;
+                        if (clusterClient.httpEnable) {
+                            if (pluginConfig.isCore()) {
+                                // core节点需要同集群各core节点进行数据同步
+                                receiver.receiveClusterMessage(clusterClient);
+                            } else if (workerClient == null) {
+                                workerClient = clusterClient;
+                                receiver.receiveClusterMessage(clusterClient);
+                            } else if (!workerClient.sseEnable) { // 释放workerClient，重新分配
+                                workerClient.sseClient.close();
+                                workerClient = null;
+                            }
+                            return;
+                        }
+                        //release old client
+                        if (clusterClient.httpClient != null) {
+                            clusterClient.httpClient.close();
+                            clusterClient.httpClient = null;
+                        }
+                        clusterClient.httpClient = new HttpClient(clusterClient.baseURL);
+                        clusterClient.httpClient.options().debug(true).connectTimeout(5000).group(brokerContext.Options().getChannelGroup());
+                        clusterClient.checkPending = true;
+                        clusterClient.httpClient.get("/cluster/status").onSuccess(httpResponse -> {
+                            LOGGER.info("check node status success.");
+                            clusterClient.httpEnable = true;
+                            clusterClient.checkPending = false;
 
-                    }).onFailure(throwable -> {
-                        clusterClient.httpEnable = false;
-                        clusterClient.checkPending = false;
-                        LOGGER.error("check node status error", throwable);
-                    }).submit();
-                });
+                        }).onFailure(throwable -> {
+                            clusterClient.httpEnable = false;
+                            clusterClient.checkPending = false;
+                            LOGGER.error("check node status error", throwable);
+                        }).submit();
+                    });
+                }
+
             }
-        }, 1, TimeUnit.SECONDS);
+        }, "cluster-plugin-health-checker").start();
     }
 
     private void offer(Message message, ArrayBlockingQueue<Message> clusterMessageQueue) {
@@ -132,10 +135,6 @@ class Coordinator implements Runnable {
     }
 
     public void destroy() {
-        if (timerTask != null) {
-            timerTask.cancel();
-        }
-        timer.shutdown();
         enabled = false;
         //中断集群数据监听
         clients.forEach(clusterClient -> {
