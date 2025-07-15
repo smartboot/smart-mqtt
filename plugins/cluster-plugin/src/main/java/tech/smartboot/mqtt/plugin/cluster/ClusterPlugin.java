@@ -38,10 +38,12 @@ public class ClusterPlugin extends Plugin {
         //停止核心节点服务
         if (httpServer != null) {
             httpServer.shutdown();
+            httpServer = null;
         }
 
         if (coordinator != null) {
             coordinator.destroy();
+            coordinator = null;
         }
     }
 
