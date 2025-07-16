@@ -23,8 +23,11 @@ public class ClusterPlugin extends Plugin {
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
         PluginConfig pluginConfig = loadPluginConfig(PluginConfig.class);
 
+        //启动协调者
         coordinator = new Coordinator(pluginConfig, brokerContext);
-        coordinator.run();
+        Thread thread = new Thread(coordinator, "cluster-plugin-coordinator");
+        thread.setDaemon(true);
+        thread.start();
 
         //启动核心节点服务监听
         if (pluginConfig.isCore()) {

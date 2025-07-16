@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 
-class Coordinator implements Runnable {
+class Coordinator extends AsyncTask {
     private static final Logger LOGGER = LoggerFactory.getLogger(Coordinator.class);
     private static final Message SHUTDOWN_MESSAGE = new Message(null, null, null, false);
     private static final String ACCESS_TOKEN = UUID.randomUUID().toString();
@@ -50,83 +50,77 @@ class Coordinator implements Runnable {
             length = Short.MAX_VALUE;
         }
         this.queueLength = length;
-
-
         distributor = new Distributor();
-        new Thread(distributor, "cluster-plugin-distributer").start();
-
         receiver = new Receiver();
-        new Thread(receiver, "cluster-plugin-receiver").start();
     }
 
+
     @Override
-    public void run() {
+    public void execute() {
+        new Thread(distributor, "cluster-plugin-distributor").start();
+        new Thread(receiver, "cluster-plugin-receiver").start();
         if (FeatUtils.isNotEmpty(pluginConfig.getClusters())) {
             for (String cluster : pluginConfig.getClusters()) {
                 clients.add(new ClusterClient(cluster));
             }
         }
-        new Thread(new AsyncTask() {
-            @Override
-            public void execute() {
-                while (enabled) {
-                    try {
-                        Thread.sleep(1000L);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                    clients.forEach(clusterClient -> {
-                        if (clusterClient.checkPending) {
-                            LOGGER.info("check pending message for {}", clusterClient.baseURL);
-                            return;
-                        }
-                        if (clusterClient.httpEnable) {
-                            if (pluginConfig.isCore()) {
-                                // core节点需要同集群各core节点进行数据同步
-                                receiver.receiveClusterMessage(clusterClient);
-                            } else if (workerClient == null) {
-                                workerClient = clusterClient;
-                                receiver.receiveClusterMessage(clusterClient);
-                            } else if (!workerClient.sseEnable) { // 释放workerClient，重新分配
-                                workerClient.sseClient.close();
-                                workerClient = null;
-                            }
-                            return;
-                        }
-                        //release old client
-                        if (clusterClient.httpClient != null) {
-                            clusterClient.httpClient.close();
-                            clusterClient.httpClient = null;
-                        }
-                        clusterClient.httpClient = new HttpClient(clusterClient.baseURL);
-                        clusterClient.httpClient.options().debug(true).connectTimeout(5000).group(brokerContext.Options().getChannelGroup());
-                        clusterClient.checkPending = true;
-                        clusterClient.httpClient.get("/cluster/status").onSuccess(httpResponse -> {
-                            LOGGER.info("check node status success.");
-                            clusterClient.httpEnable = true;
-                            clusterClient.checkPending = false;
-
-                        }).onFailure(throwable -> {
-                            clusterClient.httpEnable = false;
-                            clusterClient.checkPending = false;
-                            LOGGER.error("check node status error", throwable);
-                        }).submit();
-                    });
-                }
-                //中断集群数据监听
-                clients.forEach(clusterClient -> {
-                    if (clusterClient.sseClient != null) {
-                        clusterClient.sseEnable = false;
-                        clusterClient.sseClient.close();
-                    }
-                    if (clusterClient.httpClient != null) {
-                        clusterClient.httpEnable = false;
-                        clusterClient.httpClient.close();
-                    }
-                });
-
+        // 启动集群监控监测
+        while (enabled) {
+            try {
+                Thread.sleep(1000L);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
-        }, "cluster-plugin-health-checker").start();
+            clients.forEach(clusterClient -> {
+                if (clusterClient.checkPending) {
+                    LOGGER.info("check pending message for {}", clusterClient.baseURL);
+                    return;
+                }
+                if (clusterClient.httpEnable) {
+                    if (pluginConfig.isCore()) {
+                        // core节点需要同集群各core节点进行数据同步
+                        receiver.receiveClusterMessage(clusterClient);
+                    } else if (workerClient == null) {
+                        workerClient = clusterClient;
+                        receiver.receiveClusterMessage(clusterClient);
+                    } else if (!workerClient.sseEnable) { // 释放workerClient，重新分配
+                        workerClient.sseClient.close();
+                        workerClient = null;
+                    }
+                    return;
+                }
+                //release old client
+                if (clusterClient.httpClient != null) {
+                    clusterClient.httpClient.close();
+                    clusterClient.httpClient = null;
+                }
+                clusterClient.httpClient = new HttpClient(clusterClient.baseURL);
+                clusterClient.httpClient.options().debug(true).connectTimeout(5000).group(brokerContext.Options().getChannelGroup());
+                clusterClient.checkPending = true;
+                clusterClient.httpClient.get("/cluster/status").onSuccess(httpResponse -> {
+                    LOGGER.info("check node status success.");
+                    clusterClient.httpEnable = true;
+                    clusterClient.checkPending = false;
+
+                }).onFailure(throwable -> {
+                    clusterClient.httpEnable = false;
+                    clusterClient.checkPending = false;
+                    LOGGER.error("check node status error", throwable);
+                }).submit();
+            });
+        }
+        //中断集群数据监听
+        clients.forEach(clusterClient -> {
+            if (clusterClient.sseClient != null) {
+                clusterClient.sseEnable = false;
+                clusterClient.sseClient.close();
+            }
+            if (clusterClient.httpClient != null) {
+                clusterClient.httpEnable = false;
+                clusterClient.httpClient.close();
+            }
+        });
+        LOGGER.info("coordinator stopped.");
     }
 
     private void offer(Message message, ArrayBlockingQueue<Message> clusterMessageQueue) {
@@ -164,6 +158,7 @@ class Coordinator implements Runnable {
 
         @Override
         public void run() {
+            LOGGER.info("receiver started.");
             while (enabled) {
                 try {
                     Message message = receiverQueue.take();
@@ -181,6 +176,7 @@ class Coordinator implements Runnable {
                     e.printStackTrace();
                 }
             }
+            LOGGER.info("receiver stopped.");
         }
 
         private void receiveClusterMessage(ClusterClient clusterClient) {
@@ -242,6 +238,7 @@ class Coordinator implements Runnable {
         private final ArrayBlockingQueue<Message> distributorQueue = new ArrayBlockingQueue<>(queueLength);
 
         public void run() {
+            LOGGER.info("distributor started.");
             //将消息总线中的消息发送给集群
             brokerContext.getMessageBus().consumer(new MessageBusConsumer() {
                 @Override
@@ -296,7 +293,7 @@ class Coordinator implements Runnable {
                     e.printStackTrace();
                 }
             }
-
+            LOGGER.info("distributor finished.");
         }
 
         public void destroy() {
