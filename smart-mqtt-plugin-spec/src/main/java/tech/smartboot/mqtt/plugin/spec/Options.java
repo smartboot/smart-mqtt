@@ -59,7 +59,7 @@ public class Options extends ToString {
     /**
      * 当前smart-mqtt
      */
-    public static final String VERSION = "v1.4.0";
+    public static final String VERSION = "v1.3.0";
     public static final String VENDOR = "smart-mqtt";
 
     /**
