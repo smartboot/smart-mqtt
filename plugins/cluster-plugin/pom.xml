@@ -6,7 +6,7 @@
     <parent>
         <groupId>tech.smartboot.mqtt</groupId>
         <artifactId>plugins</artifactId>
-        <version>1.3.0-SNAPSHOT</version>
+        <version>1.4.0</version>
     </parent>
 
     <artifactId>cluster-plugin</artifactId>
