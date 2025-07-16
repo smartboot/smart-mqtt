@@ -187,8 +187,13 @@ public class ClusterController {
                 if (sseEmitter != null) {
                     sseEmitter.complete();
                 }
-                coreNodes.remove(accessToken);
-                workerNodes.remove(accessToken);
+                //避免将重连上来的节点踢下线
+                if (coreNodes.get(accessToken) == sseEmitter) {
+                    coreNodes.remove(accessToken);
+                }
+                if (workerNodes.get(accessToken) == sseEmitter) {
+                    workerNodes.remove(accessToken);
+                }
                 LOGGER.info("移除节点:{}", accessToken);
             }
         });

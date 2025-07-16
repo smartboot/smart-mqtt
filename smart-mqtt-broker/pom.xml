@@ -21,7 +21,7 @@
         <dependency>
             <groupId>tech.smartboot.feat</groupId>
             <artifactId>feat-core</artifactId>
-            <version>1.1.4</version>
+            <version>1.1.5-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <groupId>io.github.smartboot.socket</groupId>
