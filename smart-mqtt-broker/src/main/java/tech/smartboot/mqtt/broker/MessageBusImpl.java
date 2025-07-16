@@ -12,14 +12,13 @@ package tech.smartboot.mqtt.broker;
 
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.bus.MessageBus;
 import tech.smartboot.mqtt.plugin.spec.bus.MessageBusConsumer;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * 消息总线服务，接收由客户端发送过来的消息，并通过总线投递给订阅者进行消费
@@ -32,12 +31,7 @@ class MessageBusImpl implements MessageBus {
     /**
      * 消息总线消费者
      */
-    private final List<MessageBusConsumer> messageBuses = new ArrayList<>();
-    private final BrokerContext brokerContext;
-
-    public MessageBusImpl(BrokerContext brokerContext) {
-        this.brokerContext = brokerContext;
-    }
+    private final List<MessageBusConsumer> messageBuses = new CopyOnWriteArrayList<>();
 
     /**
      * 订阅消息总线消费者

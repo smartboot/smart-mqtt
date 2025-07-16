@@ -183,7 +183,7 @@ public class BrokerContextImpl implements BrokerContext {
      * </ul>
      * </p>
      */
-    private final MessageBusImpl messageBus = new MessageBusImpl(this);
+    private final MessageBusImpl messageBus = new MessageBusImpl();
 
     /**
      * 事件总线，用于处理Broker内部的事件通知。
