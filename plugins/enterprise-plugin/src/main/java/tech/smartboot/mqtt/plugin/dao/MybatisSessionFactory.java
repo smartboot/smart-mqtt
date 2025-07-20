@@ -47,7 +47,7 @@ public class MybatisSessionFactory {
             dataBaseConfig.setDbType(DB_TYPE_H2_MEM);
         }
         if (DB_TYPE_H2.equals(dataBaseConfig.getDbType())) {
-            dataBaseConfig.setUrl("jdbc:h2:" + new File(storage, "smart-mqtt").getAbsoluteFile() + ";NON_KEYWORDS=value;mode=mysql;DB_CLOSE_DELAY=-1");
+            dataBaseConfig.setUrl("jdbc:h2:" + new File(storage, "smart-mqtt").getAbsoluteFile() + ";NON_KEYWORDS=value;mode=mysql;DB_CLOSE_DELAY=-1;MAX_MEMORY_ROWS=100;CACHE_SIZE=8192");
         }
 
         String resource = "mybatis/mybatis-config.xml";
