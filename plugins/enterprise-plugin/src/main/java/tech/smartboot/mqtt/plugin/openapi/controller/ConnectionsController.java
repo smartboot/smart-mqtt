@@ -102,7 +102,7 @@ public class ConnectionsController {
                     connectionDO.setCity(array[3]);
                     connectionDO.setIsp(array[4]);
                 } else {
-                    LOGGER.error("unexpected ip:{} region: {}", connectionDO.getIpAddress(), region);
+//                    LOGGER.error("unexpected ip:{} region: {}", connectionDO.getIpAddress(), region);
                 }
             } catch (Throwable e) {
                 connectionDO.setIpAddress("-");
