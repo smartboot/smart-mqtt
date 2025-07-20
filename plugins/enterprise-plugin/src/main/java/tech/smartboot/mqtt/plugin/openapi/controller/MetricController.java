@@ -130,7 +130,7 @@ public class MetricController {
 
 
                 LOGGER.debug("reset period metric...");
-                try (SqlSession session = sessionFactory.openSession(ExecutorType.BATCH, true)) {
+                try (SqlSession session = sessionFactory.openSession(ExecutorType.BATCH)) {
                     MetricMapper metricMapper = session.getMapper(MetricMapper.class);
                     for (Map.Entry<MqttMetricEnum, MetricItemTO> entry : metrics.entrySet()) {
                         MqttMetricEnum metric = entry.getKey();
@@ -159,6 +159,7 @@ public class MetricController {
                             list.add(metricDO);
                         }
                     }
+                    session.commit(true);
                 }
                 if (recordTypeEnum == RecordTypeEnum.DB) {
                     //定期清除3天前的数据

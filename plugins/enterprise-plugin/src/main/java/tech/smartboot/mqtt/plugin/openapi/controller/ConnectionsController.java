@@ -146,7 +146,7 @@ public class ConnectionsController {
                     return;
                 }
                 int i = 0;
-                try (SqlSession session = sessionFactory.openSession(ExecutorType.BATCH, true)) {
+                try (SqlSession session = sessionFactory.openSession(ExecutorType.BATCH)) {
                     Consumer<SqlSession> consumer;
                     while (i++ < 500 && (consumer = consumers.poll()) != null) {
                         try {
@@ -155,6 +155,7 @@ public class ConnectionsController {
                             LOGGER.error("batch consume  exception", throwable);
                         }
                     }
+                    session.commit(true);
                     LOGGER.debug("batch consume {} records", i);
                 }
             }

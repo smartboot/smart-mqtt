@@ -89,11 +89,12 @@ public class SubscriptionController {
                     return;
                 }
                 int i = 0;
-                try (SqlSession session = sessionFactory.openSession(ExecutorType.BATCH, true)) {
+                try (SqlSession session = sessionFactory.openSession(ExecutorType.BATCH)) {
                     Consumer<SqlSession> consumer;
                     while (i++ < 100 && (consumer = consumers.poll()) != null) {
                         consumer.accept(session);
                     }
+                    session.commit(true);
                 }
             }
         }, 1000, TimeUnit.MILLISECONDS);
