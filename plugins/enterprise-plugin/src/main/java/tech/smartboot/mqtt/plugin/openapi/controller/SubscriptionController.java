@@ -94,7 +94,6 @@ public class SubscriptionController {
                     while (i++ < 100 && (consumer = consumers.poll()) != null) {
                         consumer.accept(session);
                     }
-                    session.commit(true);
                 }
             }
         }, 1000, TimeUnit.MILLISECONDS);

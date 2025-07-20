@@ -155,7 +155,6 @@ public class ConnectionsController {
                             LOGGER.error("batch consume  exception", throwable);
                         }
                     }
-                    session.commit(true);
                     LOGGER.debug("batch consume {} records", i);
                 }
             }

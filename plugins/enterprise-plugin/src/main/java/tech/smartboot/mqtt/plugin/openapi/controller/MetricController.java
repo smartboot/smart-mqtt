@@ -159,7 +159,6 @@ public class MetricController {
                             list.add(metricDO);
                         }
                     }
-                    session.commit(true);
                 }
                 if (recordTypeEnum == RecordTypeEnum.DB) {
                     //定期清除3天前的数据
