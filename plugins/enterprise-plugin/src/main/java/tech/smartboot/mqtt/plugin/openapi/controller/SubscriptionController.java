@@ -86,6 +86,7 @@ public class SubscriptionController {
             @Override
             public void execute() {
                 if (consumers.isEmpty()) {
+                    LOGGER.info("batch consume 0 records");
                     return;
                 }
                 int i = 0;
@@ -96,6 +97,7 @@ public class SubscriptionController {
                     }
                     session.commit(true);
                 }
+                LOGGER.info("batch consume {} records", i);
             }
         }, 1000, TimeUnit.MILLISECONDS);
     }

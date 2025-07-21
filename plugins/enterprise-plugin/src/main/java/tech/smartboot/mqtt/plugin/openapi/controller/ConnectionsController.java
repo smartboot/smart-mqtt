@@ -143,6 +143,7 @@ public class ConnectionsController {
             @Override
             public void execute() {
                 if (consumers.isEmpty()) {
+                    LOGGER.info("batch consume 0 records");
                     return;
                 }
                 int i = 0;
@@ -156,8 +157,8 @@ public class ConnectionsController {
                         }
                     }
                     session.commit(true);
-                    LOGGER.debug("batch consume {} records", i);
                 }
+                LOGGER.info("batch consume {} records", i);
             }
         }, 1000, TimeUnit.MILLISECONDS);
     }
