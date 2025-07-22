@@ -38,6 +38,7 @@ import tech.smartboot.mqtt.plugin.spec.bus.EventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 import tech.smartboot.mqtt.plugin.spec.provider.SessionState;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -56,7 +57,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
     /**
      * 当前连接订阅的Topic的消费信息
      */
-    private final Map<String, SessionSubscribeRelation> subscribers = new ConcurrentHashMap<>();
+    private Map<String, SessionSubscribeRelation> subscribers = Collections.EMPTY_MAP;
 
     private final BrokerContextImpl mqttContext;
     /**
@@ -150,6 +151,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
             //非正常中断，推送遗嘱消息
             Message message = new Message(willMessage, mqttContext.getOrCreateTopic(willMessage.getVariableHeader().getTopicName()));
             mqttContext.getMessageBus().publish(this, message);
+            willMessage = null;
         }
         subscribers.keySet().forEach(this::unsubscribe);
         MqttSession removeSession = mqttContext.removeSession(this.getClientId());
@@ -160,6 +162,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
         LOGGER.debug("remove mqttSession success:{}", removeSession);
         if (keepAliveTimer != null) {
             keepAliveTimer.cancel();
+            keepAliveTimer = null;
         }
         disconnect = true;
         setInflightQueue(null);
@@ -197,6 +200,9 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
             }
         }
         SessionSubscribeRelation relation = topicToken.isWildcards() ? new SessionSubscribeRelation.WildcardTopicRelation(this, topicToken, mqttQoS) : new SessionSubscribeRelation.SpecificTopicRelation(this, topicToken, mqttQoS);
+        if (subscribers == Collections.EMPTY_MAP) {
+            subscribers = new ConcurrentHashMap<>();
+        }
         ValidateUtils.isTrue(subscribers.put(topicFilter, relation) == null, "duplicate topic filter");
         mqttContext.getRelationMatcher().add(relation);
         mqttContext.getTopicMatcher().match(relation, topic -> subscribeSuccess(relation, topic));
@@ -282,6 +288,10 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
     public void unsubscribe(String topicFilter) {
         //移除当前Session的映射关系
         SessionSubscribeRelation filterSubscriber = subscribers.remove(topicFilter);
+        //重置map,节省内存
+        if (subscribers.isEmpty()) {
+            subscribers = Collections.EMPTY_MAP;
+        }
         if (filterSubscriber == null) {
             LOGGER.warn("unsubscribe waring! topic:{} is not exists", topicFilter);
             return;
