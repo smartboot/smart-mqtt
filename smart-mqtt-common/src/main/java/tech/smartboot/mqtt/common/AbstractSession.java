@@ -75,7 +75,7 @@ public abstract class AbstractSession {
 
 
     public void write(MqttMessage mqttMessage, boolean autoFlush) {
-        ValidateUtils.isTrue(!session.isInvalid(), "已断开连接,无法发送消息");
+        ValidateUtils.isTrue(!disconnect, "已断开连接,无法发送消息");
         try {
             mqttMessage.setVersion(mqttVersion);
             synchronized (mqttWriter) {
@@ -106,6 +106,9 @@ public abstract class AbstractSession {
     }
 
     public InetSocketAddress getRemoteAddress() throws IOException {
+        if (disconnect) {
+            throw new IOException("session is disconnect");
+        }
         return session.getRemoteAddress();
     }
 
@@ -131,6 +134,9 @@ public abstract class AbstractSession {
     }
 
     public final InflightQueue getInflightQueue() {
+        if (disconnect) {
+            throw new IllegalStateException("session is disconnect");
+        }
         return inflightQueue;
     }
 

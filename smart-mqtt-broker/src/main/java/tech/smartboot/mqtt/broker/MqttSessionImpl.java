@@ -150,7 +150,6 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
             //非正常中断，推送遗嘱消息
             Message message = new Message(willMessage, mqttContext.getOrCreateTopic(willMessage.getVariableHeader().getTopicName()));
             mqttContext.getMessageBus().publish(this, message);
-//            mqttContext.publish( willMessage.getVariableHeader().getTopicName());
         }
         subscribers.keySet().forEach(this::unsubscribe);
         MqttSession removeSession = mqttContext.removeSession(this.getClientId());
@@ -163,8 +162,10 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
             keepAliveTimer.cancel();
         }
         disconnect = true;
+        setInflightQueue(null);
         try {
             session.close();
+            session = null;
         } finally {
             mqttContext.getEventBus().publish(EventType.DISCONNECT, this);
         }
