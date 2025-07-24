@@ -166,6 +166,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
         }
         disconnect = true;
         setInflightQueue(null);
+        mqttWriter = null;
         try {
             session.close();
             session = null;

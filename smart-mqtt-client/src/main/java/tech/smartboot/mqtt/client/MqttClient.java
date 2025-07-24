@@ -510,6 +510,7 @@ public class MqttClient extends AbstractSession {
             //关闭自动重连
             options.setAutomaticReconnect(false);
             disconnect = true;
+            mqttWriter = null;
             setInflightQueue(null);
             release();
         }
