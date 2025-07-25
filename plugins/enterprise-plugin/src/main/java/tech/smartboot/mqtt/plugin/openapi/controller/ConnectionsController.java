@@ -16,7 +16,6 @@ import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.smartboot.socket.timer.HashedWheelTimer;
-import org.smartboot.socket.timer.Timer;
 import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
@@ -68,8 +67,6 @@ public class ConnectionsController {
     @Autowired
     private SystemConfigMapper systemConfigMapper;
     private final ConcurrentLinkedQueue<Consumer<SqlSession>> consumers = new ConcurrentLinkedQueue<>();
-    private final Timer selfRescueTimer = new HashedWheelTimer(r -> new Thread(r, "self-rescue-timer"), 1000, 16);
-    private long latestConsumer = System.currentTimeMillis();
 
     @PostConstruct
     public void init() {
@@ -85,8 +82,9 @@ public class ConnectionsController {
 
         brokerContext.getEventBus().subscribe(EventType.DISCONNECT, (eventType, object) -> {
             consumers.offer(session -> {
+                String clientId = object.getClientId();
                 ConnectionMapper connectionMapper = session.getMapper(ConnectionMapper.class);
-                connectionMapper.updateStatus(object.getClientId(), ConnectionStatusEnum.DIS_CONNECT.getStatus());
+                connectionMapper.updateStatus(clientId, ConnectionStatusEnum.DIS_CONNECT.getStatus());
             });
         });
         brokerContext.getEventBus().subscribe(EventType.CONNECT, (eventType, object) -> {
@@ -121,45 +119,11 @@ public class ConnectionsController {
                 ConnectionMapper mapper = session.getMapper(ConnectionMapper.class);
                 mapper.deleteById(connectionDO.getClientId());
                 int r = mapper.insert(connectionDO);
-//                int i = 1000;
-//                while (i-- > 0) {
-//                    connectionDO.setClientId(UUID.randomUUID().toString().substring(0, 32));
-//                    connectionDO.setIpAddress(((int) (Math.random() * 255) + 1) + "." + ((int) (Math.random() * 255) + 1) + "." + ((int) (Math.random() * 255) + 1) + "." + ((int) (Math.random() *
-//                    255) + 1));
-//                    String region = IpUtil.search(connectionDO.getIpAddress());
-//                    String[] array = StringUtils.split(region, "|");
-//                    if (array.length == 5) {
-//                        connectionDO.setCountry(array[0]);
-//                        connectionDO.setRegion(array[1]);
-//                        connectionDO.setProvince(array[2]);
-//                        connectionDO.setCity(array[3]);
-//                        connectionDO.setIsp(array[4]);
-//                    } else {
-//                        LOGGER.error("unexpected ip:{} region: {}", connectionDO.getIpAddress(), region);
-//                    }
-//                    mapper.insert(connectionDO);
-//                }
-//                LOGGER.info("insert connection:{}", JSON.toJSONString(connectionDO));
             });
         });
-        selfRescueTimer.scheduleWithFixedDelay(new AsyncTask() {
-            @Override
-            public void execute() {
-                //检测上次消费时间,避免消费线程长时间处于阻塞状态导致内存泄漏
-                if (System.currentTimeMillis() - latestConsumer < 20000) {
-                    return;
-                }
-                int i = 0;
-                while (consumers.poll() != null) {
-                    i++;
-                }
-                LOGGER.warn("self rescue {} consumers", i);
-            }
-        }, 10, TimeUnit.SECONDS);
         HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(new AsyncTask() {
             @Override
             public void execute() {
-                latestConsumer = System.currentTimeMillis();
                 if (consumers.isEmpty()) {
                     LOGGER.info("batch consume 0 records");
                     return;

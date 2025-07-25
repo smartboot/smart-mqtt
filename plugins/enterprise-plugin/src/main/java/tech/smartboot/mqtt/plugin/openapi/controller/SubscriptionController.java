@@ -16,7 +16,6 @@ import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.smartboot.socket.timer.HashedWheelTimer;
-import org.smartboot.socket.timer.Timer;
 import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
@@ -64,8 +63,6 @@ public class SubscriptionController {
     @Autowired
     private SystemConfigMapper systemConfigMapper;
     private final ConcurrentLinkedQueue<Consumer<SqlSession>> consumers = new ConcurrentLinkedQueue<>();
-    private long latestConsumer = System.currentTimeMillis();
-    private final Timer selfRescueTimer = new HashedWheelTimer(r -> new Thread(r, "self-rescue-timer"), 1000, 16);
 
     @PostConstruct
     public void init() {
@@ -75,35 +72,20 @@ public class SubscriptionController {
             return;
         }
         brokerContext.getEventBus().subscribe(EventType.SUBSCRIBE_ACCEPT, (eventType, object) -> {
+            SubscriptionDO subscriptionDO = new SubscriptionDO();
+            subscriptionDO.setClientId(object.getSession().getClientId());
+            subscriptionDO.setTopic(object.getObject().getTopicFilter());
+            subscriptionDO.setQos(object.getObject().getQualityOfService().value());
+            subscriptionDO.setNodeId("smart-mqtt");
             consumers.offer(session -> {
                 SubscriberMapper mapper = session.getMapper(SubscriberMapper.class);
-                SubscriptionDO subscriptionDO = new SubscriptionDO();
-                subscriptionDO.setClientId(object.getSession().getClientId());
-                subscriptionDO.setTopic(object.getObject().getTopicFilter());
-                subscriptionDO.setQos(object.getObject().getQualityOfService().value());
-                subscriptionDO.setNodeId("smart-mqtt");
                 mapper.insert(subscriptionDO);
             });
         });
 
-        selfRescueTimer.scheduleWithFixedDelay(new AsyncTask() {
-            @Override
-            public void execute() {
-                //检测上次消费时间,避免消费线程长时间处于阻塞状态导致内存泄漏
-                if (System.currentTimeMillis() - latestConsumer < 20000) {
-                    return;
-                }
-                int i = 0;
-                while (consumers.poll() != null) {
-                    i++;
-                }
-                LOGGER.warn("self rescue {} consumers", i);
-            }
-        }, 10, TimeUnit.SECONDS);
         HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(new AsyncTask() {
             @Override
             public void execute() {
-                latestConsumer = System.currentTimeMillis();
                 if (consumers.isEmpty()) {
                     LOGGER.info("batch consume 0 records");
                     return;
