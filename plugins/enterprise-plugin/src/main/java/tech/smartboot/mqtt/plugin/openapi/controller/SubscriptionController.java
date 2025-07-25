@@ -24,7 +24,6 @@ import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.common.AsyncTask;
-import tech.smartboot.mqtt.common.util.MqttUtil;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.EnterprisePlugin;
 import tech.smartboot.mqtt.plugin.convert.SubscriptionConvert;
@@ -103,7 +102,7 @@ public class SubscriptionController {
         HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(new AsyncTask() {
             @Override
             public void execute() {
-                lastestTime = MqttUtil.currentTimeMillis();
+                lastestTime = System.currentTimeMillis();
                 if (consumers.isEmpty()) {
                     LOGGER.info("batch consume 0 records");
                     return;
@@ -111,12 +110,12 @@ public class SubscriptionController {
                 int i = 0;
                 try (SqlSession session = sessionFactory.openSession(ExecutorType.BATCH)) {
                     Consumer<SqlSession> consumer;
-                    while (i++ < 100 && (consumer = consumers.poll()) != null) {
+                    while (i++ < 500 && (consumer = consumers.poll()) != null) {
                         consumer.accept(session);
                     }
                     session.commit(true);
                 }
-                LOGGER.info("batch consume {} records", i);
+                LOGGER.info("batch consume {} records, cost: {}ms", i, (System.currentTimeMillis() - lastestTime));
             }
         }, 1000, TimeUnit.MILLISECONDS);
     }

@@ -26,7 +26,6 @@ import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.common.AsyncTask;
-import tech.smartboot.mqtt.common.util.MqttUtil;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.EnterprisePlugin;
 import tech.smartboot.mqtt.plugin.convert.ConnectionConvert;
@@ -141,7 +140,7 @@ public class ConnectionsController {
         HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(new AsyncTask() {
             @Override
             public void execute() {
-                lastestTime = MqttUtil.currentTimeMillis();
+                lastestTime = System.currentTimeMillis();
                 if (consumers.isEmpty()) {
                     LOGGER.info("batch consume 0 records");
                     return;
@@ -158,7 +157,7 @@ public class ConnectionsController {
                     }
                     session.commit(true);
                 }
-                LOGGER.info("batch consume {} records", i);
+                LOGGER.info("batch consume {} records, cost: {}ms", i, (System.currentTimeMillis() - lastestTime));
             }
         }, 1000, TimeUnit.MILLISECONDS);
     }
