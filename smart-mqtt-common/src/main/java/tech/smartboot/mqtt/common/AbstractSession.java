@@ -15,7 +15,6 @@ import tech.smartboot.mqtt.common.enums.MqttVersion;
 import tech.smartboot.mqtt.common.message.MqttMessage;
 import tech.smartboot.mqtt.common.message.MqttPubRecMessage;
 import tech.smartboot.mqtt.common.message.MqttPublishMessage;
-import tech.smartboot.mqtt.common.util.MqttUtil;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 
 import java.io.IOException;
@@ -32,10 +31,6 @@ public abstract class AbstractSession {
 
     protected String clientId;
     protected AioSession session;
-    /**
-     * 最近一次发送的消息
-     */
-    protected long latestSendMessageTime;
 
     /**
      * 是否正常断开连接
@@ -85,7 +80,6 @@ public abstract class AbstractSession {
             if (autoFlush) {
                 mqttWriter.flush();
             }
-            latestSendMessageTime = MqttUtil.currentTimeMillis();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

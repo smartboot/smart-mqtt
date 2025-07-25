@@ -36,7 +36,6 @@ import tech.smartboot.mqtt.common.message.MqttPubRelMessage;
 import tech.smartboot.mqtt.common.message.MqttPublishMessage;
 import tech.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import tech.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
-import tech.smartboot.mqtt.common.util.MqttUtil;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.spec.MqttProcessor;
 import tech.smartboot.mqtt.plugin.spec.bus.EventObject;
@@ -99,7 +98,7 @@ final class MqttBrokerMessageProcessor extends MqttMessageProcessor {
         if (!EventBusImpl.RECEIVE_MESSAGE_SUBSCRIBER_LIST.isEmpty()) {
             mqttContext.getEventBus().publish(EventType.RECEIVE_MESSAGE, EventObject.newEventObject(mqttSession, msg), EventBusImpl.RECEIVE_MESSAGE_SUBSCRIBER_LIST);
         }
-        mqttSession.setLatestReceiveMessageTime(MqttUtil.currentTimeMillis());
+        mqttSession.setLatestReceiveMessageTime(System.currentTimeMillis());
         processor.process(mqttContext, mqttSession, msg);
     }
 

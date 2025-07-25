@@ -66,6 +66,10 @@ import java.util.function.Consumer;
 public class MqttClient extends AbstractSession {
     private static final Consumer<Integer> IGNORE = integer -> {
     };
+    /**
+     * 最近一次发送的消息
+     */
+    private long latestSendMessageTime;
     private static final HashedWheelTimer TIMER = new HashedWheelTimer(r -> new Thread(r, "client-timer"), 50, 1024);
     /**
      * 客户端配置项
@@ -208,6 +212,12 @@ public class MqttClient extends AbstractSession {
             e.getMessage();
             release();
         }
+    }
+
+    @Override
+    public void write(MqttMessage mqttMessage, boolean autoFlush) {
+        super.write(mqttMessage, autoFlush);
+        latestSendMessageTime = MqttUtil.currentTimeMillis();
     }
 
     private void consumeTask() {
