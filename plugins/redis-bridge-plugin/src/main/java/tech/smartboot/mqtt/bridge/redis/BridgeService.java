@@ -33,7 +33,7 @@ class BridgeService {
             @Override
             public void consume(MqttSession session, Message publishMessage) {
                 RScoredSortedSet<String> bucket = redissonClient.getScoredSortedSet(publishMessage.getTopic().getTopic(), StringCodec.INSTANCE);
-                boolean suc = bucket.add(System.currentTimeMillis(), publishMessage.getJsonObject(encodeEnum));
+                boolean suc = bucket.add(System.currentTimeMillis(), publishMessage.toJsonString(encodeEnum));
                 if (!suc) {
                     System.err.println("redis bridge error");
                 }

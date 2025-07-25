@@ -12,7 +12,6 @@ package tech.smartboot.mqtt.plugin.spec;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.alibaba.fastjson2.annotation.JSONField;
 import tech.smartboot.mqtt.common.ToString;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
 import tech.smartboot.mqtt.common.enums.PayloadEncodeEnum;
@@ -104,41 +103,29 @@ public final class Message extends ToString {
         this.pushSemaphore = new AtomicInteger(pushSemaphore);
     }
 
-    @JSONField(serialize = false)
-    private String defaultJson;
-    @JSONField(serialize = false)
-    private String stringJson;
-    @JSONField(serialize = false)
-    private String base64Json;
 
-    public String getJsonObject(PayloadEncodeEnum payloadEncodeEnum) {
+    public String toJsonString(PayloadEncodeEnum payloadEncodeEnum) {
         if (payloadEncodeEnum == null) {
             payloadEncodeEnum = PayloadEncodeEnum.BYTES;
         }
         switch (payloadEncodeEnum) {
-            case STRING:
-                if (stringJson == null) {
-                    JSONObject json = (JSONObject) JSON.toJSON(this);
-                    json.put("payload", new String(payload));
-                    json.put("encoding", payloadEncodeEnum.getCode());
-                    stringJson = json.toString();
-                }
-                return stringJson;
-            case BASE64:
-                if (base64Json == null) {
-                    JSONObject json = (JSONObject) JSON.toJSON(this);
-                    json.put("payload", new String(Base64.getEncoder().encode(payload)));
-                    json.put("encoding", payloadEncodeEnum.getCode());
-                    base64Json = json.toString();
-                }
-                return base64Json;
-            default:
-                if (defaultJson == null) {
-                    JSONObject json = (JSONObject) JSON.toJSON(this);
-                    json.put("encoding", payloadEncodeEnum.getCode());
-                    defaultJson = json.toString();
-                }
-                return defaultJson;
+            case STRING: {
+                JSONObject json = (JSONObject) JSON.toJSON(this);
+                json.put("payload", new String(payload));
+                json.put("encoding", payloadEncodeEnum.getCode());
+                return json.toString();
+            }
+            case BASE64: {
+                JSONObject json = (JSONObject) JSON.toJSON(this);
+                json.put("payload", new String(Base64.getEncoder().encode(payload)));
+                json.put("encoding", payloadEncodeEnum.getCode());
+                return json.toString();
+            }
+            default: {
+                JSONObject json = (JSONObject) JSON.toJSON(this);
+                json.put("encoding", payloadEncodeEnum.getCode());
+                return json.toString();
+            }
         }
     }
 }
