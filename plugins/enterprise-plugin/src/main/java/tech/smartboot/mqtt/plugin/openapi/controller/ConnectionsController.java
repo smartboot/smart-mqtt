@@ -81,8 +81,8 @@ public class ConnectionsController {
 //        });
 
         brokerContext.getEventBus().subscribe(EventType.DISCONNECT, (eventType, object) -> {
+            String clientId = object.getClientId();
             consumers.offer(session -> {
-                String clientId = object.getClientId();
                 ConnectionMapper connectionMapper = session.getMapper(ConnectionMapper.class);
                 connectionMapper.updateStatus(clientId, ConnectionStatusEnum.DIS_CONNECT.getStatus());
             });
