@@ -95,7 +95,7 @@ class Coordinator extends AsyncTask {
                     clusterClient.httpClient = null;
                 }
                 clusterClient.httpClient = new HttpClient(clusterClient.baseURL);
-                clusterClient.httpClient.options().debug(true).connectTimeout(5000).group(brokerContext.Options().getChannelGroup());
+                clusterClient.httpClient.options().debug(false).connectTimeout(5000).group(brokerContext.Options().getChannelGroup());
                 clusterClient.checkPending = true;
                 clusterClient.httpClient.get("/cluster/status").onSuccess(httpResponse -> {
                     LOGGER.info("check node status success.");
@@ -189,7 +189,7 @@ class Coordinator extends AsyncTask {
             }
             clusterClient.sseEnable = true;
             clusterClient.sseClient = new HttpClient(clusterClient.baseURL);
-            clusterClient.sseClient.options().debug(true).group(brokerContext.Options().getChannelGroup());
+            clusterClient.sseClient.options().debug(false).group(brokerContext.Options().getChannelGroup());
             //订阅集群推送过来的消息，并投递至总线
             clusterClient.sseClient.post(pluginConfig.isCore() ? "/cluster/subscribe/core/" + ACCESS_TOKEN : "/cluster/subscribe/worker/" + ACCESS_TOKEN).onResponseBody(new ClusterMessageStream() {
                 @Override
