@@ -16,7 +16,6 @@ import tech.smartboot.mqtt.common.ToString;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
 import tech.smartboot.mqtt.common.enums.PayloadEncodeEnum;
 import tech.smartboot.mqtt.common.message.MqttPublishMessage;
-import tech.smartboot.mqtt.common.util.MqttUtil;
 
 import java.util.Base64;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -43,11 +42,6 @@ public final class Message extends ToString {
     private long offset;
 
     private final MqttQoS qos;
-    /**
-     * 消息存储时间
-     */
-    private final long createTime = MqttUtil.currentTimeMillis();
-
     /**
      * 本条消息可推送的次数
      */
@@ -77,10 +71,6 @@ public final class Message extends ToString {
 
     public boolean isRetained() {
         return retained;
-    }
-
-    public long getCreateTime() {
-        return createTime;
     }
 
     public long getOffset() {

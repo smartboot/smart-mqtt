@@ -117,7 +117,7 @@ public class BrokerContextImpl implements BrokerContext {
      * 保留消息可以通过发布新消息更新，或通过发布空消息删除。
      * </p>
      */
-    private final Map<String, Message> retains = new ConcurrentHashMap<>();
+    private final Map<String, RetainMessage> retains = new ConcurrentHashMap<>();
 
     /**
      * Broker配置选项，包含服务器端口、最大连接数等配置参数。
@@ -392,7 +392,7 @@ public class BrokerContextImpl implements BrokerContext {
                 LOGGER.info("receive Qos0 retain message,clear topic:{} retained messages", topic.getTopic());
                 retains.remove(topic.getTopic());
             }
-            retains.put(topic.getTopic(), message);
+            retains.put(topic.getTopic(), new RetainMessage(message.getPayload(), topic.getTopic()));
         }, Message::isRetained);
     }
 
@@ -575,7 +575,7 @@ public class BrokerContextImpl implements BrokerContext {
         return timer;
     }
 
-    public Message getRetain(String topic) {
+    RetainMessage getRetain(String topic) {
         return retains.get(topic);
     }
 
