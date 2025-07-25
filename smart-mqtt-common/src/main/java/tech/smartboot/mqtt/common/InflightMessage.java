@@ -63,7 +63,7 @@ public class InflightMessage {
             throw new UnsupportedOperationException();
         }
 
-        this.latestTime = MqttUtil.currentTimeMillis();
+        this.latestTime = System.currentTimeMillis();
     }
 
     public MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> getOriginalMessage() {

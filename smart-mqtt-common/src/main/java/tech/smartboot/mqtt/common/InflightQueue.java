@@ -144,13 +144,13 @@ public class InflightQueue {
 //                    LOGGER.debug("session is disconnect , pause qos monitor.");
                     return;
                 }
-                long delay = TimeUnit.SECONDS.toMillis(TIMEOUT) - MqttUtil.currentTimeMillis() + inflightMessage.getLatestTime();
+                long delay = TimeUnit.SECONDS.toMillis(TIMEOUT) - System.currentTimeMillis() + inflightMessage.getLatestTime();
                 if (delay > 0) {
 //                    LOGGER.info("the time is not up, try again in {} milliseconds ", delay);
                     timer.schedule(this, delay, TimeUnit.MILLISECONDS);
                     return;
                 }
-                inflightMessage.setLatestTime(MqttUtil.currentTimeMillis());
+                inflightMessage.setLatestTime(System.currentTimeMillis());
 //                LOGGER.info("message:{} time out,retry...", inflightMessage.getExpectMessageType());
                 switch (inflightMessage.getExpectMessageType()) {
                     case PUBACK:
@@ -182,7 +182,7 @@ public class InflightQueue {
                 //不断重试直至完成
                 timer.schedule(this, TIMEOUT, TimeUnit.SECONDS);
             }
-        }, TimeUnit.SECONDS.toMillis(TIMEOUT) - (MqttUtil.currentTimeMillis() - inflightMessage.getLatestTime()), TimeUnit.MILLISECONDS);
+        }, TimeUnit.SECONDS.toMillis(TIMEOUT) - (System.currentTimeMillis() - inflightMessage.getLatestTime()), TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -205,7 +205,7 @@ public class InflightQueue {
                     break;
                 }
                 inflightMessage.setResponseMessage(message);
-                inflightMessage.setLatestTime(MqttUtil.currentTimeMillis());
+                inflightMessage.setLatestTime(System.currentTimeMillis());
 
                 commit(inflightMessage);
 
@@ -218,7 +218,7 @@ public class InflightQueue {
                     break;
                 }
                 inflightMessage.setResponseMessage(message);
-                inflightMessage.setLatestTime(MqttUtil.currentTimeMillis());
+                inflightMessage.setLatestTime(System.currentTimeMillis());
                 inflightMessage.setExpectMessageType(MqttMessageType.PUBCOMP);
                 //todo
                 ReasonProperties properties = null;

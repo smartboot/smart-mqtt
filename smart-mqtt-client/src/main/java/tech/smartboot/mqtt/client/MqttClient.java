@@ -217,7 +217,7 @@ public class MqttClient extends AbstractSession {
     @Override
     public void write(MqttMessage mqttMessage, boolean autoFlush) {
         super.write(mqttMessage, autoFlush);
-        latestSendMessageTime = MqttUtil.currentTimeMillis();
+        latestSendMessageTime = System.currentTimeMillis();
     }
 
     private void consumeTask() {

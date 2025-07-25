@@ -10,14 +10,12 @@
 
 package tech.smartboot.mqtt.common.util;
 
-import org.smartboot.socket.timer.HashedWheelTimer;
 import tech.smartboot.mqtt.common.TopicNode;
 import tech.smartboot.mqtt.common.TopicToken;
 import tech.smartboot.mqtt.common.exception.MqttException;
 
 import java.lang.reflect.Field;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -28,19 +26,6 @@ public class MqttUtil {
      * Topic 通配符
      */
     private static final char[] TOPIC_WILDCARDS = {'#', '+'};
-
-    /**
-     * 当前时间
-     */
-    private static long currentTimeMillis = System.currentTimeMillis();
-
-    static {
-        HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(() -> currentTimeMillis = System.currentTimeMillis(), 1, TimeUnit.SECONDS);
-    }
-
-    public static long currentTimeMillis() {
-        return currentTimeMillis;
-    }
 
     public static boolean containsTopicWildcards(String topicName) {
         for (char c : TOPIC_WILDCARDS) {
@@ -54,15 +39,6 @@ public class MqttUtil {
     public static String createClientId() {
         return UUID.randomUUID().toString().replace("-", "");
     }
-
-//    public static String getRemoteAddress(AbstractSession session) {
-//        try {
-//            return session.getRemoteAddress().toString();
-//        } catch (Exception e) {
-//            LOGGER.error("getRemoteAddress exception", e);
-//            return "";
-//        }
-//    }
 
     public static boolean match(TopicToken pubTopicToken, TopicToken subTopicToken) {
         if (subTopicToken == null) {
