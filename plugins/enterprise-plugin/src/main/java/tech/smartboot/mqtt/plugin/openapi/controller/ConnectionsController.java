@@ -137,7 +137,7 @@ public class ConnectionsController {
                 }
                 LOGGER.error("discard consume {} records", i);
             }
-        }, 1000, TimeUnit.MILLISECONDS);
+        }, 10000, TimeUnit.MILLISECONDS);
         HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(new AsyncTask() {
             @Override
             public void execute() {
