@@ -26,7 +26,9 @@ import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.common.AsyncTask;
+import tech.smartboot.mqtt.common.util.MqttUtil;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
+import tech.smartboot.mqtt.plugin.EnterprisePlugin;
 import tech.smartboot.mqtt.plugin.convert.ConnectionConvert;
 import tech.smartboot.mqtt.plugin.dao.mapper.ConnectionMapper;
 import tech.smartboot.mqtt.plugin.dao.mapper.SubscriberMapper;
@@ -67,6 +69,7 @@ public class ConnectionsController {
     @Autowired
     private SystemConfigMapper systemConfigMapper;
     private final ConcurrentLinkedQueue<Consumer<SqlSession>> consumers = new ConcurrentLinkedQueue<>();
+    private long lastestTime = System.currentTimeMillis();
 
     @PostConstruct
     public void init() {
@@ -121,9 +124,24 @@ public class ConnectionsController {
                 int r = mapper.insert(connectionDO);
             });
         });
+
+        EnterprisePlugin.SelfRescueTimer.scheduleWithFixedDelay(new AsyncTask() {
+            @Override
+            public void execute() {
+                if (System.currentTimeMillis() - lastestTime < 20000) {
+                    return;
+                }
+                int i = 0;
+                while (consumers.poll() != null) {
+                    i++;
+                }
+                LOGGER.error("discard consume {} records", i);
+            }
+        }, 1000, TimeUnit.MILLISECONDS);
         HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(new AsyncTask() {
             @Override
             public void execute() {
+                lastestTime = MqttUtil.currentTimeMillis();
                 if (consumers.isEmpty()) {
                     LOGGER.info("batch consume 0 records");
                     return;

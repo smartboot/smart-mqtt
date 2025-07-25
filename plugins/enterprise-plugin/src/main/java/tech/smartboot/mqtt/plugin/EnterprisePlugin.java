@@ -12,6 +12,8 @@ package tech.smartboot.mqtt.plugin;
 
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import org.smartboot.socket.extension.plugins.MonitorPlugin;
+import org.smartboot.socket.timer.HashedWheelTimer;
+import org.smartboot.socket.timer.Timer;
 import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
@@ -28,8 +30,12 @@ import java.util.concurrent.ThreadFactory;
  * @version V1.0 , 2022/4/2
  */
 public class EnterprisePlugin extends Plugin {
+    public static final Timer SelfRescueTimer = new HashedWheelTimer(r -> {
+        Thread t = new Thread(r, "self-rescue-timer");
+        t.setDaemon(true);
+        return t;
+    }, 1000, 16);
     private static final Logger LOGGER = LoggerFactory.getLogger(EnterprisePlugin.class);
-
     private AsynchronousChannelGroup asynchronousChannelGroup;
     private HttpServer httpServer;
 
@@ -53,11 +59,7 @@ public class EnterprisePlugin extends Plugin {
             }
         });
 
-        httpServer = FeatCloud.cloudServer(serverOptions -> serverOptions
-                .registerBean("brokerContext", brokerContext)
-                .registerBean("pluginConfig", config)
-                .registerBean("storage", storage())
-                .group(asynchronousChannelGroup));
+        httpServer = FeatCloud.cloudServer(serverOptions -> serverOptions.registerBean("brokerContext", brokerContext).registerBean("pluginConfig", config).registerBean("storage", storage()).group(asynchronousChannelGroup));
         httpServer.listen(config.getHttpConfig().getHost(), config.getHttpConfig().getPort());
         System.out.println("openapi server start success!");
     }
