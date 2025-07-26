@@ -144,6 +144,10 @@ public class SystemController {
     @RequestMapping(OpenApi.SYSTEM_SETTINGS_GET)
     public RestResult<SettingsTO> getSettings() {
         SettingsTO settingsTO = new SettingsTO();
+        settingsTO.setConnectRecord("");
+        settingsTO.setSubscribeRecord("");
+        settingsTO.setMetricRecord("");
+        settingsTO.setShowMetrics("");
         JSONObject jsonObject = (JSONObject) JSON.toJSON(settingsTO);
         jsonObject.keySet().forEach(key -> {
             String v = systemConfigMapper.getConfig(key);

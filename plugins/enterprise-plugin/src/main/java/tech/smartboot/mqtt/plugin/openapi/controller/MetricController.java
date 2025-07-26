@@ -60,6 +60,7 @@ import tech.smartboot.mqtt.plugin.spec.bus.MessageBusConsumer;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -373,12 +374,13 @@ public class MetricController {
         } else {
             publishReceiveCount = metricMapper.selectMetrics(nodeId, metrics, step, startTime, endTime);
         }
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         JSONObject jsonObject = new JSONObject();
         publishReceiveCount.stream().collect(Collectors.groupingBy(MetricDO::getCode)).forEach((metric, list) -> {
             Map<Date, Map> group = new HashMap<>();
             list.stream().collect(Collectors.groupingBy(MetricDO::getCreateTime)).forEach((date, sublist) -> {
                 Map<String, Object> nodesMetric = new HashMap<>();
-                nodesMetric.put("date", date);
+                nodesMetric.put("date", sdf.format(date));
                 sublist.forEach(metricDO -> nodesMetric.put(metricDO.getNodeName(), metricDO.getValue()));
                 group.put(date, nodesMetric);
             });
