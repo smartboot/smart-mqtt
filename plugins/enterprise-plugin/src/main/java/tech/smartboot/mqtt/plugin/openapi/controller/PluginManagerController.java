@@ -20,6 +20,7 @@ import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
+import tech.smartboot.feat.cloud.annotation.mcp.Tool;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -166,6 +167,7 @@ public class PluginManagerController {
     }
 
     @RequestMapping("/market")
+    @Tool(name = "market", description = "获取插件市场信息")
     public AsyncResponse market() {
         AsyncResponse asyncResponse = new AsyncResponse();
         if (FeatUtils.isBlank(pluginConfig.getRegistry())) {
