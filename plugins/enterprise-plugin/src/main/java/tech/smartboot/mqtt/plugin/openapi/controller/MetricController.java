@@ -25,6 +25,7 @@ import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
+import tech.smartboot.feat.cloud.annotation.mcp.Tool;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
@@ -324,6 +325,7 @@ public class MetricController {
 
 
     @RequestMapping("/api/cluster/nodes")
+    @Tool(name = "nodes", description = "获取集群节点信息")
     public RestResult<Collection<BrokerNodeTO>> nodes() {
         //broker节点
         BrokerNodeDO node = new BrokerNodeDO();

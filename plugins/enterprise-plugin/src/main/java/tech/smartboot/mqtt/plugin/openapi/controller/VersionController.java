@@ -16,6 +16,8 @@ import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
+import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
+import tech.smartboot.feat.cloud.annotation.mcp.Tool;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -60,6 +62,7 @@ public class VersionController {
     }
 
     @RequestMapping(OpenApi.SYSTEM_VERSION)
+    @Tool(name = "latestVersion", description = "获取最新版本信息")
     public RestResult<VersionTO> getLatestVersion() {
         if (version == null) {
             getVersion();
