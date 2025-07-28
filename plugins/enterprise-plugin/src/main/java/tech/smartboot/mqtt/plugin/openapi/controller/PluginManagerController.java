@@ -167,7 +167,7 @@ public class PluginManagerController {
     }
 
     @RequestMapping("/market")
-    @Tool(name = "market", description = "获取插件市场信息")
+    @Tool(name = "market", description = "获取smart-mqtt插件市场中所有插件的信息")
     public AsyncResponse market() {
         AsyncResponse asyncResponse = new AsyncResponse();
         if (FeatUtils.isBlank(pluginConfig.getRegistry())) {
