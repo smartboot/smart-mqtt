@@ -119,21 +119,23 @@ public class PluginManagerController {
     }
 
     @RequestMapping("/:id/config")
-    public RestResult<String> config(@PathParam("id") String id) {
+    public RestResult<String> config(@PathParam("id") String id) throws IOException {
         List<Plugin> plugins = localPlugins.get(FeatUtils.toInt(id, 0));
         if (FeatUtils.isEmpty(plugins)) {
             return RestResult.fail("插件不存在");
         }
         Plugin plugin = plugins.get(0);
         File file = new File(plugin.storage(), "plugin.yaml");
-        if (!file.exists()) {
-            return RestResult.ok("");
+        InputStream inputStream;
+        if (file.exists()) {
+            inputStream = new FileInputStream(file);
+        } else {
+            inputStream = plugin.getClass().getClassLoader().getResourceAsStream(Plugin.CONFIG_FILE_NAME);
         }
-        try (FileInputStream inputStream = new FileInputStream(file)) {
+        try {
             return RestResult.ok(FeatUtils.asString(inputStream));
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-            return RestResult.fail(e.getMessage());
+        } finally {
+            inputStream.close();
         }
     }
 
@@ -156,7 +158,7 @@ public class PluginManagerController {
             return RestResult.fail(e.getMessage());
         }
         if (brokerContext.pluginRegistry().getPlugin(plugin.id()) == null) {
-            return RestResult.ok(null);
+            return enable(plugin.id());
         }
         //自动重启
         RestResult<Void> result = disable(plugin.id());
