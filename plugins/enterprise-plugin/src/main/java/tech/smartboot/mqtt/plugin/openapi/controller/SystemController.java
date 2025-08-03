@@ -21,6 +21,7 @@ import tech.smartboot.feat.cloud.annotation.InterceptorMapping;
 import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
@@ -78,6 +79,9 @@ public class SystemController {
             if (session.get("username") == null) {
                 session.invalidate();
                 context.Response.setHttpStatus(HttpStatus.UNAUTHORIZED);
+                byte[] bytes = JSONObject.from(RestResult.fail("会话已失效,请重新登录")).toJSONString().getBytes();
+                context.Response.setContentType(HeaderValue.ContentType.APPLICATION_JSON);
+                context.Response.write(bytes);
             } else {
                 chain.proceed(context, completableFuture);
             }

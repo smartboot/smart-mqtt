@@ -189,7 +189,8 @@ public class PluginManagerController {
             });
             asyncResponse.complete(RestResult.ok(result));
         }).onFailure(error -> {
-            asyncResponse.complete(RestResult.fail(error.getMessage()));
+            logger.error("market request exception", error);
+            asyncResponse.complete(RestResult.fail("网络异常，暂无法访问插件市场。原因：" + error.getMessage()));
         }).submit();
         return asyncResponse;
     }

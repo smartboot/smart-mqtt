@@ -175,7 +175,7 @@ public class LicenseController {
         //校验Licensee
         if (licenseTO == null || licenseTO.getExpireTime() < System.currentTimeMillis()) {
             response.setHttpStatus(HttpStatus.FORBIDDEN);
-            return RestResult.fail("license expire");
+            return RestResult.fail("smart-mqtt 授权证书已过期");
         } else {
             Limit limit = license.getEntity().getLimit();
             if (limit.limit() == 0) {
