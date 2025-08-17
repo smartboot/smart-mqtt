@@ -127,9 +127,6 @@ final class MqttBrokerMessageProcessor extends MqttMessageProcessor {
             default:
                 break;
         }
-        if (throwable != null) {
-            throwable.printStackTrace();
-        }
     }
 
 }
