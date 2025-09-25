@@ -9,7 +9,7 @@
     <description>mqtt broker</description>
 
     <properties>
-        <smart-socket.version>1.5.74</smart-socket.version>
+        <smart-socket.version>1.7.1</smart-socket.version>
         <commons.lang.version>2.6</commons.lang.version>
     </properties>
     <dependencyManagement>
