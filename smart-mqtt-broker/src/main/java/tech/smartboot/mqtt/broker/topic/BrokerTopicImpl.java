@@ -10,8 +10,6 @@
 
 package tech.smartboot.mqtt.broker.topic;
 
-import tech.smartboot.feat.core.common.logging.Logger;
-import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.common.TopicToken;
 import tech.smartboot.mqtt.common.exception.MqttException;
 import tech.smartboot.mqtt.common.message.MqttCodecUtil;
@@ -53,7 +51,6 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic, Runnable
     private static final int FLAG_ENABLED = 1 << 1;
     private static final int FLAG_LOCK = 1 << 2;
     private static final int FLAG_UPDATE = 1 << 3;
-    private static final Logger LOGGER = LoggerFactory.getLogger(BrokerTopicImpl.class);
     private static final Map<String, SharedDeliverGroup> INITIAL_SUBSCRIBERS = Collections.emptyMap();
     /**
      * 默认订阅组，用于管理普通的主题订阅。
@@ -259,7 +256,8 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic, Runnable
                 try {
                     subscriber.run();
                 } catch (Exception e) {
-                    LOGGER.error("batch publish exception:{}", e.getMessage(), e);
+                    System.err.println("batch publish exception");
+                    e.printStackTrace();
                 }
             }
             unsetFlag(FLAG_LOCK);
@@ -270,10 +268,11 @@ public class BrokerTopicImpl extends TopicToken implements BrokerTopic, Runnable
             if (e.getCallback() != null) {
                 e.getCallback().run();
             } else {
-                LOGGER.error("execute async task exception", e);
+                System.err.println("execute async task exception");
+                e.printStackTrace();
             }
         } catch (Throwable throwable) {
-            LOGGER.error("execute async task exception", throwable);
+            throwable.printStackTrace();
         }
     }
 }
