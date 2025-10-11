@@ -10,8 +10,6 @@
 
 package tech.smartboot.mqtt.broker.processor;
 
-import tech.smartboot.feat.core.common.logging.Logger;
-import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.broker.BrokerContextImpl;
 import tech.smartboot.mqtt.broker.MqttSessionImpl;
 import tech.smartboot.mqtt.common.InflightQueue;
@@ -49,7 +47,6 @@ import static tech.smartboot.mqtt.common.enums.MqttConnectReturnCode.UNSUPPORTED
  * @version V1.0 , 2018/4/25
  */
 public class ConnectProcessor implements MqttProcessor<BrokerContextImpl, MqttConnectMessage, MqttSessionImpl> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ConnectProcessor.class);
     private static final int MAX_CLIENT_ID_LENGTH = 23;
 
     @Override
@@ -71,7 +68,6 @@ public class ConnectProcessor implements MqttProcessor<BrokerContextImpl, MqttCo
 
         context.getEventBus().publish(EventType.CONNECT, EventObject.newEventObject(session, mqttConnectMessage));
         if (session.isDisconnect()) {
-            LOGGER.warn("session is disconnected when consume CONNECT event");
             return;
         }
         session.setAuthorized(true);
@@ -105,9 +101,6 @@ public class ConnectProcessor implements MqttProcessor<BrokerContextImpl, MqttCo
         MqttConnAckMessage mqttConnAckMessage = MqttSession.connAck(MqttConnectReturnCode.CONNECTION_ACCEPTED, !mqttConnectMessage.getVariableHeader().isCleanSession(), properties);
 
         session.write(mqttConnAckMessage, false);
-
-
-        LOGGER.debug("CONNECT message processed CId={}", session.getClientId());
     }
 
 
@@ -117,7 +110,7 @@ public class ConnectProcessor implements MqttProcessor<BrokerContextImpl, MqttCo
         //对于后一种情况，按照本规范，服务端不能继续处理 CONNECT 报文。
         final MqttProtocolEnum protocol = MqttProtocolEnum.getByName(connectVariableHeader.protocolName());
         ValidateUtils.notNull(protocol, "invalid protocol", () -> {
-            LOGGER.error("invalid protocol:{}", connectVariableHeader.protocolName());
+            System.err.println("invalid protocol:" + connectVariableHeader.protocolName());
             //MQTT5.0规范：如果服务端不愿意接受CONNECT但希望表明其MQTT服务端身份，
             // 可以发送包含原因码为0x84（不支持的协议版本）的CONNACK报文，然后必须关闭网络连接。
             if (session.getMqttVersion() == MqttVersion.MQTT_5) {
@@ -144,13 +137,11 @@ public class ConnectProcessor implements MqttProcessor<BrokerContextImpl, MqttCo
         boolean invalidClient = MqttUtil.isNotBlank(clientId) && (mqttVersion == MqttVersion.MQTT_3_1 && clientId.length() > MAX_CLIENT_ID_LENGTH);
         ValidateUtils.isTrue(!invalidClient, "", () -> {
             MqttSession.connFailAck(CONNECTION_REFUSED_IDENTIFIER_REJECTED, session);
-            LOGGER.error("The MQTT client ID cannot be empty. Username={}", payload.userName());
         });
         //如果客户端提供的 ClientId 为零字节且清理会话标志为 0，
         // 服务端必须发送返回码为 0x02（表示标识符不合格）的 CONNACK 报文响应客户端的 CONNECT 报文，然后关闭网络连接
         ValidateUtils.isTrue(connectVariableHeader.isCleanSession() || !MqttUtil.isBlank(clientId), "", () -> {
             MqttSession.connFailAck(CONNECTION_REFUSED_IDENTIFIER_REJECTED, session);
-            LOGGER.error("The MQTT client ID cannot be empty. Username={}", payload.userName());
         });
     }
 
@@ -161,7 +152,6 @@ public class ConnectProcessor implements MqttProcessor<BrokerContextImpl, MqttCo
             if (session.isCleanSession()) {
                 //如果清理会话（CleanSession）标志被设置为 1，客户端和服务端必须丢弃之前的任何会话并开始一个新的会话。
                 mqttSession.setCleanSession(true);
-                LOGGER.info("disconnect session:{}", mqttSession);
                 mqttSession.disconnect();
             } else {
                 //如果mqttSession#cleanSession为false，将还原会话状态
@@ -180,7 +170,6 @@ public class ConnectProcessor implements MqttProcessor<BrokerContextImpl, MqttCo
         }
 
         context.addSession(session);
-        LOGGER.debug("add session for client:{}", session);
     }
 
     private void storeWillMessage(BrokerContext context, MqttSessionImpl session, MqttConnectMessage msg) {
