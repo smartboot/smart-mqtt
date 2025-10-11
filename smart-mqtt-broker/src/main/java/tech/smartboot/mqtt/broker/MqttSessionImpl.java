@@ -12,8 +12,6 @@ package tech.smartboot.mqtt.broker;
 
 import org.smartboot.socket.timer.TimerTask;
 import org.smartboot.socket.transport.AioSession;
-import tech.smartboot.feat.core.common.logging.Logger;
-import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.broker.topic.BaseMessageDeliver;
 import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import tech.smartboot.mqtt.broker.topic.DeliverGroup;
@@ -52,7 +50,6 @@ import java.util.concurrent.TimeUnit;
  * @version V1.0 , 2018/4/26
  */
 public class MqttSessionImpl extends AbstractSession implements MqttSession {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MqttSessionImpl.class);
 
     /**
      * 当前连接订阅的Topic的消费信息
@@ -89,7 +86,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
             @Override
             public void execute() {
                 if (!isAuthorized()) {
-                    LOGGER.info("长时间未收到客户端：{} 的Connect消息，连接断开！", getClientId());
+                    System.out.println("长时间未收到客户端：" + getClientId() + " 的Connect消息，连接断开！");
                     disconnect();
                 }
             }
@@ -156,10 +153,9 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
         subscribers.keySet().forEach(this::unsubscribe);
         MqttSession removeSession = mqttContext.removeSession(this.getClientId());
         if (removeSession != null && removeSession != this) {
-            LOGGER.error("remove old session success:{}", removeSession);
+            System.err.println("remove old session success:" + removeSession);
             removeSession.disconnect();
         }
-        LOGGER.debug("remove mqttSession success:{}", removeSession);
         if (keepAliveTimer != null) {
             keepAliveTimer.cancel();
             keepAliveTimer = null;
@@ -276,7 +272,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
         // retain消息逐个推送
         CompletableFuture<MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader>> future = inflightQueue.offer(publishBuilder);
         future.whenComplete((mqttPacketIdentifierMessage, throwable) -> {
-            LOGGER.info("publish retain to client:{} success  ", getClientId());
+//            LOGGER.info("publish retain to client:{} success  ", getClientId());
             topic.registerMessageDeliver(deliver);
         });
         flush();
@@ -294,7 +290,7 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
             subscribers = Collections.EMPTY_MAP;
         }
         if (filterSubscriber == null) {
-            LOGGER.warn("unsubscribe waring! topic:{} is not exists", topicFilter);
+//            LOGGER.warn("unsubscribe waring! topic:{} is not exists", topicFilter);
             return;
         }
         //移除关联Broker中的映射关系
@@ -303,16 +299,16 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
             BaseMessageDeliver consumerRecord = subscriberGroup.removeMessageDeliver(this);
             //移除后，如果BrokerTopic没有订阅者，则清除消息队列
             if (brokerTopic.subscribeCount() == 0) {
-                LOGGER.debug("clear topic: {} message queue", brokerTopic.getTopicFilter());
+//                LOGGER.debug("clear topic: {} message queue", brokerTopic.getTopicFilter());
                 brokerTopic.clear();
             }
             //正常情况下，当前session中维护的订阅关系与BrokerTopic中的订阅关系是一致的
             //如果不一致，说明可能存在bug
             if (subscriber == consumerRecord) {
                 mqttContext.getEventBus().publish(EventType.UNSUBSCRIBE_TOPIC, consumerRecord);
-                LOGGER.debug("remove subscriber:{} success!", brokerTopic.getTopicFilter());
+//                LOGGER.debug("remove subscriber:{} success!", brokerTopic.getTopicFilter());
             } else {
-                LOGGER.error("remove subscriber:{} error!", subscriberGroup);
+//                LOGGER.error("remove subscriber:{} error!", subscriberGroup);
             }
         });
         mqttContext.getRelationMatcher().remove(filterSubscriber);

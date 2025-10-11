@@ -10,33 +10,25 @@
 
 package tech.smartboot.mqtt.broker.bus.event;
 
-import tech.smartboot.feat.core.common.logging.Logger;
-import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.mqtt.common.message.MqttMessage;
-import tech.smartboot.mqtt.common.message.MqttPingReqMessage;
-import tech.smartboot.mqtt.plugin.spec.bus.EventBusConsumer;
-import tech.smartboot.mqtt.plugin.spec.bus.EventObject;
-import tech.smartboot.mqtt.plugin.spec.bus.EventType;
-
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/6/29
  */
-public class MessageLoggerSubscriber implements EventBusConsumer<EventObject<MqttMessage>> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MessageLoggerSubscriber.class);
-
-    @Override
-    public void consumer(EventType<EventObject<MqttMessage>> eventType, EventObject<MqttMessage> object) {
-        if (eventType == EventType.RECEIVE_MESSAGE) {
-            if (object.getObject() instanceof MqttPingReqMessage) {
-                LOGGER.info("receive ping message from client:{}", object.getSession().getClientId());
-            } else if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("smart-mqtt broker receive messageClass:{} ,data:{}", object.getObject().getClass().getSimpleName(), object.getObject());
-            }
-        }
-
-        if (eventType == EventType.WRITE_MESSAGE) {
-            LOGGER.info("write message:{} to client:{}", object.getObject().getClass().getSimpleName(), object.getSession().getClientId());
-        }
-    }
-}
+//public class MessageLoggerSubscriber implements EventBusConsumer<EventObject<MqttMessage>> {
+//    private static final Logger LOGGER = LoggerFactory.getLogger(MessageLoggerSubscriber.class);
+//
+//    @Override
+//    public void consumer(EventType<EventObject<MqttMessage>> eventType, EventObject<MqttMessage> object) {
+//        if (eventType == EventType.RECEIVE_MESSAGE) {
+//            if (object.getObject() instanceof MqttPingReqMessage) {
+//                LOGGER.info("receive ping message from client:{}", object.getSession().getClientId());
+//            } else if (LOGGER.isDebugEnabled()) {
+//                LOGGER.debug("smart-mqtt broker receive messageClass:{} ,data:{}", object.getObject().getClass().getSimpleName(), object.getObject());
+//            }
+//        }
+//
+//        if (eventType == EventType.WRITE_MESSAGE) {
+//            LOGGER.info("write message:{} to client:{}", object.getObject().getClass().getSimpleName(), object.getSession().getClientId());
+//        }
+//    }
+//}
