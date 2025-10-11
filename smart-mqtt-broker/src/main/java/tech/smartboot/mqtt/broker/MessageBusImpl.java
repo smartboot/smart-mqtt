@@ -10,8 +10,6 @@
 
 package tech.smartboot.mqtt.broker;
 
-import tech.smartboot.feat.core.common.logging.Logger;
-import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.bus.MessageBus;
@@ -27,7 +25,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @version V1.0 , 2022/4/4
  */
 class MessageBusImpl implements MessageBus {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MessageBusImpl.class);
     /**
      * 消息总线消费者
      */
