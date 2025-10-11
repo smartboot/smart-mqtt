@@ -51,7 +51,8 @@ class MessageBusImpl implements MessageBus {
                     remove = true;
                 }
             } catch (Throwable throwable) {
-                LOGGER.info("messageBus consume exception", throwable);
+                System.err.println("messageBusConsumer error");
+                throwable.printStackTrace();
             }
         }
         if (remove) {
