@@ -17,7 +17,6 @@ import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.timer.Timer;
 import org.smartboot.socket.transport.AioQuickServer;
 import org.yaml.snakeyaml.Yaml;
-import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.mqtt.broker.bus.event.KeepAliveMonitorSubscriber;
 import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import tech.smartboot.mqtt.common.MqttProtocol;
@@ -295,7 +294,7 @@ public class BrokerContextImpl implements BrokerContext {
         System.out.println("Github: https://github.com/smartboot/smart-mqtt");
         System.out.println("Document: https://smartboot.tech/smart-mqtt");
         System.out.println("Support: zhengjunweimail@163.com");
-        if (FeatUtils.isBlank(options.getHost())) {
+        if (options.getHost() == null || options.getHost().isEmpty()) {
             System.out.println("\uD83C\uDF89start smart-mqtt success, cost: " + (System.currentTimeMillis() - start) + "ms ! [port:" + options.getPort() + "]");
         } else {
             System.out.println("\uD83C\uDF89start smart-mqtt success, cost: " + (System.currentTimeMillis() - start) + "ms ! [host:" + options.getHost() + " port:" + options.getPort() + "]");
@@ -595,7 +594,7 @@ public class BrokerContextImpl implements BrokerContext {
 
         InputStream inputStream;
 
-        if (FeatUtils.isBlank(brokerConfig)) {
+        if (brokerConfig == null || brokerConfig.isEmpty()) {
             inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("smart-mqtt.yaml");
             System.out.println("load smart-mqtt.yaml from classpath.");
         } else {
