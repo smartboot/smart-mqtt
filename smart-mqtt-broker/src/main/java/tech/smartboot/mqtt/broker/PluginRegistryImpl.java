@@ -10,8 +10,6 @@
 
 package tech.smartboot.mqtt.broker;
 
-import tech.smartboot.feat.core.common.logging.Logger;
-import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
 import tech.smartboot.mqtt.plugin.spec.PluginException;
@@ -30,7 +28,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * @version v1.0 4/25/25
  */
 class PluginRegistryImpl implements PluginRegistry {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PluginRegistry.class);
     private final Map<Integer, PluginUnit> plugins = new ConcurrentHashMap<>();
     private final BrokerContext brokerContext;
     private File baseDir;
@@ -45,7 +42,7 @@ class PluginRegistryImpl implements PluginRegistry {
             baseDirPath = System.getenv("SMART_MQTT_PLUGINS");
         }
         if (baseDirPath == null) {
-            LOGGER.warn("SMART_MQTT_PLUGINS is not set,plugin will not be loaded!");
+            System.out.println("SMART_MQTT_PLUGINS is not set,plugin will not be loaded!");
             return;
         }
         baseDir = new File(baseDirPath);
@@ -73,7 +70,8 @@ class PluginRegistryImpl implements PluginRegistry {
                 plugins.put(pluginContainer.id(), new PluginUnit(pluginContainer, file));
                 pluginContainer.install(brokerContext);
             } catch (Throwable e) {
-                LOGGER.error("registryPlugin install plugin:{} exception", file.getName(), e);
+                System.err.println("registryPlugin install plugin:" + file.getName() + " exception");
+                e.printStackTrace();
             }
         }
 
@@ -118,7 +116,6 @@ class PluginRegistryImpl implements PluginRegistry {
     public void stopPlugin(int pluginId) {
         PluginUnit plugin = plugins.remove(pluginId);
         if (plugin != null) {
-            LOGGER.info("registryPlugin stop plugin:{} version:{}", plugin.plugin.pluginName(), plugin.plugin.getVersion());
             plugin.plugin.uninstall();
         }
     }
@@ -155,15 +152,14 @@ class PluginRegistryImpl implements PluginRegistry {
                 if (pluginContainer.id() != pluginId) {
                     continue;
                 }
-                LOGGER.info("registryPlugin load plugin:{}", pluginContainer.pluginName());
+                System.out.println("registryPlugin load plugin:" + pluginContainer.pluginName());
                 // 插件目录下可能存在无效的插件
                 plugins.put(pluginContainer.id(), new PluginUnit(pluginContainer, file));
                 pluginContainer.install(brokerContext);
-                LOGGER.info("registryPlugin start plugin:{}, version:{}", pluginContainer.pluginName(), pluginContainer.getVersion());
-            } catch (ClassNotFoundException e) {
-                LOGGER.error("registryPlugin install error:{}, check ", e.getMessage());
+                System.out.println("registryPlugin start plugin:" + pluginContainer.pluginName() + " success, version:" + pluginContainer.getVersion());
             } catch (Throwable e) {
-                LOGGER.error("registryPlugin install plugin:{} exception", file.getName(), e);
+                System.err.println("registryPlugin install plugin:" + file.getName() + " exception");
+                e.printStackTrace();
             }
         }
     }
