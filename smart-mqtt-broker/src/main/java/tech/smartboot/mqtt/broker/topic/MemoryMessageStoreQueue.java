@@ -10,8 +10,6 @@
 
 package tech.smartboot.mqtt.broker.topic;
 
-import tech.smartboot.feat.core.common.logging.Logger;
-import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MessageQueue;
 
@@ -23,7 +21,6 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class MemoryMessageStoreQueue implements MessageQueue {
     private static final Message[] EMPTY_MESSAGE_ARRAY = new Message[0];
-    private static final Logger LOGGER = LoggerFactory.getLogger(MemoryMessageStoreQueue.class);
     private final int capacity;
     private volatile Message[] store = EMPTY_MESSAGE_ARRAY;
     private final int mask;
@@ -32,9 +29,6 @@ public class MemoryMessageStoreQueue implements MessageQueue {
 
     public MemoryMessageStoreQueue(int maxMessageQueueLength) {
         this.capacity = Integer.highestOneBit(maxMessageQueueLength);
-        if (this.capacity != maxMessageQueueLength) {
-            LOGGER.warn("maxMessageQueueLength:{} is not power of 2, use {} instead", maxMessageQueueLength, this.capacity);
-        }
         mask = capacity - 1;
     }
 
