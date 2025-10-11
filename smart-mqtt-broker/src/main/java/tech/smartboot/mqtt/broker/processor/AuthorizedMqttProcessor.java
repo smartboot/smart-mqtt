@@ -10,8 +10,6 @@
 
 package tech.smartboot.mqtt.broker.processor;
 
-import tech.smartboot.feat.core.common.logging.Logger;
-import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.broker.BrokerContextImpl;
 import tech.smartboot.mqtt.broker.MqttSessionImpl;
 import tech.smartboot.mqtt.common.message.MqttMessage;
@@ -22,7 +20,6 @@ import tech.smartboot.mqtt.plugin.spec.MqttProcessor;
  * @version V1.0 , 2022/3/30
  */
 public abstract class AuthorizedMqttProcessor<T extends MqttMessage> implements MqttProcessor<BrokerContextImpl, T, MqttSessionImpl> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AuthorizedMqttProcessor.class);
 
     @Override
     public final void process(BrokerContextImpl context, MqttSessionImpl session, T t) {
