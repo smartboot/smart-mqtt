@@ -10,8 +10,6 @@
 
 package tech.smartboot.mqtt.broker.processor;
 
-import tech.smartboot.feat.core.common.logging.Logger;
-import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.broker.BrokerContextImpl;
 import tech.smartboot.mqtt.broker.MqttSessionImpl;
 import tech.smartboot.mqtt.common.enums.MqttVersion;
@@ -30,11 +28,9 @@ import tech.smartboot.mqtt.plugin.spec.bus.EventType;
  * @version V1.0 , 2018/4/25
  */
 public class UnSubscribeProcessor extends AuthorizedMqttProcessor<MqttUnsubscribeMessage> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(UnSubscribeProcessor.class);
 
     @Override
     public void process0(BrokerContextImpl context, MqttSessionImpl session, MqttUnsubscribeMessage unsubscribeMessage) {
-        LOGGER.info("receive unsubscribe message:{}", unsubscribeMessage);
         context.getEventBus().publish(EventType.UNSUBSCRIBE_ACCEPT, EventObject.newEventObject(session, unsubscribeMessage));
 
         //TODO
