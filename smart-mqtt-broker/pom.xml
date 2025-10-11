@@ -18,16 +18,5 @@
             <artifactId>smart-mqtt-plugin-spec</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>tech.smartboot.feat</groupId>
-            <artifactId>feat-core</artifactId>
-            <version>1.2.2</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>io.github.smartboot.socket</groupId>
-                    <artifactId>aio-pro</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
     </dependencies>
 </project>
