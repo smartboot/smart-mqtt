@@ -12,8 +12,6 @@ package tech.smartboot.mqtt.broker;
 
 import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.transport.AioSession;
-import tech.smartboot.feat.core.common.logging.Logger;
-import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.broker.processor.ConnectProcessor;
 import tech.smartboot.mqtt.broker.processor.DisConnectProcessor;
 import tech.smartboot.mqtt.broker.processor.MqttAckProcessor;
@@ -50,7 +48,6 @@ import java.util.Map;
  * @version V1.0 , 2018/4/24
  */
 final class MqttBrokerMessageProcessor extends MqttMessageProcessor {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MqttBrokerMessageProcessor.class);
     /**
      * MQTT消息处理器映射表。
      * <p>
@@ -106,7 +103,7 @@ final class MqttBrokerMessageProcessor extends MqttMessageProcessor {
     public void stateEvent0(AioSession session, StateMachineEnum stateMachineEnum, Throwable throwable) {
         switch (stateMachineEnum) {
             case DECODE_EXCEPTION:
-                LOGGER.error("decode exception", throwable);
+                throwable.printStackTrace();
                 break;
             case NEW_SESSION: {
                 session.setAttachment(new MqttSessionImpl(mqttContext, session, new DefaultMqttWriter(session.writeBuffer())));
@@ -118,11 +115,9 @@ final class MqttBrokerMessageProcessor extends MqttMessageProcessor {
                 break;
             case PROCESS_EXCEPTION:
                 if (throwable instanceof MqttException) {
-                    LOGGER.warn("process exception", throwable);
                     ((MqttException) throwable).getCallback().run();
-                } else {
-                    throwable.printStackTrace();
                 }
+                throwable.printStackTrace();
                 break;
             default:
                 break;
