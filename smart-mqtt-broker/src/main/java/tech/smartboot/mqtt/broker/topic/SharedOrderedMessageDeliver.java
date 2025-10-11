@@ -10,8 +10,6 @@
 
 package tech.smartboot.mqtt.broker.topic;
 
-import tech.smartboot.feat.core.common.logging.Logger;
-import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.broker.MqttSessionImpl;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
 import tech.smartboot.mqtt.common.enums.MqttVersion;
@@ -29,7 +27,6 @@ import java.util.concurrent.Semaphore;
  * 顺序共享订阅
  */
 class SharedOrderedMessageDeliver extends BaseMessageDeliver implements Runnable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SharedOrderedMessageDeliver.class);
     /**
      * 共享订阅者队列
      */
@@ -94,7 +91,6 @@ class SharedOrderedMessageDeliver extends BaseMessageDeliver implements Runnable
                 topic.getMessageQueue().commit(nextConsumerOffset++);
                 record.getMqttSession().write(publishBuilder.build());
                 queue.offer(record);
-                LOGGER.debug("publish share subscribe:{} to {}", record.getSubscribeRelation().getTopicFilter(), record.getMqttSession().getClientId());
                 continue;
             }
 
