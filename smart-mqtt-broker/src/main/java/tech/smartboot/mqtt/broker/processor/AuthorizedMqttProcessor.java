@@ -29,8 +29,9 @@ public abstract class AuthorizedMqttProcessor<T extends MqttMessage> implements 
         if (session.isAuthorized()) {
             process0(context, session, t);
         } else {
+            //正常情况下不会进入该分支
             session.disconnect();
-            LOGGER.error("clientId:{} is unAuthorized", session.getClientId());
+            System.err.println("clientId:" + session.getClientId() + " is unAuthorized");
         }
     }
 
