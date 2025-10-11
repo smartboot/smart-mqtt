@@ -18,8 +18,6 @@ import org.smartboot.socket.timer.Timer;
 import org.smartboot.socket.transport.AioQuickServer;
 import org.yaml.snakeyaml.Yaml;
 import tech.smartboot.feat.core.common.FeatUtils;
-import tech.smartboot.feat.core.common.logging.Logger;
-import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.broker.bus.event.KeepAliveMonitorSubscriber;
 import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import tech.smartboot.mqtt.common.MqttProtocol;
@@ -89,7 +87,6 @@ import java.util.concurrent.ThreadFactory;
  * @version V1.0 , 2018/4/26
  */
 public class BrokerContextImpl implements BrokerContext {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BrokerContextImpl.class);
 
     /**
      * 已通过认证的MQTT客户端会话映射。
@@ -364,9 +361,7 @@ public class BrokerContextImpl implements BrokerContext {
         messageBus.consumer((session, publishMessage) -> {
             BrokerTopicImpl brokerTopic = (BrokerTopicImpl) publishMessage.getTopic();
             int count = brokerTopic.subscribeCount();
-            if (count == 0) {
-                LOGGER.debug("none subscriber,ignore message");
-            } else {
+            if (count > 0) {
                 publishMessage.setPushSemaphore(count);
                 brokerTopic.getMessageQueue().put(publishMessage);
                 brokerTopic.addVersion();
@@ -379,7 +374,7 @@ public class BrokerContextImpl implements BrokerContext {
             //保留标志为 1 且有效载荷为零字节的 PUBLISH 报文会被服务端当作正常消息处理，它会被发送给订阅主题匹配的客户端。
             // 此外，同一个主题下任何现存的保留消息必须被移除，因此这个主题之后的任何订阅者都不会收到一个保留消息。
             if (message.getPayload().length == 0) {
-                LOGGER.info("clear topic:{} retained messages, because of current retained message's payload length is 0", topic.getTopic());
+//                LOGGER.info("clear topic:{} retained messages, because of current retained message's payload length is 0", topic.getTopic());
                 retains.remove(topic.getTopic());
                 return;
             }
@@ -389,7 +384,7 @@ public class BrokerContextImpl implements BrokerContext {
              * 如果这种情况发生了，那个主题将没有保留消息
              */
             if (message.getQos() == MqttQoS.AT_MOST_ONCE) {
-                LOGGER.info("receive Qos0 retain message,clear topic:{} retained messages", topic.getTopic());
+//                LOGGER.info("receive Qos0 retain message,clear topic:{} retained messages", topic.getTopic());
                 retains.remove(topic.getTopic());
             }
             retains.put(topic.getTopic(), new RetainMessage(message.getPayload(), topic.getTopic()));
@@ -503,13 +498,13 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private void loadAndInstallPlugins() throws Throwable {
         for (Plugin plugin : ServiceLoader.load(Plugin.class, BrokerContextImpl.class.getClassLoader())) {
-            LOGGER.info("load plugin: " + plugin.pluginName());
+            System.out.println("load plugin: " + plugin.pluginName());
             plugins.add(plugin);
         }
         //安装插件
         plugins.sort(Comparator.comparingInt(Plugin::order));
         for (Plugin plugin : plugins) {
-            LOGGER.debug("install plugin: " + plugin.pluginName());
+            System.out.println("install plugin: " + plugin.pluginName());
             plugin.install(this);
         }
     }
@@ -532,7 +527,6 @@ public class BrokerContextImpl implements BrokerContext {
                 if (brokerTopic == null) {
                     ValidateUtils.isTrue(!MqttUtil.containsTopicWildcards(topic), "invalid topicName: " + topic);
                     brokerTopic = new BrokerTopicImpl(topic, options.getMaxMessageQueueLength(), pushThreadPool);
-                    LOGGER.debug("create topic: {} capacity is {}", topic, brokerTopic.getMessageQueue().capacity());
                     topicMatcher.add(brokerTopic);
                     topicMap.put(topic, brokerTopic);
                     eventBus.publish(EventType.TOPIC_CREATE, topic);
@@ -559,7 +553,7 @@ public class BrokerContextImpl implements BrokerContext {
 
     public MqttSession removeSession(String clientId) {
         if (MqttUtil.isBlank(clientId)) {
-            LOGGER.warn("clientId is blank, ignore remove grantSession");
+            System.err.println("clientId is blank, ignore remove grantSession");
             return null;
         }
         return grantSessions.remove(clientId);
@@ -603,14 +597,14 @@ public class BrokerContextImpl implements BrokerContext {
 
         if (FeatUtils.isBlank(brokerConfig)) {
             inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("smart-mqtt.yaml");
-            LOGGER.info("load smart-mqtt.yaml from classpath.");
+            System.out.println("load smart-mqtt.yaml from classpath.");
         } else {
             Path path = Paths.get(brokerConfig);
             inputStream = Files.newInputStream(path);
-            LOGGER.info("load external yaml config:{}.", path.toAbsolutePath().toString());
+            System.out.println("load external yaml config:" + path.toAbsolutePath());
         }
         if (inputStream == null) {
-            LOGGER.warn("smart-mqtt.yaml not found.");
+            System.err.println("smart-mqtt.yaml not found.");
             return;
         }
         Yaml yaml = new Yaml();
@@ -632,7 +626,6 @@ public class BrokerContextImpl implements BrokerContext {
     }
 
     public void destroy() {
-        LOGGER.info("destroy broker...");
         eventBus.publish(EventType.BROKER_DESTROY, this);
         topicMap.values().forEach(BrokerTopicImpl::disable);
         retains.clear();
