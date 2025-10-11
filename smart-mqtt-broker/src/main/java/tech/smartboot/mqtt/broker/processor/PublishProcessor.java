@@ -10,8 +10,6 @@
 
 package tech.smartboot.mqtt.broker.processor;
 
-import tech.smartboot.feat.core.common.logging.Logger;
-import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.broker.BrokerContextImpl;
 import tech.smartboot.mqtt.broker.MqttSessionImpl;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
@@ -31,8 +29,6 @@ import tech.smartboot.mqtt.plugin.spec.BrokerContext;
  * @version V1.0 , 2018/4/25
  */
 public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PublishProcessor.class);
-
 
     @Override
     public void process0(BrokerContextImpl context, MqttSessionImpl session, MqttPublishMessage mqttPublishMessage) {
@@ -50,8 +46,7 @@ public class PublishProcessor extends AuthorizedMqttProcessor<MqttPublishMessage
                 processQos2(context, session, mqttPublishMessage);
                 break;
             default:
-                LOGGER.warn("unsupport mqttQos:{}", mqttQoS);
-                break;
+                throw new IllegalStateException("unsupported qos level: " + mqttQoS);
         }
 
     }
