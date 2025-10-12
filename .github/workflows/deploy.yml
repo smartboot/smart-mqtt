@@ -56,7 +56,6 @@ jobs:
         run: |
           mkdir -p smart-mqtt-enterprise/deploy/plugins
           cp smart-mqtt-enterprise/poms/target/smart-mqtt-broker-*.jar smart-mqtt-enterprise/deploy/smart-mqtt.jar
-          cp smart-mqtt-enterprise/smart-mqtt.yaml smart-mqtt-enterprise/deploy/
           cp smart-mqtt-enterprise/start.sh smart-mqtt-enterprise/deploy/
 
       - name: 上传 smart-mqtt 制品
