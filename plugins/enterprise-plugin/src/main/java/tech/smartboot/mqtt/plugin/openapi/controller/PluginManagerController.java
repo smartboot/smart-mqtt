@@ -94,7 +94,7 @@ public class PluginManagerController {
             List<Plugin> plugins = new ArrayList<>();
             for (Plugin plugin : serviceLoader) {
                 if (plugin.getClass().getClassLoader() == classLoader) {
-                    File pluginStorage = new File(storage.getParent(), String.valueOf(plugin.id()));
+                    File pluginStorage = new File(storage.getParent(), plugin.pluginName());
                     if (!pluginStorage.exists()) {
                         pluginStorage.mkdirs();
                     }
@@ -340,11 +340,11 @@ public class PluginManagerController {
             return RestResult.fail("该插件已启用");
         }
         Plugin plugin = localPlugins.get(id).get(0);
-        Path path = Paths.get(storage.getAbsolutePath(), RepositoryPlugin.REPOSITORY, String.valueOf(plugin.id()), plugin.getVersion(), RepositoryPlugin.REPOSITORY_PLUGIN_NAME);
+        Path path = Paths.get(storage.getAbsolutePath(), RepositoryPlugin.REPOSITORY, getPluginFileName(plugin));
         if (!Files.exists(path)) {
             return RestResult.fail("该插件不存在");
         }
-        Files.copy(path, new File(storage.getParentFile().getParentFile(), plugin.id() + ".jar").toPath(), StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(path, new File(storage.getParentFile().getParentFile(), getPluginFileName(plugin)).toPath(), StandardCopyOption.REPLACE_EXISTING);
         brokerContext.pluginRegistry().startPlugin(plugin.id());
         return RestResult.ok(null);
     }
@@ -356,7 +356,7 @@ public class PluginManagerController {
             return RestResult.fail("无法停用非本地仓库插件");
         }
         Plugin plugin = p.get(0);
-        File file = new File(storage.getParentFile().getParentFile(), plugin.id() + ".jar");
+        File file = new File(storage.getParentFile().getParentFile(), getPluginFileName(plugin));
         if (file.exists() && !file.delete()) {
             return RestResult.fail("插件停用失败!");
         }
@@ -414,11 +414,11 @@ public class PluginManagerController {
         }
         Plugin plugin = plugins.get(0);
         //部署到本地仓库
-        File localRepositoryDir = new File(storage, "repository/" + plugin.id() + "/" + plugin.getVersion());
+        File localRepositoryDir = new File(storage, "repository");
         if (!localRepositoryDir.exists()) {
             localRepositoryDir.mkdirs();
         }
-        File localRepository = new File(localRepositoryDir, "plugin.jar");
+        File localRepository = new File(localRepositoryDir, getPluginFileName(plugin));
         try {
             Files.copy(tempFile.toPath(), localRepository.toPath(), StandardCopyOption.REPLACE_EXISTING);
             loadPlugin(localRepository.toPath());
@@ -446,5 +446,9 @@ public class PluginManagerController {
 
     public void setBrokerContext(BrokerContext brokerContext) {
         this.brokerContext = brokerContext;
+    }
+
+    private String getPluginFileName(Plugin plugin) {
+        return plugin.pluginName() + "-" + plugin.getVersion() + ".jar";
     }
 }
