@@ -44,13 +44,13 @@ jobs:
         uses: stCarolas/setup-maven@v5
 
       - name: Build Feat
-        run: FEAT_LICENSE=${{ vars.FEAT_LICENSE }} mvn -B install --file feat/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+        run: FEAT_LICENSE=${{ secrets.FEAT_LICENSE }} mvn -B install --file feat/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: 编译 smart-mqtt 基础组件
         run: mvn -B install --file smart-mqtt/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: 编译 smart-mqtt broker 模块
         run: mvn -B install --file smart-mqtt/smart-mqtt-broker/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: 构建 MQTT Broker社区版
-        run: FEAT_LICENSE=${{ vars.FEAT_LICENSE }} mvn -B -f smart-mqtt-enterprise/poms/pom.xml clean package -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+        run: FEAT_LICENSE=${{ secrets.FEAT_LICENSE }} mvn -B -f smart-mqtt-enterprise/poms/pom.xml clean package -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
 
       - name: deploy dir
         run: |
@@ -68,7 +68,7 @@ jobs:
 
       ## 构建企业版插件
       - name: Build enterprise-plugin
-        run: FEAT_LICENSE=${{ vars.FEAT_LICENSE }} mvn -B -f smart-mqtt/plugins/pom.xml clean package -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+        run: FEAT_LICENSE=${{ secrets.FEAT_LICENSE }} mvn -B -f smart-mqtt/plugins/pom.xml clean package -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Copy enterprise-plugin
         run: cp smart-mqtt/plugins/enterprise-plugin/target/enterprise-plugin-*.jar  smart-mqtt-enterprise/deploy/plugins
       -
