@@ -12,7 +12,6 @@ package tech.smartboot.mqtt.plugin.spec;
 
 import org.smartboot.socket.extension.plugins.Plugin;
 import tech.smartboot.mqtt.common.MqttMessageProcessor;
-import tech.smartboot.mqtt.common.ToString;
 import tech.smartboot.mqtt.common.message.MqttMessage;
 
 import java.nio.channels.AsynchronousChannelGroup;
@@ -42,7 +41,7 @@ import java.util.List;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/30
  */
-public class Options extends ToString {
+public class Options {
     /**
      * http://patorjk.com/software/taag/
      * Font Name: Puffy
@@ -431,12 +430,5 @@ public class Options extends ToString {
 
     public void setProcessor(MqttMessageProcessor processor) {
         this.processor = processor;
-    }
-
-    public interface SystemProperty {
-        /**
-         * broker自定义配置文件
-         */
-        String BrokerConfig = "brokerConfig";
     }
 }

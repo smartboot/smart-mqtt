@@ -10,21 +10,16 @@
 
 package tech.smartboot.mqtt.plugin.spec;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.mqtt.common.ToString;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
-import tech.smartboot.mqtt.common.enums.PayloadEncodeEnum;
 import tech.smartboot.mqtt.common.message.MqttPublishMessage;
 
-import java.util.Base64;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/6/24
  */
-public final class Message extends ToString {
+public final class Message {
     /**
      * 负载数据
      */
@@ -91,31 +86,5 @@ public final class Message extends ToString {
 
     public void setPushSemaphore(int pushSemaphore) {
         this.pushSemaphore = new AtomicInteger(pushSemaphore);
-    }
-
-
-    public String toJsonString(PayloadEncodeEnum payloadEncodeEnum) {
-        if (payloadEncodeEnum == null) {
-            payloadEncodeEnum = PayloadEncodeEnum.BYTES;
-        }
-        switch (payloadEncodeEnum) {
-            case STRING: {
-                JSONObject json = (JSONObject) JSON.toJSON(this);
-                json.put("payload", new String(payload));
-                json.put("encoding", payloadEncodeEnum.getCode());
-                return json.toString();
-            }
-            case BASE64: {
-                JSONObject json = (JSONObject) JSON.toJSON(this);
-                json.put("payload", new String(Base64.getEncoder().encode(payload)));
-                json.put("encoding", payloadEncodeEnum.getCode());
-                return json.toString();
-            }
-            default: {
-                JSONObject json = (JSONObject) JSON.toJSON(this);
-                json.put("encoding", payloadEncodeEnum.getCode());
-                return json.toString();
-            }
-        }
     }
 }

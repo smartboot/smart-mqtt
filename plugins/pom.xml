@@ -98,6 +98,11 @@
                 <artifactId>smart-mqtt-plugin-spec</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2</artifactId>
+                <version>2.0.57</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     <build>
@@ -125,12 +130,12 @@
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <filters>
                                 <!-- 排除 fastjson2 依赖 -->
-                                <filter>
-                                    <artifact>com.alibaba.fastjson2:*</artifact>
-                                    <excludes>
-                                        <exclude>**/*</exclude>
-                                    </excludes>
-                                </filter>
+<!--                                <filter>-->
+<!--                                    <artifact>com.alibaba.fastjson2:*</artifact>-->
+<!--                                    <excludes>-->
+<!--                                        <exclude>**/*</exclude>-->
+<!--                                    </excludes>-->
+<!--                                </filter>-->
                                 <!--排除smart-socket依赖-->
                                 <filter>
                                     <artifact>io.github.smartboot.socket:*</artifact>

@@ -11,7 +11,6 @@
 package tech.smartboot.mqtt.common.message;
 
 import tech.smartboot.mqtt.common.MqttWriter;
-import tech.smartboot.mqtt.common.ToString;
 import tech.smartboot.mqtt.common.enums.MqttMessageType;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
 
@@ -33,7 +32,7 @@ import java.io.IOException;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public class MqttFixedHeader extends ToString {
+public class MqttFixedHeader {
     public static final MqttFixedHeader CONNECT_HEADER = new MqttFixedHeader(MqttMessageType.CONNECT, MqttQoS.AT_MOST_ONCE);
     public static final MqttFixedHeader CONN_ACK_HEADER = new MqttFixedHeader(MqttMessageType.CONNACK, MqttQoS.AT_MOST_ONCE);
     public static final MqttFixedHeader PUB_ACK_HEADER = new MqttFixedHeader(MqttMessageType.PUBACK, MqttQoS.AT_MOST_ONCE);

@@ -18,19 +18,17 @@ import com.alibaba.fastjson2.annotation.JSONField;
  */
 public class PluginConfig {
     private boolean enabled = true;
-    @JSONField(name = "http")
-    private HttpConfig httpConfig;
+    private HttpConfig http;
 
-    @JSONField(name = "database")
-    private DataBaseConfig dataBase;
+    private DataBaseConfig database;
     private String registry;
 
-    public HttpConfig getHttpConfig() {
-        return httpConfig;
+    public HttpConfig getHttp() {
+        return http;
     }
 
-    public void setHttpConfig(HttpConfig httpConfig) {
-        this.httpConfig = httpConfig;
+    public void setHttp(HttpConfig httpConfig) {
+        this.http = httpConfig;
     }
 
     public boolean isEnabled() {
@@ -50,12 +48,12 @@ public class PluginConfig {
     }
 
 
-    public DataBaseConfig getDataBase() {
-        return dataBase;
+    public DataBaseConfig getDatabase() {
+        return database;
     }
 
-    public void setDataBase(DataBaseConfig dataBase) {
-        this.dataBase = dataBase;
+    public void setDatabase(DataBaseConfig dataBase) {
+        this.database = dataBase;
     }
 
     public static class HttpConfig {

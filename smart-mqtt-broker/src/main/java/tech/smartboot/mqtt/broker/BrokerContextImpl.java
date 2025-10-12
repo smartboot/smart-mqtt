@@ -10,13 +10,11 @@
 
 package tech.smartboot.mqtt.broker;
 
-import com.alibaba.fastjson2.JSONObject;
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.timer.Timer;
 import org.smartboot.socket.transport.AioQuickServer;
-import org.yaml.snakeyaml.Yaml;
 import tech.smartboot.mqtt.broker.bus.event.KeepAliveMonitorSubscriber;
 import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import tech.smartboot.mqtt.common.MqttProtocol;
@@ -36,10 +34,6 @@ import tech.smartboot.mqtt.plugin.spec.bus.MessageBus;
 import tech.smartboot.mqtt.plugin.spec.provider.Providers;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -118,7 +112,7 @@ public class BrokerContextImpl implements BrokerContext {
     /**
      * Broker配置选项，包含服务器端口、最大连接数等配置参数。
      */
-    private Options options = new Options();
+    private final Options options = new Options();
 
     /**
      * 主题发布树，用于高效地管理和匹配消息发布。
@@ -455,8 +449,6 @@ public class BrokerContextImpl implements BrokerContext {
      * @throws IOException 如果配置文件读取或解析失败
      */
     private void updateBrokerConfigure() throws IOException {
-        //加载自定义配置文件
-        loadYamlConfig();
         MqttUtil.updateConfig(options, "broker");
         options.setChannelGroup(new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
             int i;
@@ -587,31 +579,6 @@ public class BrokerContextImpl implements BrokerContext {
 
     SubscribeRelationMatcher getRelationMatcher() {
         return subscribeTopicTree;
-    }
-
-    private void loadYamlConfig() throws IOException {
-        String brokerConfig = MqttUtil.defaultString(System.getProperty(Options.SystemProperty.BrokerConfig), System.getenv(Options.SystemProperty.BrokerConfig));
-
-        InputStream inputStream;
-
-        if (brokerConfig == null || brokerConfig.isEmpty()) {
-            inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("smart-mqtt.yaml");
-            System.out.println("load smart-mqtt.yaml from classpath.");
-        } else {
-            Path path = Paths.get(brokerConfig);
-            inputStream = Files.newInputStream(path);
-            System.out.println("load external yaml config:" + path.toAbsolutePath());
-        }
-        if (inputStream == null) {
-            System.err.println("smart-mqtt.yaml not found.");
-            return;
-        }
-        Yaml yaml = new Yaml();
-        Object object = yaml.load(inputStream);
-        options = JSONObject.from(object).to(Options.class);
-        if (inputStream != null) {
-            inputStream.close();
-        }
     }
 
     @Override

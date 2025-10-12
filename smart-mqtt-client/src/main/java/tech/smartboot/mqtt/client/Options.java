@@ -10,8 +10,6 @@
 
 package tech.smartboot.mqtt.client;
 
-import com.alibaba.fastjson2.annotation.JSONField;
-import tech.smartboot.mqtt.common.ToString;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
 import tech.smartboot.mqtt.common.enums.MqttVersion;
 import tech.smartboot.mqtt.common.message.MqttConnAckMessage;
@@ -26,7 +24,7 @@ import java.nio.channels.AsynchronousChannelGroup;
 import java.util.Properties;
 import java.util.function.Consumer;
 
-public class Options extends ToString {
+public class Options {
     private String clientId;
     /**
      * The default keep alive interval in seconds if one is not specified
@@ -45,7 +43,6 @@ public class Options extends ToString {
     private int maxInflight = MAX_INFLIGHT_DEFAULT;
     private WillMessage willMessage;
     private String userName;
-    @JSONField(serialize = false)
     private byte[] password;
     private SocketFactory socketFactory;
     private Properties sslClientProps = null;

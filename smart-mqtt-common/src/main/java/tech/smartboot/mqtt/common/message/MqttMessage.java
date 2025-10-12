@@ -12,7 +12,6 @@ package tech.smartboot.mqtt.common.message;
 
 import org.smartboot.socket.DecoderException;
 import tech.smartboot.mqtt.common.MqttWriter;
-import tech.smartboot.mqtt.common.ToString;
 import tech.smartboot.mqtt.common.enums.MqttVersion;
 import tech.smartboot.mqtt.common.message.payload.MqttPayload;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
@@ -25,7 +24,7 @@ import java.nio.ByteBuffer;
  * @author 三刀
  * @version V1.0 , 2018/4/22
  */
-public abstract class MqttMessage extends ToString {
+public abstract class MqttMessage {
     private static final MqttPayload NONE_PAYLOAD = new MqttPayload() {
         @Override
         protected int preEncode() {

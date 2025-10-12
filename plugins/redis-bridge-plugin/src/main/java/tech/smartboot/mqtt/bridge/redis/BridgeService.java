@@ -1,5 +1,7 @@
 package tech.smartboot.mqtt.bridge.redis;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import org.redisson.Redisson;
 import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RedissonClient;
@@ -10,6 +12,8 @@ import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.bus.MessageBusConsumer;
+
+import java.util.Base64;
 
 class BridgeService {
     private final BridgeConfig.RedisConfig config;
@@ -33,7 +37,7 @@ class BridgeService {
             @Override
             public void consume(MqttSession session, Message publishMessage) {
                 RScoredSortedSet<String> bucket = redissonClient.getScoredSortedSet(publishMessage.getTopic().getTopic(), StringCodec.INSTANCE);
-                boolean suc = bucket.add(System.currentTimeMillis(), publishMessage.toJsonString(encodeEnum));
+                boolean suc = bucket.add(System.currentTimeMillis(), toJsonString(publishMessage, encodeEnum));
                 if (!suc) {
                     System.err.println("redis bridge error");
                 }
@@ -46,6 +50,30 @@ class BridgeService {
         });
     }
 
+    public String toJsonString(Message message, PayloadEncodeEnum payloadEncodeEnum) {
+        if (payloadEncodeEnum == null) {
+            payloadEncodeEnum = PayloadEncodeEnum.BYTES;
+        }
+        switch (payloadEncodeEnum) {
+            case STRING: {
+                JSONObject json = (JSONObject) JSON.toJSON(this);
+                json.put("payload", new String(message.getPayload()));
+                json.put("encoding", payloadEncodeEnum.getCode());
+                return json.toString();
+            }
+            case BASE64: {
+                JSONObject json = (JSONObject) JSON.toJSON(this);
+                json.put("payload", new String(Base64.getEncoder().encode(message.getPayload())));
+                json.put("encoding", payloadEncodeEnum.getCode());
+                return json.toString();
+            }
+            default: {
+                JSONObject json = (JSONObject) JSON.toJSON(this);
+                json.put("encoding", payloadEncodeEnum.getCode());
+                return json.toString();
+            }
+        }
+    }
 
     public void destroy() {
         enable = false;

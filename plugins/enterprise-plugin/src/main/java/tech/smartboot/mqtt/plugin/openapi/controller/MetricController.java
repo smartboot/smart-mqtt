@@ -111,7 +111,7 @@ public class MetricController {
 
     @PostConstruct
     public void init() {
-        h2 = pluginConfig.getDataBase().getDbType().contains("h2");
+        h2 = pluginConfig.getDatabase().getDbType().contains("h2");
         initMetric(brokerContext);
         recordTypeEnum = RecordTypeEnum.getByCode(systemConfigMapper.getConfig(SystemConfigEnum.METRIC_RECORD.getCode()));
         //周期性重置指标值

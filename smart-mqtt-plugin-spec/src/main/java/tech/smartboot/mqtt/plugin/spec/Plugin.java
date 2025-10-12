@@ -10,7 +10,6 @@
 
 package tech.smartboot.mqtt.plugin.spec;
 
-import com.alibaba.fastjson2.JSONObject;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.ByteArrayOutputStream;
@@ -165,7 +164,7 @@ public abstract class Plugin {
 
     public <T> T loadPluginConfig(Class<T> clazz) {
         Yaml yaml = new Yaml();
-        return JSONObject.from(yaml.load(config())).to(clazz);
+        return yaml.loadAs(config(), clazz);
     }
 
     /**

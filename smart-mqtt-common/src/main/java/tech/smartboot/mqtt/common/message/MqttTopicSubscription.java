@@ -10,10 +10,9 @@
 
 package tech.smartboot.mqtt.common.message;
 
-import tech.smartboot.mqtt.common.ToString;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
 
-public final class MqttTopicSubscription extends ToString {
+public final class MqttTopicSubscription {
     /**
      * 主题过滤器
      */

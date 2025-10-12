@@ -39,7 +39,7 @@ public class MybatisSessionFactory {
 
     @Bean
     public SqlSessionFactory sessionFactory(PluginConfig pluginConfig, File storage) throws IOException {
-        PluginConfig.DataBaseConfig dataBaseConfig = pluginConfig.getDataBase();
+        PluginConfig.DataBaseConfig dataBaseConfig = pluginConfig.getDatabase();
         if (dataBaseConfig == null) {
             dataBaseConfig = new PluginConfig.DataBaseConfig();
         }

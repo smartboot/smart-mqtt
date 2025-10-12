@@ -11,10 +11,9 @@
 package tech.smartboot.mqtt.plugin.openapi.to;
 
 import com.alibaba.fastjson2.annotation.JSONField;
-import tech.smartboot.mqtt.common.ToString;
 import tech.smartboot.mqtt.plugin.spec.Options;
 
-public class VersionTO extends ToString {
+public class VersionTO {
     private String name;
     @JSONField(name = "tag_name")
     private String tagName;
