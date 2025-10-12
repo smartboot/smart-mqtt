@@ -328,7 +328,7 @@ public class PluginManagerController {
             return RestResult.fail("该插件不存在");
         }
         Plugin plugin = plugins.get(0);
-        File file = new File(storage, "repository/" + plugin.id());
+        File file = new File(storage, "repository/" + plugin.pluginName());
         Files.walk(file.toPath()).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
         Files.walk(plugin.storage().toPath()).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
         return RestResult.ok(null);

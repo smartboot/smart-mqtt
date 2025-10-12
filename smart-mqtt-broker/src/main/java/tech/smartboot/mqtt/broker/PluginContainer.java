@@ -43,7 +43,7 @@ class PluginContainer extends Plugin {
             throw new RuntimeException("plugin container init error");
         }
         this.plugin = plugins.get(0);
-        File storage = new File(baseStorage, String.valueOf(plugin.id()));
+        File storage = new File(baseStorage, plugin.pluginName());
         if (!storage.exists()) {
             storage.mkdirs();
         }
