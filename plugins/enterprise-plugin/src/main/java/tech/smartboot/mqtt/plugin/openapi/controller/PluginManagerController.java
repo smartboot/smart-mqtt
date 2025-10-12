@@ -81,7 +81,7 @@ public class PluginManagerController {
         // 加载已安装的插件
         File repository = new File(storage, RepositoryPlugin.REPOSITORY);
         if (repository.isDirectory()) {
-            Files.walk(repository.toPath()).filter(path -> path.getFileName().toString().equals(RepositoryPlugin.REPOSITORY_PLUGIN_NAME)).forEach(path -> {
+            Files.walk(repository.toPath()).filter(path -> path.getFileName().toString().endsWith(".jar")).forEach(path -> {
                 loadPlugin(path);
             });
         }
@@ -344,7 +344,7 @@ public class PluginManagerController {
         if (!Files.exists(path)) {
             return RestResult.fail("该插件不存在");
         }
-        Files.copy(path, new File(storage.getParentFile().getParentFile(), getPluginFileName(plugin)).toPath(), StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(path, new File(storage.getParentFile().getParentFile(), getPluginSimpleFileName(plugin)).toPath(), StandardCopyOption.REPLACE_EXISTING);
         brokerContext.pluginRegistry().startPlugin(plugin.id());
         return RestResult.ok(null);
     }
@@ -356,7 +356,7 @@ public class PluginManagerController {
             return RestResult.fail("无法停用非本地仓库插件");
         }
         Plugin plugin = p.get(0);
-        File file = new File(storage.getParentFile().getParentFile(), getPluginFileName(plugin));
+        File file = new File(storage.getParentFile().getParentFile(), getPluginSimpleFileName(plugin));
         if (file.exists() && !file.delete()) {
             return RestResult.fail("插件停用失败!");
         }
@@ -450,5 +450,9 @@ public class PluginManagerController {
 
     private String getPluginFileName(Plugin plugin) {
         return plugin.pluginName() + "-" + plugin.getVersion() + ".jar";
+    }
+
+    private String getPluginSimpleFileName(Plugin plugin) {
+        return plugin.pluginName() + ".jar";
     }
 }
