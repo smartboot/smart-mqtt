@@ -406,6 +406,11 @@ public class PluginManagerController {
             return RestResult.fail("不支持混合插件");
         }
         Plugin plugin = plugins.get(0);
+        //卸载旧插件
+        PluginUnit unit = localPlugins.remove(plugin.id());
+        if (unit != null) {
+            unit.pluginFile.delete();
+        }
         //部署到本地仓库
         File localRepositoryDir = new File(storage, "repository");
         if (!localRepositoryDir.exists()) {
@@ -443,10 +448,6 @@ public class PluginManagerController {
 
     private String getPluginFileName(Plugin plugin) {
         return plugin.pluginName() + "-" + plugin.getVersion() + ".jar";
-    }
-
-    private String getPluginSimpleFileName(Plugin plugin) {
-        return plugin.pluginName() + ".jar";
     }
 
     static class PluginUnit {
