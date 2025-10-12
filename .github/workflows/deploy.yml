@@ -45,8 +45,8 @@ jobs:
       - name: Set up Maven 3.9
         uses: stCarolas/setup-maven@v5
 
-      - name: Build Feat
-        run: mvn -B install --file feat/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+#      - name: Build Feat
+#        run: mvn -B install --file feat/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: 编译 smart-mqtt 基础组件
         run: mvn -B install --file smart-mqtt/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: 编译 smart-mqtt broker 模块
