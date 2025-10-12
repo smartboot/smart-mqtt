@@ -19,6 +19,8 @@ on:
 jobs:
   docker:
     runs-on: ubuntu-latest
+    env:
+      FEAT_LICENSE: ${{ secrets.FEAT_LICENSE }}
     steps:
       - uses: actions/checkout@v4
         name: Checkout
