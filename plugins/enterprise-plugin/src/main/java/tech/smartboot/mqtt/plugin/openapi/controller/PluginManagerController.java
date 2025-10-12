@@ -74,7 +74,7 @@ public class PluginManagerController {
     @Autowired
     private BrokerContext brokerContext;
 
-    private final Map<Integer, List<Plugin>> localPlugins = new HashMap<>();
+    private final Map<Integer, List<PluginUnit>> localPlugins = new HashMap<>();
 
     @PostConstruct
     public void init() throws IOException {
@@ -108,9 +108,9 @@ public class PluginManagerController {
                 Files.delete(jarPath);
             } else {
                 Plugin p = plugins.get(0);
-                List<Plugin> list = localPlugins.computeIfAbsent(p.id(), k -> new ArrayList<>());
-                list.removeIf(plugin -> plugin.getVersion().equals(p.getVersion()));
-                list.add(p);
+                List<PluginUnit> list = localPlugins.computeIfAbsent(p.id(), k -> new ArrayList<>());
+                list.removeIf(plugin -> plugin.plugin.getVersion().equals(p.getVersion()));
+                list.add(new PluginUnit(p, jarPath.toFile()));
             }
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
@@ -120,12 +120,12 @@ public class PluginManagerController {
 
     @RequestMapping("/:id/config")
     public RestResult<String> config(@PathParam("id") String id) throws IOException {
-        List<Plugin> plugins = localPlugins.get(FeatUtils.toInt(id, 0));
+        List<PluginUnit> plugins = localPlugins.get(FeatUtils.toInt(id, 0));
         if (FeatUtils.isEmpty(plugins)) {
             return RestResult.fail("插件不存在");
         }
-        Plugin plugin = plugins.get(0);
-        File file = new File(plugin.storage(), "plugin.yaml");
+        PluginUnit plugin = plugins.get(0);
+        File file = new File(plugin.plugin.storage(), "plugin.yaml");
         InputStream inputStream;
         if (file.exists()) {
             inputStream = new FileInputStream(file);
@@ -144,12 +144,12 @@ public class PluginManagerController {
         if (FeatUtils.isBlank(config)) {
             return RestResult.fail("配置内容为空");
         }
-        List<Plugin> plugins = localPlugins.get(FeatUtils.toInt(id, 0));
+        List<PluginUnit> plugins = localPlugins.get(FeatUtils.toInt(id, 0));
         if (FeatUtils.isEmpty(plugins)) {
             return RestResult.fail("插件不存在");
         }
-        Plugin plugin = plugins.get(0);
-        File file = new File(plugin.storage(), "plugin.yaml");
+        PluginUnit plugin = plugins.get(0);
+        File file = new File(plugin.plugin.storage(), "plugin.yaml");
         try (FileOutputStream outputStream = new FileOutputStream(file);) {
             outputStream.write(config.getBytes());
             outputStream.flush();
@@ -157,15 +157,15 @@ public class PluginManagerController {
         } catch (IOException e) {
             return RestResult.fail(e.getMessage());
         }
-        if (brokerContext.pluginRegistry().getPlugin(plugin.id()) == null) {
-            return enable(plugin.id());
+        if (brokerContext.pluginRegistry().getPlugin(plugin.plugin.id()) == null) {
+            return enable(plugin.plugin.id());
         }
         //自动重启
-        RestResult<Void> result = disable(plugin.id());
+        RestResult<Void> result = disable(plugin.plugin.id());
         if (!result.isSuccess()) {
             return result;
         }
-        return enable(plugin.id());
+        return enable(plugin.plugin.id());
     }
 
     @RequestMapping("/market")
@@ -184,9 +184,9 @@ public class PluginManagerController {
             List<PluginItem> result = jsonObject.getList("plugins", PluginItem.class);
             result.forEach(pluginItem -> {
                 pluginItem.setStatus(PluginStatusEnum.UNINSTALLED.getCode());
-                List<Plugin> plugins = localPlugins.get(pluginItem.getId());
+                List<PluginUnit> plugins = localPlugins.get(pluginItem.getId());
                 if (FeatUtils.isNotEmpty(plugins)) {
-                    setPluginStatus(plugins.get(0), pluginItem);
+                    setPluginStatus(plugins.get(0).plugin, pluginItem);
                 }
             });
             asyncResponse.complete(RestResult.ok(result));
@@ -204,7 +204,7 @@ public class PluginManagerController {
     public RestResult<List<PluginItem>> list() throws IOException {
         List<PluginItem> pluginItems = new ArrayList<>();
         localPlugins.forEach((id, pluginList) -> {
-            Plugin plugin = pluginList.get(0);
+            Plugin plugin = pluginList.get(0).plugin;
             PluginItem item = new PluginItem();
             item.setId(plugin.id());
             item.setName(plugin.pluginName());
@@ -323,14 +323,13 @@ public class PluginManagerController {
         if (brokerContext.pluginRegistry().containsPlugin(id)) {
             return RestResult.fail("请先停用该插件");
         }
-        List<Plugin> plugins = this.localPlugins.remove(id);
+        List<PluginUnit> plugins = this.localPlugins.remove(id);
         if (FeatUtils.isEmpty(plugins)) {
             return RestResult.fail("该插件不存在");
         }
-        Plugin plugin = plugins.get(0);
-        File file = new File(storage, "repository/" + plugin.pluginName());
-        Files.walk(file.toPath()).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
-        Files.walk(plugin.storage().toPath()).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
+        PluginUnit plugin = plugins.get(0);
+        plugin.pluginFile.delete();
+        Files.walk(plugin.plugin.storage().toPath()).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
         return RestResult.ok(null);
     }
 
@@ -339,24 +338,24 @@ public class PluginManagerController {
         if (brokerContext.pluginRegistry().containsPlugin(id)) {
             return RestResult.fail("该插件已启用");
         }
-        Plugin plugin = localPlugins.get(id).get(0);
-        Path path = Paths.get(storage.getAbsolutePath(), RepositoryPlugin.REPOSITORY, getPluginFileName(plugin));
+        PluginUnit plugin = localPlugins.get(id).get(0);
+        Path path = Paths.get(storage.getAbsolutePath(), RepositoryPlugin.REPOSITORY, plugin.pluginFile.getName());
         if (!Files.exists(path)) {
             return RestResult.fail("该插件不存在");
         }
-        Files.copy(path, new File(storage.getParentFile().getParentFile(), getPluginSimpleFileName(plugin)).toPath(), StandardCopyOption.REPLACE_EXISTING);
-        brokerContext.pluginRegistry().startPlugin(plugin.id());
+        Files.copy(path, new File(storage.getParentFile().getParentFile(), plugin.pluginFile.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
+        brokerContext.pluginRegistry().startPlugin(plugin.plugin.id());
         return RestResult.ok(null);
     }
 
     @RequestMapping("/disable")
     public RestResult<Void> disable(@Param("id") int id) {
-        List<Plugin> p = localPlugins.get(id);
+        List<PluginUnit> p = localPlugins.get(id);
         if (FeatUtils.isEmpty(p)) {
             return RestResult.fail("无法停用非本地仓库插件");
         }
-        Plugin plugin = p.get(0);
-        File file = new File(storage.getParentFile().getParentFile(), getPluginSimpleFileName(plugin));
+        PluginUnit plugin = p.get(0);
+        File file = new File(storage.getParentFile().getParentFile(), plugin.pluginFile.getName());
         if (file.exists() && !file.delete()) {
             return RestResult.fail("插件停用失败!");
         }
@@ -454,5 +453,15 @@ public class PluginManagerController {
 
     private String getPluginSimpleFileName(Plugin plugin) {
         return plugin.pluginName() + ".jar";
+    }
+
+    static class PluginUnit {
+        Plugin plugin;
+        File pluginFile;
+
+        public PluginUnit(Plugin plugin, File pluginFile) {
+            this.plugin = plugin;
+            this.pluginFile = pluginFile;
+        }
     }
 }
