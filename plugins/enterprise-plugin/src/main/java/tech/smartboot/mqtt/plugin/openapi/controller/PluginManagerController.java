@@ -127,7 +127,7 @@ public class PluginManagerController {
         if (file.exists()) {
             inputStream = new FileInputStream(file);
         } else {
-            inputStream = plugin.getClass().getClassLoader().getResourceAsStream(Plugin.CONFIG_FILE_NAME);
+            inputStream = plugin.plugin.getClass().getClassLoader().getResourceAsStream(Plugin.CONFIG_FILE_NAME);
         }
         try {
             return RestResult.ok(FeatUtils.asString(inputStream));
