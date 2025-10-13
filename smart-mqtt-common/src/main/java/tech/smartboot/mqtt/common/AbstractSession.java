@@ -74,6 +74,9 @@ public abstract class AbstractSession {
         try {
             mqttMessage.setVersion(mqttVersion);
             synchronized (mqttWriter) {
+                if (disconnect) {
+                    ValidateUtils.throwException("session is disconnect");
+                }
                 mqttMessage.write(mqttWriter);
             }
 
