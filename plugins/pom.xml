@@ -142,6 +142,13 @@
                                         <exclude>**/*</exclude>
                                     </excludes>
                                 </filter>
+                                <!--排除feat依赖-->
+                                <filter>
+                                    <artifact>tech.smartboot.feat:*</artifact>
+                                    <excludes>
+                                        <exclude>**/*</exclude>
+                                    </excludes>
+                                </filter>
                                 <!--排除smart-socket依赖-->
                                 <filter>
                                     <artifact>io.github.smartboot.socket:*</artifact>
