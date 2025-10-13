@@ -130,12 +130,18 @@
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <filters>
                                 <!-- 排除 fastjson2 依赖 -->
-<!--                                <filter>-->
-<!--                                    <artifact>com.alibaba.fastjson2:*</artifact>-->
-<!--                                    <excludes>-->
-<!--                                        <exclude>**/*</exclude>-->
-<!--                                    </excludes>-->
-<!--                                </filter>-->
+                                <filter>
+                                    <artifact>com.alibaba.fastjson2:*</artifact>
+                                    <excludes>
+                                        <exclude>**/*</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.yaml:*</artifact>
+                                    <excludes>
+                                        <exclude>**/*</exclude>
+                                    </excludes>
+                                </filter>
                                 <!--排除smart-socket依赖-->
                                 <filter>
                                     <artifact>io.github.smartboot.socket:*</artifact>

@@ -66,10 +66,14 @@ jobs:
           path: smart-mqtt-enterprise/deploy
 
       ## 构建企业版插件
+      - name: 构建 MQTT Broker企业版
+        run: FEAT_LICENSE=${{ secrets.FEAT_LICENSE }} mvn -B -f smart-mqtt-enterprise/poms/pom.xml clean package -Penterprise -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Build enterprise-plugin
         run: FEAT_LICENSE=${{ secrets.FEAT_LICENSE }} mvn -B -f smart-mqtt/plugins/pom.xml clean package -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Copy enterprise-plugin
-        run: cp smart-mqtt/plugins/enterprise-plugin/target/enterprise-plugin-*.jar  smart-mqtt-enterprise/deploy/plugins
+        run: |
+          cp smart-mqtt-enterprise/poms/target/smart-mqtt-broker-*.jar smart-mqtt-enterprise/deploy/smart-mqtt.jar
+          cp smart-mqtt/plugins/enterprise-plugin/target/enterprise-plugin-*.jar  smart-mqtt-enterprise/deploy/plugins
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v3
