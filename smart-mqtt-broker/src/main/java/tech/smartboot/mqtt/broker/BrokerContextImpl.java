@@ -19,7 +19,6 @@ import tech.smartboot.mqtt.broker.bus.event.KeepAliveMonitorSubscriber;
 import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import tech.smartboot.mqtt.common.MqttProtocol;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
-import tech.smartboot.mqtt.common.exception.MqttException;
 import tech.smartboot.mqtt.common.util.MqttUtil;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
@@ -35,8 +34,6 @@ import tech.smartboot.mqtt.plugin.spec.bus.MessageBus;
 import tech.smartboot.mqtt.plugin.spec.provider.Providers;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -452,7 +449,7 @@ public class BrokerContextImpl implements BrokerContext {
      * @throws IOException 如果配置文件读取或解析失败
      */
     private void updateBrokerConfigure() throws IOException {
-        updateConfig();
+        MqttUtil.updateConfig(options, "broker");
         options.setChannelGroup(new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
             int i;
 
@@ -465,59 +462,6 @@ public class BrokerContextImpl implements BrokerContext {
         this.bufferPagePool = new BufferPagePool(Runtime.getRuntime().availableProcessors(), true);
         eventBus.publish(EventType.BROKER_CONFIGURE_LOADED, options);
 //        System.out.println("brokerConfigure: " + brokerConfigure);
-    }
-
-    private void updateConfig() {
-        String prefix = "broker";
-        try {
-            StringBuilder sb = new StringBuilder();
-            sb.append("----------smart-mqtt Options----------\n");
-
-            // 表头
-            String format = "%-25s %-40s %-40s %-20s%n";
-            sb.append(String.format(format, "FieldName", "SystemProperty:(Value)", "SystemEnv:(Value)", "FinalValue"));
-
-            for (Field field : options.getClass().getDeclaredFields()) {
-                if ((field.getModifiers() & Modifier.PRIVATE) == 0) {
-                    continue;
-                }
-                if (!field.getType().isPrimitive() && field.getType() != String.class) {
-                    continue;
-                }
-                field.setAccessible(true);
-                //系统属性优先
-                String pk = prefix + "." + field.getName();
-                String pv = System.getProperty(pk);
-
-                //环境属性次之
-                String ek = (prefix + "." + field.getName()).replace(".", "_").toUpperCase();
-                String ev = System.getenv(ek);
-
-                String propertyInfo = pk + ":(" + (pv == null ? "N/A" : pv) + ")";
-                String envInfo = ek + ":(" + (ev == null ? "N/A" : ev) + ")";
-                String finalValue = (pv != null ? pv : (ev != null ? ev : String.valueOf(field.get(options))));
-
-                sb.append(String.format(format, field.getName(), propertyInfo, envInfo, finalValue));
-
-                String v = pv != null ? pv : ev;
-                if (v == null) {
-                    continue;
-                }
-
-                Class<?> type = field.getType();
-                if (type == int.class) {
-                    field.set(options, Integer.parseInt(v));
-                } else if (type == String.class) {
-                    field.set(options, v);
-                } else {
-                    throw new UnsupportedOperationException();
-                }
-            }
-            sb.append("----------");
-            System.out.println(sb);
-        } catch (Throwable throwable) {
-            throw new MqttException("update config exception", throwable);
-        }
     }
 
     /**
