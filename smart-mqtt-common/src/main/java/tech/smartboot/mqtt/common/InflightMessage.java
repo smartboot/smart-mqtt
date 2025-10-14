@@ -17,7 +17,6 @@ import tech.smartboot.mqtt.common.message.MqttPublishMessage;
 import tech.smartboot.mqtt.common.message.MqttSubscribeMessage;
 import tech.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import tech.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
-import tech.smartboot.mqtt.common.util.MqttUtil;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -49,16 +48,16 @@ public class InflightMessage {
     public InflightMessage(int packetId, MqttPacketIdentifierMessage<? extends MqttPacketIdVariableHeader> originalMessage) {
         this.assignedPacketId = packetId;
         this.originalMessage = originalMessage;
-        if (originalMessage instanceof MqttSubscribeMessage) {
-            this.expectMessageType = MqttMessageType.SUBACK;
-        } else if (originalMessage instanceof MqttUnsubscribeMessage) {
-            this.expectMessageType = MqttMessageType.UNSUBACK;
-        } else if (originalMessage instanceof MqttPublishMessage) {
+        if (originalMessage instanceof MqttPublishMessage) {
             if (originalMessage.getFixedHeader().getQosLevel() == MqttQoS.AT_LEAST_ONCE) {
                 this.expectMessageType = MqttMessageType.PUBACK;
             } else if (originalMessage.getFixedHeader().getQosLevel() == MqttQoS.EXACTLY_ONCE) {
                 this.expectMessageType = MqttMessageType.PUBREC;
             }
+        } else if (originalMessage instanceof MqttSubscribeMessage) {
+            this.expectMessageType = MqttMessageType.SUBACK;
+        } else if (originalMessage instanceof MqttUnsubscribeMessage) {
+            this.expectMessageType = MqttMessageType.UNSUBACK;
         } else {
             throw new UnsupportedOperationException();
         }
