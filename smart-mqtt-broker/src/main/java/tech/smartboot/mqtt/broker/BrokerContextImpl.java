@@ -472,7 +472,7 @@ public class BrokerContextImpl implements BrokerContext {
         try {
             StringBuilder sb = new StringBuilder();
             sb.append("----------smart-mqtt Options----------\n");
-            
+
             // 表头
             String format = "%-25s %-40s %-40s %-20s%n";
             sb.append(String.format(format, "FieldName", "SystemProperty:(Value)", "SystemEnv:(Value)", "FinalValue"));
@@ -494,7 +494,7 @@ public class BrokerContextImpl implements BrokerContext {
                 String ev = System.getenv(ek);
 
                 String propertyInfo = pk + ":(" + (pv == null ? "N/A" : pv) + ")";
-                String envInfo = ek + ":" + (ev == null ? "N/A" : ev);
+                String envInfo = ek + ":(" + (ev == null ? "N/A" : ev) + ")";
                 String finalValue = (pv != null ? pv : (ev != null ? ev : String.valueOf(field.get(options))));
 
                 sb.append(String.format(format, field.getName(), propertyInfo, envInfo, finalValue));
