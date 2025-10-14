@@ -414,14 +414,19 @@ public class Options {
 
     @Override
     public String toString() {
-        return "BrokerConfigure{" +
-                ", host='" + host + '\'' +
-                ", port=" + port +
-                ", maxKeepAliveTime=" + maxKeepAliveTime +
-                ", pushThreadNum=" + pushThreadNum +
-                ", noConnectIdleTimeout=" + noConnectIdleTimeout +
-                ", maxInflight=" + maxInflight +
-                '}';
+        return
+                "host='" + host + '\'' +
+                        ", port=" + port +
+                        ", bufferSize=" + bufferSize +
+                        ", topicLimit=" + topicLimit +
+                        ", maxPacketSize=" + maxPacketSize +
+                        ", threadNum=" + threadNum +
+                        ", maxKeepAliveTime=" + maxKeepAliveTime +
+                        ", pushThreadNum=" + pushThreadNum +
+                        ", noConnectIdleTimeout=" + noConnectIdleTimeout +
+                        ", maxInflight=" + maxInflight +
+                        ", maxMessageQueueLength=" + maxMessageQueueLength +
+                        ", lowMemory=" + lowMemory;
     }
 
     public MqttMessageProcessor getProcessor() {

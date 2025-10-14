@@ -450,6 +450,7 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private void updateBrokerConfigure() throws IOException {
         MqttUtil.updateConfig(options, "broker");
+        System.out.println("Broker Options: " + options);
         options.setChannelGroup(new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
             int i;
 
