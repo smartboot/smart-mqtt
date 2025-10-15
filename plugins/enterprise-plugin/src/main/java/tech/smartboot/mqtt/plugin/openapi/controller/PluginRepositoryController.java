@@ -57,31 +57,21 @@ public class PluginRepositoryController {
         if (!file.isDirectory()) {
             return RestResult.fail("服务异常");
         }
-        for (File pluginDir : Objects.requireNonNull(file.listFiles((dir, name) -> dir.isDirectory()))) {
+        for (File pluginFile : Objects.requireNonNull(file.listFiles((dir, name) -> name.endsWith(".jar")))) {
             PluginTO item = new PluginTO();
-            // 读取最新版本
-            File[] versions = pluginDir.listFiles((dir, name) -> dir.isDirectory());
-            if (versions == null || versions.length == 0) {
-                continue;
-            }
-            for (File version : versions) {
-                File pluginFile = new File(version, RepositoryPlugin.REPOSITORY_PLUGIN_NAME);
-                if (!pluginFile.isFile()) {
-                    continue;
-                }
-                URLClassLoader classLoader = new URLClassLoader(new URL[]{pluginFile.toURI().toURL()}, PluginRepositoryController.class.getClassLoader());
-                ServiceLoader<Plugin> serviceLoader = ServiceLoader.load(Plugin.class, classLoader);
-                for (Plugin plugin : serviceLoader) {
-                    if (plugin.getClass().getClassLoader() == classLoader) {
-                        item.setId(plugin.id());
-                        item.setName(plugin.pluginName());
-                        item.setVendor(plugin.getVendor());
-                        item.setVersion(plugin.getVersion());
-                        item.setDescription(plugin.getDescription());
-                        item.setSize(pluginFile.length());
-                        item.setUrl("/repository/" + pluginDir.getName() + "/" + version.getName() + "/download");
-                        break;
-                    }
+
+            URLClassLoader classLoader = new URLClassLoader(new URL[]{pluginFile.toURI().toURL()}, PluginRepositoryController.class.getClassLoader());
+            ServiceLoader<Plugin> serviceLoader = ServiceLoader.load(Plugin.class, classLoader);
+            for (Plugin plugin : serviceLoader) {
+                if (plugin.getClass().getClassLoader() == classLoader) {
+                    item.setId(plugin.id());
+                    item.setName(plugin.pluginName());
+                    item.setVendor(plugin.getVendor());
+                    item.setVersion(plugin.getVersion());
+                    item.setDescription(plugin.getDescription());
+                    item.setSize(pluginFile.length());
+                    item.setUrl("/repository/" + pluginFile.getName().substring(0, pluginFile.getName().length() - 4) + "/download");
+                    break;
                 }
             }
             if (FeatUtils.isNotBlank(item.getName())) {
@@ -91,17 +81,17 @@ public class PluginRepositoryController {
         return RestResult.ok(pluginMarket);
     }
 
-    @RequestMapping("/:plugin/:version/download")
-    public AsyncResponse download(@PathParam(value = "plugin") String pluginName, @PathParam(value = "version") String version, HttpResponse response) throws FileNotFoundException {
+    @RequestMapping("/:plugin/download")
+    public AsyncResponse download(@PathParam(value = "plugin") String pluginName, HttpResponse response) throws FileNotFoundException {
         AsyncResponse asyncResponse = new AsyncResponse();
-        File file = new File(storage, "repository/" + pluginName + "/" + version + "/plugin.jar");
+        File file = new File(storage, "repository/" + pluginName + ".jar");
         if (!file.isFile()) {
             response.setHttpStatus(HttpStatus.NOT_FOUND);
             asyncResponse.complete();
             return asyncResponse;
         }
         response.setContentType("application/octet-stream");
-        response.setHeader("Content-Disposition", "attachment; filename=" + pluginName + "-" + version + ".jar");
+        response.setHeader("Content-Disposition", "attachment; filename=" + pluginName + ".jar");
         response.setContentLength(file.length());
         if (file.length() == 0) {
             response.setHttpStatus(HttpStatus.OK);
