@@ -142,7 +142,7 @@ public class ConnectionsController {
             public void execute() {
                 lastestTime = System.currentTimeMillis();
                 if (consumers.isEmpty()) {
-                    LOGGER.info("batch consume 0 records");
+                    LOGGER.debug("batch consume 0 records");
                     return;
                 }
                 int i = 0;
