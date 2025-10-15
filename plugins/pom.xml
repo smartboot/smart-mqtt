@@ -176,6 +176,13 @@
                 <groupId>tech.smartboot.mqtt</groupId>
                 <artifactId>smart-mqtt-maven-plugin</artifactId>
                 <version>0.0.0</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>tech.smartboot.feat</groupId>
+                        <artifactId>feat-cloud-starter</artifactId>
+                        <version>${feat.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>

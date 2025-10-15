@@ -13,7 +13,7 @@ public class PluginConfig {
     private String host;
     private int port;
     private int queueLength = 1024;
-    private int queuePolicy;
+    private int queueDiscardPolicy;
 
     private List<String> clusters;
 
@@ -57,11 +57,11 @@ public class PluginConfig {
         this.queueLength = queueLength;
     }
 
-    public int getQueuePolicy() {
-        return queuePolicy;
+    public int getQueueDiscardPolicy() {
+        return queueDiscardPolicy;
     }
 
-    public void setQueuePolicy(int queuePolicy) {
-        this.queuePolicy = queuePolicy;
+    public void setQueueDiscardPolicy(int queueDiscardPolicy) {
+        this.queueDiscardPolicy = queueDiscardPolicy;
     }
 }

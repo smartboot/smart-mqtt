@@ -10,7 +10,11 @@
 
 package tech.smartboot.mqtt.plugin.spec;
 
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.Constructor;
+import org.yaml.snakeyaml.introspector.Property;
+import org.yaml.snakeyaml.introspector.PropertyUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -163,8 +167,44 @@ public abstract class Plugin {
     }
 
     public <T> T loadPluginConfig(Class<T> clazz) {
-        Yaml yaml = new Yaml();
+        Constructor constructor = new Constructor(new LoaderOptions());
+        constructor.setPropertyUtils(new CamelCasePropertyUtils());
+        constructor.getPropertyUtils().setSkipMissingProperties(true);
+
+        Yaml yaml = new Yaml(constructor);
         return yaml.loadAs(config(), clazz);
+    }
+
+    private static class CamelCasePropertyUtils extends PropertyUtils {
+
+        @Override
+        public Property getProperty(Class<?> type, String name) {
+            // 将下划线命名转换为驼峰命名
+            String camelCaseName = underlineToCamelCase(name);
+            return super.getProperty(type, camelCaseName);
+        }
+
+        private String underlineToCamelCase(String name) {
+            if (name == null || !name.contains("_")) {
+                return name;
+            }
+
+            StringBuilder result = new StringBuilder();
+            String[] parts = name.split("_");
+
+            // 第一部分保持小写
+            result.append(parts[0]);
+
+            // 后续部分首字母大写
+            for (int i = 1; i < parts.length; i++) {
+                if (!parts[i].isEmpty()) {
+                    result.append(Character.toUpperCase(parts[i].charAt(0)))
+                            .append(parts[i].substring(1));
+                }
+            }
+
+            return result.toString();
+        }
     }
 
     /**

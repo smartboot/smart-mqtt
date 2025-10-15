@@ -124,7 +124,7 @@ class Coordinator extends AsyncTask {
     }
 
     private void offer(Message message, ArrayBlockingQueue<Message> clusterMessageQueue) {
-        if (pluginConfig.getQueuePolicy() == QUEUE_POLICY_DISCARD_NEWEST) {
+        if (pluginConfig.getQueueDiscardPolicy() == QUEUE_POLICY_DISCARD_NEWEST) {
             boolean suc = clusterMessageQueue.offer(message);
             if (!suc) {
                 LOGGER.warn("queue is full, discard message: {}", message);
