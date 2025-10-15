@@ -11,7 +11,7 @@ services:
     environment:
       ENTERPRISE_ENABLE: false
 #      BROKER_LOWMEMORY: true
-#      BROKER_MAXINFLIGHT: 4
+      BROKER_MAXINFLIGHT: 256
     restart: always
     privileged: true
     security_opt:

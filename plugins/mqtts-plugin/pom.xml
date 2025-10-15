@@ -6,7 +6,7 @@
     <parent>
         <artifactId>plugins</artifactId>
         <groupId>tech.smartboot.mqtt</groupId>
-        <version>1.3.0</version>
+        <version>1.4.0</version>
     </parent>
 
     <artifactId>mqtts-plugin</artifactId>
