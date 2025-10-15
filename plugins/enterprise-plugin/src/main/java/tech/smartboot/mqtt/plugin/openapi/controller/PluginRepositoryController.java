@@ -19,6 +19,8 @@ import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
+import tech.smartboot.feat.core.common.logging.Logger;
+import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.mqtt.plugin.openapi.to.PluginTO;
 import tech.smartboot.mqtt.plugin.openapi.to.RepositoryPlugin;
@@ -44,7 +46,7 @@ import java.util.function.Consumer;
  */
 @Controller("/repository")
 public class PluginRepositoryController {
-
+    private static final Logger logger = LoggerFactory.getLogger(PluginRepositoryController.class);
     @Autowired
     private File storage;
 
@@ -55,7 +57,8 @@ public class PluginRepositoryController {
 
         File file = new File(storage, RepositoryPlugin.REPOSITORY);
         if (!file.isDirectory()) {
-            return RestResult.fail("服务异常");
+            logger.error("repository directory not exists");
+            return RestResult.ok(pluginMarket);
         }
         for (File pluginFile : Objects.requireNonNull(file.listFiles((dir, name) -> name.endsWith(".jar")))) {
             PluginTO item = new PluginTO();
