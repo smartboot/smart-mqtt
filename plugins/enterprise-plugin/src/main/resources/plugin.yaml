@@ -9,4 +9,4 @@ database:
   url: ""
   username: ""
   password: ""
-registry: http://82.157.162.230:8083/
+registry: http://115.190.30.166:8083/
