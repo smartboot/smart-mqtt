@@ -67,6 +67,7 @@ public class WebSocketPlugin extends Plugin {
                             }
                             //处理消息
                             brokerContext.Options().getProcessor().process(proxySession, message);
+                            proxySession.writeBuffer().flush();
                         }
                         readBuffer.compact();
                     }

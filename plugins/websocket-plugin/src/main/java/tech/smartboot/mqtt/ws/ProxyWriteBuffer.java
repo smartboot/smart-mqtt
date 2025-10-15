@@ -72,6 +72,9 @@ class ProxyWriteBuffer implements WriteBuffer {
 
     @Override
     public void flush() {
+        if (outputStream.size() == 0) {
+            return;
+        }
         byte[] bytes = outputStream.toByteArray();
         outputStream.reset();
         response.sendBinaryMessage(bytes);
