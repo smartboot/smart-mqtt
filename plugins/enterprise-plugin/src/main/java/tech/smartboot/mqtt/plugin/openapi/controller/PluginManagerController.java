@@ -37,6 +37,8 @@ import tech.smartboot.mqtt.plugin.openapi.to.PluginItem;
 import tech.smartboot.mqtt.plugin.openapi.to.RepositoryPlugin;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
+import tech.smartboot.mqtt.plugin.spec.bus.DisposableEventBusSubscriber;
+import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -110,12 +112,18 @@ public class PluginManagerController {
                 Plugin p = plugins.get(0);
                 localPlugins.put(p.id(), new PluginUnit(p, jarPath.toFile()));
             }
-            plugins.forEach(plugin -> {
-                System.out.println(plugin.pluginName() + ": ");
-                plugin.getUsagePorts().forEach(port -> {
-                    System.out.println("  " + port.getPort() + ":" + port.getDesc());
-                });
+            brokerContext.getEventBus().subscribe(EventType.BROKER_STARTED, new DisposableEventBusSubscriber<BrokerContext>() {
+                @Override
+                public void consumer(EventType<BrokerContext> eventType, BrokerContext object) {
+                    plugins.forEach(plugin -> {
+                        System.out.println(plugin.pluginName() + ": ");
+                        plugin.getUsagePorts().forEach(port -> {
+                            System.out.println("  " + port.getPort() + ":" + port.getDesc());
+                        });
+                    });
+                }
             });
+
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             throw new RuntimeException(e);
