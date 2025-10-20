@@ -110,6 +110,12 @@ public class PluginManagerController {
                 Plugin p = plugins.get(0);
                 localPlugins.put(p.id(), new PluginUnit(p, jarPath.toFile()));
             }
+            plugins.forEach(plugin -> {
+                System.out.println(plugin.pluginName() + ": ");
+                plugin.getUsagePorts().forEach(port -> {
+                    System.out.println("  " + port.getPort() + ":" + port.getDesc());
+                });
+            });
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             throw new RuntimeException(e);

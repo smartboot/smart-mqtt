@@ -21,6 +21,9 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.file.Files;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -39,6 +42,8 @@ public abstract class Plugin {
      * 启动异常
      */
     private Throwable throwable;
+
+    private List<PluginPort> usagePorts;
 
     /**
      * 获取插件名称
@@ -173,6 +178,26 @@ public abstract class Plugin {
 
         Yaml yaml = new Yaml(constructor);
         return yaml.loadAs(config(), clazz);
+    }
+
+    /**
+     * 添加插件使用端口
+     *
+     * @param port 使用端口
+     * @param desc 描述
+     */
+    protected void addUsagePort(int port, String desc) {
+        if (usagePorts == null) {
+            usagePorts = new LinkedList<>();
+        }
+        usagePorts.add(new PluginPort(port, desc));
+    }
+
+    public List<PluginPort> getUsagePorts() {
+        if (usagePorts == null) {
+            return Collections.emptyList();
+        }
+        return Collections.unmodifiableList(usagePorts);
     }
 
     private static class CamelCasePropertyUtils extends PropertyUtils {

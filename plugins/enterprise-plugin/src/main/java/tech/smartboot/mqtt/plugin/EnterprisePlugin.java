@@ -15,6 +15,7 @@ import org.smartboot.socket.extension.plugins.MonitorPlugin;
 import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.timer.Timer;
 import tech.smartboot.feat.cloud.FeatCloud;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.HttpServer;
@@ -47,6 +48,7 @@ public class EnterprisePlugin extends Plugin {
         }
 
         PluginConfig config = loadPluginConfig(PluginConfig.class);
+        addUsagePort(config.getHttp().getPort(), (FeatUtils.isBlank(config.getHttp().getHost()) ? "0.0.0.0" : config.getHttp().getHost()) + ":" + config.getHttp().getPort());
 
         brokerContext.Options().addPlugin(new MonitorPlugin<>(60));
 

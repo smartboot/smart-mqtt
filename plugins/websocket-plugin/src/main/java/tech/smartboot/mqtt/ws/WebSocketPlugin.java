@@ -39,6 +39,7 @@ public class WebSocketPlugin extends Plugin {
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
         PluginConfig config = loadPluginConfig(PluginConfig.class);
+        addUsagePort(config.getPort(), "websocket port");
         MqttProtocol protocol = new MqttProtocol(brokerContext.Options().getMaxPacketSize());
         httpBootstrap = Feat.httpServer(serverOptions -> serverOptions.debug(true).bannerEnabled(false).readBufferSize(1024 * 1024)).httpHandler(new HttpHandler() {
             @Override

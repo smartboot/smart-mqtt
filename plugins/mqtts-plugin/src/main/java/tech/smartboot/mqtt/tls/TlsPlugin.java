@@ -40,6 +40,8 @@ public class TlsPlugin extends Plugin {
         options.getPlugins().forEach(proxy::addPlugin);
         proxy.addPlugin(new SslPlugin<>(new PemServerSSLContextFactory(new ByteArrayInputStream(pluginConfig.getPem().getBytes()))));
 
+        addUsagePort(pluginConfig.getPort(), "mqtts port");
+
         server = new AioQuickServer(options.getHost(), pluginConfig.getPort(), new MqttProtocol(options.getMaxPacketSize()), proxy);
         server.setBannerEnabled(false).setReadBufferSize(options.getBufferSize()).setWriteBuffer(options.getBufferSize(), Math.min(options.getMaxInflight(), 16)).setBufferPagePool(brokerContext.bufferPagePool()).setThreadNum(Math.max(2, options.getThreadNum()));
         if (!options.isLowMemory()) {
