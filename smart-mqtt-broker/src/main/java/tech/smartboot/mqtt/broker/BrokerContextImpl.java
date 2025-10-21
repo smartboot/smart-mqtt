@@ -19,6 +19,7 @@ import tech.smartboot.mqtt.broker.bus.event.KeepAliveMonitorSubscriber;
 import tech.smartboot.mqtt.broker.topic.BrokerTopicImpl;
 import tech.smartboot.mqtt.common.MqttProtocol;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
+import tech.smartboot.mqtt.common.exception.MqttException;
 import tech.smartboot.mqtt.common.util.MqttUtil;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
@@ -449,7 +450,7 @@ public class BrokerContextImpl implements BrokerContext {
      * @throws IOException 如果配置文件读取或解析失败
      */
     private void updateBrokerConfigure() throws IOException {
-        MqttUtil.updateConfig(options, "broker");
+        updateOptions();
         System.out.println("Broker Options: " + options);
         options.setChannelGroup(new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
             int i;
@@ -463,6 +464,126 @@ public class BrokerContextImpl implements BrokerContext {
         this.bufferPagePool = new BufferPagePool(Runtime.getRuntime().availableProcessors(), true);
         eventBus.publish(EventType.BROKER_CONFIGURE_LOADED, options);
 //        System.out.println("brokerConfigure: " + brokerConfigure);
+    }
+
+    /**
+     * 静态代码的私有化实现，用于更新配置，支持native编译
+     *
+     */
+    private void updateOptions() {
+        try {
+
+            // 处理host配置
+            String hostValue = getPropertyValue("host");
+            if (hostValue != null) {
+                options.setHost(hostValue);
+            }
+
+            // 处理port配置
+            String portValue = getPropertyValue("port");
+            if (portValue != null) {
+                try {
+                    options.setPort(Integer.parseInt(portValue));
+                } catch (NumberFormatException e) {
+                    throw new MqttException("Invalid port value: " + portValue, e);
+                }
+            }
+
+            // 处理threadNum配置
+            String threadNumValue = getPropertyValue("threadNum");
+            if (threadNumValue != null) {
+                try {
+                    options.setThreadNum(Integer.parseInt(threadNumValue));
+                } catch (NumberFormatException e) {
+                    throw new MqttException("Invalid threadNum value: " + threadNumValue, e);
+                }
+            }
+
+            // 处理bufferSize配置
+            String bufferSizeValue = getPropertyValue("bufferSize");
+            if (bufferSizeValue != null) {
+                try {
+                    options.setBufferSize(Integer.parseInt(bufferSizeValue));
+                } catch (NumberFormatException e) {
+                    throw new MqttException("Invalid bufferSize value: " + bufferSizeValue, e);
+                }
+            }
+
+            // 处理maxInflight配置
+            String maxInflightValue = getPropertyValue("maxInflight");
+            if (maxInflightValue != null) {
+                try {
+                    options.setMaxInflight(Integer.parseInt(maxInflightValue));
+                } catch (NumberFormatException e) {
+                    throw new MqttException("Invalid maxInflight value: " + maxInflightValue, e);
+                }
+            }
+
+            // 处理maxPacketSize配置
+            String maxPacketSizeValue = getPropertyValue("maxPacketSize");
+            if (maxPacketSizeValue != null) {
+                try {
+                    options.setMaxPacketSize(Integer.parseInt(maxPacketSizeValue));
+                } catch (NumberFormatException e) {
+                    throw new MqttException("Invalid maxPacketSize value: " + maxPacketSizeValue, e);
+                }
+            }
+
+            // 处理pushThreadNum配置
+            String pushThreadNumValue = getPropertyValue("pushThreadNum");
+            if (pushThreadNumValue != null) {
+                try {
+                    options.setPushThreadNum(Integer.parseInt(pushThreadNumValue));
+                } catch (NumberFormatException e) {
+                    throw new MqttException("Invalid pushThreadNum value: " + pushThreadNumValue, e);
+                }
+            }
+
+            // 处理topicLimit配置
+            String topicLimitValue = getPropertyValue("topicLimit");
+            if (topicLimitValue != null) {
+                try {
+                    options.setTopicLimit(Integer.parseInt(topicLimitValue));
+                } catch (NumberFormatException e) {
+                    throw new MqttException("Invalid topicLimit value: " + topicLimitValue, e);
+                }
+            }
+
+            // 处理maxMessageQueueLength配置
+            String maxMessageQueueLengthValue = getPropertyValue("maxMessageQueueLength");
+            if (maxMessageQueueLengthValue != null) {
+                try {
+                    options.setMaxMessageQueueLength(Integer.parseInt(maxMessageQueueLengthValue));
+                } catch (NumberFormatException e) {
+                    throw new MqttException("Invalid maxMessageQueueLength value: " + maxMessageQueueLengthValue, e);
+                }
+            }
+
+            // 处理lowMemory配置
+            String lowMemoryValue = getPropertyValue("lowMemory");
+            if (lowMemoryValue != null) {
+                options.setLowMemory(Boolean.parseBoolean(lowMemoryValue));
+            }
+
+        } catch (Throwable throwable) {
+            throw new MqttException("update config exception", throwable);
+        }
+    }
+
+    /**
+     * 获取配置属性值，优先级：系统属性 > 环境变量
+     *
+     * @param fieldName 字段名
+     * @return 配置值，如果未设置则返回null
+     */
+    private static String getPropertyValue(String fieldName) {
+        // 系统属性优先
+        String value = System.getProperty("broker" + "." + fieldName);
+        // 环境属性次之
+        if (value == null) {
+            value = System.getenv(("broker" + "." + fieldName).replace(".", "_").toUpperCase());
+        }
+        return value;
     }
 
     /**
