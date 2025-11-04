@@ -10,6 +10,7 @@ import tech.smartboot.mqtt.plugin.spec.bus.MessageBusConsumer;
 import tech.smartboot.redisun.Redisun;
 
 import java.util.Base64;
+import java.util.concurrent.CompletableFuture;
 
 class BridgeService {
     private final BridgeConfig.RedisConfig config;
@@ -30,10 +31,14 @@ class BridgeService {
         context.getMessageBus().consumer(new MessageBusConsumer() {
             @Override
             public void consume(MqttSession session, Message publishMessage) {
-                int count = redisun.zadd(publishMessage.getTopic().getTopic(), System.currentTimeMillis(), toJsonString(publishMessage, encodeEnum));
-                if (count > 0) {
+                long timestamp = System.currentTimeMillis();
+                JSONObject json = toJsonString(publishMessage, encodeEnum);
+                json.put("timestamp", timestamp);
+                CompletableFuture<Integer> future = redisun.asyncZadd(publishMessage.getTopic().getTopic(), timestamp, json.toString());
+                future.exceptionally(throwable -> {
                     System.err.println("redis bridge error");
-                }
+                    return null;
+                });
             }
 
             @Override
@@ -43,7 +48,7 @@ class BridgeService {
         });
     }
 
-    public String toJsonString(Message message, PayloadEncodeEnum payloadEncodeEnum) {
+    public JSONObject toJsonString(Message message, PayloadEncodeEnum payloadEncodeEnum) {
         if (payloadEncodeEnum == null) {
             payloadEncodeEnum = PayloadEncodeEnum.BYTES;
         }
@@ -52,18 +57,18 @@ class BridgeService {
                 JSONObject json = (JSONObject) JSON.toJSON(this);
                 json.put("payload", new String(message.getPayload()));
                 json.put("encoding", payloadEncodeEnum.getCode());
-                return json.toString();
+                return json;
             }
             case BASE64: {
                 JSONObject json = (JSONObject) JSON.toJSON(this);
                 json.put("payload", new String(Base64.getEncoder().encode(message.getPayload())));
                 json.put("encoding", payloadEncodeEnum.getCode());
-                return json.toString();
+                return json;
             }
             default: {
                 JSONObject json = (JSONObject) JSON.toJSON(this);
                 json.put("encoding", payloadEncodeEnum.getCode());
-                return json.toString();
+                return json;
             }
         }
     }
