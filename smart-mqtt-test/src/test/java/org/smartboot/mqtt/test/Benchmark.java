@@ -14,8 +14,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import tech.smartboot.feat.core.common.logging.Logger;
-import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.broker.BrokerContextImpl;
 import tech.smartboot.mqtt.client.MqttClient;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
@@ -31,7 +29,6 @@ import java.util.concurrent.atomic.AtomicLong;
  * @version V1.0 , 2022/4/18
  */
 public class Benchmark {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Benchmark.class);
     private final String host = "127.0.0.1";
     private final int port = 1883;
     private AsynchronousChannelGroup channelGroup;

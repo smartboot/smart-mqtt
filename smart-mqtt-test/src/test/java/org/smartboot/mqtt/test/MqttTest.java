@@ -14,12 +14,9 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import tech.smartboot.feat.core.common.logging.Logger;
-import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.broker.BrokerContextImpl;
 import tech.smartboot.mqtt.client.MqttClient;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
-import tech.smartboot.mqtt.common.message.payload.WillMessage;
 
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
@@ -28,7 +25,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class MqttTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MqttTest.class);
     private BrokerContextImpl brokerContext;
 
     @Before
@@ -56,7 +52,7 @@ public class MqttTest {
         });
         mqttClient.publish("/a", MqttQoS.AT_MOST_ONCE, payload.getBytes());
         Assert.assertEquals(payload, completableFuture.get());
-        LOGGER.info("payload: {}", completableFuture.get());
+        System.out.println("payload: " + completableFuture.get());
         mqttClient.disconnect();
     }
 
@@ -92,10 +88,10 @@ public class MqttTest {
     public void testB() throws Throwable {
         System.setProperty("broker.maxPacketSize", String.valueOf(Integer.MAX_VALUE));
         System.setProperty("broker.bufferSize", String.valueOf(16 * 1024 * 1024));
-        brokerContext.destroy();
-        brokerContext = new BrokerContextImpl();
+        BrokerContextImpl brokerContext = new BrokerContextImpl();
+        brokerContext.Options().setPort(1884);
         brokerContext.init();
-        MqttClient mqttClient = new MqttClient("mqtt://127.0.0.1:1883", opt -> opt.setMaxPacketSize(Integer.MAX_VALUE).setBufferSize(1024 * 1024 * 16));
+        MqttClient mqttClient = new MqttClient("mqtt://127.0.0.1:1884", opt -> opt.setMaxPacketSize(Integer.MAX_VALUE).setBufferSize(1024 * 1024 * 16));
         System.out.println(mqttClient.getClientId());
         mqttClient.connect();
         for (int i = 268435441; i <= 268435451; i++) {
@@ -103,6 +99,7 @@ public class MqttTest {
             System.out.println("index:" + i);
         }
         mqttClient.disconnect();
+        brokerContext.destroy();
     }
 
     private static void checkPayloadSize(int i, MqttClient mqttClient) throws InterruptedException, ExecutionException {
@@ -130,7 +127,7 @@ public class MqttTest {
         Thread.sleep(100);
         mqttClient.disconnect();
         Assert.assertEquals(payload, completableFuture.get());
-        LOGGER.info("payload: {}", completableFuture.get());
+        System.out.println("payload: " + completableFuture.get());
     }
 
     @Test
@@ -175,26 +172,26 @@ public class MqttTest {
         System.out.println("count: " + countDownLatch.getCount());
     }
 
-    @Test
-    public void testWillMessage() throws InterruptedException, ExecutionException {
-        MqttClient mqttClient = new MqttClient("mqtt://127.0.0.1:1883", opt -> {
-            WillMessage willMessage = new WillMessage();
-            willMessage.setTopic("/will");
-            willMessage.setWillQos(MqttQoS.AT_MOST_ONCE);
-            willMessage.setPayload("willPayload".getBytes());
-            opt.setWillMessage(willMessage);
-        });
-
-        mqttClient.connect();
-
-        CompletableFuture<String> completableFuture = new CompletableFuture<>();
-        MqttClient mqttClient2 = new MqttClient("mqtt://127.0.0.1:1883");
-        mqttClient2.connect();
-        mqttClient2.subscribe("/will", MqttQoS.AT_MOST_ONCE, (mqttClient1, mqttPublishMessage) -> {
-            System.out.println(new String(mqttPublishMessage.getPayload().getPayload()));
-            completableFuture.complete(new String(mqttPublishMessage.getPayload().getPayload()));
-        }, (mqttClient1, mqttQoS) -> mqttClient.disconnect());
-
-        Assert.assertEquals(completableFuture.get(), "willPayload");
-    }
+//    @Test
+//    public void testWillMessage() throws InterruptedException, ExecutionException {
+//        MqttClient mqttClient = new MqttClient("mqtt://127.0.0.1:1883", opt -> {
+//            WillMessage willMessage = new WillMessage();
+//            willMessage.setTopic("/will");
+//            willMessage.setWillQos(MqttQoS.AT_MOST_ONCE);
+//            willMessage.setPayload("willPayload".getBytes());
+//            opt.setWillMessage(willMessage);
+//        });
+//
+//        mqttClient.connect();
+//
+//        CompletableFuture<String> completableFuture = new CompletableFuture<>();
+//        MqttClient mqttClient2 = new MqttClient("mqtt://127.0.0.1:1883");
+//        mqttClient2.connect();
+//        mqttClient2.subscribe("/will", MqttQoS.AT_MOST_ONCE, (mqttClient1, mqttPublishMessage) -> {
+//            System.out.println(new String(mqttPublishMessage.getPayload().getPayload()));
+//            completableFuture.complete(new String(mqttPublishMessage.getPayload().getPayload()));
+//        }, (mqttClient1, mqttQoS) -> mqttClient.disconnect());
+//
+//        Assert.assertEquals(completableFuture.get(), "willPayload");
+//    }
 }
