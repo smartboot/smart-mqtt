@@ -188,7 +188,7 @@ class SubscribeRelationMatcher {
         subscribeTree = subNode.get(TopicNode.WILDCARD_PLUS_NODE);
         if (subscribeTree != null) {
             if (topicToken.getNextNode() == null) {
-                subscribers.forEach(consumer);
+                subscribeTree.subscribers.forEach(consumer);
             } else {
                 subscribeTree.match0(topicToken.getNextNode(), consumer);
             }
