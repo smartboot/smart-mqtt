@@ -2,7 +2,6 @@ package tech.smartboot.mqtt.plugin.cluster;
 
 import org.smartboot.socket.transport.AioSession;
 import org.smartboot.socket.transport.WriteBuffer;
-import org.smartboot.socket.util.StringUtils;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.PathParam;
@@ -179,7 +178,7 @@ public class ClusterController {
             public void onBodyStream(ByteBuffer buffer) {
                 byte[] bytes = new byte[buffer.remaining()];
                 buffer.get(bytes);
-                LOGGER.error("BinarySSEUpgrade.onBodyStream:{}", StringUtils.toHexString(bytes));
+                LOGGER.error("BinarySSEUpgrade.onBodyStream:{}", new String(bytes));
             }
 
             @Override
