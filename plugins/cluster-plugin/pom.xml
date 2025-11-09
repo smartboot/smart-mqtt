@@ -20,6 +20,7 @@
         <dependency>
             <groupId>tech.smartboot.feat</groupId>
             <artifactId>feat-cloud-starter</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>
