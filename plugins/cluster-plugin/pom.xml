@@ -16,6 +16,12 @@
         <dependency>
             <groupId>tech.smartboot.mqtt</groupId>
             <artifactId>smart-mqtt-client</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>tech.smartboot.mqtt</groupId>
+                    <artifactId>smart-mqtt-common</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>tech.smartboot.feat</groupId>
