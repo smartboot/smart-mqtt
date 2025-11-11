@@ -1,0 +1,47 @@
+name: 企业采购 License 申请
+description: |
+  
+      请务必先完成产品试用并确认满足您的需求后再提交采购申请！   
+           <br/>
+      ❗**如果您对 License 有疑问但尚未决定采购，请使用[License采购咨询](https://gitee.com/smartboot/smart-mqtt/issues/new?template=license_inquiry.yml)模板。**
+         <br/>
+      ❗**如果您已获得授权但需要技术支持，请使用[企业技术支持](https://gitee.com/smartboot/smart-mqtt/issues/new?template=enterprise_support.yml)模板。**
+title: "[企业采购License申请]: xxx有限公司"
+labels: ["license", "apply"]
+body:
+  - type: input
+    id: company_name
+    attributes:
+      label: 企业名称
+      description: 请输入完整的企业名称
+      placeholder: 例如：某某科技有限公司
+    validations:
+      required: true
+  - type: input
+    id: unified_social_credit_code
+    attributes:
+      label: 统一社会信用代码
+      description: 请输入企业的统一社会信用代码
+      placeholder: 例如：912345678901234567
+    validations:
+      required: true
+  - type: textarea
+    id: company_logo
+    attributes:
+      label: 企业Logo
+      description: 请上传企业Logo（支持PNG、JPG格式，建议尺寸不小于200*200像素）
+      placeholder: 可直接拖拽图片到此处或点击上传
+    validations:
+      required: true
+  - type: checkboxes
+    attributes:
+      label: 申请确认
+      options:
+        - label: 我承诺提供的企业信息真实有效
+          required: true
+  - type: markdown
+    attributes:
+      value: |
+        - 完成登记后添加个人微信号: `junweiis008`（备注：smart-mqtt采购申请已提交）
+        
+          <img src="https://smartboot.tech/img/qrcode/personal_wx.png" width="25%"/>

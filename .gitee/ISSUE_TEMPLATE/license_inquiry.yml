@@ -1,0 +1,43 @@
+name: License采购咨询
+description: |
+    在您仔细阅读了商业授权说明但仍存疑问的情况下，可以通过此模板进行咨询。
+title: "[License咨询]: "
+labels: ["license", "question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 注意事项
+        在提交此咨询前，请确保您已经详细阅读并理解了我们的《[产品手册](https://smartboot.tech/smart-mqtt/enterprise.html)》。
+        
+        只有在您对文档内容有充分理解但仍然存在疑问的情况下才应使用此模板。   
+            
+        ❗**如果您想申请商业许可证，请不要使用此模板，而应使用[企业采购 License 申请](https://gitee.com/smartboot/smart-mqtt/issues/new?template=license_apply.yml)模板。**
+            
+        ❗**如果您是已授权客户并需要技术支持，请使用[企业技术支持](https://gitee.com/smartboot/smart-mqtt/issues/new?template=enterprise_support.yml)模板。**
+  - type: checkboxes
+    attributes:
+      label: 前置确认
+      options:
+        - label: 我已仔细阅读并理解了《[产品手册](https://smartboot.tech/smart-mqtt/enterprise.html)》说明
+          required: true
+        - label: 我在阅读文档后仍有一些疑问需要进一步澄清
+          required: true
+  - type: textarea
+    attributes:
+      label: 咨询内容
+      description: 请详细描述您对 smart-mqtt 的疑问
+      placeholder: |
+        例如：
+        1. 关于商业许可证的具体功能差异
+        2. 关于授权范围的详细解释
+        3. 关于技术支持服务的具体内容
+        4. 其他与License相关的疑问
+    validations:
+      required: true
+  - type: input
+    id: contact
+    attributes:
+      label: 联系方式（可选）
+      description: 如果您希望我们通过特定方式联系您，可以留下联系方式（邮箱、微信等）
+      placeholder: 例如：email@example.com 或 微信号：xxxxxx
