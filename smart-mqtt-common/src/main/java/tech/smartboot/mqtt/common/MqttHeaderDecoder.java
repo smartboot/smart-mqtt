@@ -83,6 +83,7 @@ final class MqttHeaderDecoder implements Decoder {
 
         MqttFixedHeader mqttFixedHeader = MqttFixedHeader.getInstance(messageType, dupFlag, qosLevel, retain);
         session.mqttMessage = newMessage(mqttFixedHeader);
+        session.mqttMessage.setVersion(session.getMqttVersion());
         session.mqttMessage.setRemainingLength(remainingLength);
         return mqttPayloadDecoder.decode(buffer, session);
     }
