@@ -48,7 +48,7 @@ public class UnSubscribeProcessor extends AuthorizedMqttProcessor<MqttUnsubscrib
         MqttReasonVariableHeader variableHeader;
         Mqtt5UnsubAckPayload payload;
         //todo
-        if (unsubscribeMessage.getVersion() == MqttVersion.MQTT_5) {
+        if (session.getMqttVersion() == MqttVersion.MQTT_5) {
             ReasonProperties properties = new ReasonProperties();
             variableHeader = new MqttReasonVariableHeader(unsubscribeMessage.getVariableHeader().getPacketId(), properties);
             //todo 暂时默认都成功

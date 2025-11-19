@@ -55,7 +55,7 @@ public class SubscribeProcessor extends AuthorizedMqttProcessor<MqttSubscribeMes
         //允许服务端在发送 SUBACK 报文之前就开始发送与订阅匹配的 PUBLISH 报文
         //todo
         ReasonProperties properties = null;
-        if (mqttSubscribeMessage.getVersion() == MqttVersion.MQTT_5) {
+        if (session.getMqttVersion() == MqttVersion.MQTT_5) {
             properties = new ReasonProperties();
         }
         MqttReasonVariableHeader variableHeader = new MqttReasonVariableHeader(mqttSubscribeMessage.getVariableHeader().getPacketId(), properties);

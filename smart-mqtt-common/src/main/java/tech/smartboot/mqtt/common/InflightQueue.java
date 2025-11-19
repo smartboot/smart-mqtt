@@ -162,7 +162,7 @@ public class InflightQueue {
                         break;
                     case PUBCOMP:
                         ReasonProperties properties = null;
-                        if (inflightMessage.getOriginalMessage().getVersion() == MqttVersion.MQTT_5) {
+                        if (session.getMqttVersion() == MqttVersion.MQTT_5) {
                             properties = new ReasonProperties();
                         }
                         MqttVariableMessage<? extends MqttPacketIdVariableHeader> message = inflightMessage.getOriginalMessage();
@@ -222,7 +222,7 @@ public class InflightQueue {
                 inflightMessage.setExpectMessageType(MqttMessageType.PUBCOMP);
                 //todo
                 ReasonProperties properties = null;
-                if (message.getVersion() == MqttVersion.MQTT_5) {
+                if (session.getMqttVersion() == MqttVersion.MQTT_5) {
                     properties = new ReasonProperties();
                 }
                 MqttPubQosVariableHeader variableHeader = new MqttPubQosVariableHeader(message.getVariableHeader().getPacketId(), properties);

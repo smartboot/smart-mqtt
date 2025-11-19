@@ -51,7 +51,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
         mqttClient.accepted(mqttPublishMessage);
         //todo
         ReasonProperties properties = null;
-        if (mqttPublishMessage.getVersion() == MqttVersion.MQTT_5) {
+        if (mqttClient.getMqttVersion() == MqttVersion.MQTT_5) {
             properties = new ReasonProperties();
         }
         MqttPubQosVariableHeader variableHeader = new MqttPubQosVariableHeader(mqttPublishMessage.getVariableHeader().getPacketId(), properties);
@@ -63,7 +63,7 @@ public class PublishProcessor implements MqttProcessor<MqttPublishMessage> {
         final int messageId = mqttPublishMessage.getVariableHeader().getPacketId();
         //todo
         ReasonProperties properties = null;
-        if (mqttPublishMessage.getVersion() == MqttVersion.MQTT_5) {
+        if (session.getMqttVersion() == MqttVersion.MQTT_5) {
             properties = new ReasonProperties();
         }
         MqttPubQosVariableHeader variableHeader = new MqttPubQosVariableHeader(messageId, properties);

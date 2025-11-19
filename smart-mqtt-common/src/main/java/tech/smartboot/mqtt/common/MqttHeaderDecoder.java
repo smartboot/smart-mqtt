@@ -71,7 +71,6 @@ final class MqttHeaderDecoder implements Decoder {
             }
             multiplier <<= 7;
         } while (true);
-        buffer.mark();
 
         if (remainingLength > maxBytesInMessage) {
             throw new DecoderException("too large message: " + remainingLength + " bytes");
@@ -85,10 +84,6 @@ final class MqttHeaderDecoder implements Decoder {
         MqttFixedHeader mqttFixedHeader = MqttFixedHeader.getInstance(messageType, dupFlag, qosLevel, retain);
         session.mqttMessage = newMessage(mqttFixedHeader);
         session.mqttMessage.setRemainingLength(remainingLength);
-        //非MqttConnectMessage对象为null,
-        if (session.mqttMessage.getVersion() == null) {
-            session.mqttMessage.setVersion(session.getMqttVersion());
-        }
         return mqttPayloadDecoder.decode(buffer, session);
     }
 
