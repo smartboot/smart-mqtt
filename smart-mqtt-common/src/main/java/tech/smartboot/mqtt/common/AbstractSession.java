@@ -38,7 +38,7 @@ public abstract class AbstractSession {
     protected boolean disconnect = false;
     protected MqttWriter mqttWriter;
 
-    private MqttVersion mqttVersion;
+    protected MqttVersion mqttVersion;
 
     protected InflightQueue inflightQueue;
     private final Hashtable<Integer, MqttPublishMessage> ackMessageCacheMap = new Hashtable<>();
@@ -119,10 +119,6 @@ public abstract class AbstractSession {
 
     public final MqttVersion getMqttVersion() {
         return mqttVersion;
-    }
-
-    public final void setMqttVersion(MqttVersion mqttVersion) {
-        this.mqttVersion = mqttVersion;
     }
 
     public final void setInflightQueue(InflightQueue inflightQueue) {

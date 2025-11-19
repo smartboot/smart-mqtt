@@ -388,8 +388,7 @@ public class MqttSpecComplianceTest {
         int numSubscribers = 3;
         int numMessages = numSubscribers * 2; // Send enough messages to likely hit all subscribers
 
-        MqttClient publisher = new MqttClient(host, port);
-        publisher.setMqttVersion(MqttVersion.MQTT_5);
+        MqttClient publisher = new MqttClient(host, port, options -> options.setMqttVersion(MqttVersion.MQTT_5));
         CompletableFuture<Void> pubConnectFuture = new CompletableFuture<>();
         publisher.connect(connAck -> {
             if (connAck.getVariableHeader().connectReturnCode() == MqttConnectReturnCode.CONNECTION_ACCEPTED) {
@@ -407,9 +406,8 @@ public class MqttSpecComplianceTest {
         for (int i = 0; i < numSubscribers; i++) {
             int j = i;
             MqttClient subscriber = new MqttClient(host, port, options -> {
-                options.setClientId("shared-sub-" + j);
+                options.setClientId("shared-sub-" + j).setMqttVersion(MqttVersion.MQTT_5);
             });
-            subscriber.setMqttVersion(MqttVersion.MQTT_5);
             subscribers.add(subscriber);
             CompletableFuture<String> messageFuture = new CompletableFuture<>();
             messageFutures.add(messageFuture); // We expect each subscriber to get at least one message
@@ -631,7 +629,8 @@ public class MqttSpecComplianceTest {
 
         // Test wildcard in the middle of a topic level (invalid)
         CompletableFuture<Boolean> invalidWildcardFuture = new CompletableFuture<>();
-        subscriber.subscribe("sport/+/tennis", MqttQoS.AT_MOST_ONCE, (client, msg) -> {}, (client, qos) -> {
+        subscriber.subscribe("sport/+/tennis", MqttQoS.AT_MOST_ONCE, (client, msg) -> {
+        }, (client, qos) -> {
             // This subscription should be rejected or handled properly
             invalidWildcardFuture.complete(true);
         });
@@ -645,7 +644,8 @@ public class MqttSpecComplianceTest {
 
         // Test hash wildcard not at the end (invalid)
         CompletableFuture<Boolean> invalidHashFuture = new CompletableFuture<>();
-        subscriber.subscribe("sport/#/tennis", MqttQoS.AT_MOST_ONCE, (client, msg) -> {}, (client, qos) -> {
+        subscriber.subscribe("sport/#/tennis", MqttQoS.AT_MOST_ONCE, (client, msg) -> {
+        }, (client, qos) -> {
             invalidHashFuture.complete(true);
         });
 
@@ -667,7 +667,7 @@ public class MqttSpecComplianceTest {
         // Test subscribing to both specific topic and wildcard topic
         String specificTopic = "sport/tennis/results";
         String wildcardTopic = "sport/tennis/+";
-        
+
         String matchingTopic1 = "sport/tennis/results";
         String matchingTopic2 = "sport/tennis/scores";
 
@@ -687,7 +687,7 @@ public class MqttSpecComplianceTest {
                     specificMessageFuture.complete(payload);
                 }
             });
-            
+
             // Subscribe to wildcard topic
             subscriber.subscribe(wildcardTopic, MqttQoS.AT_MOST_ONCE, (client, msg) -> {
                 String topic = msg.getVariableHeader().getTopicName();
@@ -697,7 +697,7 @@ public class MqttSpecComplianceTest {
                 }
             });
         });
-        
+
         Thread.sleep(500); // Allow subscriptions to complete
 
         // Publish to matching topics
@@ -736,11 +736,11 @@ public class MqttSpecComplianceTest {
                 }
             });
         });
-        
+
         Thread.sleep(500); // Allow subscription to complete
 
         publisher.publish(matchingTopic, MqttQoS.AT_MOST_ONCE, "empty_level_payload".getBytes());
-        
+
         // Check if message with empty level is received
         try {
             Assert.assertEquals("empty_level_payload", messageFuture.get(5, TimeUnit.SECONDS));

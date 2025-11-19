@@ -334,4 +334,8 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
     public void setLatestReceiveMessageTime(long latestReceiveMessageTime) {
         this.latestReceiveMessageTime = latestReceiveMessageTime;
     }
+
+    public final void setMqttVersion(MqttVersion mqttVersion) {
+        this.mqttVersion = mqttVersion;
+    }
 }

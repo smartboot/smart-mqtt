@@ -131,7 +131,7 @@ public class MqttClient extends AbstractSession {
         options.setPort(MqttUtil.toInt(array[2]));
         opt.accept(options);
         this.clientId = options.getClientId();
-        setMqttVersion(options.getMqttVersion());
+        mqttVersion = options.getMqttVersion();
     }
 
 
