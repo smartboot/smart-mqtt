@@ -29,7 +29,7 @@ public class MqttDisconnectMessage extends MqttVariableMessage<MqttDisconnectVar
     }
 
     @Override
-    protected void decodeVariableHeader0(ByteBuffer buffer) {
+    protected void decodeVariableHeader0(ByteBuffer buffer, final MqttVersion version) {
         if (version == MqttVersion.MQTT_5) {
             byte returnCode = buffer.get();
             DisConnectProperties properties = new DisConnectProperties();

@@ -37,7 +37,7 @@ public class MqttPublishMessage extends MqttPacketIdentifierMessage<MqttPublishV
     }
 
     @Override
-    public void decodeVariableHeader0(ByteBuffer buffer) {
+    public void decodeVariableHeader0(ByteBuffer buffer, final MqttVersion version) {
         final String topic = TopicByteTree.DEFAULT_INSTANCE.search(buffer);
         int packetId = -1;
         //只有当 QoS 等级是 1 或 2 时，报文标识符（Packet Identifier）字段才能出现在 PUBLISH 报文中。

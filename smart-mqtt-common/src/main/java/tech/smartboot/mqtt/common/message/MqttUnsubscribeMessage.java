@@ -37,7 +37,7 @@ public class MqttUnsubscribeMessage extends MqttPacketIdentifierMessage<MqttReas
     }
 
     @Override
-    protected void decodeVariableHeader0(ByteBuffer buffer) {
+    protected void decodeVariableHeader0(ByteBuffer buffer, final MqttVersion version) {
         int packetId = decodeMessageId(buffer);
         MqttPubQosVariableHeader header;
         if (version == MqttVersion.MQTT_5) {

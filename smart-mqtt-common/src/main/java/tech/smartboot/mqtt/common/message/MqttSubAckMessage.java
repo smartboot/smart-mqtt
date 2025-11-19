@@ -35,7 +35,7 @@ public class MqttSubAckMessage extends MqttPacketIdentifierMessage<MqttReasonVar
     }
 
     @Override
-    protected void decodeVariableHeader0(ByteBuffer buffer) {
+    protected void decodeVariableHeader0(ByteBuffer buffer, final MqttVersion version) {
         int packetId = decodeMessageId(buffer);
         MqttReasonVariableHeader header;
         if (version == MqttVersion.MQTT_5) {

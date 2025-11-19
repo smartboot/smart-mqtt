@@ -33,6 +33,7 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
      * 有效载荷
      */
     private MqttConnectPayload mqttConnectPayload;
+    private MqttVersion version;
 
     public MqttConnectMessage(MqttFixedHeader mqttFixedHeader) {
         super(mqttFixedHeader);
@@ -45,7 +46,7 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
     }
 
     @Override
-    public void decodeVariableHeader0(ByteBuffer buffer) {
+    public void decodeVariableHeader0(ByteBuffer buffer, MqttVersion mqttVersion) {
         //协议名
         //协议名是表示协议名 MQTT 的 UTF-8 编码的字符串。
         //MQTT 规范的后续版本不会改变这个字符串的偏移和长度。

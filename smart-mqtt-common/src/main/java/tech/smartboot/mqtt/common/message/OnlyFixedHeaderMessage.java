@@ -11,6 +11,7 @@
 package tech.smartboot.mqtt.common.message;
 
 import tech.smartboot.mqtt.common.MqttWriter;
+import tech.smartboot.mqtt.common.enums.MqttVersion;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -37,7 +38,7 @@ class OnlyFixedHeaderMessage extends MqttMessage {
     }
 
     @Override
-    public final void decodeVariableHeader(ByteBuffer buffer) {
+    public final void decodeVariableHeader(ByteBuffer buffer, MqttVersion mqttVersion) {
     }
 
     @Override

@@ -41,7 +41,7 @@ public class MqttSubscribeMessage extends MqttPacketIdentifierMessage<MqttSubscr
     }
 
     @Override
-    public void decodeVariableHeader0(ByteBuffer buffer) {
+    public void decodeVariableHeader0(ByteBuffer buffer, final MqttVersion version) {
         int packetId = decodeMessageId(buffer);
         MqttSubscribeVariableHeader header;
         if (version == MqttVersion.MQTT_5) {

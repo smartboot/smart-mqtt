@@ -32,7 +32,7 @@ public class MqttPubQosMessage extends MqttPacketIdentifierMessage<MqttPubQosVar
     }
 
     @Override
-    protected final void decodeVariableHeader0(ByteBuffer buffer) {
+    protected final void decodeVariableHeader0(ByteBuffer buffer, MqttVersion version) {
         int packetId = decodeMessageId(buffer);
         MqttPubQosVariableHeader header = null;
         if (version == MqttVersion.MQTT_5) {

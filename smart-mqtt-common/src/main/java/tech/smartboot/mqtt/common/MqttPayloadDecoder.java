@@ -46,7 +46,7 @@ final class MqttPayloadDecoder implements Decoder {
             return this;
         }
         int p = payloadBuffer.position();
-        session.mqttMessage.decodeVariableHeader(payloadBuffer);
+        session.mqttMessage.decodeVariableHeader(payloadBuffer, session.getMqttVersion());
         session.mqttMessage.decodePlayLoad(payloadBuffer);
         ValidateUtils.isTrue((payloadBuffer.position() - p) == remainingLength, "Payload size is wrong");
         session.disposableBuffer = null;

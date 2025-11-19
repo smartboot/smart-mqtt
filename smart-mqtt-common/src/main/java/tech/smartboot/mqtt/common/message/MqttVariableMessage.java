@@ -11,6 +11,7 @@
 package tech.smartboot.mqtt.common.message;
 
 
+import tech.smartboot.mqtt.common.enums.MqttVersion;
 import tech.smartboot.mqtt.common.message.variable.properties.AbstractProperties;
 
 import java.nio.ByteBuffer;
@@ -35,9 +36,9 @@ public abstract class MqttVariableMessage<T extends MqttVariableHeader<? extends
     }
 
     @Override
-    public final void decodeVariableHeader(ByteBuffer buffer) {
+    public final void decodeVariableHeader(ByteBuffer buffer, MqttVersion mqttVersion) {
         int position = buffer.position();
-        decodeVariableHeader0(buffer);
+        decodeVariableHeader0(buffer, mqttVersion);
         variableHeaderLength = buffer.position() - position;
     }
 
@@ -45,7 +46,7 @@ public abstract class MqttVariableMessage<T extends MqttVariableHeader<? extends
         return variableHeaderLength;
     }
 
-    protected abstract void decodeVariableHeader0(ByteBuffer buffer);
+    protected abstract void decodeVariableHeader0(ByteBuffer buffer, MqttVersion mqttVersion);
 
     public final T getVariableHeader() {
         return variableHeader;

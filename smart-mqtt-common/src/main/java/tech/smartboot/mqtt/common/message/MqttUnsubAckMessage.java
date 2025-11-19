@@ -10,6 +10,7 @@
 
 package tech.smartboot.mqtt.common.message;
 
+import tech.smartboot.mqtt.common.enums.MqttVersion;
 import tech.smartboot.mqtt.common.message.payload.Mqtt5UnsubAckPayload;
 import tech.smartboot.mqtt.common.message.variable.MqttReasonVariableHeader;
 
@@ -27,7 +28,7 @@ public class MqttUnsubAckMessage extends MqttPacketIdentifierMessage<MqttReasonV
     }
 
     @Override
-    protected void decodeVariableHeader0(ByteBuffer buffer) {
+    protected void decodeVariableHeader0(ByteBuffer buffer, final MqttVersion version) {
 
     }
 

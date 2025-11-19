@@ -40,7 +40,6 @@ public abstract class MqttMessage {
      * 固定报头
      */
     protected final MqttFixedHeader fixedHeader;
-    protected MqttVersion version;
     /**
      * 剩余长度
      */
@@ -59,7 +58,7 @@ public abstract class MqttMessage {
      *
      * @param buffer
      */
-    public abstract void decodeVariableHeader(ByteBuffer buffer);
+    public abstract void decodeVariableHeader(ByteBuffer buffer, MqttVersion mqttVersion);
 
     public void decodePlayLoad(ByteBuffer buffer) {
 
@@ -109,9 +108,5 @@ public abstract class MqttMessage {
 
     public void setRemainingLength(int remainingLength) {
         this.remainingLength = remainingLength;
-    }
-
-    public final void setVersion(MqttVersion version) {
-        this.version = version;
     }
 }

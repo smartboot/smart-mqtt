@@ -72,7 +72,6 @@ public abstract class AbstractSession {
     public void write(MqttMessage mqttMessage, boolean autoFlush) {
         ValidateUtils.isTrue(!disconnect, "已断开连接,无法发送消息");
         try {
-            mqttMessage.setVersion(mqttVersion);
             synchronized (mqttWriter) {
                 if (disconnect) {
                     ValidateUtils.throwException("session is disconnect");
