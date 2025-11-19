@@ -111,10 +111,6 @@ public abstract class MqttMessage {
         this.remainingLength = remainingLength;
     }
 
-    public final MqttVersion getVersion() {
-        return version;
-    }
-
     public final void setVersion(MqttVersion version) {
         this.version = version;
     }

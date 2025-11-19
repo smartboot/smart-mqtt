@@ -121,4 +121,8 @@ public class MqttConnectMessage extends MqttVariableMessage<MqttConnectVariableH
     public MqttConnectPayload getPayload() {
         return mqttConnectPayload;
     }
+
+    public MqttVersion getVersion() {
+        return version;
+    }
 }
