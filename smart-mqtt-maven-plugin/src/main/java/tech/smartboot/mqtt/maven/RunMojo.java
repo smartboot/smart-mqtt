@@ -25,6 +25,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author 三刀
@@ -36,8 +37,8 @@ public class RunMojo extends AbstractMojo {
     /**
      * @since 1.0
      */
-    @Parameter(defaultValue = "${plugin.artifacts}", required = true)
-    private List<Artifact> pluginArtifacts;
+    @Parameter(defaultValue = "${project.artifacts}", required = true)
+    private Set<Artifact> pluginArtifacts;
 
     /**
      * 编译后的存放目录
@@ -85,7 +86,7 @@ public class RunMojo extends AbstractMojo {
 
             URL[] urls = new URL[urlList.size()];
             urlList.toArray(urls);
-            URLClassLoader classLoader = new URLClassLoader(urls, ClassLoader.getSystemClassLoader());
+            URLClassLoader classLoader = new URLClassLoader(urls, RunMojo.class.getClassLoader());
             Thread.currentThread().setContextClassLoader(classLoader);
 
             //将插件的target目录作为插件的存储目录
