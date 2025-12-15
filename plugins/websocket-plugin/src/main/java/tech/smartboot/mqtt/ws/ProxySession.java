@@ -68,11 +68,6 @@ class ProxySession extends AioSession {
     }
 
     @Override
-    public String getSessionID() {
-        return session.getSessionID();
-    }
-
-    @Override
     public boolean isInvalid() {
         return session.isInvalid();
     }
