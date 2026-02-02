@@ -12,7 +12,6 @@ package tech.smartboot.mqtt.broker;
 
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
-import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.timer.Timer;
 import org.smartboot.socket.transport.AioQuickServer;
@@ -416,7 +415,7 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private void subscribeEventBus() {
         //保持连接状态监听,长时间没有消息通信将断开连接
-        eventBus.subscribe(EventType.CONNECT, new KeepAliveMonitorSubscriber(this));
+        eventBus.subscribe(EventType.CONNECT, AsyncEventObject.syncConsumer(new KeepAliveMonitorSubscriber(this)));
         //完成连接认证，移除监听器
         eventBus.subscribe(EventType.CONNECT, AsyncEventObject.syncConsumer((eventType, object) -> {
             MqttSessionImpl session = (MqttSessionImpl) object.getSession();

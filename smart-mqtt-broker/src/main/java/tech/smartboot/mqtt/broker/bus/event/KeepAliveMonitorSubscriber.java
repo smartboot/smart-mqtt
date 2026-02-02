@@ -60,6 +60,5 @@ public class KeepAliveMonitorSubscriber implements EventBusConsumer<AsyncEventOb
             }
         }, finalTimeout, TimeUnit.MILLISECONDS);
         session.setKeepAliveTimer(task);
-        object.getFuture().complete(null);
     }
 }
