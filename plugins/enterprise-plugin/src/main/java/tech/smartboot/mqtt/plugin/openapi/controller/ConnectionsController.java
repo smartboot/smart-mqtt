@@ -42,6 +42,7 @@ import tech.smartboot.mqtt.plugin.openapi.to.ConnectionTO;
 import tech.smartboot.mqtt.plugin.openapi.to.Pagination;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
+import tech.smartboot.mqtt.plugin.spec.bus.AsyncEventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 import tech.smartboot.mqtt.plugin.utils.IpUtil;
 
@@ -89,7 +90,7 @@ public class ConnectionsController {
                 connectionMapper.updateStatus(clientId, ConnectionStatusEnum.DIS_CONNECT.getStatus());
             });
         });
-        brokerContext.getEventBus().subscribe(EventType.CONNECT, (eventType, object) -> {
+        brokerContext.getEventBus().subscribe(EventType.CONNECT, AsyncEventObject.syncConsumer((eventType, object) -> {
             ConnectionDO connectionDO = new ConnectionDO();
             connectionDO.setClientId(object.getSession().getClientId());
             connectionDO.setUsername(object.getObject().getPayload().userName());
@@ -122,7 +123,7 @@ public class ConnectionsController {
                 mapper.deleteById(connectionDO.getClientId());
                 int r = mapper.insert(connectionDO);
             });
-        });
+        }));
 
         EnterprisePlugin.SelfRescueTimer.scheduleWithFixedDelay(new AsyncTask() {
             @Override

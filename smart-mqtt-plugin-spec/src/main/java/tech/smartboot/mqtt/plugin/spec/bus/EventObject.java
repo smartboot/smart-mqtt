@@ -22,13 +22,17 @@ public class EventObject<T> {
     private final MqttSession session;
     private final T object;
 
-    private EventObject(MqttSession session, T object) {
+    EventObject(MqttSession session, T object) {
         this.session = session;
         this.object = object;
     }
 
     public static <T> EventObject<T> newEventObject(MqttSession mqttSession, T object) {
         return new EventObject<>(mqttSession, object);
+    }
+
+    public static <T> AsyncEventObject<T> newAsyncEventObject(MqttSession mqttSession, T object) {
+        return new AsyncEventObject<>(mqttSession, object);
     }
 
     public MqttSession getSession() {

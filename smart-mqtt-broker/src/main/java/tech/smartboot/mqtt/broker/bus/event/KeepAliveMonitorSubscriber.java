@@ -15,8 +15,8 @@ import tech.smartboot.mqtt.broker.MqttSessionImpl;
 import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
+import tech.smartboot.mqtt.plugin.spec.bus.AsyncEventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventBusConsumer;
-import tech.smartboot.mqtt.plugin.spec.bus.EventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 
 import java.util.concurrent.TimeUnit;
@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/7/5
  */
-public class KeepAliveMonitorSubscriber implements EventBusConsumer<EventObject<MqttConnectMessage>> {
+public class KeepAliveMonitorSubscriber implements EventBusConsumer<AsyncEventObject<MqttConnectMessage>> {
     private final BrokerContext context;
 
     public KeepAliveMonitorSubscriber(BrokerContext context) {
@@ -33,7 +33,7 @@ public class KeepAliveMonitorSubscriber implements EventBusConsumer<EventObject<
     }
 
     @Override
-    public void consumer(EventType<EventObject<MqttConnectMessage>> eventType, EventObject<MqttConnectMessage> object) {
+    public void consumer(EventType<AsyncEventObject<MqttConnectMessage>> eventType, AsyncEventObject<MqttConnectMessage> object) {
         //如果保持连接的值非零，并且服务端在一点五倍的保持连接时间内没有收到客户端的控制报文，
         // 它必须断开客户端的网络连接，认为网络连接已断开.
         int timeout = object.getObject().getVariableHeader().keepAliveTimeSeconds() * 1000;
@@ -60,5 +60,6 @@ public class KeepAliveMonitorSubscriber implements EventBusConsumer<EventObject<
             }
         }, finalTimeout, TimeUnit.MILLISECONDS);
         session.setKeepAliveTimer(task);
+        object.getFuture().complete(null);
     }
 }

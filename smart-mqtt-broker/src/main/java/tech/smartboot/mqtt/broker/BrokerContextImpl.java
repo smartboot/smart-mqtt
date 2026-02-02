@@ -12,6 +12,7 @@ package tech.smartboot.mqtt.broker;
 
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
+import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.timer.Timer;
 import org.smartboot.socket.transport.AioQuickServer;
@@ -29,6 +30,7 @@ import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
 import tech.smartboot.mqtt.plugin.spec.PluginRegistry;
+import tech.smartboot.mqtt.plugin.spec.bus.AsyncEventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventBus;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 import tech.smartboot.mqtt.plugin.spec.bus.MessageBus;
@@ -271,6 +273,7 @@ public class BrokerContextImpl implements BrokerContext {
         pluginRegistry.init();
 
         try {
+            options.getPlugins().add(new StreamMonitorPlugin<>());
             options.getPlugins().forEach(processor::addPlugin);
             server = new AioQuickServer(options.getHost(), options.getPort(), new MqttProtocol(options.getMaxPacketSize()), processor);
             server.setBannerEnabled(false).setReadBufferSize(options.getBufferSize()).setWriteBuffer(options.getBufferSize(), Math.min(options.getMaxInflight(), 16)).setBufferPagePool(bufferPagePool).setThreadNum(Math.max(2, options.getThreadNum()));
@@ -416,11 +419,11 @@ public class BrokerContextImpl implements BrokerContext {
         //保持连接状态监听,长时间没有消息通信将断开连接
         eventBus.subscribe(EventType.CONNECT, new KeepAliveMonitorSubscriber(this));
         //完成连接认证，移除监听器
-        eventBus.subscribe(EventType.CONNECT, (eventType, object) -> {
+        eventBus.subscribe(EventType.CONNECT, AsyncEventObject.syncConsumer((eventType, object) -> {
             MqttSessionImpl session = (MqttSessionImpl) object.getSession();
             session.idleConnectTimer.cancel();
             session.idleConnectTimer = null;
-        });
+        }));
 
         eventBus.subscribe(EventType.TOPIC_CREATE, (eventType, brokerTopic) -> subscribeTopicTree.match(getOrCreateTopic(brokerTopic)));
     }

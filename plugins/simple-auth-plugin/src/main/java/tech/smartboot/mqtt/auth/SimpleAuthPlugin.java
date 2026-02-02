@@ -6,8 +6,8 @@ import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
+import tech.smartboot.mqtt.plugin.spec.bus.AsyncEventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventBusConsumer;
-import tech.smartboot.mqtt.plugin.spec.bus.EventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 
 import java.util.Arrays;
@@ -25,9 +25,9 @@ public class SimpleAuthPlugin extends Plugin {
         PluginConfig pluginConfig = loadPluginConfig(PluginConfig.class);
         Map<String, byte[]> accounts = pluginConfig.getAccounts().stream().collect(java.util.stream.Collectors.toMap(PluginConfig.Account::getUsername, account -> account.getPassword().getBytes()));
         enabled = true;
-        brokerContext.getEventBus().subscribe(EventType.CONNECT, new EventBusConsumer<EventObject<MqttConnectMessage>>() {
+        brokerContext.getEventBus().subscribe(EventType.CONNECT, AsyncEventObject.syncConsumer(new EventBusConsumer<AsyncEventObject<MqttConnectMessage>>() {
             @Override
-            public void consumer(EventType<EventObject<MqttConnectMessage>> eventType, EventObject<MqttConnectMessage> object) {
+            public void consumer(EventType<AsyncEventObject<MqttConnectMessage>> eventType, AsyncEventObject<MqttConnectMessage> object) {
                 MqttSession session = object.getSession();
                 //如果已经认证失败，就不需要再认证了
                 if (session.isDisconnect()) {
@@ -53,7 +53,7 @@ public class SimpleAuthPlugin extends Plugin {
             public boolean enable() {
                 return enabled;
             }
-        });
+        }));
     }
 
     @Override

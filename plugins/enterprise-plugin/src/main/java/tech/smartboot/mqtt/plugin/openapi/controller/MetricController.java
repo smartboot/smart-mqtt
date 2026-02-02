@@ -53,6 +53,7 @@ import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.Options;
+import tech.smartboot.mqtt.plugin.spec.bus.AsyncEventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventBus;
 import tech.smartboot.mqtt.plugin.spec.bus.EventBusConsumer;
 import tech.smartboot.mqtt.plugin.spec.bus.EventObject;
@@ -237,7 +238,7 @@ public class MetricController {
             }
         });
         EventBus eventBus = context.getEventBus();
-        eventBus.subscribe(EventType.CONNECT, (eventType, object) -> metrics.get(MqttMetricEnum.CLIENT_CONNECT).getMetric().increment());
+        eventBus.subscribe(EventType.CONNECT, AsyncEventObject.syncConsumer((eventType, object) -> metrics.get(MqttMetricEnum.CLIENT_CONNECT).getMetric().increment()));
         eventBus.subscribe(EventType.DISCONNECT, (eventType, object) -> metrics.get(MqttMetricEnum.CLIENT_DISCONNECT).getMetric().increment());
         eventBus.subscribe(EventType.SUBSCRIBE_ACCEPT, (eventType, object) -> metrics.get(MqttMetricEnum.CLIENT_SUBSCRIBE).getMetric().increment());
         eventBus.subscribe(EventType.UNSUBSCRIBE_ACCEPT, (eventType, object) -> metrics.get(MqttMetricEnum.CLIENT_UNSUBSCRIBE).getMetric().increment());

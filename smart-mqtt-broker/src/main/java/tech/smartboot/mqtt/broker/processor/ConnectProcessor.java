@@ -31,6 +31,7 @@ import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.MqttProcessor;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.PublishBuilder;
+import tech.smartboot.mqtt.plugin.spec.bus.AsyncEventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 import tech.smartboot.mqtt.plugin.spec.provider.SessionState;
@@ -66,41 +67,46 @@ public class ConnectProcessor implements MqttProcessor<BrokerContextImpl, MqttCo
         //服务端必须按照 3.1 节的要求验证 CONNECT 报文，如果报文不符合规范，服务端不发送CONNACK 报文直接关闭网络连接
         checkMessage(session, mqttConnectMessage);
 
-        context.getEventBus().publish(EventType.CONNECT, EventObject.newEventObject(session, mqttConnectMessage));
-        if (session.isDisconnect()) {
-            return;
-        }
-        session.setAuthorized(true);
-        //清理会话
-        refreshSession(context, session, mqttConnectMessage);
+        AsyncEventObject<MqttConnectMessage> obj = EventObject.newAsyncEventObject(session, mqttConnectMessage);
+        session.getSession().awaitRead();
+        obj.getFuture().thenAccept(msg -> {
+            session.getSession().signalRead();
+            if (session.isDisconnect()) {
+                return;
+            }
+            session.setAuthorized(true);
+            //清理会话
+            refreshSession(context, session, mqttConnectMessage);
 
-        //存储遗嘱消息
-        storeWillMessage(context, session, mqttConnectMessage);
+            //存储遗嘱消息
+            storeWillMessage(context, session, mqttConnectMessage);
 
-        //存储连接属性
-        session.setProperties(mqttConnectMessage.getVariableHeader().getProperties());
-        int receiveMaximum;
-        if (session.getMqttVersion() == MqttVersion.MQTT_5) {
-            //客户端使用此值限制客户端愿意同时处理的QoS等级1和QoS等级2的发布消息最大数量。
-            receiveMaximum = Math.min(mqttConnectMessage.getVariableHeader().getProperties().getReceiveMaximum(), context.Options().getMaxInflight());
-        } else {
-            receiveMaximum = context.Options().getMaxInflight();
-        }
-        session.setInflightQueue(new InflightQueue(session, receiveMaximum, context.getInflightQueueTimer()));
+            //存储连接属性
+            session.setProperties(mqttConnectMessage.getVariableHeader().getProperties());
+            int receiveMaximum;
+            if (session.getMqttVersion() == MqttVersion.MQTT_5) {
+                //客户端使用此值限制客户端愿意同时处理的QoS等级1和QoS等级2的发布消息最大数量。
+                receiveMaximum = Math.min(mqttConnectMessage.getVariableHeader().getProperties().getReceiveMaximum(), context.Options().getMaxInflight());
+            } else {
+                receiveMaximum = context.Options().getMaxInflight();
+            }
+            session.setInflightQueue(new InflightQueue(session, receiveMaximum, context.getInflightQueueTimer()));
 
-        //如果服务端收到清理会话（CleanSession）标志为 1 的连接，除了将 CONNACK 报文中的返回码设置为 0 之外，
-        // 还必须将 CONNACK 报文中的当前会话设置（Session Present）标志为 0。
-        //如果服务端收到一个 CleanSession 为 0 的连接，当前会话标志的值取决于服务端是否已经保存了 ClientId 对应客户端的会话状态。
-        // 如果服务端已经保存了会话状态，它必须将 CONNACK 报文中的当前会话标志设置为 1 。
-        // 如果服务端没有已保存的会话状态，它必须将 CONNACK 报文中的当前会话设置为 0。还需要将 CONNACK 报文中的返回码设置为 0
-        ConnectAckProperties properties = null;
-        if (session.getMqttVersion() == MqttVersion.MQTT_5) {
-            properties = new ConnectAckProperties();
-            properties.setReceiveMaximum(receiveMaximum);
-        }
-        MqttConnAckMessage mqttConnAckMessage = MqttSession.connAck(MqttConnectReturnCode.CONNECTION_ACCEPTED, !mqttConnectMessage.getVariableHeader().isCleanSession(), properties);
+            //如果服务端收到清理会话（CleanSession）标志为 1 的连接，除了将 CONNACK 报文中的返回码设置为 0 之外，
+            // 还必须将 CONNACK 报文中的当前会话设置（Session Present）标志为 0。
+            //如果服务端收到一个 CleanSession 为 0 的连接，当前会话标志的值取决于服务端是否已经保存了 ClientId 对应客户端的会话状态。
+            // 如果服务端已经保存了会话状态，它必须将 CONNACK 报文中的当前会话标志设置为 1 。
+            // 如果服务端没有已保存的会话状态，它必须将 CONNACK 报文中的当前会话设置为 0。还需要将 CONNACK 报文中的返回码设置为 0
+            ConnectAckProperties properties = null;
+            if (session.getMqttVersion() == MqttVersion.MQTT_5) {
+                properties = new ConnectAckProperties();
+                properties.setReceiveMaximum(receiveMaximum);
+            }
+            MqttConnAckMessage mqttConnAckMessage = MqttSession.connAck(MqttConnectReturnCode.CONNECTION_ACCEPTED, !mqttConnectMessage.getVariableHeader().isCleanSession(), properties);
 
-        session.write(mqttConnAckMessage, false);
+            session.write(mqttConnAckMessage, true);
+        });
+        context.getEventBus().publish(EventType.CONNECT, obj);
     }
 
 

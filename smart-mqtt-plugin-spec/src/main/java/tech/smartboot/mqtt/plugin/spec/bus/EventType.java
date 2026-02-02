@@ -93,7 +93,7 @@ public class EventType<T> {
     /**
      * 客户端连接请求
      */
-    public static final EventType<EventObject<MqttConnectMessage>> CONNECT = new EventType<>("connect");
+    public static final EventType<AsyncEventObject<MqttConnectMessage>> CONNECT = new EventType<>("connect");
     private final String name;
 
     /**

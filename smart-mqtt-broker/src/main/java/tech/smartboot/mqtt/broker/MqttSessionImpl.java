@@ -323,6 +323,10 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
         this.authorized = authorized;
     }
 
+    public AioSession getSession() {
+        return session;
+    }
+
     public void setWillMessage(MqttPublishMessage willMessage) {
         this.willMessage = willMessage;
     }

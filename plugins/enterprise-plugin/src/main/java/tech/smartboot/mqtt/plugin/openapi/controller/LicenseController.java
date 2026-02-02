@@ -37,6 +37,7 @@ import tech.smartboot.mqtt.plugin.openapi.enums.SystemConfigEnum;
 import tech.smartboot.mqtt.plugin.openapi.to.LicenseTO;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
+import tech.smartboot.mqtt.plugin.spec.bus.AsyncEventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 import tech.smartboot.mqtt.plugin.utils.Streams;
 
@@ -108,7 +109,7 @@ public class LicenseController {
             }
         });
 
-        brokerContext.getEventBus().subscribe(EventType.CONNECT, (eventType, object) -> {
+        brokerContext.getEventBus().subscribe(EventType.CONNECT, AsyncEventObject.syncConsumer((eventType, object) -> {
             MqttSession session = object.getSession();
             if (session.isDisconnect()) {
                 return;
@@ -125,7 +126,7 @@ public class LicenseController {
                 LOGGER.warn("reject connect because of license has been used up.");
                 MqttSession.connFailAck(MqttConnectReturnCode.QUOTA_EXCEEDED, session);
             }
-        });
+        }));
     }
 
     private LicenseTO loadLicense(LicenseEntity entity) throws IOException {
