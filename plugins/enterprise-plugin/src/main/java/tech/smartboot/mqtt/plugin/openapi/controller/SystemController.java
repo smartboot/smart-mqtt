@@ -132,7 +132,7 @@ public class SystemController {
      * @return
      */
     @RequestMapping(OpenApi.SYSTEM_USER_DELETE)
-    public RestResult<Void> deleteUsers(@Param("users") List<String> users) {
+    public RestResult<Void> deleteUsers(List<String> users) {
         userMapper.deleteUsers(users);
         return RestResult.ok(null);
     }
