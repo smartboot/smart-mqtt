@@ -11,6 +11,7 @@
 package tech.smartboot.mqtt.plugin.openapi.controller;
 
 import com.alibaba.fastjson2.JSONObject;
+import org.yaml.snakeyaml.Yaml;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.cloud.AsyncResponse;
 import tech.smartboot.feat.cloud.RestResult;
@@ -155,7 +156,7 @@ public class PluginManagerController {
     }
 
     @RequestMapping("/:id/config")
-    public RestResult<String> config(@PathParam("id") int id) throws IOException {
+    public RestResult<String> getConfig(@PathParam("id") int id, @Param("format") String format) throws IOException {
         boolean current = plugin.id() == id;
         PluginUnit plugin = localPlugins.get(id);
         if (!current && plugin == null) {
@@ -169,7 +170,12 @@ public class PluginManagerController {
             inputStream = (current ? PluginManagerController.class : plugin.plugin.getClass()).getClassLoader().getResourceAsStream(Plugin.CONFIG_FILE_NAME);
         }
         try {
-            return RestResult.ok(FeatUtils.asString(inputStream));
+            String config = FeatUtils.asString(inputStream);
+            if (FeatUtils.equals(format, "json")) {
+                Yaml yaml = new Yaml();
+                config = JSONObject.from(yaml.load(config)).toJSONString();
+            }
+            return RestResult.ok(config);
         } finally {
             inputStream.close();
         }
