@@ -17,7 +17,6 @@ import com.alibaba.fastjson2.annotation.JSONField;
  * @version v1.0 4/27/25
  */
 public class PluginConfig {
-    private boolean enabled = true;
     private HttpConfig http;
 
     private DataBaseConfig database;
@@ -29,14 +28,6 @@ public class PluginConfig {
 
     public void setHttp(HttpConfig httpConfig) {
         this.http = httpConfig;
-    }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
     }
 
     public String getRegistry() {

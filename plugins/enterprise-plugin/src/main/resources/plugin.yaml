@@ -1,4 +1,3 @@
-enabled: true
 http:
   port: 18083
   host: 0.0.0.0

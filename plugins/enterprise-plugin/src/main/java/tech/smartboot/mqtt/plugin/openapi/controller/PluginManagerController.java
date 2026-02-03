@@ -76,6 +76,9 @@ public class PluginManagerController {
     @Autowired
     private BrokerContext brokerContext;
 
+    @Autowired
+    private int pluginId;
+
     private final Map<Integer, PluginUnit> localPlugins = new HashMap<>();
 
     @PostConstruct
@@ -130,18 +133,24 @@ public class PluginManagerController {
         }
     }
 
+    @RequestMapping("/current")
+    public RestResult<Integer> current() throws IOException {
+        return RestResult.ok(pluginId);
+    }
+
     @RequestMapping("/:id/config")
-    public RestResult<String> config(@PathParam("id") String id) throws IOException {
-        PluginUnit plugin = localPlugins.get(FeatUtils.toInt(id, 0));
-        if (plugin == null) {
+    public RestResult<String> config(@PathParam("id") int id) throws IOException {
+        boolean current = pluginId == id;
+        PluginUnit plugin = localPlugins.get(id);
+        if (!current && plugin == null) {
             return RestResult.fail("插件不存在");
         }
-        File file = new File(plugin.plugin.storage(), "plugin.yaml");
+        File file = new File(current ? storage : plugin.plugin.storage(), "plugin.yaml");
         InputStream inputStream;
         if (file.exists()) {
             inputStream = new FileInputStream(file);
         } else {
-            inputStream = plugin.plugin.getClass().getClassLoader().getResourceAsStream(Plugin.CONFIG_FILE_NAME);
+            inputStream = (current ? PluginManagerController.class : plugin.plugin.getClass()).getClassLoader().getResourceAsStream(Plugin.CONFIG_FILE_NAME);
         }
         try {
             return RestResult.ok(FeatUtils.asString(inputStream));
@@ -151,15 +160,16 @@ public class PluginManagerController {
     }
 
     @RequestMapping("/:id/config/save")
-    public RestResult<Void> config(@PathParam("id") String id, @Param("config") String config) throws Throwable {
+    public RestResult<Void> config(@PathParam("id") int id, @Param("config") String config) throws Throwable {
+        boolean current = pluginId == id;
         if (FeatUtils.isBlank(config)) {
             return RestResult.fail("配置内容为空");
         }
-        PluginUnit plugin = localPlugins.get(FeatUtils.toInt(id, 0));
-        if (plugin == null) {
+        PluginUnit plugin = localPlugins.get(id);
+        if (!current && plugin == null) {
             return RestResult.fail("插件不存在");
         }
-        File file = new File(plugin.plugin.storage(), "plugin.yaml");
+        File file = new File(current ? storage : plugin.plugin.storage(), "plugin.yaml");
         try (FileOutputStream outputStream = new FileOutputStream(file);) {
             outputStream.write(config.getBytes());
             outputStream.flush();
@@ -167,11 +177,11 @@ public class PluginManagerController {
         } catch (IOException e) {
             return RestResult.fail(e.getMessage());
         }
-        if (brokerContext.pluginRegistry().getPlugin(plugin.plugin.id()) == null) {
-            return enable(plugin.plugin.id());
+        if (brokerContext.pluginRegistry().getPlugin(id) == null) {
+            return enable(id);
         }
         //自动重启
-        RestResult<Void> result = disable(plugin.plugin.id());
+        RestResult<Void> result = disable(id);
         if (!result.isSuccess()) {
             return result;
         }
@@ -462,6 +472,10 @@ public class PluginManagerController {
 
     private String getPluginFileName(Plugin plugin) {
         return plugin.pluginName() + "-" + plugin.getVersion() + ".jar";
+    }
+
+    public void setPluginId(int pluginId) {
+        this.pluginId = pluginId;
     }
 
     static class PluginUnit {
