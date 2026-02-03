@@ -50,9 +50,9 @@ import java.util.function.Consumer;
  * @version V1.0 , 2023/1/23
  */
 @Controller
-public class SubscriptionController {
+public class TopicController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SubscriptionController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TopicController.class);
     @Autowired
     private SubscriberMapper subscriberMapper;
 
