@@ -66,12 +66,11 @@ public interface UserMapper {
      */
     @Update("<script>" +
             "UPDATE user_info " +
-            "SET " +
+            "<trim prefix='set' suffixOverrides=','>" +
             "  <if test='password != null'>password = #{password},</if>" +
             "  <if test='role != null'>role = #{role},</if>" +
             "  <if test='desc != null'>`desc` = #{desc},</if>" +
-            "  update_time = NOW() " +
-            "WHERE username = #{username}" +
+            "</trim> WHERE username = #{username}" +
             "</script>")
     int updateUser(UserDO userDO);
 }
