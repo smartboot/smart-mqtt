@@ -207,7 +207,7 @@ public class PluginManagerController {
         if (!result.isSuccess()) {
             return result;
         }
-        return enable(plugin.plugin.id());
+        return enable(id);
     }
 
     @RequestMapping("/market")
@@ -379,25 +379,38 @@ public class PluginManagerController {
         if (brokerContext.pluginRegistry().containsPlugin(id)) {
             return RestResult.fail("该插件已启用");
         }
-        PluginUnit plugin = localPlugins.get(id);
-        Path path = Paths.get(storage.getAbsolutePath(), RepositoryPlugin.REPOSITORY, plugin.pluginFile.getName());
-        if (!Files.exists(path)) {
-            return RestResult.fail("该插件不存在");
+        if (plugin.id() != id) {
+            PluginUnit plugin = localPlugins.get(id);
+            Path path = Paths.get(storage.getAbsolutePath(), RepositoryPlugin.REPOSITORY, plugin.pluginFile.getName());
+            if (!Files.exists(path)) {
+                return RestResult.fail("该插件不存在");
+            }
+            Files.copy(path, new File(storage.getParentFile().getParentFile(), plugin.pluginFile.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
+            brokerContext.pluginRegistry().startPlugin(id);
+        }else{
+            new Thread(() -> {
+                try {
+                    brokerContext.pluginRegistry().startPlugin(id);
+                } catch (Throwable e) {
+                    throw new RuntimeException(e);
+                }
+            }).start();
         }
-        Files.copy(path, new File(storage.getParentFile().getParentFile(), plugin.pluginFile.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
-        brokerContext.pluginRegistry().startPlugin(plugin.plugin.id());
+
         return RestResult.ok(null);
     }
 
     @RequestMapping("/disable")
     public RestResult<Void> disable(@Param("id") int id) {
-        PluginUnit plugin = localPlugins.get(id);
-        if (plugin == null) {
-            return RestResult.fail("无法停用非本地仓库插件");
-        }
-        File file = new File(storage.getParentFile().getParentFile(), plugin.pluginFile.getName());
-        if (file.exists() && !file.delete()) {
-            return RestResult.fail("插件停用失败!");
+        if (plugin.id() != id) {
+            PluginUnit plugin = localPlugins.get(id);
+            if (plugin == null) {
+                return RestResult.fail("无法停用非本地仓库插件");
+            }
+            File file = new File(storage.getParentFile().getParentFile(), plugin.pluginFile.getName());
+            if (file.exists() && !file.delete()) {
+                return RestResult.fail("插件停用失败!");
+            }
         }
         brokerContext.pluginRegistry().stopPlugin(id);
         return RestResult.ok(null);
