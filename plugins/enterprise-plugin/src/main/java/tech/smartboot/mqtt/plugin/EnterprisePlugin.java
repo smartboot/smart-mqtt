@@ -22,6 +22,9 @@ import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
+import tech.smartboot.mqtt.plugin.spec.schema.Enum;
+import tech.smartboot.mqtt.plugin.spec.schema.Item;
+import tech.smartboot.mqtt.plugin.spec.schema.Schema;
 
 import java.nio.channels.AsynchronousChannelGroup;
 import java.util.concurrent.ThreadFactory;
@@ -61,10 +64,10 @@ public class EnterprisePlugin extends Plugin {
             }
         });
 
-        httpServer = FeatCloud.cloudServer(serverOptions -> serverOptions
-                .registerBean("brokerContext", brokerContext)
-                .registerBean("pluginConfig", config)
-                .registerBean("pluginId", id())//当前的插件ID
+        httpServer = FeatCloud.cloudServer(serverOptions ->
+                serverOptions.registerBean("brokerContext", brokerContext)
+                        .registerBean("pluginConfig", config)
+                        .registerBean("plugin", this)//当前的插件ID
                 .registerBean("storage", storage()).group(asynchronousChannelGroup));
         httpServer.listen(config.getHttp().getHost(), config.getHttp().getPort());
         System.out.println("openapi server start success!");
@@ -103,5 +106,24 @@ public class EnterprisePlugin extends Plugin {
     @Override
     public String pluginName() {
         return "enterprise-plugin";
+    }
+
+    @Override
+    public Schema schema() {
+        Schema schema = new Schema();
+        Item http = Item.Object("http", "http服务配置");
+        http.addItems(Item.Int("port", "http服务监听端口"));
+        http.addItems(Item.String("host", "http服务监听地址"));
+        schema.addItem(http);
+        Item database = Item.Object("database", "数据库配置");
+        database.addItems(Item.String("dbType", "数据库类型").addEnums(Enum.of("h2_mem", "h2内存模式"), Enum.of("mysql", "mysql"), Enum.of("h2", "h2文件模式")));
+        database.addItems(Item.String("url", "数据库连接地址"));
+        database.addItems(Item.String("username", "数据库用户名"));
+        database.addItems(Item.Password("password", "数据库密码"));
+        schema.addItem(database);
+
+        Item registry = Item.String("registry", "插件市场");
+        schema.addItem(registry);
+        return schema;
     }
 }

@@ -39,6 +39,7 @@ import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
 import tech.smartboot.mqtt.plugin.spec.bus.DisposableEventBusSubscriber;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
+import tech.smartboot.mqtt.plugin.spec.schema.Schema;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -76,8 +77,11 @@ public class PluginManagerController {
     @Autowired
     private BrokerContext brokerContext;
 
+    /**
+     * 当前插件id
+     */
     @Autowired
-    private int pluginId;
+    private Plugin plugin;
 
     private final Map<Integer, PluginUnit> localPlugins = new HashMap<>();
 
@@ -135,12 +139,24 @@ public class PluginManagerController {
 
     @RequestMapping("/current")
     public RestResult<Integer> current() throws IOException {
-        return RestResult.ok(pluginId);
+        return RestResult.ok(plugin.id());
+    }
+
+    @RequestMapping("/:id/schema")
+    public RestResult<Schema> schema(@PathParam("id") int id) {
+        if (plugin.id() == id) {
+            return RestResult.ok(plugin.schema());
+        }
+        PluginUnit p = localPlugins.get(id);
+        if (p == null) {
+            return RestResult.fail("插件不存在");
+        }
+        return RestResult.ok(p.plugin.schema());
     }
 
     @RequestMapping("/:id/config")
     public RestResult<String> config(@PathParam("id") int id) throws IOException {
-        boolean current = pluginId == id;
+        boolean current = plugin.id() == id;
         PluginUnit plugin = localPlugins.get(id);
         if (!current && plugin == null) {
             return RestResult.fail("插件不存在");
@@ -161,7 +177,7 @@ public class PluginManagerController {
 
     @RequestMapping("/:id/config/save")
     public RestResult<Void> config(@PathParam("id") int id, @Param("config") String config) throws Throwable {
-        boolean current = pluginId == id;
+        boolean current = plugin.id() == id;
         if (FeatUtils.isBlank(config)) {
             return RestResult.fail("配置内容为空");
         }
@@ -474,8 +490,8 @@ public class PluginManagerController {
         return plugin.pluginName() + "-" + plugin.getVersion() + ".jar";
     }
 
-    public void setPluginId(int pluginId) {
-        this.pluginId = pluginId;
+    public void setPlugin(Plugin plugin) {
+        this.plugin = plugin;
     }
 
     static class PluginUnit {

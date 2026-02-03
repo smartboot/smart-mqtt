@@ -15,6 +15,7 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.introspector.Property;
 import org.yaml.snakeyaml.introspector.PropertyUtils;
+import tech.smartboot.mqtt.plugin.spec.schema.Schema;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -252,5 +253,9 @@ public abstract class Plugin {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public Schema schema() {
+        return null;
     }
 }
