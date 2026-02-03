@@ -30,6 +30,8 @@ public class UserConvert {
         userTO.setUsername(userDO.getUsername());
         userTO.setRole(userDO.getRole());
         userTO.setDesc(userDO.getDesc());
+        userTO.setEditTime(userDO.getEditTime());
+        userTO.setCreateTime(userDO.getCreateTime());
         return userTO;
     }
 

@@ -10,6 +10,10 @@
 
 package tech.smartboot.mqtt.plugin.openapi.to;
 
+import com.alibaba.fastjson2.annotation.JSONField;
+
+import java.util.Date;
+
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 5/1/23
@@ -29,6 +33,17 @@ public class UserTO {
      * 描述
      */
     private String desc;
+    /**
+     * 创建时间
+     */
+    @JSONField(format = "yyyy-MM-dd HH:mm:ss")
+    private Date createTime;
+
+    /**
+     * 修改时间
+     */
+    @JSONField(format = "yyyy-MM-dd HH:mm:ss")
+    private Date editTime;
 
     public String getUsername() {
         return username;
@@ -52,5 +67,21 @@ public class UserTO {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public Date getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
+
+    public Date getEditTime() {
+        return editTime;
+    }
+
+    public void setEditTime(Date editTime) {
+        this.editTime = editTime;
     }
 }

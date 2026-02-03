@@ -12,7 +12,6 @@ package tech.smartboot.mqtt.plugin.openapi.controller;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Autowired;
@@ -108,10 +107,8 @@ public class SystemController {
     @RequestMapping(OpenApi.SYSTEM_USER_LIST)
     public RestResult<Pagination<UserTO>> userList(UserQuery query) {
         PageHelper.offsetPage((query.getPageNo() - 1) * query.getPageSize(), query.getPageSize());
-        Page<UserDO> list = (Page<UserDO>) userMapper.getUserList(query);
+        List<UserDO> list = userMapper.getUserList(query);
         Pagination<UserTO> pagination = new Pagination<>();
-        pagination.setPageSize(query.getPageSize());
-        pagination.setTotal(list.getTotal());
         pagination.setList(UserConvert.convert(list));
         return RestResult.ok(pagination);
     }
