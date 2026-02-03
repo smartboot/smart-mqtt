@@ -403,6 +403,18 @@ public class MetricController {
         return RestResult.ok(list);
     }
 
+    @RequestMapping("/api/metric/topic")
+    public RestResult<JSONObject> topic() {
+        JSONObject jsonObject = new JSONObject();
+        //topic总数
+        jsonObject.put("totalTopic", metrics.get(MqttMetricEnum.TOPIC_COUNT).getMetric().longValue());
+        //订阅总数
+        jsonObject.put("totalSub", metrics.get(MqttMetricEnum.CLIENT_SUBSCRIBE).getMetric().longValue()-metrics.get(MqttMetricEnum.CLIENT_UNSUBSCRIBE).getMetric().longValue());
+        //订阅关系总数
+        jsonObject.put("totalRelation", metrics.get(MqttMetricEnum.SUBSCRIBE_RELATION).getMetric().longValue());
+        return RestResult.ok(jsonObject);
+    }
+
     public void setBrokerContext(BrokerContext brokerContext) {
         this.brokerContext = brokerContext;
     }
