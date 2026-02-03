@@ -16,6 +16,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.ResultType;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 import tech.smartboot.mqtt.plugin.dao.model.UserDO;
 import tech.smartboot.mqtt.plugin.dao.query.UserQuery;
 
@@ -59,4 +60,18 @@ public interface UserMapper {
             "   </foreach> " +
             "</script>")
     int deleteUsers(@Param("users") List<String> usernames);
+
+    /**
+     * 更新用户信息
+     */
+    @Update("<script>" +
+            "UPDATE user_info " +
+            "SET " +
+            "  <if test='password != null'>password = #{password},</if>" +
+            "  <if test='role != null'>role = #{role},</if>" +
+            "  <if test='desc != null'>`desc` = #{desc},</if>" +
+            "  update_time = NOW() " +
+            "WHERE username = #{username}" +
+            "</script>")
+    int updateUser(UserDO userDO);
 }

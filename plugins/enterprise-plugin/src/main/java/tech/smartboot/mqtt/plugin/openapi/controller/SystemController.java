@@ -138,6 +138,22 @@ public class SystemController {
     }
 
     /**
+     * 更新用户
+     *
+     * @return
+     */
+    @RequestMapping(OpenApi.SYSTEM_USER_UPDATE)
+    public RestResult<Void> updateUser(UserDO userDO) {
+        ValidateUtils.notNull(userDO, "invalid param");
+        ValidateUtils.notNull(userDO.getUsername(), "invalid username");
+        if (userMapper.updateUser(userDO) == 1) {
+            return RestResult.ok(null);
+        } else {
+            return RestResult.fail("update fail");
+        }
+    }
+
+    /**
      * 获取系统配置
      *
      * @return

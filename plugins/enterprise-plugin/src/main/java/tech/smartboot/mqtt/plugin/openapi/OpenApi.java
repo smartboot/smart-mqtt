@@ -53,6 +53,7 @@ public class OpenApi {
     public static final String SYSTEM_USER_ADD = SYSTEM + "/user/add";
 
     public static final String SYSTEM_USER_DELETE = SYSTEM + "/user/delete";
+    public static final String SYSTEM_USER_UPDATE = SYSTEM + "/user/update";
 
     public static final String SYSTEM_SETTINGS_GET = SYSTEM + "/settings/get";
 
