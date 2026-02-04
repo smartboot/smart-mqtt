@@ -95,6 +95,7 @@ public class SystemController {
         }
         UserTO userTO = new UserTO();
         userTO.setUsername(username);
+        userTO.setRole(userDO.getRole());
         session.put("username", username);
         return RestResult.ok(userTO);
     }
