@@ -31,6 +31,11 @@ public class Item {
      */
     private int col;
 
+    /**
+     * 高度
+     */
+    private int height;
+
     private final List<Item> items = new ArrayList<>();
     private final List<Enum> enums = new ArrayList<>();
 
@@ -125,6 +130,15 @@ public class Item {
 
     public Item col(int col) {
         this.col = col;
+        return this;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public Item height(int height) {
+        this.height = height;
         return this;
     }
 }

@@ -83,9 +83,9 @@ public class TlsPlugin extends Plugin {
     @Override
     public Schema schema() {
         Schema schema = new Schema();
-        schema.addItem(Item.String("host", "mqtts服务监听地址"));
-        schema.addItem(Item.Int("port", "mqtts服务监听端口"));
-        schema.addItem(Item.TextArea("pem", "pem文件内容"));
+        schema.addItem(Item.String("host", "mqtts服务监听地址").col(6));
+        schema.addItem(Item.Int("port", "mqtts服务监听端口").col(6));
+        schema.addItem(Item.TextArea("pem", "pem文件内容").height(400));
         return schema;
     }
 }
