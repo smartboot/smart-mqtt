@@ -182,7 +182,7 @@ public class PluginManagerController {
     }
 
     @RequestMapping("/:id/config/save")
-    public RestResult<Void> config(@PathParam("id") int id, @Param("config") String config) throws Throwable {
+    public RestResult<Void> config(@PathParam("id") int id, @Param("config") String config, @Param("restart") boolean restart) throws Throwable {
         boolean current = plugin.id() == id;
         if (FeatUtils.isBlank(config)) {
             return RestResult.fail("配置内容为空");
@@ -198,6 +198,9 @@ public class PluginManagerController {
 
         } catch (IOException e) {
             return RestResult.fail(e.getMessage());
+        }
+        if (!restart) {
+            return RestResult.ok(null);
         }
         if (brokerContext.pluginRegistry().getPlugin(id) == null) {
             return enable(id);
@@ -387,7 +390,7 @@ public class PluginManagerController {
             }
             Files.copy(path, new File(storage.getParentFile().getParentFile(), plugin.pluginFile.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
             brokerContext.pluginRegistry().startPlugin(id);
-        }else{
+        } else {
             new Thread(() -> {
                 try {
                     brokerContext.pluginRegistry().startPlugin(id);
@@ -402,6 +405,7 @@ public class PluginManagerController {
 
     @RequestMapping("/disable")
     public RestResult<Void> disable(@Param("id") int id) {
+        //即时清理插件文件
         if (plugin.id() != id) {
             PluginUnit plugin = localPlugins.get(id);
             if (plugin == null) {
