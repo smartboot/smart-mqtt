@@ -205,12 +205,28 @@ public class PluginManagerController {
         if (brokerContext.pluginRegistry().getPlugin(id) == null) {
             return enable(id);
         }
-        //自动重启
-        RestResult<Void> result = disable(id);
-        if (!result.isSuccess()) {
-            return result;
+        if (current) {
+            new Thread(() -> {
+                try {
+                    logger.info("waiting restart plugin: {} ", this.plugin.pluginName());
+                    Thread.sleep(1000);
+                    disable(id);
+                    logger.info("stop plugin {} success.", this.plugin.pluginName());
+                    enable(id);
+                    logger.info("start plugin {} success.", this.plugin.pluginName());
+                } catch (Throwable e) {
+                    logger.error(e.getMessage(), e);
+                }
+            }).start();
+            return RestResult.ok(null);
+        } else {
+            //自动重启
+            RestResult<Void> result = disable(id);
+            if (!result.isSuccess()) {
+                return result;
+            }
+            return enable(id);
         }
-        return enable(id);
     }
 
     @RequestMapping("/market")
@@ -389,17 +405,8 @@ public class PluginManagerController {
                 return RestResult.fail("该插件不存在");
             }
             Files.copy(path, new File(storage.getParentFile().getParentFile(), plugin.pluginFile.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
-            brokerContext.pluginRegistry().startPlugin(id);
-        } else {
-            new Thread(() -> {
-                try {
-                    brokerContext.pluginRegistry().startPlugin(id);
-                } catch (Throwable e) {
-                    throw new RuntimeException(e);
-                }
-            }).start();
         }
-
+        brokerContext.pluginRegistry().startPlugin(id);
         return RestResult.ok(null);
     }
 
