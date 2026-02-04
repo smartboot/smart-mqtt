@@ -9,9 +9,22 @@ import java.util.List;
  * @version v1.0 2/3/26
  */
 public class Item {
+    /**
+     * 字段名称
+     */
     private final String name;
+    /**
+     * 字段类型
+     */
     private final String type;
+    /**
+     * 字段描述
+     */
     private final String desc;
+    /**
+     * 提示信息
+     */
+    private String tip;
     private final List<Item> items = new ArrayList<>();
     private final List<Enum> enums = new ArrayList<>();
 
@@ -89,5 +102,14 @@ public class Item {
 
     public List<Item> getItems() {
         return items;
+    }
+
+    public String getTip() {
+        return tip;
+    }
+
+    public Item tip(String tip) {
+        this.tip = tip;
+        return this;
     }
 }
