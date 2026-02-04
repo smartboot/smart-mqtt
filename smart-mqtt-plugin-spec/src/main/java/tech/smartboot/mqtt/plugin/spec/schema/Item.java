@@ -25,6 +25,12 @@ public class Item {
      * 提示信息
      */
     private String tip;
+
+    /**
+     * 列数
+     */
+    private int col;
+
     private final List<Item> items = new ArrayList<>();
     private final List<Enum> enums = new ArrayList<>();
 
@@ -110,6 +116,15 @@ public class Item {
 
     public Item tip(String tip) {
         this.tip = tip;
+        return this;
+    }
+
+    public int getCol() {
+        return col;
+    }
+
+    public Item col(int col) {
+        this.col = col;
         return this;
     }
 }
