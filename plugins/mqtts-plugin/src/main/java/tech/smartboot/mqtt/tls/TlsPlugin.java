@@ -12,6 +12,8 @@ import tech.smartboot.mqtt.common.util.MqttUtil;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
+import tech.smartboot.mqtt.plugin.spec.schema.Item;
+import tech.smartboot.mqtt.plugin.spec.schema.Schema;
 
 import java.io.ByteArrayInputStream;
 
@@ -76,5 +78,14 @@ public class TlsPlugin extends Plugin {
     @Override
     public String pluginName() {
         return "mqtts-plugin";
+    }
+
+    @Override
+    public Schema schema() {
+        Schema schema = new Schema();
+        schema.addItem(Item.String("host", "mqtts服务监听地址"));
+        schema.addItem(Item.Int("port", "mqtts服务监听端口"));
+        schema.addItem(Item.TextArea("pem", "pem文件内容"));
+        return schema;
     }
 }

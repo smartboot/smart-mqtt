@@ -37,6 +37,15 @@ public class Item {
         };
     }
 
+    public static Item TextArea(String name, String desc) {
+        return new Item(name, "textarea", desc) {
+            @Override
+            public void addItems(Item... items) {
+                throw new UnsupportedOperationException("textarea类型不能添加子集");
+            }
+        };
+    }
+
     public static Item Password(String name, String desc) {
         return new Item(name, "password", desc) {
             @Override
