@@ -1,1 +1,0 @@
-import{d as e,a4 as t,u as o,w as s,x as n}from"./vue.1c9db5c2.js";const a={class:"content"},c=n("div",null,"notfound",-1),_=[c],l=e({__name:"index",setup(d){return t(),(r,i)=>(o(),s("div",a,_))}});export{l as default};
