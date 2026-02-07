@@ -47,7 +47,7 @@ jobs:
           npm install
       - name: Build frontend
         run: |
-          cd ui
+          cd smart-mqtt-enterprise/ui
           npm run build
       - name: Copy frontend to plugins
         run: |
