@@ -52,7 +52,7 @@ jobs:
       - name: Copy frontend to plugins
         run: |
           mkdir -p smart-mqtt/plugins/enterprise-plugin/src/main/resources/static
-          cp -r smart-mqtt-enterprise/ui/out/* smart-mqtt/plugins/enterprise-plugin/src/main/resources/static/
+          cp -r smart-mqtt-enterprise/ui/dist/* smart-mqtt/plugins/enterprise-plugin/src/main/resources/static/
 
       - name: Set up JDK 8
         uses: actions/setup-java@v4
