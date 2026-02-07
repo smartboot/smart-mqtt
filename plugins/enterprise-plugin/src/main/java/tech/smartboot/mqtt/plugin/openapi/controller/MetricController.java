@@ -23,6 +23,7 @@ import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.Param;
+import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.mcp.Tool;
@@ -409,10 +410,22 @@ public class MetricController {
         //topic总数
         jsonObject.put("totalTopic", metrics.get(MqttMetricEnum.TOPIC_COUNT).getMetric().longValue());
         //订阅总数
-        jsonObject.put("totalSub", metrics.get(MqttMetricEnum.CLIENT_SUBSCRIBE).getMetric().longValue()-metrics.get(MqttMetricEnum.CLIENT_UNSUBSCRIBE).getMetric().longValue());
+        jsonObject.put("totalSub", metrics.get(MqttMetricEnum.CLIENT_SUBSCRIBE).getMetric().longValue() - metrics.get(MqttMetricEnum.CLIENT_UNSUBSCRIBE).getMetric().longValue());
         //订阅关系总数
         jsonObject.put("totalRelation", metrics.get(MqttMetricEnum.SUBSCRIBE_RELATION).getMetric().longValue());
         return RestResult.ok(jsonObject);
+    }
+
+    @RequestMapping("/api/metric/get/:code")
+    public RestResult<Long> getMetric(@PathParam("code") String code) {
+        if (FeatUtils.isBlank(code)) {
+            return RestResult.fail("请输入指标名称");
+        }
+        MqttMetricEnum metricEnum = MqttMetricEnum.getByCode(code);
+        if (metricEnum != null) {
+            return RestResult.ok(metrics.get(metricEnum).getMetric().longValue());
+        }
+        return RestResult.fail("该指标不存在");
     }
 
     public void setBrokerContext(BrokerContext brokerContext) {
