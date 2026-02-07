@@ -35,6 +35,25 @@ jobs:
           repository: smartboot/smart-mqtt-enterprise
           token: ${{ secrets.GH_PAT }}
           path: smart-mqtt-enterprise
+
+      # 前端构建
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: |
+          cd ui
+          npm install
+      - name: Build frontend
+        run: |
+          cd ui
+          npm run build
+      - name: Copy frontend to plugins
+        run: |
+          mkdir -p smart-mqtt/plugins/enterprise-plugin/src/main/resources/static
+          cp -r smart-mqtt-enterprise/ui/out/* smart-mqtt/plugins/enterprise-plugin/src/main/resources/static/
+
       - name: Set up JDK 8
         uses: actions/setup-java@v4
         with:
