@@ -10,7 +10,6 @@
 
 package tech.smartboot.mqtt.common.util;
 
-import org.smartboot.socket.DecoderException;
 import tech.smartboot.mqtt.common.message.MqttCodecUtil;
 
 import java.nio.ByteBuffer;
@@ -37,13 +36,19 @@ import java.nio.ByteBuffer;
  */
 public class TopicByteTree {
     public static final TopicByteTree DEFAULT_INSTANCE = new TopicByteTree();
-    /** 主题树的最大深度限制，防止无限递归 */
+    /**
+     * 主题树的最大深度限制，防止无限递归
+     */
     private static final int MAX_DEPTH = 128;
 
-    /** 当前节点在树中的深度 */
+    /**
+     * 当前节点在树中的深度
+     */
     private final int depth;
 
-    /** 当前节点对应的主题名称 */
+    /**
+     * 当前节点对应的主题名称
+     */
     protected String topicName;
 
     /**
@@ -93,10 +98,10 @@ public class TopicByteTree {
      * </ol>
      * </p>
      *
-     * @param bytes 待匹配的主题字节缓冲区
+     * @param bytes  待匹配的主题字节缓冲区
      * @param offset 起始偏移量
-     * @param len 要匹配的字节长度
-     * @param cache 是否缓存新建的节点
+     * @param len    要匹配的字节长度
+     * @param cache  是否缓存新建的节点
      * @return 匹配到的主题节点，如果未找到则返回虚拟节点
      */
     private TopicByteTree search(ByteBuffer bytes, int offset, int len, boolean cache) {
@@ -152,9 +157,9 @@ public class TopicByteTree {
      * </ol>
      * </p>
      *
-     * @param value 主题的字节数组
+     * @param value  主题的字节数组
      * @param offset 当前处理的字节偏移量
-     * @param len 主题的总字节长度
+     * @param len    主题的总字节长度
      * @return 添加的主题节点
      */
     private synchronized TopicByteTree addTopic(byte[] value, int offset, int len) {
@@ -222,7 +227,7 @@ public class TopicByteTree {
         this.topicName = topicName;
         //PUBLISH 报文中的主题名不能包含通配符
         if (MqttUtil.containsTopicWildcards(topicName)) {
-            throw new DecoderException("invalid publish topic name: " + topicName + " (contains wildcards)");
+            throw new IllegalStateException("invalid publish topic name: " + topicName + " (contains wildcards)");
         }
     }
 

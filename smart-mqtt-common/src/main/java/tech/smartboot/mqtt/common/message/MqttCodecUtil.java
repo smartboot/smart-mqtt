@@ -11,7 +11,6 @@
 package tech.smartboot.mqtt.common.message;
 
 
-import org.smartboot.socket.DecoderException;
 import tech.smartboot.mqtt.common.MqttWriter;
 import tech.smartboot.mqtt.common.exception.MqttException;
 
@@ -34,7 +33,7 @@ public final class MqttCodecUtil {
         do {
             encodedByte = buffer.get();
             value += (encodedByte & 127) * multiplier;
-            if (multiplier > 128 * 128 * 128) throw new DecoderException("decode Variable Byte Integer error");
+            if (multiplier > 128 * 128 * 128) throw new IllegalStateException("decode Variable Byte Integer error");
             multiplier *= 128;
         } while ((encodedByte & 128) != 0);
         return value;
@@ -69,7 +68,7 @@ public final class MqttCodecUtil {
     public static String decodeUTF8(ByteBuffer buffer) {
         final int size = decodeMsbLsb(buffer);
         if (size < 0 || size > 65535) {
-            throw new DecoderException("invalid string length " + size);
+            throw new IllegalStateException("invalid string length " + size);
         }
         byte[] bytes = new byte[size];
         buffer.get(bytes);

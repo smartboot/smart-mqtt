@@ -10,7 +10,6 @@
 
 package tech.smartboot.mqtt.common.message;
 
-import org.smartboot.socket.DecoderException;
 import tech.smartboot.mqtt.common.MqttWriter;
 import tech.smartboot.mqtt.common.enums.MqttVersion;
 import tech.smartboot.mqtt.common.message.payload.MqttPayload;
@@ -97,7 +96,7 @@ public abstract class MqttMessage {
     protected final int decodeMessageId(ByteBuffer buffer) {
         final int messageId = MqttCodecUtil.decodeMsbLsb(buffer);
         if (messageId == 0) {
-            throw new DecoderException("invalid messageId: " + messageId);
+            throw new IllegalStateException("invalid messageId: " + messageId);
         }
         return messageId;
     }

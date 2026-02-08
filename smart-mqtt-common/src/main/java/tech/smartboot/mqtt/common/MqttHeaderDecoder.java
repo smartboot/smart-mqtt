@@ -10,7 +10,6 @@
 
 package tech.smartboot.mqtt.common;
 
-import org.smartboot.socket.DecoderException;
 import tech.smartboot.mqtt.common.enums.MqttMessageType;
 import tech.smartboot.mqtt.common.message.MqttConnAckMessage;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
@@ -62,7 +61,7 @@ final class MqttHeaderDecoder implements Decoder {
             }
             // MQTT protocol limits Remaining Length to 4 bytes
             if (++loops == 4) {
-                throw new DecoderException("remaining length exceeds 4 digits (" + messageType + ')');
+                throw new IllegalStateException("remaining length exceeds 4 digits (" + messageType + ')');
             }
             //数据不足
             if (!buffer.hasRemaining()) {
@@ -73,7 +72,7 @@ final class MqttHeaderDecoder implements Decoder {
         } while (true);
 
         if (remainingLength > maxBytesInMessage) {
-            throw new DecoderException("too large message: " + remainingLength + " bytes");
+            throw new IllegalStateException("too large message: " + remainingLength + " bytes");
         }
 
         boolean dupFlag = (b1 & 0x08) == 0x08;
