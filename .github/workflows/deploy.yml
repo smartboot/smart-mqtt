@@ -77,13 +77,6 @@ jobs:
           cp smart-mqtt-enterprise/poms/target/smart-mqtt-broker-*.jar smart-mqtt-enterprise/deploy/smart-mqtt.jar
           cp smart-mqtt-enterprise/start.sh smart-mqtt-enterprise/deploy/
 
-      - name: 上传 smart-mqtt 制品
-        uses: actions/upload-artifact@v4
-        with:
-          name: smart-mqtt-community-${{ github.ref_name }}
-          compression-level: 0
-          path: smart-mqtt-enterprise/deploy
-
       ## 构建企业版插件
       - name: 构建 MQTT Broker企业版
         run: FEAT_LICENSE=${{ secrets.FEAT_LICENSE }} mvn -B -f smart-mqtt-enterprise/poms/pom.xml clean package -Penterprise -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
@@ -130,18 +123,6 @@ jobs:
           name: smart-mqtt-enterprise-${{ github.ref_name }}
           compression-level: 0
           path: smart-mqtt-enterprise/deploy
-
-      ## 构建所有插件
-      - name: Build smart-mqtt-plugin
-        run: |
-          cp smart-mqtt/plugins/*-plugin/target/*.jar smart-mqtt-enterprise/deploy/plugins
-          rm -rf smart-mqtt-enterprise/deploy/plugins/original-*.jar
-      - name: 上传插件包
-        uses: actions/upload-artifact@v4
-        with:
-          name: plugins-${{ github.ref_name }}
-          compression-level: 0
-          path: smart-mqtt-enterprise/deploy/plugins
 
       - name: Build smart-mqtt-full
         run: |
