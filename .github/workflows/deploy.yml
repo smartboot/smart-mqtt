@@ -85,7 +85,8 @@ jobs:
       - name: Copy enterprise-plugin
         run: |
           cp smart-mqtt-enterprise/poms/target/smart-mqtt-broker-*.jar smart-mqtt-enterprise/deploy/smart-mqtt.jar
-          cp smart-mqtt/plugins/enterprise-plugin/target/enterprise-plugin-*.jar  smart-mqtt-enterprise/deploy/plugins|
+          cp smart-mqtt/plugins/*-plugin/target/*.jar smart-mqtt-enterprise/deploy/plugins
+          rm -rf smart-mqtt-enterprise/deploy/plugins/original-*.jar
           mkdir -p smart-mqtt-enterprise/deploy/plugins/_storage/enterprise-plugin/repository
           mv smart-mqtt-enterprise/deploy/plugins/*.jar smart-mqtt-enterprise/deploy/plugins/_storage/enterprise-plugin/repository
           mv smart-mqtt-enterprise/deploy/plugins/_storage/enterprise-plugin/repository/enterprise-plugin-*.jar smart-mqtt-enterprise/deploy/plugins/
