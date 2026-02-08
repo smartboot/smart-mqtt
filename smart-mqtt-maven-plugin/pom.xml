@@ -41,7 +41,7 @@
         <dependency>
             <groupId>tech.smartboot.mqtt</groupId>
             <artifactId>smart-mqtt-broker</artifactId>
-            <version>1.5.0</version>
+            <version>1.5.1</version>
         </dependency>
     </dependencies>
     <distributionManagement>
