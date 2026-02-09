@@ -1,165 +1,67 @@
 ---
-title: Feat
-description: 一款高性能、低资源消耗的Java Web服务开发框架
-template: splash
-hero:
-  tagline: 运行性能超 <b>Vert.x</b>，开发体验近似 <b>SpringBoot</b> ，以 <b>AI 原生</b> 和 <b>云原生</b> 双引擎驱动的现代化 Java Web 服务开发框架
-  image:
-    file: ../../assets/banner.svg
-  actions:
-    - text: Feat 启程
-      link: ./guides/about/
-      icon: right-arrow
+title: smart-mqtt
 ---
 
-import { Card, CardGrid,LinkCard,LinkButton } from '@astrojs/starlight/components';
-import FeatUsers from '../../components/FeatUsers.astro'
-import PaymentQrCode from '../../components/PaymentQrCode.astro'
-import {ContributorList} from "starlight-contributor-list";
+import {Card, CardGrid, LinkCard} from '@astrojs/starlight/components';
 
-<FeatUsers/>
+# smart-mqtt 文档中心
 
-## 产品特色
+欢迎来到 smart-mqtt 的官方文档中心！smart-mqtt 是 smartboot 开源组织推出的商业化 MQTT Broker 产品，专为拥有上万级设备连接量的企业级物联网场景设计。
 
-<CardGrid>
-	<Card title="<span style='color:#ffffff;background-color:#fa541c;border-bottom: 2px solid #fa541c'> &nbsp;F&nbsp;</span><span style='color:#fa541c;border-bottom: 2px solid #fa541c'>ree</span>" icon="seti:happenings">
-        基于AGPL-3.0开源协议，保障技术透明与社区共建。合规授权企业可自由商用，共建开放生态。
-	</Card>
-	<Card title="<span style='color:#ffffff;background-color:#722ed1;border-bottom: 2px solid #722ed1'>&nbsp;E&nbsp;</span><span style='color:#722ed1;border-bottom: 2px solid #722ed1'>lastic</span>" icon="rocket">
-        柔性伸缩架构，轻松应对海量并发请求，支持十万级、百万级 QPS，满足高并发场景需求。
-	</Card>
-	<Card title="<span style='color:#ffffff;background-color:#52c41a;border-bottom: 2px solid #52c41a'>&nbsp;A&nbsp;</span><span style='color:#52c41a;border-bottom: 2px solid #52c41a'>dvanced</span>" icon="puzzle">
-        全面支持 HTTP/1.0、1.1、2.0、WebSocket、SSE、TLS/SSL 等现代 Web 技术，内置路由、文件上传、WAF 等丰富功能。
-	</Card>
-	<Card title="<span style='color:#ffffff;background-color:#eb2f96;border-bottom: 2px solid #eb2f96'>&nbsp;T&nbsp;</span><span style='color:#eb2f96;border-bottom: 2px solid #eb2f96'>iny</span>" icon="github">
-        微内核架构，基于自研smart-socket通信引擎。冷启动耗时低于 100ms，极致性能与资源效率的完美平衡。
-	</Card>
+## 为什么选择 smart-mqtt？
+
+<CardGrid stagger>
+    <Card title="超高性能" icon="rocket">
+        单机支持百万级连接，消息吞吐量可达 790万/秒（QoS0），基于自研通信框架 smart-socket 打造。
+    </Card>
+    <Card title="纯国产血统" icon="badge-check">
+        符合信创场景需求，底层采用自研通信框架，无外部依赖，代码可控。
+    </Card>
+    <Card title="插件化架构" icon="puzzle">
+        基于事件总线的插件化设计，支持热插拔，可根据需求灵活扩展功能。
+    </Card>
+    <Card title="轻量级" icon="feather">
+        v1.4.0 版本包体积不足 800KB，资源占用低，部署简单。
+    </Card>
+    <Card title="Java 生态" icon="seti:java">
+        基于 Java 开发，天然适合 Java 技术栈企业，易于集成和二次开发。
+    </Card>
+    <Card title="企业级特性" icon="shield">
+        支持集群部署、数据持久化、数据桥接、WebSocket、Dashboard 等企业级功能。
+    </Card>
 </CardGrid>
 
-## 定价方案
+## 快速导航
 
-<div style="display: flex; justify-content: center; gap: 1.5rem; margin: 2rem 0; padding: 0 1rem; flex-wrap: wrap;">
-
-
-    <div style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 25px rgba(255, 215, 0, 0.15); transition: transform 0.3s ease, box-shadow 0.3s ease; flex: 1; min-width: 280px; max-width: 320px; display: flex; flex-direction: column; min-height: 420px; position: relative; border: 2px solid #ffd700;">
-        <div style="position: absolute; top: -10px; right: -10px; background: #f39c12; color: white; padding: 0.3rem 1rem; border-radius: 20px; font-size: 0.8rem; z-index: 1;">推荐</div>
-        <h3 style="margin: 0 0 1rem 0; color: #2c3e50; font-size: 1.4rem; text-align: center; font-weight: 600;">企业版</h3>
-        <div style="text-align: center; margin: 0.5rem 0 1.5rem;">
-            <h4 style="font-size: 2rem; font-weight: bold; color: #e67e22; margin: 0.5rem 0;">5000元</h4>
-            <p style="color: #7f8c8d; font-size: 0.9rem; margin: 0.25rem 0;">永久授权</p>
-        </div>
-        <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem; flex-grow: 1;">
-            <li style="margin: 0.7rem 0; padding-left: 1.5rem; position: relative; color: #34495e;">
-                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                全部功能模块
-            </li>
-            <li style="margin: 0.7rem 0; padding-left: 1.5rem; position: relative; color: #34495e;">
-                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                专业技术支持
-            </li>
-            <li style="margin: 0.7rem 0; padding-left: 1.5rem; position: relative; color: #34495e;">
-                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                5个文档访问权限
-            </li>
-            <li style="margin: 0.7rem 0; padding-left: 1.5rem; position: relative; color: #34495e;">
-                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                优先体验新功能
-            </li>
-            <li style="margin: 0.7rem 0; padding-left: 1.5rem; position: relative; color: #34495e;">
-                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                企业级安全保障
-            </li>
-        </ul>
-        <div style="margin-top: auto; text-align: center;">
-            <PaymentQrCode buttonLabel="永久授权" />
-        </div>
-    </div>
-    <div style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transition: transform 0.3s ease, box-shadow 0.3s ease; flex: 1; min-width: 280px; max-width: 320px; display: flex; flex-direction: column; min-height: 420px; position: relative; border: 1px solid #eaeaea;">
-        <h3 style="margin: 0 0 1rem 0; color: #2c3e50; font-size: 1.4rem; text-align: center; font-weight: 600;">社区版</h3>
-        <div style="text-align: center; margin: 0.5rem 0 1.5rem;">
-            <h4 style="font-size: 2rem; font-weight: bold; color: #3498db; margin: 0.5rem 0;">免费</h4>
-            <p style="color: #7f8c8d; font-size: 0.9rem; margin: 0.25rem 0;">面向个人开源项目</p>
-        </div>
-        <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem; flex-grow: 1;">
-            <li style="margin: 0.7rem 0; padding-left: 1.5rem; position: relative; color: #34495e;">
-                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                完整开源代码
-            </li>
-            <li style="margin: 0.7rem 0; padding-left: 1.5rem; position: relative; color: #34495e;">
-                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                全部功能模块
-            </li>
-            <li style="margin: 0.7rem 0; padding-left: 1.5rem; position: relative; color: #34495e;">
-                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                社区技术支持
-            </li>
-        </ul>
-        <div style="margin-top: auto; text-align: center;">
-            <a href="https://gitee.com/smartboot/feat/issues/new?template=support_plan_gitee.yml" target="_blank" style="display: inline-block; background-color: #3498db; color: white; padding: 0.6rem 1.2rem; border-radius: 25px; font-size: 0.9rem; text-decoration: none; transition: background-color 0.3s ease;">申请入口</a>
-        </div>
-    </div>
-    <div style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transition: transform 0.3s ease, box-shadow 0.3s ease; flex: 1; min-width: 280px; max-width: 320px; display: flex; flex-direction: column; min-height: 420px; position: relative; border: 1px solid #eaeaea;">
-        <h3 style="margin: 0 0 1rem 0; color: #2c3e50; font-size: 1.4rem; text-align: center; font-weight: 600;">教育/创业支持</h3>
-        <div style="text-align: center; margin: 0.5rem 0 1.5rem;">
-            <h4 style="font-size: 2rem; font-weight: bold; color: #27ae60; margin: 0.5rem 0;">免费申请</h4>
-            <p style="color: #7f8c8d; font-size: 0.9rem; margin: 0.25rem 0;">针对特殊群体的优惠计划</p>
-        </div>
-        <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem; flex-grow: 1;">
-            <li style="margin: 0.7rem 0; padding-left: 1.5rem; position: relative; color: #34495e;">
-                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                高校教育助力计划
-            </li>
-            <li style="margin: 0.7rem 0; padding-left: 1.5rem; position: relative; color: #34495e;">
-                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                创业企业扶持计划
-            </li>
-            <li style="margin: 0.7rem 0; padding-left: 1.5rem; position: relative; color: #34495e;">
-                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                Gitee个人开源项目支持
-            </li>
-            <li style="margin: 0.7rem 0; padding-left: 1.5rem; position: relative; color: #34495e;">
-                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                优先获得学习资源
-            </li>
-        </ul>
-        <div style="margin-top: auto; text-align: center;">
-            <div style="display: flex; flex-direction: row; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
-                <a href="https://gitee.com/smartboot/feat/issues/new?template=support_plan.yml" target="_blank" style="display: inline-block; background-color: #27ae60; color: white; padding: 0.6rem 1rem; border-radius: 25px; font-size: 0.8rem; text-decoration: none; transition: background-color 0.3s ease; white-space: nowrap;">创业企业申请</a>
-                <a href="https://gitee.com/smartboot/feat/issues/new?template=support_plan_education.yml" target="_blank" style="display: inline-block; background-color: #27ae60; color: white; padding: 0.6rem 1rem; border-radius: 25px; font-size: 0.8rem; text-decoration: none; transition: background-color 0.3s ease; white-space: nowrap;">教育机构申请</a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<hr/>
-
-```java title="Application.java"
-@Controller
-public class Application {
-    @RequestMapping("/")
-    public String helloWorld() {
-        return "hello Feat Cloud";
-    }
-
-    public static void main(String[] args) {
-        Feat.cloudServer().listen();
-    }
-}
-```
-
-<center>
-    <h2>Feat boasts unparalleled performance</h2>
-    ![](../../assets/performance.svg)
-</center>
-
-## Contributors
-<ContributorList githubRepo="smartboot/feat"/>
-
-## 生态项目
 <CardGrid>
-    <LinkCard title="smart-socket" target="_blank" description="Java AIO 实现的支持百万级长连接通信框架" href="https://smartboot.tech/smart-socket/" />
-    <LinkCard title="smart-servlet" target="_blank" description="提供一个自主可控的轻量级 Tomcat/Undertow 可替代版本，基于 Feat 重新定义下一代 Servlet 容器!" href="https://smartboot.tech/smart-servlet/" />
-    <LinkCard title="smart-mqtt" target="_blank" description="一款面向物联网领域的 MQTT 消息中间件产品" href="https://smartboot.tech/smart-mqtt/enterprise.html" />
-    <LinkCard title="Redisun" target="_blank" description="基于 smart-socket 开发的轻量级 Redis 客户端，专为 Java 平台设计，支持异步非阻塞 I/O 操作" href="https://smartboot.tech/redisun/" />
+    <LinkCard
+        title="快速开始"
+        description="5分钟快速上手 smart-mqtt"
+        href="/smart-mqtt/getting-started/quickstart/"
+    />
+    <LinkCard
+        title="产品手册"
+        description="了解产品特性、版本对比和使用说明"
+        href="/smart-mqtt/product/introduction/"
+    />
+    <LinkCard
+        title="开发参考"
+        description="插件开发、事件总线等技术文档"
+        href="/smart-mqtt/development/plugin/"
+    />
 </CardGrid>
 
+## 社区与支持
+
+- **代码仓库**：
+  - Gitee（主仓库）：[https://gitee.com/smartboot/smart-mqtt](https://gitee.com/smartboot/smart-mqtt)
+  - Github（镜像）：[https://github.com/smartboot/smart-mqtt](https://github.com/smartboot/smart-mqtt)
+- **在线体验**：[http://115.190.30.166:8083/](http://115.190.30.166:8083/)
+  - 账号：smart-mqtt
+  - 密码：smart-mqtt
+
+---
+
+:::tip[开源不易]
+我们始于热爱，敬于技术，更要忠于生活。smart-mqtt 探索商业化路线是为了让项目能够持续发展，为用户提供更好的服务。
+:::

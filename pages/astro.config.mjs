@@ -18,7 +18,7 @@ export default defineConfig({
         starlight({
             title: 'smart-mqtt',
             logo: {
-                src: './src/assets/feat_logo_v2.svg',
+                src: './src/assets/logo.svg',
             },
             customCss: [
                 // 你的自定义 CSS 文件的相对路径
@@ -86,33 +86,51 @@ export default defineConfig({
             },
             sidebar: [
                 {
-                    label: '关于',
-                    autogenerate: {directory: 'guides'},
+                    label: '首页',
+                    link: '/',
                 },
                 {
-                    label: 'Feat Cloud教程',
-                    autogenerate: {directory: 'cloud'},
-                },
-                {
-                    label: 'Feat AI教程',
-                    autogenerate: {directory: 'ai'},
-                },
-                {
-                    label: 'Feat Core教程',
-                    items:[
+                    label: '快速开始',
+                    items: [
                         {
-                            label: 'Http Server',
-                            autogenerate: {directory: 'server'},
+                            label: '快速开始',
+                            link: '/getting-started/quickstart/',
+                        }
+                    ],
+                },
+                {
+                    label: '产品手册',
+                    items: [
+                        {
+                            label: '产品介绍',
+                            link: '/product/introduction/',
                         },
                         {
-                            label: 'Http Client',
-                            autogenerate: {directory: 'client'},
+                            label: '如何选择 Broker',
+                            link: '/product/choosing-broker/',
+                        },
+                        {
+                            label: '发版记录',
+                            link: '/product/changelog/',
                         }
-                    ]
+                    ],
                 },
                 {
-                    label: '附录',
-                    autogenerate: {directory: 'appendix'},
+                    label: '开发参考',
+                    items: [
+                        {
+                            label: '插件开发',
+                            link: '/development/plugin/',
+                        },
+                        {
+                            label: '事件总线',
+                            link: '/development/eventbus/',
+                        },
+                        {
+                            label: '性能压测',
+                            link: '/development/benchmark/',
+                        }
+                    ],
                 },
             ],
         }),

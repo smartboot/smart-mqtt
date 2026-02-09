@@ -1,0 +1,239 @@
+---
+title: 插件开发
+---
+
+# 插件开发
+
+smart-mqtt 是一款非常开放的产品，在满足基本 MQTT 服务的同时，还能基于其插件化的能力衍生出多样化的功能，例如：服务指标统计、集群服务、数据路由等。
+
+smart-mqtt 企业版的几乎每项特性都是一个插件，并且插件与插件之间各自独立自治。
+
+在[事件总线](/smart-mqtt/development/eventbus/)章节中为大家展示了相对细致的 smart-mqtt 内部架构。但如果从**插件**视角重新审视 smart-mqtt，则会是另外一番景象（见下图）。
+
+![插件架构图](/public/plugin.svg)
+
+通过订阅事件总线上不同类型的事件，并配套不同的实现策略，可以实现很多实用的功能。当然，你也可以完全脱离事件总线做一些有意思的插件，譬如：插件的热插拔、Broker服务动态启停等。
+
+## 工作原理
+
+我们会持续为企业用户提供丰富且实用性的插件，同时也鼓励具备研发能力的企业通过自研插件支撑业务上需求。
+
+或许在将来，我们会考虑建设一个插件市场，为企业自研的插件提供一个展示、分享的平台，让优质的作品可以惠及全行业。
+
+### 启动流程
+
+插件，在 smart-mqtt 中的侵入性是非常低的。如果结合代码的话，你应该能在几分钟内完全掌握它的精髓。
+
+![插件启动流程](./img/plugin_start.png)
+
+上图为 smart-mqtt 服务启动的完整流程，插件处于其中间环节。插件的启动分为两个步骤：
+
+1. 通过 `ServiceLoader` 的方式加载 `classpath` 内的所有插件实例
+2. 按插件的优先级进行排序，再执行 `install` 方法安装启用插件
+
+```java
+private void loadAndInstallPlugins() {
+    for (Plugin plugin : ServiceLoader.load(Plugin.class, Providers.class.getClassLoader())) {
+        LOGGER.info("load plugin: " + plugin.pluginName());
+        plugins.add(plugin);
+    }
+    // 安装插件
+    plugins.stream().sorted(Comparator.comparingInt(Plugin::order)).forEach(plugin -> {
+        LOGGER.info("install plugin: " + plugin.pluginName());
+        plugin.install(this);
+    });
+}
+```
+
+:::tip
+只要遵循 ServiceLoader 模式开发的插件，都能非常轻松的自动扫描并加载进来。
+:::
+
+### 退出流程
+
+卸载插件，是 smart-mqtt Broker 停止服务的一个必经过程，以此保证服务的优雅退出和资源的充分释放。
+
+![插件退出流程](./img/plugin_stop.png)
+
+实现的代码也仅仅只有2行：
+
+```java
+plugins.forEach(Plugin::uninstall);
+plugins.clear();
+```
+
+## 演示示例
+
+### 1. 创建插件项目
+
+创建一个插件项目，JDK 为 1.8 的 Maven 工程。
+
+![创建项目](./img/plugin_demo_1.png)
+
+### 2. 引入依赖
+
+引入 smart-mqtt-broker 的 maven 依赖和 `build` 插件。
+
+```xml
+<dependencies>
+    <dependency>
+        <groupId>org.smartboot.mqtt</groupId>
+        <artifactId>smart-mqtt-broker</artifactId>
+        <version>1.4.0</version>
+    </dependency>
+</dependencies>
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.10.1</version>
+            <configuration>
+                <source>1.8</source>
+                <target>1.8</target>
+                <debug>false</debug>
+            </configuration>
+        </plugin>
+        <plugin>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>3.3.0</version>
+            <executions>
+                <execution>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>shade</goal>
+                    </goals>
+                    <configuration>
+                        <createDependencyReducedPom>false</createDependencyReducedPom>
+                        <transformers>
+                            <!-- 采用追加的方式 -->
+                            <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                <resource>META-INF/services/org.smartboot.mqtt.broker.plugin.Plugin</resource>
+                            </transformer>
+                        </transformers>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+```
+
+:::caution[重要]
+`maven-shade-plugin` 插件中的 `AppendingTransformer` 配置非常重要，它确保了当多个插件同时存在时，ServiceLoader 能够正确加载所有插件。
+:::
+
+### 3. 编写插件代码
+
+在 `resources/META-INF/services` 目录下创建名为 `org.smartboot.mqtt.broker.plugin.Plugin` 的文件，内容为插件实现类的全限定名。
+
+```
+tech.smartboot.mqtt.plugin.demo.DemoPlugin
+```
+
+创建插件实现类：
+
+```java
+package tech.smartboot.mqtt.plugin.demo;
+
+import org.smartboot.mqtt.broker.BrokerContext;
+import org.smartboot.mqtt.broker.plugin.Plugin;
+
+public class DemoPlugin extends Plugin {
+    
+    @Override
+    public void install(BrokerContext brokerContext) {
+        System.out.println("DemoPlugin installed!");
+        // 在这里编写插件初始化逻辑
+        // 例如：订阅事件、注册服务、启动线程等
+    }
+    
+    @Override
+    public void uninstall() {
+        System.out.println("DemoPlugin uninstalled!");
+        // 在这里编写插件卸载逻辑
+        // 例如：释放资源、停止线程等
+    }
+    
+    @Override
+    public String pluginName() {
+        return "DemoPlugin";
+    }
+    
+    @Override
+    public int order() {
+        // 插件加载顺序，值越小优先级越高
+        return 0;
+    }
+}
+```
+
+### 4. 打包与部署
+
+运行 `mvn clean package` 打包插件，将生成的 jar 文件放入 smart-mqtt 的 `plugins` 目录下，重启服务即可生效。
+
+## 常用插件类型
+
+### 认证插件
+
+实现自定义的客户端认证逻辑：
+
+```java
+@Override
+public void install(BrokerContext brokerContext) {
+    brokerContext.getProviders().setAuthenticationValidator((client, username, password) -> {
+        // 自定义认证逻辑
+        return "admin".equals(username) && "123456".equals(password);
+    });
+}
+```
+
+### 消息桥接插件
+
+将 MQTT 消息转发到其他系统：
+
+```java
+@Override
+public void install(BrokerContext brokerContext) {
+    // 订阅消息接收事件
+    brokerContext.getEventBus().subscribe(EventType.RECEIVE_PUBLISH_MESSAGE, event -> {
+        MqttPublishMessage message = event.getObject();
+        // 将消息发送到 Redis、Kafka 等
+    });
+}
+```
+
+### 监控插件
+
+收集和上报服务指标：
+
+```java
+@Override
+public void install(BrokerContext brokerContext) {
+    // 定时上报指标
+    ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    scheduler.scheduleAtFixedRate(() -> {
+        // 收集连接数、消息量等指标
+    }, 0, 60, TimeUnit.SECONDS);
+}
+```
+
+## 最佳实践
+
+1. **插件职责单一**：每个插件只负责一个明确的功能
+2. **正确处理异常**：插件中的异常不应影响 Broker 的正常运行
+3. **资源及时释放**：在 `uninstall` 方法中释放所有资源
+4. **配置外部化**：将可变参数提取到配置文件中
+5. **日志规范**：使用统一的日志框架，避免直接打印到控制台
+
+## 参考插件
+
+smart-mqtt 官方提供了多个参考插件：
+
+- **simple-auth-plugin**：简单的用户名密码认证
+- **redis-bridge-plugin**：MQTT 消息与 Redis 集成
+- **websocket-plugin**：WebSocket 连接支持
+- **memory-session-plugin**：内存会话状态管理
+
+你可以在 [Gitee 仓库](https://gitee.com/smartboot/smart-mqtt/tree/master/plugins) 查看这些插件的源码。

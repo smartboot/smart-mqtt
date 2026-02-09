@@ -1,0 +1,175 @@
+---
+title: 发版记录
+---
+
+# 发版记录
+
+## smart-mqtt broker v1.4.0（2025-10-15）
+
+发版详情：《[smart-mqtt v1.4.0极致瘦身，以不足 800KB 的包体积承载1000万/秒消息洪流](https://mp.weixin.qq.com/s/eSgmHLqN3iMuZ5XXl64eFg)》
+
+---
+
+## smart-mqtt broker v1.3.0（2025-07-16）
+
+发版详情：《[轻量级 MQTT Broker 再进化！smart-mqtt v1.3.0 支持多节点集群部署](https://mp.weixin.qq.com/s/qlrM64slFXpelW_1Wc9LfA)》
+
+---
+
+## smart-mqtt broker v1.2.0（2025-06-18）
+
+发版详情：《[历经300万次重连压测，smart-mqtt v1.2.0证明自己有多稳定！](https://mp.weixin.qq.com/s/9KlKRbr4GmxyPRPUn95HVw)》
+
+---
+
+## smart-mqtt broker v1.1.0（2025-04-30）
+
+- 发布 smart-mqtt 插件开发规范组件：smart-mqtt-plugin-spec
+- 发布 smart-mqtt plugin 本地运行 maven 插件，满足本地开发调试需求
+- 完成 smart-mqtt-broker 插件式运行环境改造
+- 发布插件：simple-auth-plugin，一个简单的MQTT认证插件，提供基本的用户名密码认证功能
+- 发布插件：redis-bridge-plugin，一个用于MQTT消息与Redis集成的桥接插件
+- 发布插件：websocket-plugin，允许客户端通过WebSocket连接进行MQTT通信
+- 发布插件：memory-session-plugin，为MQTT broker提供基于内存的会话状态管理功能
+- smart-mqtt-broker 移除 feat 依赖，精简发行包体积
+- smart-socket 升级至 1.5.60
+- fastjson2 升级至 2.0.57
+- feat 升级至 0.8.9
+
+---
+
+## smart-mqtt broker v1.0.0（2025-04-20）
+
+发版详情：[https://mp.weixin.qq.com/s/xsv_l9azTIQ4a1vVEucH5g](https://mp.weixin.qq.com/s/xsv_l9azTIQ4a1vVEucH5g)
+
+---
+
+## smart-mqtt broker v0.42（2025-04-13）
+
+1. 改进消息队列的类结构设计，精简内存开销
+2. 重构消息推送的相关接口设计
+3. 补充大量的代码注释
+4. feat升级至v0.8.3
+5. smart-socket升级至v1.5.58
+
+---
+
+## smart-mqtt broker v0.41（2025-02-26）
+
+1. 开源压测模块：smart-mqtt-bench
+2. 开源企业版后台模块：smart-mqtt-plugin-enterprise
+3. BrokerConfigure 重命名为：Options
+4. MqttClientConfigure 重命名为：Options
+5. 修复特定场景下共享订阅失效问题
+6. 重构 MQTT Client 接口设计
+7. 废弃接口：BrokerContext@bundle
+8. 废弃接口：BrokerContext@getBundle
+
+---
+
+## smart-mqtt broker v0.40（2024-12-06）
+
+1. 优化消息推送模型，提升通信性能
+2. 增加消息队列历史数据清退功能，节省服务内存开销
+3. 增加消息推送率指标的检测
+4. 升级 smart-socket，启用柔性内存池模型
+5. 容器环境支持时区设置功能，默认：上海
+6. 修复某些场景下的空指针问题
+7. 数据库表：connection 增加索引配置
+
+---
+
+## smart-mqtt broker v0.37（2024-04-06）
+
+1. 采用更高效的编解码算法，TPS 提升至 790万/秒
+2. 重构解码算法，提升代码可读性
+3. 优化消息重发的实现机制
+4. 补充单元测试
+
+---
+
+## smart-mqtt broker v0.36（2024-03-07）
+
+1. 降低控制台指标监控打印频次
+2. 新增共享订阅特性
+3. 调整 Topic 编解码算法，提升性能至 700万/秒
+
+---
+
+## smart-mqtt broker v0.35（2024-01-28）
+
+1. 优化消息总线 Consumer 的接口设计
+2. 临时性事件类型执行完毕后自动销毁订阅者
+3. 提升事件总线的执行性能
+4. BrokerTopic 增加可用性状态量
+5. 增加遗嘱消息配置的合法性校验
+6. 提升通信性能
+7. 加入新版本检测功能，及时获得最新动态
+8. smart-socket 升级至 1.5.41
+9. smart-http 升级至 1.3.8
+
+---
+
+## 历史版本
+
+<details>
+<summary>点击查看更早版本</summary>
+
+### v0.34（2023-12-16）
+
+**社区版**
+1. 引入弱时间精度提升通信性能
+2. 移除无用事件类型：MESSAGE_BUS_CONSUMED
+3. 重构消息推送模型，简化代码复杂性
+4. 修复 v0.33 引入的packetId解码算法 bug
+
+**企业版**
+1. 优化内存使用率统计指标
+2. 新增客户端踢下线功能
+3. 优化指标统计界面
+4. 升级 opentiny 至 3.12.0
+
+### v0.33（2023-12-03）
+
+**社区版**
+1. 优化消息总线设计
+2. 移除无用事件类型：OPEN_API_STARTED、CONNACK、NOTIFY_TOPIC_PUSH
+3. 优化 MQTT5 关于 Disconnect 的规范实现
+4. 采用位运算方式优化协议编解码算法
+5. 减少通信内存开销
+6. 升级 smart-socket 至 1.5.39
+
+**企业版**
+1. 优化指标展示的时间格式化效果
+2. 修复系统参数设置不能为空的问题
+3. 支持配置化展示 dashboard 的指标项
+4. 升级 smart-http 至 1.3.6
+
+### v0.32（2023-11-12）
+
+1. 优化 Plugin 接口设计
+2. 重构消息队列
+3. 提供优雅停机能力
+4. 提升 mqtt client 服务稳定性
+5. 改进连接认证功能
+6. restapi 启用异步接口功能
+7. 优化企业管理后台 topic订阅检索功能
+8. 提供集群演示环境一键部署能力
+9. 企业管理后台新增系统参数配置功能
+10. 升级 smart-http 至 1.3.5
+11. 升级 smart-socket 至 v1.5.36
+
+### v0.1 ~ v0.31
+
+更多历史版本信息请访问 [Gitee Releases](https://gitee.com/smartboot/smart-mqtt/releases)。
+
+</details>
+
+---
+
+:::tip[版本策略]
+smart-mqtt 采用语义化版本控制（SemVer）：
+- **主版本号**：重大架构变更或不兼容的API修改
+- **次版本号**：向下兼容的功能性新增
+- **修订号**：向下兼容的问题修正
+:::
