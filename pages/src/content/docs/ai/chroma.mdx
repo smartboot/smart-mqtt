@@ -1,0 +1,295 @@
+---
+title: 向量数据库-Chroma
+description: Feat AI
+sidebar:
+    order: 5
+---
+
+Chroma 是一个开源的向量数据库，支持高效存储和检索高维向量数据。
+在 Feat 项目中，Chroma 被集成到 `VectorStore` 组件中，提供了与 Chroma 服务交互的能力。
+本教程将详细介绍如何在 Feat 中使用 Chroma 进行向量数据的管理。
+
+---
+
+
+## 安装和配置
+
+### 安装 Chroma 服务
+
+首先，需要安装并运行 Chroma 服务。你可以通过以下命令启动 Chroma：
+
+```bash
+docker run -p 8000:8000 -p 8001:8001 chromaai/chroma:latest
+```
+
+启动后，Chroma 服务将运行在 `http://localhost:8000`。
+
+### 配置 Feat 连接 Chroma
+
+在 Feat 中，通过 `ChromaVectorStore` 类连接到 Chroma 服务。以下是一个基本配置示例：
+
+```java
+import tech.smartboot.feat.ai.vector.ChromaVectorStore;
+import tech.smartboot.feat.ai.vector.Document;
+import tech.smartboot.feat.ai.vector.SearchRequest;
+import tech.smartboot.feat.ai.vector.VectorStore;
+import tech.smartboot.feat.ai.vector.chroma.ChromaVectorOptions;
+
+public class ChromaConfig {
+    public static void main(String[] args) {
+        // 创建 ChromaVectorStore 实例
+        VectorStore vectorStore = ChromaVectorStore.chroma(opt -> {
+            opt.setUrl("http://localhost:8000")  // Chroma 服务地址
+               .collectionName("my_collection")  // 向量集合名称
+               .debug(true);                     // 开启调试模式
+        });
+
+        // 创建文档对象
+        Document document = new Document();
+        document.setId("1");
+        document.setDocument("hello world");  // 文本内容
+        document.setMetadata(Collections.singletonMap("name", "sndao"));  // 元数据
+
+        // 添加文档到集合
+        vectorStore.add(Collections.singletonList(document));
+    }
+}
+```
+
+---
+
+## 创建和管理数据库
+
+### 创建数据库
+
+在 Chroma 中，数据库是数据存储的顶层单位。以下是如何通过 Feat 创建数据库的示例：
+
+```java
+import tech.smartboot.feat.ai.vector.chroma.Chroma;
+
+public class CreateDatabase {
+    public static void main(String[] args) {
+        Chroma chroma = new Chroma("http://localhost:8000", opt -> opt.debug(true));
+        chroma.createDatabase("my_database");
+        System.out.println("Database created successfully");
+    }
+}
+```
+
+### 获取数据库信息
+
+```java
+import tech.smartboot.feat.ai.vector.chroma.Chroma;
+
+public class GetDatabase {
+    public static void main(String[] args) {
+        Chroma chroma = new Chroma("http://localhost:8000", opt -> opt.debug(true));
+        String databaseInfo = chroma.getDatabase("my_database");
+        System.out.println("Database info: " + databaseInfo);
+    }
+}
+```
+
+### 删除数据库
+
+```java
+import tech.smartboot.feat.ai.vector.chroma.Chroma;
+
+public class DeleteDatabase {
+    public static void main(String[] args) {
+        Chroma chroma = new Chroma("http://localhost:8000", opt -> opt.debug(true));
+        chroma.deleteDatabase("my_database");
+        System.out.println("Database deleted successfully");
+    }
+}
+```
+
+---
+
+## 创建和管理集合
+
+### 创建集合
+
+在 Chroma 中，集合是存储向量数据的基本单位。以下是如何创建集合的示例：
+
+```java
+import tech.smartboot.feat.ai.vector.chroma.Chroma;
+import java.util.HashMap;
+import java.util.Map;
+
+public class CreateCollection {
+    public static void main(String[] args) {
+        Chroma chroma = new Chroma("http://localhost:8000", opt -> opt.debug(true));
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("description", "My test collection");
+
+        Collection collection = chroma.createCollection("my_collection", metadata);
+        System.out.println("Collection created: " + collection.getName());
+    }
+}
+```
+
+### 获取集合信息
+
+```java
+import tech.smartboot.feat.ai.vector.chroma.Chroma;
+
+public class GetCollection {
+    public static void main(String[] args) {
+        Chroma chroma = new Chroma("http://localhost:8000", opt -> opt.debug(true));
+        Collection collection = chroma.getCollection("my_collection");
+        System.out.println("Collection name: " + collection.getName());
+    }
+}
+```
+
+### 删除集合
+
+```java
+import tech.smartboot.feat.ai.vector.chroma.Chroma;
+
+public class DeleteCollection {
+    public static void main(String[] args) {
+        Chroma chroma = new Chroma("http://localhost:8000", opt -> opt.debug(true));
+        Collection collection = chroma.getCollection("my_collection");
+        collection.delete();
+        System.out.println("Collection deleted successfully");
+    }
+}
+```
+
+---
+
+## 添加和删除文档
+
+### 添加文档
+
+```java
+import tech.smartboot.feat.ai.vector.Document;
+import tech.smartboot.feat.ai.vector.VectorStore;
+import tech.smartboot.feat.ai.vector.chroma.ChromaVectorStore;
+import java.util.Collections;
+
+public class AddDocument {
+    public static void main(String[] args) {
+        // 创建 ChromaVectorStore 实例
+        VectorStore vectorStore = ChromaVectorStore.chroma(opt -> {
+            opt.setUrl("http://localhost:8000")
+               .collectionName("my_collection")
+               .debug(true);
+        });
+
+        // 创建文档对象
+        Document document = new Document();
+        document.setId("1");
+        document.setDocument("hello world");  // 文本内容
+        document.setMetadata(Collections.singletonMap("name", "sndao"));  // 元数据
+
+        // 添加文档到集合
+        vectorStore.add(Collections.singletonList(document));
+        System.out.println("Document added successfully");
+    }
+}
+```
+
+### 删除文档
+
+```java
+import tech.smartboot.feat.ai.vector.Document;
+import tech.smartboot.feat.ai.vector.VectorStore;
+import tech.smartboot.feat.ai.vector.chroma.ChromaVectorStore;
+import java.util.Collections;
+
+public class DeleteDocument {
+    public static void main(String[] args) {
+        // 创建 ChromaVectorStore 实例
+        VectorStore vectorStore = ChromaVectorStore.chroma(opt -> {
+            opt.setUrl("http://localhost:8000")
+               .collectionName("my_collection")
+               .debug(true);
+        });
+
+        // 删除文档
+        vectorStore.delete("1");  // 删除 ID 为 "1" 的文档
+        System.out.println("Document deleted successfully");
+    }
+}
+```
+
+---
+
+## 查询和搜索
+
+### 基于内容的相似性搜索
+
+```java
+import tech.smartboot.feat.ai.vector.SearchRequest;
+import tech.smartboot.feat.ai.vector.VectorStore;
+import tech.smartboot.feat.ai.vector.chroma.ChromaVectorStore;
+import java.util.Collections;
+
+public class SimilaritySearch {
+    public static void main(String[] args) {
+        // 创建 ChromaVectorStore 实例
+        VectorStore vectorStore = ChromaVectorStore.chroma(opt -> {
+            opt.setUrl("http://localhost:8000")
+               .collectionName("my_collection")
+               .debug(true);
+        });
+
+        // 创建搜索请求
+        SearchRequest request = new SearchRequest();
+        request.setQuery("hello");  // 搜索文本
+        request.setTopK(3);         // 返回前 3 个结果
+
+        // 执行相似性搜索
+        List<Document> results = vectorStore.similaritySearch(request);
+        System.out.println("Search results: " + results.size());
+    }
+}
+```
+
+### 基于元数据的过滤搜索
+
+```java
+import tech.smartboot.feat.ai.vector.SearchRequest;
+import tech.smartboot.feat.ai.vector.VectorStore;
+import tech.smartboot.feat.ai.vector.chroma.ChromaVectorStore;
+import tech.smartboot.feat.ai.vector.expression.Expression;
+
+public class MetadataSearch {
+    public static void main(String[] args) {
+        // 创建 ChromaVectorStore 实例
+        VectorStore vectorStore = ChromaVectorStore.chroma(opt -> {
+            opt.setUrl("http://localhost:8000")
+               .collectionName("my_collection")
+               .debug(true);
+        });
+
+        // 创建过滤表达式
+        Expression filter = Expression.of("name").eq("sndao");
+
+        // 创建搜索请求
+        SearchRequest request = new SearchRequest();
+        request.setQuery("hello");
+        request.setExpression(filter);
+
+        // 执行搜索
+        List<Document> results = vectorStore.similaritySearch(request);
+        System.out.println("Filtered search results: " + results.size());
+    }
+}
+```
+
+---
+
+## 总结
+
+通过本教程，你已经掌握了在 Feat 中使用 Chroma 进行向量数据管理的基本方法，包括：
+
+- Chroma 服务的安装与配置
+- 数据库和集合的创建与管理
+- 文档的添加与删除
+- 基于内容和元数据的搜索
+
+Chroma 的强大功能使其成为处理高维向量数据的理想选择。希望本教程能帮助你快速上手，并在实际项目中发挥其优势。

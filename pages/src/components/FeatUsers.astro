@@ -1,0 +1,53 @@
+---
+// Mermaid.astro
+const {code} = Astro.props;
+let content = await Astro.slots.render('default');
+if (!content) {
+    content = ""
+}
+console.log(code)
+---
+
+<!-- 新增用户数显示容器 -->
+<div id="userCountDisplay" class="user-count"></div>
+
+<script>
+    const storedCount = localStorage.getItem('userCount');
+    const d = document.getElementById('userCountDisplay');
+    if (storedCount) {
+        d.textContent = "当前在册用户数: " + storedCount;
+    } else {
+        //隐藏d
+        d.style.display = "none";
+    }
+</script>
+
+<style>
+.user-count {
+    margin: 1.5rem 0;
+    padding: 1.2rem 1.5rem;
+    background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    }
+
+.user-count::before {
+    content: "👥";
+    font-size: 1.4rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    }
+
+.user-count:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
+    }
+</style>

@@ -1,0 +1,34 @@
+---
+title: 系统要求
+description: 系统要求
+sidebar:
+    order: 2
+---
+
+# 系统要求
+
+Feat 要求至少 **Java 8**，并且兼容更新的 Java 版本，包括 Java 17 及以上版本。
+对于第三方库没有特定的版本要求，但建议使用最新的稳定版本。
+
+为以下构建工具提供了明确的构建支持：
+
+| 构建工具 | 版本 |
+| --- | --- |
+| Maven | 3.6.3 或更高版本 |
+| Gradle | Gradle 8.x 或 9.x |
+
+## Servlet 容器
+
+Feat 不依赖传统的 servlet 容器，因为它拥有基于 <a href="https://smartboot.tech/smart-socket" target="_blank">smart-socket</a> 构建的高性能 HTTP 服务器。
+
+不过，Feat 应用程序可以部署在提供标准 Java 运行时的环境中。
+
+## 原生镜像
+
+Feat 应用程序可以使用 <a href="https://www.graalvm.org/jdk21/reference-manual/native-image/" target="_blank">GraalVM native-image</a> 工具编译为原生可执行文件，从而提供更快的启动时间和更低的内存占用。
+支持以下版本：
+
+| 名称 | 版本 |
+| --- | --- |
+| GraalVM Community | 21.0.x |
+| Native Build Tools | <a href="https://github.com/graalvm/native-build-tools" target="_blank">0.11.3</a> |

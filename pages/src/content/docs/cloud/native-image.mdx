@@ -1,0 +1,178 @@
+---
+title: Native Image 支持
+description: 使用 GraalVM Native Image 构建高性能 Feat 应用
+sidebar:
+    order: 7
+---
+
+import CheckAuthorize from '../../../components/CheckAuthorize.astro'
+import Mermaid from '../../../components/Mermaid.astro'
+import {Aside, TabItem, Tabs} from "@astrojs/starlight/components";
+
+<CheckAuthorize/>
+
+## 什么是 GraalVM Native Image
+
+让我们一起探索 GraalVM Native Image 技术！这是一种革命性的技术，它为部署和运行 Java 应用程序提供了全新的方式。
+
+与传统的 Java 虚拟机相比，原生镜像具有显著的优势：
+- **极速启动**：启动时间从几秒甚至几十秒缩短到几十毫秒级别
+- **低内存占用**：相比 JVM 运行时，内存使用量可减少高达 5-10 倍
+- **独立部署**：生成的可执行文件不依赖 JVM，可独立运行
+- **容器优化**：更适合容器化部署和云原生环境
+
+这些优势使得原生镜像特别适用于使用容器镜像部署的应用程序，特别是与"函数即服务"(FaaS)平台结合使用时。
+
+## 为什么选择 Feat 框架
+
+Feat 框架原生支持 GraalVM Native Image，能够充分利用其优势：
+
+- **极速启动**：原生镜像启动时间通常在几十毫秒级别
+- **低内存占用**：相比 JVM 运行时，内存使用量大幅降低
+- **独立部署**：生成的可执行文件不依赖 JVM，可独立运行
+- **容器优化**：更适合容器化部署和云原生环境
+
+Feat 框架通过其独特的 [AOT 编译机制](/feat/cloud/aot/)，天然适合 GraalVM Native Image 构建。相比其他框架需要大量配置和调整才能构建原生镜像，Feat 几乎无需额外工作即可构建出高性能的原生镜像应用。
+
+## 快速入门：构建你的第一个原生镜像
+
+### 实际示例
+
+我们来看一个简单的 Feat 应用示例，这是一个最小化的 Hello World 应用，完整代码可以在 [Gitee 示例项目](https://gitee.com/smartboot/feat/tree/master/demo/helloworld_native) 中找到：
+
+```java
+@Controller
+public class Bootstrap {
+
+    @RequestMapping("/hello")
+    public String helloWorld() {
+        return "hello Feat Cloud";
+    }
+
+    public static void main(String[] args) {
+        FeatCloud.cloudServer().listen();
+    }
+}
+```
+
+该应用的 pom.xml 文件配置如下：
+
+```xml
+<plugin>
+    <groupId>org.graalvm.buildtools</groupId>
+    <artifactId>native-maven-plugin</artifactId>
+    <version>0.11.3</version>
+    <extensions>true</extensions>
+    <configuration>
+        <mainClass>tech.smartboot.feat.Bootstrap</mainClass>
+        <buildArgs>
+            <argument>--no-fallback</argument>
+        </buildArgs>
+    </configuration>
+</plugin>
+```
+
+### 方法一：使用 Maven 插件构建
+
+执行以下命令进行构建：
+
+```bash
+mvn clean native:compile -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+```
+
+<Aside>
+    - 使用 native-maven-plugin 插件方式需要将项目的 **JDK 版本升级为 21**。
+    - 当前 fastjson2 还不兼容 GraalVM 25，因此请使用 GraalVM 21 版本来构建原生镜像。
+</Aside>
+
+### 方法二：使用 native-image 命令构建
+
+使用 native-image 命令适用于 **JDK8** 的项目工程。这种方法需要先将[应用打包成 Fat-JAR](/feat/cloud/deployment/)：
+
+```bash
+mvn clean package
+```
+
+然后使用 native-image 命令进行构建：
+
+```bash
+native-image \
+  --no-fallback \
+  --enable-url-protocols=http,https \
+  -H:Name=helloworld_native \
+  -jar target/helloworld_native.jar
+```
+
+## 构建流程详解
+
+<Mermaid code={`
+graph TD
+    A[准备源代码] --> B[选择构建方式]
+    B --> C1[使用 Maven 插件<br/>需要JDK21+]
+    B --> C2[使用 native-image 命令<br/>适用于JDK8]
+    C1 --> D[执行 mvn clean native:compile]
+    C2 --> E[打包成 fat jar]
+    E --> F[执行 native-image 命令]
+    D --> G[生成原生可执行文件]
+    F --> G
+    G --> H[测试原生应用]
+`} />
+
+## 最佳实践
+
+### 1. 避免运行时动态特性
+
+尽量避免使用运行时动态特性，如：
+
+```java
+// 不推荐
+Class<?> clazz = Class.forName(className);
+Method method = clazz.getMethod("methodName");
+
+// 推荐
+// 使用 Feat AOT 编译替代运行时反射
+```
+
+### 2. 测试原生镜像
+
+构建完成后，务必测试原生镜像的运行效果：
+
+```bash
+# 启动原生镜像
+./helloworld_native
+
+# 测试基本功能
+curl http://localhost:8080/hello
+```
+
+## 故障排除
+
+### 常见问题
+
+1. **ClassNotFoundException**: 缺少类路径配置
+2. **NoSuchMethodException**: 反射配置缺失
+3. **Resource not found**: 资源文件未正确包含
+
+### 调试技巧
+
+启用 GraalVM 的诊断输出可以帮助定位问题：
+
+```bash
+native-image \
+  --no-fallback \
+  -H:+PrintAnalysisCallTree \
+  -H:AnalysisLogLevel=INFO \
+  -jar target/helloworld_native.jar
+```
+
+## 性能对比
+
+通过使用 Feat 和 GraalVM Native Image，您可以获得：
+- 极速启动的应用程序（从秒级降到毫秒级）
+- 更低的资源消耗（内存使用量减少5-10倍）
+- 更好的容器化部署体验
+- 更高的运行时性能
+
+这使得 Feat 成为构建云原生应用和微服务的理想选择。
+
+掌握了这些基础知识，你就能轻松地将 Feat 应用打包成高效的原生镜像了！

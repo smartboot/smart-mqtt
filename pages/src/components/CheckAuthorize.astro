@@ -1,0 +1,8 @@
+<script>
+    if (typeof checkAuthorize !== 'undefined') {
+        checkAuthorize("smartboot", "feat", "users.json", function (type) {
+            console.log("fail", type)
+            location.href = "/feat/auth/?code=" + type;
+        })
+    }
+</script>

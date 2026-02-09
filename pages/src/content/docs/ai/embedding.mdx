@@ -1,0 +1,242 @@
+---
+title: Embedding
+description: Feat AI
+sidebar:
+    order: 4
+---
+
+随着人工智能技术的飞速发展，文本嵌入（Text Embedding）已经成为自然语言处理（NLP）中的基础且重要的技术。文本嵌入通过将文本转换为高维向量，使得计算机能够理解文本的语义信息。
+
+Feat 提供了强大的嵌入式（Embedding）功能，支持多种预训练模型和自定义模型，能够将文本转换为高维向量表示，广泛应用于文本相似度计算、语义检索等场景。
+
+本教程将详细介绍如何使用 Feat 的 AI 嵌入功能，包括基本使用、高级配置以及与向量数据库的结合。
+
+---
+
+## 基本使用
+
+### 1. 单句嵌入
+
+```java
+// 加载 Gitee AI 的 bce-embedding-base_v1 模型
+EmbeddingModel embeddingModel = FeatAI.embedding(opt ->
+    opt.model(ModelVendor.GITEE_AI_BCE_BASE_V1)
+);
+
+// 对单句文本进行嵌入
+float[] embedding = embeddingModel.embed("你好！");
+System.out.println(Arrays.toString(embedding));
+```
+
+**说明：**
+- `ModelVendor.GITEE_AI_BCE_BASE_V1`：使用 Gitee AI 提供的预训练嵌入模型
+- `embed` 方法返回一个浮点数数组，表示文本的高维向量表示
+- 输出结果为一个长度为 768 的向量
+
+### 2. 多句嵌入
+
+```java
+EmbeddingModel embeddingModel = FeatAI.embedding(opt ->
+    opt.model(ModelVendor.GITEE_AI_BGE_LARGE_ZH_V1_5)
+);
+
+List<float[]> embeddings = embeddingModel.embed(Arrays.asList(
+    "Hello World",
+    "你好"
+));
+
+embeddings.forEach(embed -> System.out.println(Arrays.toString(embed)));
+```
+
+**说明：**
+- 支持批量处理多句文本
+- 每个句子都会被转换为固定长度的向量表示
+- 返回结果为 `List<float[]>` 类型，每个元素对应一个句子的向量表示
+
+
+## 模型选择
+
+Feat 支持多种预训练嵌入模型，用户可以根据需求选择合适的模型：
+
+### 1. Gitee AI 模型
+
+```java
+// 使用 Gitee AI 的不同模型
+EmbeddingModel bceBaseModel = FeatAI.embedding(opt ->
+    opt.model(ModelVendor.GITEE_AI_BCE_BASE_V1)  // 基础版模型
+);
+
+EmbeddingModel bgeSmallModel = FeatAI.embedding(opt ->
+    opt.model(ModelVendor.GITEE_AI_BGE_SMALL_ZH_V1_5)  // 小型中文模型
+);
+
+EmbeddingModel bgeLargeModel = FeatAI.embedding(opt ->
+    opt.model(ModelVendor.GITEE_AI_BGE_LARGE_ZH_V1_5)  // 大型中文模型
+);
+```
+
+### 2. Ollama 模型
+
+```java
+// 使用 Ollama 本地服务
+EmbeddingModel ollamaModel = FeatAI.embedding(opt -> {
+    opt.baseUrl("http://localhost:11434/v1")  // Ollama 服务地址
+        .model(ModelVendor.Ollama.nomic_embed_text);  // 使用 nomic-embed-text 模型
+});
+
+List<float[]> embeddings = ollamaModel.embed(Arrays.asList(
+    "Hello World",
+    "你好"
+));
+```
+
+**说明：**
+- 需要先启动 Ollama 服务
+- `nomic_embed_text` 是一个高性能的开源嵌入模型
+- 支持多种模型选择，具体模型列表可参考 ModelVendor 接口
+
+### 3. 自定义模型
+
+```java
+// 使用自定义模型
+EmbeddingModel customModel = FeatAI.embedding(opt -> {
+    opt.baseUrl("http://your-model-server/v1")  // 自定义模型服务地址
+        .model("your-model-name")  // 自定义模型名称
+        .apiKey("your-api-key");  // 如果需要认证
+});
+```
+
+##  使用示例
+### 1. 与 Chroma 集成
+```java
+// 使用 Chroma 进行向量存储和检索
+Chroma chroma = new Chroma("http://localhost:8000", opt -> {
+    opt.debug(true)
+        .embeddingModel(FeatAI.embedding(embedOpt -> {
+            embedOpt.baseUrl("http://localhost:11434/v1")  // Ollama 服务地址
+                .model(ModelVendor.Ollama.nomic_embed_text)  // 使用 nomic-embed-text 模型
+                .debug(true);
+        }));
+});
+
+// 创建集合
+Collection collection = chroma.createCollection("my_collection");
+
+// 添加文档
+List<Document> documents = Arrays.asList(
+    new Document("1", "Hello World"),
+    new Document("2", "你好")
+);
+collection.add(documents);
+
+// 查询
+Query query = new Query();
+query.setQueryTexts(Arrays.asList("Hello"));
+query.setInclude(Arrays.asList("metadatas", "documents", "distances"));
+collection.query(query);
+```
+
+**说明：**
+- Chroma 是一个开源的向量数据库，支持高效的向量存储和检索
+- 可通过 Chroma 进行大规模文本的语义检索
+- 支持自定义嵌入模型
+
+### 2. 文本相似度计算
+
+将文本嵌入到向量空间后，可以计算文本之间的相似度，用于推荐系统、问答系统等场景。
+
+```java
+import tech.smartboot.feat.ai.FeatAI;
+import tech.smartboot.feat.ai.embedding.EmbeddingModelVendor;
+import java.util.Arrays;
+
+public class TextSimilarityExample {
+    public static void main(String[] args) {
+        var embeddingModel = FeatAI.embedding(opt -> opt.model(ModelVendor.GITEE_AI_BCE_BASE_V1));
+
+        float[] embedding1 = embeddingModel.embed("你好！");
+        float[] embedding2 = embeddingModel.embed("您好！");
+
+        // 计算余弦相似度
+        double similarity = cosineSimilarity(embedding1, embedding2);
+        System.out.println("文本相似度: " + similarity);
+    }
+
+    private static double cosineSimilarity(float[] a, float[] b) {
+        double dotProduct = 0.0;
+        double normA = 0.0;
+        double normB = 0.0;
+
+        for (int i = 0; i < a.length; i++) {
+            dotProduct += a[i] * b[i];
+            normA += Math.pow(a[i], 2);
+            normB += Math.pow(b[i], 2);
+        }
+
+        return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+    }
+}
+```
+
+### 3. 文本分类
+
+通过嵌入向量，可以将文本映射到特定的类别，用于分类任务。
+
+```java
+import tech.smartboot.feat.ai.FeatAI;
+import tech.smartboot.feat.ai.embedding.EmbeddingModelVendor;
+import java.util.Arrays;
+import java.util.List;
+
+public class TextClassificationExample {
+    public static void main(String[] args) {
+        var embeddingModel = FeatAI.embedding(opt -> opt.model(ModelVendor.GITEE_AI_BCE_BASE_V1));
+
+        List<String> texts = Arrays.asList(
+            "机器学习是人工智能的一部分。",
+            "深度学习是一种机器学习方法。",
+            "自然语言处理是计算机科学的一个领域。"
+        );
+
+        List<String> categories = Arrays.asList("技术", "技术", "计算机科学");
+
+        // 假设我们有一个分类器，根据嵌入向量进行分类
+        List<String> predictedCategories = classify(embeddingModel.embed(texts));
+
+        for (int i = 0; i < texts.size(); i++) {
+            System.out.println("文本: " + texts.get(i));
+            System.out.println("实际类别: " + categories.get(i));
+            System.out.println("预测类别: " + predictedCategories.get(i));
+            System.out.println("--------------------");
+        }
+    }
+
+    // 简单的分类器示例
+    private static List<String> classify(List<float[]> embeddings) {
+        // 这里只是一个示例，实际分类器需要根据具体业务逻辑实现
+        return Arrays.asList("技术", "技术", "计算机科学");
+    }
+}
+```
+
+## 注意事项
+
+1. **模型选择**：
+- 不同模型的性能和适用场景不同，需根据具体需求选择
+- 预训练模型通常已经过良好训练，适合大多数场景
+
+2. **性能优化**：
+- 批量处理可以显著提高性能
+- 注意内存使用，避免一次性处理过多数据
+
+3. **错误处理**：
+- 嵌入模型调用可能抛出异常，需添加 try-catch 处理
+- 检查 API 返回状态码，处理可能的错误情况
+
+4. **安全性**：
+- 敏感信息如 API 密钥需妥善保管
+- 生产环境建议使用 HTTPS 传输
+
+---
+
+通过以上教程，您可以快速上手 Feat 的嵌入式功能，体验其强大能力。如需更深入了解，可以参考相关 API 文档或联系技术支持。

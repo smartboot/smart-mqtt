@@ -1,0 +1,76 @@
+PaymentQrCode.astro
+---
+const { buttonLabel = "永久授权", buttonStyle = "display: inline-block; background-color: #e67e22; color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem; border: none; cursor: pointer;" } = Astro.props;
+---
+
+<div>
+  <button id="paymentQrCodeBtn" type="button" style={buttonStyle}>
+    {buttonLabel}
+  </button>
+  
+  <div id="qrCodeModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center;">
+    <div class="modal-content" style="background: white; border-radius: 12px; padding: 1.5rem; width: 90%; max-width: 800px; position: relative; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #eee;">
+        <h3 style="margin: 0; color: #2c3e50;">开通授权</h3>
+        <button id="closeModalBtn" type="button" style="background: none; border: none; font-size: 1.8rem; cursor: pointer; color: #7f8c8d; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">×</button>
+      </div>
+      <div class="payment-steps" style="display: flex; flex-direction: column; align-items: center; margin-bottom: 1.5rem;">
+
+        
+        <div class="payment-content" style="display: flex; gap: 1.5rem; width: 100%; flex-wrap: wrap;">
+          <div class="payment-section" style="flex: 1; min-width: 300px; max-width: 450px; display: flex; flex-direction: column;">
+            <h4 style="text-align: center; margin: 0 0 0.25rem; color: #2c3e50; font-size: 1.1rem; font-weight: 600;">捐赠二维码</h4>
+            <div class="payment-options" style="display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center; align-items: flex-end; flex: 1;">
+              <div class="payment-option" style="display: flex; flex-direction: column; align-items: center;">
+                <img src="https://smartboot.tech/wx_pay.png" alt="微信支付二维码" style="width: 180px; height: 190px; border: 1px solid #ddd; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
+              </div>
+              <div class="payment-option" style="display: flex; flex-direction: column; align-items: center;">
+                <img src="https://smartboot.tech/ali_pay.png" alt="支付宝二维码" style="width: 180px; height: 190px; border: 1px solid #ddd; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
+              </div>
+            </div>
+          </div>
+          
+          <div class="divider" style="width: 1px; background: #ddd; height: 190px; align-self: flex-end;"></div>
+          
+          <div class="wechat-section" style="flex: 1; min-width: 200px; max-width: 300px; display: flex; flex-direction: column;">
+            <h4 style="text-align: center; margin: 0 0 0.25rem; color: #2c3e50; font-size: 1.1rem; font-weight: 600;">添加好友</h4>
+            <div class="wechat-option" style="display: flex; flex-direction: column; align-items: center; margin-top: auto;">
+              <p style="margin: 0.25rem 0 0.5rem; font-size: 0.9rem; color: #7f8c8d; line-height: 1.4;"></p>
+              <img src="https://smartboot.tech/img/qrcode/personal_wx.png" alt="微信二维码" style="width: 180px; height: 190px; border: 1px solid #ddd; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="payment-note" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.9rem; color: #7f8c8d; text-align: center; line-height: 1.5;">完成捐赠后及时添加好友（备注：<b>Feat企业授权</b>）获取授权码</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const openModal = () => {
+    document.getElementById('qrCodeModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeModal = () => {
+    document.getElementById('qrCodeModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+  };
+
+  document.getElementById('paymentQrCodeBtn').addEventListener('click', openModal);
+  document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+  
+  // 点击遮罩层关闭弹窗
+  document.getElementById('qrCodeModal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) {
+      closeModal();
+    }
+  });
+  
+  // 按ESC键关闭弹窗
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeModal();
+    }
+  });
+</script>

@@ -1,0 +1,698 @@
+---
+// LicenseGenerator.astro - Feat框架License生成器
+---
+
+<div class="license-generator">
+    <div class="generator-header">
+        <h2>🔐 Feat License 生成器</h2>
+        <p>为 Feat 框架生成商业授权许可证</p>
+    </div>
+
+    <div class="form-section">
+        <div class="input-group">
+            <label for="licenseName">授权对象名称:</label>
+            <input 
+                type="text" 
+                id="licenseName" 
+                placeholder="请输入授权对象名称，如：smartboot开源组织"
+                value="smartboot开源组织"
+            />
+        </div>
+
+        <div class="input-group">
+            <label for="licenseNumber">许可证编号:</label>
+            <div class="input-with-button">
+                <input 
+                    type="text" 
+                    id="licenseNumber" 
+                    placeholder="企业统一社会信用代码或开源项目仓库地址，例如：91110000123456789X 或 github.com/smartboot/feat"
+                />
+                <button id="autoGenerateBtn" class="auto-generate-btn">自动生成编号</button>
+            </div>
+            <div class="license-examples">
+                <span class="example-label">许可证编号示例：</span>
+                <div class="example-item">
+                    <span class="example-type">企业：</span>
+                    <code class="example-code">91110000123456789X</code>
+                    <span class="example-desc">统一社会信用代码</span>
+                </div>
+                <div class="example-item">
+                    <span class="example-type">开源项目：</span>
+                    <code class="example-code">github.com/smartboot/feat</code>
+                    <span class="example-desc">仓库地址</span>
+                </div>
+                <div class="example-item">
+                    <span class="example-type">其他：</span>
+                    <code class="example-code">20241201000001</code>
+                    <span class="example-desc">自定义编号</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button id="generateBtn" class="generate-btn">生成许可证</button>
+        </div>
+    </div>
+
+    <div class="results-section" id="resultsSection" style="display: none;">
+        <div class="results-grid">
+            <div class="result-card instructions-card">
+                <div class="result-header">
+                    <h3>📖 使用说明</h3>
+                </div>
+                <div class="usage-instructions">
+                    <div class="instruction-item">
+                        <h4>📋 License 申报方式：</h4>
+                        <p>1. Fork <a href="https://gitee.com/smartboot/feat" target="_blank">Feat 主仓库</a> 到您的个人账户下</p>
+                        <p>2. 将以下License配置添加到项目中的 <a href="https://gitee.com/smartboot/feat/blob/master/feat-cloud-aot/src/main/resources/feat_users.yaml" target="_blank"><code>feat-cloud-aot/src/main/resources/feat_users.yaml</code></a> 文件中：</p>
+                        <pre id="featUsersConfig" class="config-output"></pre>
+                        <p>3. 提交更改并推送至您的 Fork 仓库</p>
+                        <p>4. 向 Feat 主仓库提交 <a href="https://gitee.com/smartboot/feat/pulls" target="_blank">Pull Request</a></p>
+                        <p>5. 将 PR 地址通过公司邮箱发送至 <a href="mailto:zhengjunweimail@163.com">zhengjunweimail@163.com</a></p>
+                    </div>
+                    <div class="instruction-item">
+                        <h4>✅ 本地测试建议：</h4>
+                        <p><b>重要提醒：</b>在正式提交 LICENSE 申报之前，强烈建议您先在本地环境中完成测试验证。</p>
+                        <p><b>测试方式：</b></p>
+                        <ol>
+                            <li>将生成的用户配置添加到 <code>feat-cloud-aot/src/main/resources/feat_users.yaml</code> 文件中</li>
+                            <li>在 Feat 项目根目录执行 <code>mvn install</code> 命令使配置在本地生效</li>
+                            <li>在您的项目中配置生成的许可证信息（添加到 <code>feat.yml</code> 文件中或设置为系统环境变量）</li>
+                            <li>启动您的 Feat 应用程序</li>
+                            <li>观察启动日志，如果出现类似 <code>Feat License verification passed!</code> 的绿色提示信息，则表示许可证验证通过</li>
+                        </ol>
+                        <p>只有本地测试通过后，再进行 LICENSE 申报提交。</p>
+                    </div>
+                    <div class="instruction-item">
+                        <h4>⚙️ 许可证配置方式：</h4>
+                        <p><b>方式一(不推荐)：</b>将以下许可证信息添加到项目的 <code>feat.yml</code> 文件中：</p>
+                        <pre id="featYmlConfig" class="config-output"></pre>
+                        <p><b>方式二（推荐）：</b>出于安全考虑，强烈建议将许可证信息保存为系统环境变量：FEAT_LICENSE</p>
+                        <h4>🔧 系统环境变量配置示例：</h4>
+                        
+                        <!-- Tab导航 -->
+                        <div class="tab-navigation">
+                            <button class="tab-button active" data-tab="linux">Linux/macOS</button>
+                            <button class="tab-button" data-tab="windows-cmd">Windows CMD</button>
+                            <button class="tab-button" data-tab="windows-ps">Windows PowerShell</button>
+                        </div>
+                        
+                        <!-- Tab内容 -->
+                        <div class="tab-content">
+                            <!-- Linux/macOS Tab -->
+                            <div class="tab-pane active" id="linux-tab">
+                                <pre class="config-output">export FEAT_LICENSE="<span id="licenseEnvExample"></span>"</pre>
+                                <p class="config-note">要使环境变量在重启后仍然有效，请将上述命令添加到您的 <code>~/.bashrc</code>、<code>~/.bash_profile</code> 或 <code>~/.zshrc</code> 文件中。</p>
+                            </div>
+                            
+                            <!-- Windows CMD Tab -->
+                            <div class="tab-pane" id="windows-cmd-tab">
+                                <pre class="config-output">set FEAT_LICENSE=<span id="licenseEnvExample2"></span></pre>
+                                <p class="config-note">要使环境变量在重启后仍然有效，请使用以下方法之一：</p>
+                                <ul class="config-note-list">
+                                    <li>通过"系统属性" → "高级" → "环境变量"设置系统环境变量</li>
+                                    <li>在PowerShell中使用 <code>[Environment]::SetEnvironmentVariable("FEAT_LICENSE", "<span id="licenseEnvExample6"></span>", "Machine")</code></li>
+                                </ul>
+                            </div>
+                            
+                            <!-- Windows PowerShell Tab -->
+                            <div class="tab-pane" id="windows-ps-tab">
+                                <pre class="config-output">$env:FEAT_LICENSE="<span id="licenseEnvExample3"></span>"</pre>
+                                <p class="config-note">要使环境变量在重启后仍然有效，请使用以下命令：</p>
+                                <pre class="config-output">[Environment]::SetEnvironmentVariable("FEAT_LICENSE", "<span id="licenseEnvExample7"></span>", "Machine")</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+import { ec as EC } from 'elliptic';
+
+class LicenseGenerator {
+    constructor() {
+        this.ec = new EC('p256');
+        this.keyPair = null;
+        this.signature = null;
+        this.licenseName = '';
+        this.licenseNumber = '';
+        
+        this.initEventListeners();
+    }
+
+    initEventListeners() {
+        const generateBtn = document.getElementById('generateBtn');
+        const autoGenerateBtn = document.getElementById('autoGenerateBtn');
+        const licenseNameInput = document.getElementById('licenseName');
+        const licenseNumberInput = document.getElementById('licenseNumber');
+
+        generateBtn?.addEventListener('click', () => this.generateLicense());
+        autoGenerateBtn?.addEventListener('click', () => this.generateLicenseNumber());
+        
+        // 添加Tab切换事件监听器
+        const tabButtons = document.querySelectorAll('.tab-button');
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => this.switchTab(button));
+        });
+        
+        licenseNameInput?.addEventListener('input', (e) => {
+            this.licenseName = e.target.value;
+        });
+        
+        licenseNumberInput?.addEventListener('input', (e) => {
+            this.licenseNumber = e.target.value;
+        });
+    }
+
+    // Tab切换方法
+    switchTab(clickedButton) {
+        const tabId = clickedButton.getAttribute('data-tab');
+        
+        // 更新按钮状态
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.classList.remove('active');
+        });
+        clickedButton.classList.add('active');
+        
+        // 显示对应的Tab内容
+        document.querySelectorAll('.tab-pane').forEach(pane => {
+            pane.classList.remove('active');
+        });
+        document.getElementById(`${tabId}-tab`).classList.add('active');
+    }
+
+    generateLicenseNumber() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        this.licenseNumber = `${year}${month}${day}${hours}${minutes}${seconds}`;
+        
+        const licenseNumberInput = document.getElementById('licenseNumber');
+        if (licenseNumberInput) {
+            licenseNumberInput.value = this.licenseNumber;
+        }
+    }
+
+
+    async generateLicense() {
+        try {
+            // 获取授权名称
+            const licenseNameInput = document.getElementById('licenseName');
+            this.licenseName = licenseNameInput?.value || 'smartboot开源组织';
+            
+            // 获取许可证编号
+            const licenseNumberInput = document.getElementById('licenseNumber');
+            this.licenseNumber = licenseNumberInput?.value || '';
+
+            if (!this.licenseName.trim()) {
+                alert('请输入授权对象名称');
+                return;
+            }
+            
+            if (!this.licenseNumber.trim()) {
+                alert('请输入许可证编号（统一社会信用代码、仓库地址或时间编号）');
+                return;
+            }
+            
+            // 验证许可证编号格式（支持多种格式）
+            // if (!this.validateLicenseNumber(this.licenseNumber)) {
+            //     alert('许可证编号格式不正确！\n\n支持的格式：\n1. 统一社会信用代码（18位）\n2. 仓库地址（如 github.com/user/repo）\n3. 时间编号（14位数字）');
+            //     return;
+            // }
+
+            // 1. 生成 ECDSA 密钥对 (P-256 曲线，对应Java的EC 256位)
+            this.keyPair = this.ec.genKeyPair();
+
+            // 2. 获取公钥 (DER格式，Base64编码 - 匹配Java的实现)
+            const publicKeyDER = this.getPublicKeyDER();
+            const publicKeyBase64 = this.arrayBufferToBase64(publicKeyDER);
+
+            // 3. 对授权名称进行签名 (匹配Java的SHA256withECDSA)
+            // Java使用的是data.getBytes()，默认使用系统编码，这里使用UTF-8确保一致性
+            const messageBytes = new TextEncoder().encode(this.licenseName);
+            const messageHash = await this.sha256(messageBytes);
+            this.signature = this.keyPair.sign(Array.from(new Uint8Array(messageHash)));
+            const signatureBase64 = this.signatureToBase64(this.signature);
+
+            // 4. 显示结果
+            this.displayResults(publicKeyBase64, signatureBase64);
+
+
+        } catch (error) {
+            console.error('生成许可证时出错:', error);
+            alert('生成许可证时出错: ' + error.message);
+        }
+    }
+
+    // 将椭圆曲线公钥转换为DER格式 (匹配Java的X509EncodedKeySpec格式)
+    getPublicKeyDER() {
+        const publicKeyPoint = this.keyPair.getPublic();
+        const x = publicKeyPoint.getX().toArray('be', 32);
+        const y = publicKeyPoint.getY().toArray('be', 32);
+        
+        // P-256曲线的DER编码格式
+        // SEQUENCE { SEQUENCE { OBJECT IDENTIFIER, NULL }, BIT STRING }
+        const algorithmIdentifier = new Uint8Array([
+            0x30, 0x13, // SEQUENCE, length 19
+            0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01, // ecPublicKey OID
+            0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07 // prime256v1 OID
+        ]);
+        
+        const publicKeyBytes = new Uint8Array([0x04, ...x, ...y]); // 未压缩格式
+        const bitString = new Uint8Array([0x03, publicKeyBytes.length + 1, 0x00, ...publicKeyBytes]);
+        
+        const derBytes = new Uint8Array([
+            0x30, algorithmIdentifier.length + bitString.length, // SEQUENCE
+            ...algorithmIdentifier,
+            ...bitString
+        ]);
+        
+        return derBytes;
+    }
+
+    // SHA256 哈希函数
+    async sha256(data) {
+        return await crypto.subtle.digest('SHA-256', data);
+    }
+
+    // 将签名转换为Base64格式
+    signatureToBase64(signature) {
+        // 将r和s值转换为DER编码的ASN.1格式 (匹配Java的签名格式)
+        const r = signature.r.toArray('be');
+        const s = signature.s.toArray('be');
+        
+        const rLen = r.length;
+        const sLen = s.length;
+        
+        // DER编码: SEQUENCE { INTEGER r, INTEGER s }
+        const derSig = new Uint8Array([
+            0x30, rLen + sLen + 4, // SEQUENCE
+            0x02, rLen, ...r,      // INTEGER r
+            0x02, sLen, ...s       // INTEGER s
+        ]);
+        
+        return this.arrayBufferToBase64(derSig);
+    }
+
+    // ArrayBuffer转Base64
+    arrayBufferToBase64(buffer) {
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
+    }
+
+    // 显示生成结果
+    displayResults(publicKeyBase64, signatureBase64) {
+        // feat_users.yaml 配置
+        const featUsersConfig = `users:
+  ${this.licenseNumber}:
+    name: ${this.licenseName}
+    license: ${signatureBase64}`;
+
+        // feat.yml 配置
+        const featYmlConfig = `license: ${this.licenseNumber}_${publicKeyBase64}`;
+        
+        // 环境变量示例
+        const licenseEnvExample = `${this.licenseNumber}_${publicKeyBase64}`;
+
+        // 显示配置
+        const featUsersConfigElement = document.getElementById('featUsersConfig');
+        const featYmlConfigElement = document.getElementById('featYmlConfig');
+        const licenseEnvExampleElements = document.querySelectorAll('#licenseEnvExample, #licenseEnvExample2, #licenseEnvExample3, #licenseEnvExample6, #licenseEnvExample7');
+                    
+        if (featUsersConfigElement) {
+            featUsersConfigElement.textContent = featUsersConfig;
+        }
+                    
+        if (featYmlConfigElement) {
+            featYmlConfigElement.textContent = featYmlConfig;
+        }
+        
+        // 更新环境变量示例
+        licenseEnvExampleElements.forEach(element => {
+            element.textContent = licenseEnvExample;
+        });
+        
+        // 显示结果区域
+        const resultsSection = document.getElementById('resultsSection');
+        if (resultsSection) {
+            resultsSection.style.display = 'block';
+        }
+    }
+
+
+}
+
+// 初始化许可证生成器
+document.addEventListener('DOMContentLoaded', () => {
+    new LicenseGenerator();
+});
+</script>
+
+<style>
+.license-generator {
+    max-width: 1000px;
+    margin: 1rem auto;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.generator-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.generator-header h2 {
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.generator-header p {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.form-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e2e8f0;
+}
+
+.input-group {
+    margin-bottom: 1rem;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.input-with-button {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.input-with-button input {
+    flex: 1;
+}
+
+.auto-generate-btn {
+    padding: 0.5rem 0.75rem;
+    background: #e2e8f0;
+    color: #1e293b;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.auto-generate-btn:hover {
+    background: #cbd5e1;
+}
+
+.license-examples {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: #f1f5f9;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+    font-size: 0.75rem;
+    line-height: 1.4;
+}
+
+.example-label {
+    font-weight: 500;
+    color: #374151;
+}
+
+.example-code {
+    background: #e2e8f0;
+    padding: 0.15rem 0.3rem;
+    border-radius: 2px;
+    font-family: monospace;
+    color: #4f46e5;
+    margin: 0 0.15rem;
+    display: inline-block;
+}
+
+.button-group {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+.generate-btn {
+    padding: 0.5rem 1.5rem;
+    background: #3b82f6;
+    color: white;
+    border: 1px solid #3b82f6;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.generate-btn:hover {
+    background: #2563eb;
+}
+
+.results-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.results-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.result-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: #f1f5f9;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.result-header h3 {
+    color: #1e293b;
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.instructions-card .result-header {
+    background: #dbeafe;
+}
+
+.config-output {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 1rem;
+    font-family: monospace;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    overflow-x: auto;
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
+    min-height: 80px;
+}
+
+.usage-instructions {
+    padding: 1rem;
+}
+
+.instruction-item {
+    margin-bottom: 1rem;
+}
+
+.instruction-item:last-child {
+    margin-bottom: 0;
+}
+
+.instruction-item h4 {
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.instruction-item ol,
+.instruction-item ul {
+    padding-left: 1.25rem;
+    margin: 0;
+}
+
+.instruction-item li {
+    margin-bottom: 0.25rem;
+    line-height: 1.5;
+    color: #374151;
+    font-size: 0.85rem;
+}
+
+.instruction-item a {
+    color: #3b82f6;
+    text-decoration: none;
+}
+
+.instruction-item a:hover {
+    text-decoration: underline;
+}
+
+.instruction-item code {
+    background: #e2e8f0;
+    padding: 0.15rem 0.3rem;
+    border-radius: 2px;
+    font-family: monospace;
+    color: #4f46e5;
+    font-size: 0.75rem;
+}
+
+@media (max-width: 768px) {
+    .license-generator {
+        margin: 0.5rem;
+        padding: 0.5rem;
+    }
+    
+    .button-group {
+        flex-direction: column;
+    }
+    
+    .input-with-button {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .input-with-button input {
+        order: 1;
+    }
+    
+    .auto-generate-btn {
+        order: 2;
+        align-self: stretch;
+    }
+    
+    .license-examples {
+        font-size: 0.7rem;
+    }
+    
+    .example-code {
+        display: block;
+        margin: 0.2rem 0;
+        word-break: break-all;
+    }
+}
+
+/* Tab导航样式 */
+.tab-navigation {
+    display: flex;
+    gap: 0.25rem;
+    margin: 0.75rem 0;
+    flex-wrap: wrap;
+}
+
+.tab-button {
+    padding: 0.4rem 0.75rem;
+    background: #e2e8f0;
+    border: 1px solid #cbd5e1;
+    border-radius: 3px 3px 0 0;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.tab-button:hover {
+    background: #cbd5e1;
+}
+
+.tab-button.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+/* Tab内容样式 */
+.tab-content {
+    border: 1px solid #e2e8f0;
+    border-radius: 0 3px 3px 3px;
+    padding: 0.75rem;
+    margin-top: -1px;
+    background: #ffffff;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+.config-note {
+    background: #f0f9ff;
+    border-left: 3px solid #3b82f6;
+    padding: 0.5rem;
+    margin: 0.25rem 0;
+    font-size: 0.8rem;
+}
+
+.config-note-list {
+    background: #f0f9ff;
+    border-left: 3px solid #3b82f6;
+    padding: 0.5rem 0.5rem 0.5rem 1rem;
+    margin: 0.25rem 0;
+    font-size: 0.8rem;
+}
+
+.config-note-list li {
+    margin-bottom: 0.25rem;
+}
+</style>
