@@ -86,51 +86,16 @@ export default defineConfig({
             },
             sidebar: [
                 {
-                    label: '首页',
+                    label: '快速开始',
                     link: '/',
                 },
                 {
-                    label: '快速开始',
-                    items: [
-                        {
-                            label: '快速开始',
-                            link: '/getting-started/quickstart/',
-                        }
-                    ],
-                },
-                {
                     label: '产品手册',
-                    items: [
-                        {
-                            label: '产品介绍',
-                            link: '/product/introduction/',
-                        },
-                        {
-                            label: '如何选择 Broker',
-                            link: '/product/choosing-broker/',
-                        },
-                        {
-                            label: '发版记录',
-                            link: '/product/changelog/',
-                        }
-                    ],
+                    autogenerate: {directory: 'product'}
                 },
                 {
                     label: '开发参考',
-                    items: [
-                        {
-                            label: '插件开发',
-                            link: '/development/plugin/',
-                        },
-                        {
-                            label: '事件总线',
-                            link: '/development/eventbus/',
-                        },
-                        {
-                            label: '性能压测',
-                            link: '/development/benchmark/',
-                        }
-                    ],
+                    autogenerate: {directory: 'development'}
                 },
             ],
         }),

@@ -1,67 +1,129 @@
 ---
-title: smart-mqtt
+title: 快速开始
 ---
 
-import {Card, CardGrid, LinkCard} from '@astrojs/starlight/components';
+本文将帮助你在 5 分钟内快速启动并运行 smart-mqtt。
 
-# smart-mqtt 文档中心
+## 环境要求
 
-欢迎来到 smart-mqtt 的官方文档中心！smart-mqtt 是 smartboot 开源组织推出的商业化 MQTT Broker 产品，专为拥有上万级设备连接量的企业级物联网场景设计。
+- **Java**: JDK 8 或更高版本
+- **操作系统**: Linux / Windows / macOS
+- **Docker**: (可选) 用于容器化部署
 
-## 为什么选择 smart-mqtt？
+## 方式一：使用 Docker 部署（推荐）
 
-<CardGrid stagger>
-    <Card title="超高性能" icon="rocket">
-        单机支持百万级连接，消息吞吐量可达 790万/秒（QoS0），基于自研通信框架 smart-socket 打造。
-    </Card>
-    <Card title="纯国产血统" icon="badge-check">
-        符合信创场景需求，底层采用自研通信框架，无外部依赖，代码可控。
-    </Card>
-    <Card title="插件化架构" icon="puzzle">
-        基于事件总线的插件化设计，支持热插拔，可根据需求灵活扩展功能。
-    </Card>
-    <Card title="轻量级" icon="feather">
-        v1.4.0 版本包体积不足 800KB，资源占用低，部署简单。
-    </Card>
-    <Card title="Java 生态" icon="seti:java">
-        基于 Java 开发，天然适合 Java 技术栈企业，易于集成和二次开发。
-    </Card>
-    <Card title="企业级特性" icon="shield">
-        支持集群部署、数据持久化、数据桥接、WebSocket、Dashboard 等企业级功能。
-    </Card>
-</CardGrid>
+smart-mqtt 提供了 Docker 镜像，这是最简单的部署方式。
 
-## 快速导航
+### 1. 使用 docker-compose
 
-<CardGrid>
-    <LinkCard
-        title="快速开始"
-        description="5分钟快速上手 smart-mqtt"
-        href="/smart-mqtt/getting-started/quickstart/"
-    />
-    <LinkCard
-        title="产品手册"
-        description="了解产品特性、版本对比和使用说明"
-        href="/smart-mqtt/product/introduction/"
-    />
-    <LinkCard
-        title="开发参考"
-        description="插件开发、事件总线等技术文档"
-        href="/smart-mqtt/development/plugin/"
-    />
-</CardGrid>
+```yaml
+version: '3.8'
+services:
+  smart-mqtt:
+    image: smartboot/smart-mqtt:latest
+    container_name: smart-mqtt
+    ports:
+      - "1883:1883"
+      - "8083:8083"
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+```
 
-## 社区与支持
+保存为 `docker-compose.yml`，然后执行：
 
-- **代码仓库**：
-  - Gitee（主仓库）：[https://gitee.com/smartboot/smart-mqtt](https://gitee.com/smartboot/smart-mqtt)
-  - Github（镜像）：[https://github.com/smartboot/smart-mqtt](https://github.com/smartboot/smart-mqtt)
-- **在线体验**：[http://115.190.30.166:8083/](http://115.190.30.166:8083/)
-  - 账号：smart-mqtt
-  - 密码：smart-mqtt
+```bash
+docker-compose up -d
+```
 
----
+### 2. 直接运行 Docker 容器
 
-:::tip[开源不易]
-我们始于热爱，敬于技术，更要忠于生活。smart-mqtt 探索商业化路线是为了让项目能够持续发展，为用户提供更好的服务。
-:::
+```bash
+docker run -d \
+  --name smart-mqtt \
+  -p 1883:1883 \
+  -p 8083:8083 \
+  -e TZ=Asia/Shanghai \
+  -v $(pwd)/data:/data \
+  --restart unless-stopped \
+  smartboot/smart-mqtt:latest
+```
+
+## 方式二：手动部署
+
+### 1. 下载发行包
+
+从 [Gitee Releases](https://gitee.com/smartboot/smart-mqtt/releases) 或 [GitHub Releases](https://github.com/smartboot/smart-mqtt/releases) 下载最新版本的 smart-mqtt。
+
+```bash
+wget https://gitee.com/smartboot/smart-mqtt/releases/download/v1.4.0/smart-mqtt-1.4.0.tar.gz
+tar -xzf smart-mqtt-1.4.0.tar.gz
+cd smart-mqtt-1.4.0
+```
+
+### 2. 启动服务
+
+```bash
+./bin/start.sh
+```
+
+Windows 用户请运行：
+
+```bash
+bin/start.bat
+```
+
+## 验证部署
+
+### 1. 检查服务状态
+
+```bash
+# 查看进程
+ps aux | grep smart-mqtt
+
+# 查看端口监听
+netstat -tlnp | grep 1883
+```
+
+### 2. 使用 MQTT 客户端测试
+
+你可以使用任何 MQTT 客户端进行测试，例如 [MQTT X](https://mqttx.app/) 或命令行工具 `mosquitto`：
+
+```bash
+# 订阅主题
+mosquitto_sub -h localhost -p 1883 -t test/topic
+
+# 发布消息（在另一个终端）
+mosquitto_pub -h localhost -p 1883 -t test/topic -m "Hello smart-mqtt"
+```
+
+## 访问 Dashboard
+
+如果使用的是企业版，可以通过浏览器访问 Dashboard：
+
+```
+http://localhost:8083
+```
+
+默认账号密码：
+- 账号：`smart-mqtt`
+- 密码：`smart-mqtt`
+
+## 下一步
+
+- [产品手册](/smart-mqtt/product/introduction/) - 深入了解 smart-mqtt 的功能特性
+- [插件开发](/smart-mqtt/development/plugin/) - 学习如何开发自定义插件
+- [性能压测](/smart-mqtt/development/benchmark/) - 了解如何进行性能测试
+
+## 常见问题
+
+### Q: 启动失败，提示端口被占用？
+A: 检查 1883（MQTT）或 8083（HTTP/Dashboard）端口是否已被其他服务占用。
+
+### Q: 如何修改默认配置？
+A: 编辑 `conf/smart-mqtt.properties` 文件，重启服务生效。
+
+### Q: 如何查看日志？
+A: 日志文件位于 `logs/` 目录下，可以通过 `tail -f logs/smart-mqtt.log` 实时查看。
