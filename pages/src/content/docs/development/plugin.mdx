@@ -2,8 +2,6 @@
 title: 插件开发
 ---
 
-# 插件开发
-
 smart-mqtt 是一款非常开放的产品，在满足基本 MQTT 服务的同时，还能基于其插件化的能力衍生出多样化的功能，例如：服务指标统计、集群服务、数据路由等。
 
 smart-mqtt 企业版的几乎每项特性都是一个插件，并且插件与插件之间各自独立自治。
@@ -272,6 +270,8 @@ protected void initPlugin(BrokerContext brokerContext) {
 
 ## 插件配置
 
+### 配置文件
+
 插件支持通过 `plugin.yaml` 文件进行配置，放置在插件的存储目录中。
 
 ```java
@@ -294,6 +294,45 @@ public class PluginConfig {
     // getter/setter
 }
 ```
+
+### 配置可视化（Schema）
+
+插件可以通过重写 `schema()` 方法，定义配置项的可视化表单，便于在控制台中动态配置。
+
+```java
+import tech.smartboot.mqtt.plugin.spec.schema.Item;
+import tech.smartboot.mqtt.plugin.spec.schema.Schema;
+
+@Override
+public Schema schema() {
+    Schema schema = new Schema();
+    // 添加字符串类型配置项
+    schema.addItem(Item.String("host", "服务监听地址").col(6));
+    // 添加整数类型配置项
+    schema.addItem(Item.Int("port", "服务监听端口").col(6));
+    // 添加密码类型配置项
+    schema.addItem(Item.Password("password", "访问密码"));
+    // 添加文本域配置项
+    schema.addItem(Item.TextArea("pem", "证书内容").height(400));
+    return schema;
+}
+```
+
+支持的配置项类型：
+
+| 类型 | 说明 | 示例 |
+|------|------|------|
+| `string` | 普通文本输入 | `Item.String("name", "名称")` |
+| `int` | 整数输入 | `Item.Int("port", "端口")` |
+| `password` | 密码输入（隐藏内容） | `Item.Password("pwd", "密码")` |
+| `textarea` | 多行文本输入 | `Item.TextArea("content", "内容")` |
+| `object` | 对象类型（可嵌套子项） | `Item.Object("server", "服务器配置")` |
+
+:::tip[提示]
+- 使用 `.col(n)` 设置表单项的列宽（将一行分为12列）
+- 使用 `.height(n)` 设置文本域的高度
+- 使用 `.tip("提示信息")` 为配置项添加提示说明
+:::
 
 ## 最佳实践
 
