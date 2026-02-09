@@ -93,6 +93,10 @@ export default defineConfig({
                     label: '产品手册',
                     autogenerate: {directory: 'product'}
                 },
+                // {
+                //     label: '插件',
+                //     autogenerate: {directory: 'plugins'}
+                // },
                 {
                     label: '开发参考',
                     autogenerate: {directory: 'development'}

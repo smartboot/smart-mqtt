@@ -1,0 +1,324 @@
+---
+title: TLS/SSL 插件 (mqtts-plugin)
+sidebar:
+  order: 4
+---
+
+`mqtts-plugin` 为 smart-mqtt broker 提供 TLS/SSL 安全传输支持，基于 PEM 格式的证书配置实现加密通信。
+
+## 概述
+
+在物联网和企业级应用中，数据传输安全至关重要。mqtts-plugin 通过 TLS/SSL 协议为 MQTT 通信提供加密保护，防止数据被窃听和篡改。
+
+### 适用场景
+
+- **企业内网**: 保护敏感业务数据传输
+- **公网部署**: 防止数据在公网传输中被截获
+- **合规要求**: 满足数据安全合规标准
+- **设备认证**: 通过客户端证书实现双向认证
+
+### 核心特性
+
+- 基于 PEM 格式的证书配置 TLS/SSL 加密通信
+- 可自定义监听端口和主机地址
+- 支持标准 SSL/TLS 协议版本
+- 与 smart-socket SSL 插件深度集成
+
+## 架构原理
+
+### TLS 握手流程
+
+```mermaid
+sequenceDiagram
+    participant Client as MQTT Client
+    participant Broker as MQTT Broker
+    participant SslPlugin as SslPlugin
+    participant MqttProcessor as MqttProcessor
+    
+    Note over Client,MqttProcessor: TLS 握手阶段
+    
+    Client->>Broker: Client Hello
+    Broker->>SslPlugin: 转发握手数据
+    SslPlugin-->>Broker: Server Hello + Certificate
+    Broker-->>Client: Server Hello + Certificate
+    
+    Client->>Broker: Client Key Exchange
+    Broker->>SslPlugin: 完成密钥交换
+    SslPlugin-->>Broker: Change Cipher Spec
+    Broker-->>Client: Change Cipher Spec
+    
+    Note over Client,MqttProcessor: 加密通信阶段
+    
+    Client->>Broker: CONNECT (加密)
+    Broker->>SslPlugin: 解密数据
+    SslPlugin->>MqttProcessor: MQTT 消息
+    MqttProcessor-->>SslPlugin: 响应数据
+    SslPlugin-->>Broker: 加密响应
+    Broker-->>Client: CONNACK (加密)
+```
+
+### 插件架构
+
+```mermaid
+flowchart TD
+    subgraph Client["MQTT Client"]
+        C_SSL["TLS/SSL Layer"]
+    end
+    
+    subgraph Broker["MQTT Broker"]
+        subgraph MqttsPlugin["mqtts-plugin"]
+            AioServer["AioQuickServer"]
+            SslPlugin["SslPlugin"]
+            MqttProtocol["MqttProtocol"]
+            ProxyProcessor["ProxyProcessor"]
+        end
+        
+        subgraph CoreBroker["Core Broker"]
+            Processor["MessageProcessor"]
+            Plugins["Plugin Chain"]
+        end
+    end
+    
+    C_SSL <-->|TLS 加密通道| AioServer
+    AioServer --> MqttProtocol
+    MqttProtocol --> ProxyProcessor
+    ProxyProcessor --> SslPlugin
+    SslPlugin -->|解密后数据| Processor
+    Processor --> Plugins
+    
+    subgraph Config["配置"]
+        PemFile["PEM 证书文件"]
+        HostPort["Host & Port"]
+    end
+    
+    PemFile --> SslPlugin
+    HostPort --> AioServer
+```
+
+### 启动流程
+
+```mermaid
+sequenceDiagram
+    participant Broker as BrokerContext
+    participant Plugin as TlsPlugin
+    participant Config as PluginConfig
+    participant SslFactory as PemServerSSLContextFactory
+    participant Server as AioQuickServer
+    
+    Broker->>Plugin: install(context)
+    Plugin->>Config: loadPluginConfig()
+    Config-->>Plugin: 返回配置(host, port, pem)
+    
+    Plugin->>Plugin: 创建 ProxyProcessor
+    Plugin->>SslFactory: 创建 SSL 上下文
+    SslFactory->>SslFactory: 解析 PEM 证书
+    
+    Plugin->>Plugin: 注册 SslPlugin 到 Proxy
+    Plugin->>Server: 创建 AioQuickServer
+    Plugin->>Server: 配置参数(buffer, thread等)
+    Plugin->>Server: start()
+    Server-->>Plugin: 启动成功
+    Plugin-->>Broker: 安装完成
+    
+    Note over Broker,Server: MQTTS 服务已启动
+```
+
+## 核心组件
+
+| 组件 | 类名 | 职责 |
+|------|------|------|
+| 插件入口 | [`TlsPlugin`](https://gitee.com/smartboot/smart-mqtt/blob/master/plugins/mqtts-plugin/src/main/java/tech/smartboot/mqtt/tls/TlsPlugin.java) | 初始化 TLS 服务器和 SSL 配置 |
+| 配置管理 | [`PluginConfig`](https://gitee.com/smartboot/smart-mqtt/blob/master/plugins/mqtts-plugin/src/main/java/tech/smartboot/mqtt/tls/PluginConfig.java) | 管理 host、port、pem 等配置 |
+| SSL 工厂 | `PemServerSSLContextFactory` | 从 PEM 证书创建 SSL 上下文 |
+| 消息代理 | `ProxyProcessor` | 代理消息到核心 broker 处理器 |
+
+## 配置参数
+
+在 `plugin.yaml` 中配置：
+
+```yaml
+# 监听地址
+host: 0.0.0.0
+
+# 监听端口（MQTTS 默认 8883）
+port: 8883
+
+# PEM 格式的证书内容
+pem: |
+  -----BEGIN CERTIFICATE-----
+  MIIEsTCCAxmgAwIBAgIQb1DqeyVD0+UBTKynNf3oJzANBgkqhkiG9w0BAQsFADCB
+  ... (证书内容)
+  -----END CERTIFICATE-----
+  -----BEGIN PRIVATE KEY-----
+  MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC1/iKnsFYqfqtV
+  ... (私钥内容)
+  -----END PRIVATE KEY-----
+```
+
+### 参数详解
+
+| 参数名 | 类型 | 默认值 | 必填 | 说明 |
+|--------|------|--------|------|------|
+| `host` | string | 0.0.0.0 | 否 | MQTTS 服务监听地址 |
+| `port` | int | 8883 | 是 | MQTTS 服务监听端口 |
+| `pem` | string | - | 是 | PEM 格式的证书和私钥 |
+
+## 证书准备
+
+### 自签名证书（测试环境）
+
+```bash
+# 生成私钥
+openssl genrsa -out server.key 2048
+
+# 生成证书签名请求
+openssl req -new -key server.key -out server.csr \
+  -subj "/C=CN/ST=Beijing/L=Beijing/O=smartboot/CN=localhost"
+
+# 生成自签名证书
+openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
+
+# 合并为 PEM 格式
+cat server.crt server.key > server.pem
+```
+
+### 生产环境证书
+
+建议从正规 CA 机构申请证书，或使用 Let's Encrypt 免费证书：
+
+```bash
+# 使用 Certbot 申请 Let's Encrypt 证书
+certbot certonly --standalone -d mqtt.example.com
+
+# 合并证书
+cat /etc/letsencrypt/live/mqtt.example.com/fullchain.pem \
+    /etc/letsencrypt/live/mqtt.example.com/privkey.pem > mqtt.pem
+```
+
+## 部署示例
+
+### 基础配置
+
+```yaml
+# plugin.yaml
+host: 0.0.0.0
+port: 8883
+pem: |
+  -----BEGIN CERTIFICATE-----
+  MIIDXTCCAkWgAwIBAgIJAKoK/heBjcOuMA0GCSqGSIb3DQEBBQUAMEUxCzAJBgNV
+  ...
+  -----END CERTIFICATE-----
+  -----BEGIN PRIVATE KEY-----
+  MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC1/iKnsFYqfqtV
+  ...
+  -----END PRIVATE KEY-----
+```
+
+### 多端口配置
+
+如果需要同时开启 MQTT(1883) 和 MQTTS(8883)：
+
+```yaml
+# broker.yaml - 配置普通 MQTT 端口
+port: 1883
+host: 0.0.0.0
+```
+
+```yaml
+# plugins/mqtts-plugin/plugin.yaml - 配置 TLS 端口
+host: 0.0.0.0
+port: 8883
+pem: |
+  ...
+```
+
+### Docker 部署
+
+```yaml
+version: '3.8'
+
+services:
+  mqtt-broker:
+    image: smartboot/smart-mqtt:latest
+    ports:
+      - "1883:1883"    # 普通 MQTT
+      - "8883:8883"    # MQTTS
+    volumes:
+      - ./plugin.yaml:/app/plugins/mqtts-plugin/plugin.yaml
+      - ./server.pem:/app/certs/server.pem:ro
+```
+
+## 客户端连接
+
+### MQTT.js 示例
+
+```javascript
+const mqtt = require('mqtt');
+
+// 连接 MQTTS
+const client = mqtt.connect('mqtts://broker.example.com:8883', {
+  rejectUnauthorized: false,  // 测试环境忽略证书验证
+  // ca: fs.readFileSync('./ca.crt'),  // 生产环境指定 CA 证书
+});
+
+client.on('connect', () => {
+  console.log('Connected via TLS');
+  client.subscribe('test/topic');
+});
+```
+
+### Python paho-mqtt 示例
+
+```python
+import paho.mqtt.client as mqtt
+
+client = mqtt.Client()
+client.tls_set(ca_certs="./ca.crt")  # 验证服务器证书
+# client.tls_insecure_set(True)       # 测试环境跳过验证
+
+client.connect("broker.example.com", 8883, 60)
+client.loop_forever()
+```
+
+### mosquitto_pub 示例
+
+```bash
+# 使用 TLS 连接
+mosquitto_pub -h broker.example.com -p 8883 \
+  --cafile ca.crt \
+  -t "test/topic" \
+  -m "Hello MQTTS"
+```
+
+## 注意事项
+
+:::caution[安全提示]
+- **证书有效期**: 定期检查证书有效期，避免过期导致服务中断
+- **私钥保护**: 私钥文件权限应设置为 600，避免泄露
+- **生产环境**: 务必使用正规 CA 签发的证书，禁用 `rejectUnauthorized: false`
+- **端口安全**: 8883 端口应在防火墙中限制访问范围
+:::
+
+## 故障排查
+
+| 现象 | 可能原因 | 解决方案 |
+|------|---------|---------|
+| 连接超时 | 端口未开放或防火墙阻止 | 检查防火墙规则和端口占用 |
+| 证书验证失败 | 证书过期或 CN 不匹配 | 更新证书或检查域名配置 |
+| SSL 握手失败 | 协议版本不兼容 | 检查客户端支持的 TLS 版本 |
+| 私钥格式错误 | PEM 格式不正确 | 确保证书和私钥格式正确 |
+
+## 性能优化
+
+| 优化项 | 建议 |
+|--------|------|
+| TLS 版本 | 建议使用 TLS 1.2 或 TLS 1.3 |
+| 证书链 | 配置完整的证书链，减少握手往返 |
+| 会话复用 | 启用会话复用，减少握手开销 |
+| 硬件加速 | 使用支持 AES-NI 的 CPU |
+
+## 技术支持
+
+- **作者**: 三刀（zhengjunweimail@163.com）
+- **供应商**: smart-mqtt
+- **版本**: 与 MQTT Broker 版本保持一致
