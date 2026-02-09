@@ -4,272 +4,266 @@ title: 事件总线
 
 # 事件总线
 
-smart-mqtt 所有的数据、服务都是依托于事件总线驱动的。数据总线造就了 smart-mqtt 极具灵活的扩展性，熟练掌握并运用该特性可以轻松应对各类复杂的场景需求。
+smart-mqtt 的事件总线是整个框架的核心组件，采用经典的生产/消费模型实现。所有 MQTT 消息处理、连接管理、订阅管理等都通过事件总线驱动，这为开发者提供了极强的扩展能力。
 
 ![事件总线架构图](./img/eventbus.svg)
 
-## 接口设计
+## 架构原理
 
-从消息总线的接口设计可以看出，它的运作原理就是经典的生产/消费模型。
+### 核心模型
 
-```java
-public interface EventBus {
+事件总线采用 **发布-订阅模式（Pub/Sub）**，由三个核心角色组成：
 
-    <T> void subscribe(EventType<T> type, EventBusSubscriber<T> subscriber);
-
-    <T> void subscribe(List<EventType<T>> types, EventBusSubscriber<T> subscriber);
-
-    <T> void publish(EventType<T> eventType, T object);
-}
+```mermaid
+flowchart LR
+    P[Publisher<br/>事件发布者] -->|publish| B[EventBus<br/>事件总线]
+    B -->|notify| S[Subscriber<br/>事件订阅者]
 ```
 
-其中 `EventBus#publish` 已被安插在各个恰当的位置，当发生相应事件的时候会由 smart-mqtt 框架自动触发。
+- **Publisher（发布者）**：在特定时机触发事件，如连接建立、消息接收等
+- **EventBus（事件总线）**：负责事件的注册、分发和路由
+- **Subscriber（订阅者）**：监听感兴趣的事件并执行相应处理逻辑
 
-为了实现 MQTT Broker 的基础功能，smart-mqtt 已经通过 `EventBus#subscribe` 订阅了部分事件。
+### 事件流转机制
 
-当然，当你[开发插件](/smart-mqtt/development/plugin/)的时候，也可以通过订阅关注的事件实现自己想要的功能。但在此之前，最好先了解下各个事件类型的特性及触发条件。
+```mermaid
+sequenceDiagram
+    participant Client as MQTT Client
+    participant Broker as Broker
+    participant Bus as EventBus
+    participant Subs as Subscribers
 
-## 事件类型
+    Client->>Broker: 发送 CONNECT
+    Broker->>Bus: publish(CONNECT事件)
+    Bus->>Subs: 异步通知所有订阅者
+    Subs-->>Bus: 完成处理
+    Bus-->>Broker: 继续后续流程
+    Broker->>Client: 返回 CONNACK
+```
 
-### 接收消息（RECEIVE_MESSAGE）
+事件总线支持**同步**和**异步**两种发布模式：
 
-**触发条件**：完成 MQTT 消息解码，并即将进行消息处理时。
+| 模式 | 特点 | 适用场景 |
+|-----|------|---------|
+| **同步模式** | 发布者阻塞等待所有订阅者处理完成 | 简单、快速的逻辑处理 |
+| **异步模式** | 基于 CompletableFuture 链式处理 | 耗时操作（如认证、日志记录） |
 
-**使用场景**：
-- 消息审计日志
-- 消息内容分析
-- 自定义消息过滤
+## 事件类型列表
+
+smart-mqtt 内置了丰富的事件类型，覆盖 Broker 生命周期的各个阶段：
+
+### Broker 生命周期事件
+
+| 事件类型 | 触发时机 | 数据对象 | 特性 |
+|---------|---------|---------|------|
+| `BROKER_CONFIGURE_LOADED` | Broker 配置加载完成时 | `Options` | 一次性事件 |
+| `BROKER_STARTED` | Broker 启动成功时 | `BrokerContext` | 一次性事件 |
+| `BROKER_DESTROY` | Broker 停止服务时 | `BrokerContext` | 一次性事件 |
+
+**使用场景**：插件初始化、资源准备、优雅关闭等。
+
+### 连接管理事件
+
+| 事件类型 | 触发时机 | 数据对象 | 说明 |
+|---------|---------|---------|------|
+| `SESSION_CREATE` | TCP 连接建立，Session 初始化完成 | `MqttSession` | 连接建立但尚未认证 |
+| `CONNECT` | 客户端 CONNECT 消息认证通过 | `AsyncEventObject<MqttConnectMessage>` | 异步事件，支持拦截 |
+| `DISCONNECT` | TCP 连接断开时 | `AbstractSession` | 包含正常断开和异常断开 |
+
+**SESSION_CREATE vs CONNECT 的区别**：
+- `SESSION_CREATE`：仅表示 TCP 连接建立，MQTT Session 对象已创建
+- `CONNECT`：表示 MQTT 连接认证通过，客户端可以开始正常通信
+
+### 消息收发事件
+
+| 事件类型 | 触发时机 | 数据对象 | 说明 |
+|---------|---------|---------|------|
+| `RECEIVE_MESSAGE` | 接收到客户端任何消息时 | `EventObject<MqttMessage>` | 高性能优化，独立存储 |
+| `WRITE_MESSAGE` | 向客户端发送任何消息时 | `EventObject<MqttMessage>` | 高性能优化，独立存储 |
+| `RECEIVE_CONN_ACK_MESSAGE` | 接收到 CONNACK 消息时 | `MqttConnAckMessage` | 客户端模式使用 |
+
+**性能优化**：`RECEIVE_MESSAGE` 和 `WRITE_MESSAGE` 是高频事件，框架使用独立的 `CopyOnWriteArrayList` 存储订阅者，并做了空检查优化，无订阅者时零开销。
+
+### Topic 管理事件
+
+| 事件类型 | 触发时机 | 数据对象 | 说明 |
+|---------|---------|---------|------|
+| `TOPIC_CREATE` | 新 Topic 被创建时 | `String`（Topic名称） | 首次订阅触发 |
+| `SUBSCRIBE_ACCEPT` | 服务端接受订阅请求时 | `EventObject<MqttTopicSubscription>` | 验证通过后触发 |
+| `UNSUBSCRIBE_ACCEPT` | 服务端接受取消订阅时 | `EventObject<MqttUnsubscribeMessage>` | 验证通过后触发 |
+| `SUBSCRIBE_TOPIC` | 客户端订阅 Topic 成功时 | `EventObject<MessageDeliver>` | 建立订阅关系后触发 |
+| `UNSUBSCRIBE_TOPIC` | 客户端取消订阅 Topic 时 | `MessageDeliver` | 解除订阅关系时触发 |
+| `SUBSCRIBE_REFRESH_TOPIC` | 刷新 Topic 订阅时 | `MessageDeliver` | 会话恢复时触发 |
+
+**事件触发顺序**：
+```
+客户端发送 SUBSCRIBE
+    ↓
+SUBSCRIBE_ACCEPT（验证通过）
+    ↓
+TOPIC_CREATE（如果是新Topic）
+    ↓
+SUBSCRIBE_TOPIC（建立订阅关系）
+```
+
+### 一次性事件说明
+
+标记为 **一次性事件**（`once=true`）的类型，其订阅者只会被执行一次，之后自动失效。这适用于初始化操作：
 
 ```java
-brokerContext.getEventBus().subscribe(EventType.RECEIVE_MESSAGE, event -> {
+// BROKER_STARTED 只会在 Broker 启动完成后触发一次
+brokerContext.getEventBus().subscribe(EventType.BROKER_STARTED, (eventType, context) -> {
+    // 执行一次性初始化操作
+    initializePlugin();
+});
+```
+
+## 使用示例
+
+### 基本订阅
+
+订阅客户端连接事件，统计在线连接数：
+
+```java
+AtomicInteger connectionCount = new AtomicInteger(0);
+
+// CONNECT 是异步事件，需要使用 syncConsumer 包装
+brokerContext.getEventBus().subscribe(EventType.CONNECT, 
+    AsyncEventObject.syncConsumer((eventType, event) -> {
+        MqttSession session = event.getSession();
+        int count = connectionCount.incrementAndGet();
+        System.out.println("Client " + session.getClientId() + " connected, total: " + count);
+        event.getFuture().complete(null); // 完成异步处理
+    })
+);
+
+// DISCONNECT 是同步事件
+brokerContext.getEventBus().subscribe(EventType.DISCONNECT, (eventType, session) -> {
+    int count = connectionCount.decrementAndGet();
+    System.out.println("Client " + session.getClientId() + " disconnected, total: " + count);
+});
+```
+
+### 消息审计日志
+
+记录所有收发的消息：
+
+```java
+// 接收消息
+brokerContext.getEventBus().subscribe(EventType.RECEIVE_MESSAGE, (eventType, event) -> {
     MqttMessage message = event.getObject();
-    // 处理接收到的消息
+    MqttSession session = event.getSession();
+    logger.info("[RECV] client={}, message={}", session.getClientId(), message);
+});
+
+// 发送消息
+brokerContext.getEventBus().subscribe(EventType.WRITE_MESSAGE, (eventType, event) -> {
+    MqttMessage message = event.getObject();
+    MqttSession session = event.getSession();
+    logger.info("[SEND] client={}, message={}", session.getClientId(), message);
 });
 ```
 
-### 输出消息（WRITE_MESSAGE）
+### 一次性初始化
 
-**触发条件**：即将往 TCP 通道发送一条消息。
-
-**使用场景**：
-- 消息发送统计
-- 消息加密/解密
-- 流量控制
-
-### Broker 启动服务（BROKER_STARTED）
-
-**触发条件**：Broker 服务完成初始化，并启动成功。
-
-**使用场景**：
-- 初始化插件资源
-- 启动辅助线程
-- 注册外部服务
+在 Broker 启动时执行插件初始化：
 
 ```java
-brokerContext.getEventBus().subscribe(EventType.BROKER_STARTED, event -> {
-    // Broker 已启动，可以执行初始化操作
-    System.out.println("Broker started successfully!");
-});
-```
-
-### Broker 停止服务（BROKER_DESTROY）
-
-**触发条件**：Broker 停止服务。
-
-**使用场景**：
-- 释放资源
-- 保存状态
-- 通知外部系统
-
-### CONNECT
-
-**触发条件**：客户端发送的 ConnectMessage 认证通过。
-
-**使用场景**：
-- 连接数统计
-- 客户端上线通知
-- 连接日志记录
-
-```java
-brokerContext.getEventBus().subscribe(EventType.CONNECT, event -> {
-    MqttSession session = event.getObject();
-    System.out.println("Client connected: " + session.getClientId());
-});
-```
-
-### DISCONNECT
-
-**触发条件**：客户端与 Broker 的 TCP 连接断开。
-
-**使用场景**：
-- 连接数统计
-- 客户端下线通知
-- 清理客户端相关资源
-
-### 会话初始化（SESSION_CREATE）
-
-**触发条件**：建立了新的 TCP 连接，并完成 MQTT Session 初始化。
-
-**与 CONNECT 的区别**：
-- `SESSION_CREATE`：TCP 连接建立，Session 初始化完成
-- `CONNECT`：MQTT 连接认证通过
-
-### 创建 Topic 实例（TOPIC_CREATE）
-
-**触发条件**：Broker 接收到一个新的 Topic 订阅。
-
-**使用场景**：
-- Topic 数量监控
-- 动态 Topic 权限控制
-
-### 订阅 Topic（SUBSCRIBE_TOPIC）
-
-**触发条件**：客户端连接订阅了某个 Topic。
-
-**使用场景**：
-- 订阅关系统计
-- 动态消息路由
-
-```java
-brokerContext.getEventBus().subscribe(EventType.SUBSCRIBE_TOPIC, event -> {
-    SubscribeTopicEvent subscribeEvent = event.getObject();
-    String clientId = subscribeEvent.getSession().getClientId();
-    String topic = subscribeEvent.getTopic().getTopic();
-    System.out.println("Client " + clientId + " subscribed to " + topic);
-});
-```
-
-### 取消订阅 Topic（UNSUBSCRIBE_TOPIC）
-
-**触发条件**：当 Topic 订阅关系解除时触发。
-
-### 接收发布消息（RECEIVE_PUBLISH_MESSAGE）
-
-**触发条件**：Broker 收到来自客户端发送的 PublishMessage。
-
-**使用场景**：
-- 消息持久化
-- 消息桥接
-- 消息分析
-
-```java
-brokerContext.getEventBus().subscribe(EventType.RECEIVE_PUBLISH_MESSAGE, event -> {
-    MqttPublishMessage message = event.getObject();
-    String topic = message.getTopic();
-    byte[] payload = message.getPayload();
-    // 处理消息，例如转发到 Redis/Kafka
-});
-```
-
-### 推送发布消息（PUSH_PUBLISH_MESSAGE）
-
-**触发条件**：Broker 向某个客户端连接推送一次订阅的消息。
-
-**使用场景**：
-- 消息推送统计
-- 推送失败处理
-
-## 事件处理模式
-
-### 同步处理
-
-默认情况下，事件处理是同步的，即发布者会等待订阅者处理完成后才继续执行。
-
-```java
-brokerContext.getEventBus().subscribe(EventType.CONNECT, event -> {
-    // 同步处理，可能会阻塞发布线程
-    doSomething(event.getObject());
-});
-```
-
-### 异步处理
-
-如果事件处理逻辑较重，建议采用异步方式：
-
-```java
-brokerContext.getEventBus().subscribe(EventType.RECEIVE_PUBLISH_MESSAGE, event -> {
-    // 提交到线程池异步处理
-    threadPool.submit(() -> {
-        processMessage(event.getObject());
-    });
-});
-```
-
-### 条件订阅
-
-可以通过条件判断来决定是否处理事件：
-
-```java
-brokerContext.getEventBus().subscribe(EventType.RECEIVE_PUBLISH_MESSAGE, event -> {
-    MqttPublishMessage message = event.getObject();
-    // 只处理特定 Topic 的消息
-    if (message.getTopic().startsWith("sensor/")) {
-        processSensorData(message);
+brokerContext.getEventBus().subscribe(EventType.BROKER_STARTED, 
+    new DisposableEventBusSubscriber<BrokerContext>() {
+        @Override
+        public void consumer(EventType<BrokerContext> eventType, BrokerContext context) {
+            // 只执行一次：初始化数据库连接、启动后台线程等
+            plugin.initDatabase();
+            plugin.startBackgroundTask();
+        }
     }
+);
+```
+
+### 资源释放
+
+在 Broker 停止时释放资源：
+
+```java
+brokerContext.getEventBus().subscribe(EventType.BROKER_DESTROY, (eventType, context) -> {
+    // 关闭线程池
+    executorService.shutdown();
+    // 关闭数据库连接
+    database.close();
+    // 清理临时文件
+    cleanupTempFiles();
 });
+```
+
+## 自定义事件
+
+插件可以定义自己的事件类型，用于模块间通信：
+
+```java
+public class MyPlugin extends Plugin {
+    // 定义自定义事件类型
+    public static final EventType<MyCustomData> CUSTOM_EVENT = 
+        new EventType<>("my_custom_event");
+
+    @Override
+    public void install(BrokerContext context) {
+        // 订阅自定义事件
+        context.getEventBus().subscribe(CUSTOM_EVENT, (eventType, data) -> {
+            handleCustomEvent(data);
+        });
+    }
+
+    private void someMethod() {
+        // 触发自定义事件
+        brokerContext.getEventBus().publish(CUSTOM_EVENT, myData);
+    }
+}
 ```
 
 ## 最佳实践
 
-1. **轻量快速**：事件处理应尽可能快速完成，避免阻塞事件总线
-2. **异常处理**：事件处理中的异常不应影响其他订阅者和 Broker 运行
-3. **资源管理**：在 `BROKER_DESTROY` 事件中释放所有资源
-4. **避免循环**：注意事件处理中不要触发同类事件，造成无限循环
-5. **线程安全**：事件可能在多线程环境下触发，确保处理逻辑线程安全
+### 1. 选择合适的订阅模式
 
-## 完整示例
+- **同步订阅**：处理逻辑简单、耗时短（< 1ms）的场景
+- **异步订阅**：涉及 I/O 操作（数据库、网络请求）的场景，避免阻塞 Broker
 
-以下是一个完整的插件示例，展示如何使用事件总线实现客户端连接监控：
+### 2. 异常处理
+
+订阅者内部的异常不应影响其他订阅者和 Broker 运行：
 
 ```java
-public class ConnectionMonitorPlugin extends Plugin {
-    
-    private final AtomicInteger connectionCount = new AtomicInteger(0);
-    private final Set<String> connectedClients = ConcurrentHashMap.newKeySet();
-    
-    @Override
-    public void install(BrokerContext brokerContext) {
-        // 监听连接事件
-        brokerContext.getEventBus().subscribe(EventType.CONNECT, event -> {
-            MqttSession session = event.getObject();
-            connectedClients.add(session.getClientId());
-            int count = connectionCount.incrementAndGet();
-            System.out.println("Client connected: " + session.getClientId() 
-                + ", Total connections: " + count);
-        });
-        
-        // 监听断开连接事件
-        brokerContext.getEventBus().subscribe(EventType.DISCONNECT, event -> {
-            MqttSession session = event.getObject();
-            connectedClients.remove(session.getClientId());
-            int count = connectionCount.decrementAndGet();
-            System.out.println("Client disconnected: " + session.getClientId() 
-                + ", Total connections: " + count);
-        });
+brokerContext.getEventBus().subscribe(EventType.RECEIVE_MESSAGE, (eventType, event) -> {
+    try {
+        processMessage(event.getObject());
+    } catch (Exception e) {
+        logger.error("Process message failed", e);
+        // 不要抛出异常
     }
-    
-    @Override
-    public void uninstall() {
-        // 清理资源
-        connectedClients.clear();
-    }
-    
-    @Override
-    public String pluginName() {
-        return "ConnectionMonitorPlugin";
-    }
-}
+});
 ```
 
-## 更多事件类型
+### 3. 性能考虑
 
-smart-mqtt 还提供了更多事件类型供开发者使用：
+- 避免在 `RECEIVE_MESSAGE` 和 `WRITE_MESSAGE` 事件中进行耗时操作
+- 如需处理，使用异步模式或将任务提交到独立的线程池
+- 高频事件的订阅者应尽量轻量化
 
-| 事件类型 | 说明 |
-|---------|------|
-| `SUBSCRIBE_ACCEPT` | Topic 订阅被接受 |
-| `UNSUBSCRIBE_ACCEPT` | Topic 取消订阅被接受 |
-| `CONNACK` | 发送连接响应 |
-| `BROKER_CONFIGURE_LOADED` | 配置文件加载完成 |
+### 4. 线程安全
 
-完整的事件类型列表可以在 `EventType` 类中查看。
+事件可能在多线程环境下触发，确保订阅者逻辑线程安全：
+
+```java
+// 使用线程安全的计数器
+private final LongAdder messageCount = new LongAdder();
+
+brokerContext.getEventBus().subscribe(EventType.RECEIVE_MESSAGE, (eventType, event) -> {
+    messageCount.increment(); // 线程安全
+});
+```
+
+### 5. 资源管理
+
+- 在 `BROKER_STARTED` 中初始化资源
+- 在 `BROKER_DESTROY` 中释放资源
+- 避免内存泄漏：确保及时取消不再需要的事件订阅
