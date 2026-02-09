@@ -45,3 +45,73 @@ redis:
 2. 避免重复配置相同的Redis地址
 3. 建议根据实际需求选择合适的消息编码格式
 4. 注意监控Redis存储容量，适时清理历史数据
+
+## 运行流程图
+
+### 消息桥接泳道图
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Client as MQTT发布者
+    participant Broker as MQTT Broker
+    participant Bridge as Redis桥接插件
+    participant Subscribers as MQTT订阅者
+    participant Redis as Redis实例集群
+
+    %% MQTT消息接收
+    rect rgb(230, 245, 255)
+        Note over Client,Subscribers: MQTT消息流转
+        Client->>Broker: 1. PUBLISH 消息<br/>(topic: sensors/temp)
+        Broker->>Broker: 2. Topic匹配检查
+        
+        par 正常消息路由
+            Broker->>Subscribers: 3a. 转发给订阅者
+        and 触发桥接
+            Broker->>Bridge: 3b. 触发Redis桥接<br/>(匹配topic规则)
+        end
+    end
+
+    %% 消息处理与编码
+    rect rgb(255, 245, 230)
+        Note over Bridge,Redis: 桥接消息处理
+        Bridge->>Bridge: 4. 提取消息内容<br/>(topic + payload + timestamp)
+        
+        Bridge->>Bridge: 5. 格式转换
+        alt encode=STRING
+            Bridge->>Bridge: 字符串编码
+        else encode=JSON
+            Bridge->>Bridge: JSON序列化
+        else encode=HEX
+            Bridge->>Bridge: 十六进制编码
+        end
+        
+        Bridge->>Bridge: 6. 生成SortedSet Key<br/>(格式: mqtt:topic)
+        Bridge->>Bridge: 7. 获取时间戳<br/>(作为SortedSet score)
+    end
+
+    %% Redis写入
+    rect rgb(255, 255, 230)
+        Note over Bridge,Redis: 并行写入Redis集群
+        
+        par 并发写入多实例
+            Bridge->>Redis: 8a. ZADD mqtt:sensors/temp<br/>score=timestamp value=message
+        and
+            Bridge->>Redis: 8b. ZADD mqtt:sensors/temp<br/>score=timestamp value=message
+        and
+            Bridge->>Redis: 8c. ZADD mqtt:sensors/temp<br/>score=timestamp value=message
+        end
+        
+        Redis-->>Bridge: 9. 存储确认响应
+    end
+
+    Bridge->>Broker: 10. 桥接处理完成
+    Note over Client,Redis: 消息同时完成<br/>MQTT路由 + Redis持久化
+```
+
+### 流程说明
+1. **消息捕获**: 拦截匹配指定Topic规则的MQTT消息
+2. **格式转换**: 根据配置的encode参数对消息进行编码
+3. **时间戳标记**: 使用当前时间作为SortedSet的分数(score)
+4. **多实例写入**: 异步并行写入所有配置的Redis实例
+5. **有序存储**: 利用Redis SortedSet特性实现按时间排序的消息存储

@@ -31,3 +31,78 @@ pem: |
   ...
   -----END PRIVATE KEY-----
 ```
+
+## 运行流程图
+
+### TLS 握手与加密通信泳道图
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Client as MQTT客户端
+    participant TLSPlugin as TLS/SSL插件<br/>(安全传输层)
+    participant Broker as MQTT Broker
+    participant Config as PEM证书配置
+
+    %% TLS握手阶段
+    rect rgb(230, 245, 255)
+        Note over Client,Broker: TLS 握手阶段
+        Client->>TLSPlugin: 1. ClientHello<br/>(支持的加密套件)
+        
+        TLSPlugin->>Config: 2. 加载PEM证书<br/>(证书+私钥)
+        Config-->>TLSPlugin: 返回证书内容
+        
+        TLSPlugin-->>Client: 3. ServerHello + Certificate<br/>(服务器证书)
+        
+        Client->>Client: 4. 验证服务器证书<br/>(检查签名/有效期/域名)
+        
+        alt 证书验证通过
+            Client->>TLSPlugin: 5. ClientKeyExchange<br/>(预主密钥 - 公钥加密)
+            Client->>TLSPlugin: 6. ChangeCipherSpec + Finished
+            
+            TLSPlugin->>TLSPlugin: 7. 使用私钥解密<br/>生成会话密钥
+            
+            TLSPlugin-->>Client: 8. ChangeCipherSpec + Finished
+            Note over Client,TLSPlugin: 加密隧道建立完成<br/>(对称加密通信)
+        else 证书验证失败
+            Client->>Client: 终止连接
+        end
+    end
+
+    %% MQTT加密通信阶段
+    rect rgb(255, 245, 230)
+        Note over Client,Broker: 加密 MQTT 通信阶段
+        
+        Client->>TLSPlugin: 9. 加密数据<br/>MQTT CONNECT
+        TLSPlugin->>TLSPlugin: 10. TLS解密
+        TLSPlugin->>Broker: 11. 明文 MQTT CONNECT
+        
+        Broker->>Broker: 12. 处理认证
+        Broker-->>TLSPlugin: 13. MQTT CONNACK
+        
+        TLSPlugin->>TLSPlugin: 14. TLS加密
+        TLSPlugin-->>Client: 15. 加密数据
+        
+        Note over Client,Broker: 后续所有MQTT报文<br/>均在加密隧道中传输
+        
+        Client->>TLSPlugin: 16. 加密 PUBLISH
+        TLSPlugin->>Broker: 17. 解密后转发
+        Broker->>TLSPlugin: 18. 加密响应
+        TLSPlugin-->>Client: 19. 加密数据
+    end
+
+    %% 连接关闭阶段
+    rect rgb(255, 230, 230)
+        Note over Client,Broker: 连接关闭阶段
+        Client->>TLSPlugin: 20. 加密 Close Notify
+        TLSPlugin->>Broker: 21. 通知连接关闭
+        TLSPlugin->>TLSPlugin: 22. 释放TLS会话资源
+    end
+```
+
+### 流程说明
+1. **TLS握手**: 基于配置的PEM证书进行双向/单向TLS握手
+2. **证书验证**: 客户端验证服务器证书合法性
+3. **密钥协商**: 通过非对称加密协商会话密钥
+4. **加密隧道**: 握手完成后建立加密通道
+5. **MQTT通信**: 在加密隧道中传输MQTT协议数据

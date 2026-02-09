@@ -24,3 +24,68 @@ sidebar:
 
 ## 配置说明
 无需额外配置，引入插件后自动生效。
+
+## 运行流程图
+
+### 会话管理泳道图
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Client as MQTT客户端
+    participant Broker as MQTT Broker
+    participant Plugin as 内存会话插件
+    participant Store as ConcurrentHashMap<br/>(会话存储)
+
+    %% 连接阶段
+    rect rgb(230, 245, 255)
+        Note over Client,Store: 连接阶段 - 会话建立
+        Client->>Broker: 1. CONNECT<br/>(cleanSession=0/1)
+        Broker->>Plugin: 2. 创建/恢复会话请求
+        
+        alt cleanSession=1 或 新会话
+            Plugin->>Store: 3a. 创建新会话<br/>(SessionState)
+        else cleanSession=0 且 会话存在
+            Plugin->>Store: 3b. 查找已有会话
+            Store-->>Plugin: 返回会话状态
+            Plugin->>Plugin: 恢复会话状态<br/>(未确认消息/订阅)
+        end
+        
+        Plugin-->>Broker: 4. 会话就绪
+        Broker-->>Client: 5. CONNACK<br/>(sessionPresent)
+    end
+
+    %% 消息处理阶段
+    rect rgb(255, 245, 230)
+        Note over Client,Store: 消息处理阶段 - 状态更新
+        Client->>Broker: 6. PUBLISH QoS>0
+        Broker->>Plugin: 7. 更新会话状态
+        Plugin->>Store: 8. 更新inflight队列<br/>存储消息ID
+        Store-->>Plugin: 确认存储
+        Plugin-->>Broker: 9. 状态更新完成
+        
+        Broker-->>Client: 10. PUBACK/PUBREC
+    end
+
+    %% 断开连接阶段
+    rect rgb(255, 230, 230)
+        Note over Client,Store: 断开阶段 - 资源管理
+        Client->>Broker: 11. DISCONNECT 或 连接丢失
+        Broker->>Plugin: 12. 处理断开事件
+        
+        alt cleanSession=1
+            Plugin->>Store: 13a. 从Map移除会话
+            Store->>Store: 释放内存资源
+        else cleanSession=0
+            Plugin->>Store: 13b. 保留会话状态<br/>(等待重连)
+        end
+        
+        Plugin-->>Broker: 14. 断开处理完成
+    end
+```
+
+### 流程说明
+1. **会话存储**: 根据cleanSession标志决定创建新会话或恢复已有会话
+2. **内存管理**: 使用ConcurrentHashMap实现线程安全的会话数据存储
+3. **状态持久**: 对于QoS>0的消息，更新inflight队列并持久化会话状态
+4. **资源释放**: cleanSession=1时完全清理会话，否则保留以供重连恢复

@@ -46,6 +46,109 @@ clusters:                 # 集群节点地址列表
 - 各节点 `plugin.yaml` 配置需根据实际角色（核心/工作）分别设置
 - 启动顺序建议先启动核心节点，再启动工作节点
 
+## 运行流程图
+
+### 集群节点注册泳道图
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant WorkerN as 工作节点N
+    participant Cluster as 集群插件
+    participant Core as 核心节点<br/>(Coordinator)
+
+    rect rgb(230, 245, 255)
+        Note over WorkerN,Core: 节点注册阶段
+        WorkerN->>Cluster: 1. 节点启动
+        Cluster->>Cluster: 2. 加载配置<br/>(clusters地址列表)
+        
+        Cluster->>Core: 3. HTTP POST /register<br/>(节点信息+认证凭证)
+        
+        Core->>Core: 4. 验证节点身份
+        alt 验证通过
+            Core->>Core: 5a. 注册到节点列表<br/>分配NodeID
+            Core-->>Cluster: 6a. HTTP 200 OK<br/>(集群配置+节点列表)
+            Cluster->>Cluster: 7a. 更新本地状态表
+            Note over WorkerN,Core: 节点加入集群成功
+        else 验证失败
+            Core-->>Cluster: 6b. HTTP 403 Forbidden
+            Cluster->>WorkerN: 7b. 注册失败，服务退出
+        end
+    end
+
+    rect rgb(255, 245, 230)
+        Note over WorkerN,Core: 状态同步阶段
+        Core->>Cluster: 8. 状态广播<br/>(节点加入事件)
+        Cluster->>Cluster: 9. 更新集群拓扑
+        
+        WorkerN->>Core: 10. 心跳检测
+        Core-->>WorkerN: 11. 心跳响应
+    end
+```
+
+### 跨节点消息转发泳道图
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant PubClient as 发布者(节点1)
+    participant Worker1 as 工作节点1
+    participant Cluster1 as 集群插件(节点1)
+    participant Core as 核心节点
+    participant Cluster2 as 集群插件(节点2)
+    participant Worker2 as 工作节点2
+    participant SubClient as 订阅者(节点2)
+
+    rect rgb(230, 245, 255)
+        Note over PubClient,SubClient: 消息发布阶段
+        PubClient->>Worker1: 1. PUBLISH消息<br/>(topic: sensors/temp)
+        Worker1->>Cluster1: 2. 消息路由请求
+        
+        Cluster1->>Cluster1: 3. 目标节点判断<br/>(根据topic路由表)
+    end
+
+    rect rgb(255, 245, 230)
+        Note over Core,Worker2: 跨节点转发
+        
+        alt 目标在本地
+            Cluster1->>Worker1: 4a. 本地转发
+            Worker1->>PubClient: 4b. 确认接收
+        else 目标在远程节点
+            Cluster1->>Core: 4c. HTTP POST /forward<br/>(消息+目标节点)
+            
+            Core->>Core: 5. 路由决策
+            Core->>Cluster2: 6. HTTP转发消息
+            
+            Cluster2->>Worker2: 7. 本地投递
+            Worker2->>SubClient: 8. 推送消息
+            
+            SubClient-->>Worker2: 9. 确认接收
+            Worker2-->>Cluster2: 10. 转发确认
+            Cluster2-->>Core: 11. 返回确认
+            Core-->>Cluster1: 12. 转发完成
+        end
+    end
+
+    rect rgb(255, 255, 230)
+        Note over PubClient,SubClient: 队列策略处理
+        
+        alt 队列策略=丢弃最新(queuePolicy=0)
+            Cluster1->>Cluster1: 队列满时丢弃新消息
+        else 队列策略=丢弃最旧(queuePolicy=1)
+            Cluster1->>Cluster1: 队列满时丢弃旧消息
+        end
+    end
+```
+
+### 流程说明
+1. **核心节点启动**: 核心节点启动HTTP服务，等待工作节点连接
+2. **工作节点注册**: 工作节点根据配置的clusters地址连接到核心节点并完成注册
+3. **消息路由**:
+   - 本地客户端直接转发
+   - 远程客户端通过HTTP转发到对应节点
+4. **状态同步**: Coordinator维护集群节点状态，处理节点加入/退出事件
+5. **分布式分发**: Distributor根据队列策略管理消息分发
+
 ## 技术支持
 - 作者：三刀（zhengjunweimail@163.com）
 - 供应商：smart-mqtt

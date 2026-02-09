@@ -32,3 +32,39 @@ accounts:
 
 - 密码以明文形式存储，请妥善保管配置文件
 - 建议在生产环境中使用更安全的认证方式
+
+## 运行流程图
+
+### 认证泳道图
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Client as MQTT客户端
+    participant Broker as MQTT Broker
+    participant Plugin as 简单认证插件
+    participant Config as plugin.yaml配置
+
+    Client->>Broker: 1. CONNECT报文<br/>(username + password)
+    Broker->>Plugin: 2. 转发认证请求<br/>(extract credentials)
+    Plugin->>Config: 3. 查询账户列表
+    Config-->>Plugin: 4. 返回匹配账户
+    
+    alt 账户存在且密码匹配
+        Plugin-->>Broker: 5. 返回认证成功
+        Broker-->>Client: 6. CONNACK(返回码0)<br/>连接成功
+        Note over Client,Broker: 后续MQTT通信
+    else 账户不存在或密码错误
+        Plugin-->>Broker: 5. 返回认证失败
+        Broker-->>Client: 6. CONNACK(返回码4)<br/>认证失败
+        Broker->>Client: 7. 断开TCP连接
+    end
+```
+
+### 流程说明
+1. **CONNECT报文**: 客户端向Broker发送连接请求，携带用户名和密码
+2. **账户查找**: 插件从`plugin.yaml`配置中查找匹配的账户
+3. **身份验证**: 对比请求中的用户名密码与配置的账户信息
+4. **结果处理**:
+   - 验证通过：返回连接成功，允许客户端后续通信
+   - 验证失败：拒绝连接并断开客户端

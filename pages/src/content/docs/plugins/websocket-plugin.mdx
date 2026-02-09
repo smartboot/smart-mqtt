@@ -25,3 +25,66 @@ const client = mqtt.connect('ws://localhost:8080/mqtt', {
   path: '/mqtt'
 })
 ```
+
+## 运行流程图
+
+### WebSocket 协议升级泳道图
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Browser as 浏览器/客户端
+    participant WsPlugin as WebSocket插件<br/>(Feat HTTP服务器)
+    participant Broker as MQTT Broker
+    participant Subscribers as 订阅者
+
+    %% WebSocket握手阶段
+    rect rgb(230, 245, 255)
+        Note over Browser,Broker: WebSocket 握手阶段
+        Browser->>WsPlugin: 1. HTTP GET /mqtt<br/>Upgrade: websocket<br/>Sec-WebSocket-Protocol: mqtt
+        
+        alt 协议验证通过
+            WsPlugin->>WsPlugin: 2a. 验证 Sec-WebSocket-Protocol<br/>确认支持 mqtt 子协议
+            WsPlugin-->>Browser: 3a. 101 Switching Protocols<br/>Sec-WebSocket-Accept: xxx
+            Note over Browser,WsPlugin: WebSocket 隧道建立
+        else 协议验证失败
+            WsPlugin-->>Browser: 3b. 400 Bad Request<br/>(缺少mqtt子协议)
+        end
+    end
+
+    %% MQTT通信阶段
+    rect rgb(255, 245, 230)
+        Note over Browser,Subscribers: MQTT over WebSocket 通信阶段
+        
+        Browser->>WsPlugin: 4. WebSocket Frame<br/>二进制 MQTT CONNECT
+        WsPlugin->>Broker: 5. 解码 MQTT CONNECT<br/>转发给Broker
+        Broker->>Broker: 6. 处理认证
+        Broker-->>WsPlugin: 7. MQTT CONNACK
+        WsPlugin-->>Browser: 8. WebSocket Frame<br/>二进制 CONNACK
+        
+        Note over Browser,Subscribers: 正常MQTT消息收发
+        
+        Browser->>WsPlugin: 9. PUBLISH 消息
+        WsPlugin->>Broker: 10. 解码并转发
+        Broker->>Subscribers: 11. 查找并转发<br/>给所有订阅者
+        
+        Subscribers->>Broker: 12. 其他客户端PUBLISH
+        Broker->>WsPlugin: 13. 转发给WebSocket客户端
+        WsPlugin-->>Browser: 14. WebSocket Frame<br/>推送消息
+    end
+
+    %% 连接关闭阶段
+    rect rgb(255, 230, 230)
+        Note over Browser,Broker: 连接关闭阶段
+        Browser->>WsPlugin: 15. WebSocket Close Frame<br/>或连接断开
+        WsPlugin->>Broker: 16. 通知客户端断开
+        WsPlugin->>WsPlugin: 17. 清理WebSocket资源
+    end
+```
+
+### 流程说明
+1. **协议升级**: 客户端发送HTTP升级请求，需包含`Sec-WebSocket-Protocol: mqtt`头部
+2. **握手验证**: 服务器验证WebSocket协议头，确认支持MQTT子协议
+3. **隧道建立**: 握手成功后建立WebSocket双向通信隧道
+4. **MQTT封装**: MQTT二进制报文通过WebSocket帧传输
+5. **数据流转**: 浏览器/客户端通过WebSocket收发MQTT消息，Broker处理逻辑与普通MQTT一致
