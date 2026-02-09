@@ -24,12 +24,7 @@ services:
     container_name: smart-mqtt
     ports:
       - "1883:1883"
-      - "8083:8083"
-    environment:
-      - TZ=Asia/Shanghai
-    volumes:
-      - ./data:/data
-    restart: unless-stopped
+      - "18083:18083"
 ```
 
 保存为 `docker-compose.yml`，然后执行：
@@ -44,10 +39,7 @@ docker-compose up -d
 docker run -d \
   --name smart-mqtt \
   -p 1883:1883 \
-  -p 8083:8083 \
-  -e TZ=Asia/Shanghai \
-  -v $(pwd)/data:/data \
-  --restart unless-stopped \
+  -p 18083:18083 \
   smartboot/smart-mqtt:latest
 ```
 
@@ -58,9 +50,9 @@ docker run -d \
 从 [Gitee Releases](https://gitee.com/smartboot/smart-mqtt/releases) 或 [GitHub Releases](https://github.com/smartboot/smart-mqtt/releases) 下载最新版本的 smart-mqtt。
 
 ```bash
-wget https://gitee.com/smartboot/smart-mqtt/releases/download/v1.4.0/smart-mqtt-1.4.0.tar.gz
-tar -xzf smart-mqtt-1.4.0.tar.gz
-cd smart-mqtt-1.4.0
+wget https://gitee.com/smartboot/smart-mqtt/releases/download/v1.5.1/smart-mqtt-full-v1.5.1.tar.gz
+tar -xzf smart-mqtt-full-v1.5.1.tar.gz
+cd smart-mqtt-full-v1.5.1
 ```
 
 ### 2. 启动服务
@@ -120,10 +112,4 @@ http://localhost:8083
 ## 常见问题
 
 ### Q: 启动失败，提示端口被占用？
-A: 检查 1883（MQTT）或 8083（HTTP/Dashboard）端口是否已被其他服务占用。
-
-### Q: 如何修改默认配置？
-A: 编辑 `conf/smart-mqtt.properties` 文件，重启服务生效。
-
-### Q: 如何查看日志？
-A: 日志文件位于 `logs/` 目录下，可以通过 `tail -f logs/smart-mqtt.log` 实时查看。
+A: 检查 1883（MQTT）或 18083（HTTP/Dashboard）端口是否已被其他服务占用。
