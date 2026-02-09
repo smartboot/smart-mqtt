@@ -3,6 +3,7 @@ import {defineConfig} from 'astro/config';
 import starlight from '@astrojs/starlight';
 import starlightImageZoomPlugin from "starlight-image-zoom";
 import starlightScrollToTop from 'starlight-scroll-to-top';
+import mermaid from 'astro-mermaid';
 
 
 // https://astro.build/config
@@ -10,7 +11,10 @@ export default defineConfig({
     site: 'https://smartboot.tech/',
     base: '/smart-mqtt',
     trailingSlash: "always",
-    integrations: [
+    integrations: [mermaid({
+        theme: 'forest',
+        autoTheme: true
+    }),
         starlight({
             title: 'smart-mqtt',
             logo: {
