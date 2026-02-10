@@ -4,7 +4,7 @@ import starlight from '@astrojs/starlight';
 import starlightImageZoomPlugin from "starlight-image-zoom";
 import starlightScrollToTop from 'starlight-scroll-to-top';
 import mermaid from 'astro-mermaid';
-
+import starlightLlmsTxt from 'starlight-llms-txt'
 
 // https://astro.build/config
 export default defineConfig({
@@ -55,7 +55,7 @@ export default defineConfig({
                 {icon: 'github', label: 'GitHub', href: 'https://github.com/smartboot/smart-mqtt'},
                 {icon: 'seti:git', label: 'Gitee', href: 'https://gitee.com/smartboot/smart-mqtt'}
             ],
-            plugins: [starlightImageZoomPlugin(),starlightScrollToTop({
+            plugins: [starlightLlmsTxt(),starlightImageZoomPlugin(),starlightScrollToTop({
                 // Button position
                 // Tooltip text
                 tooltipText: 'Back to top',
