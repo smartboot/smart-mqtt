@@ -119,7 +119,7 @@ public class EnterprisePlugin extends Plugin {
         database.addItems(Item.Password("password", "数据库密码").col(6).tip("仅在dbType为 mysql 时有效"));
         schema.addItem(database);
 
-        Item openapi = Item.Object("openapi", "openapi服务配置").col(6);
+        Item openapi = Item.Object("openai", "openai服务配置").col(6);
         openapi.addItems(Item.String("url", "OpenAI URL"));
         openapi.addItems(Item.String("apiKey", "API秘钥"));
         openapi.addItems(Item.String("model", "模型"));

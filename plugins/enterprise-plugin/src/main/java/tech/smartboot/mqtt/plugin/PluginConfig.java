@@ -20,7 +20,7 @@ public class PluginConfig {
     private HttpConfig http;
 
     private DataBaseConfig database;
-    private OpenAI openAI;
+    private OpenAI openai;
     private String registry;
 
 
@@ -49,12 +49,12 @@ public class PluginConfig {
         this.database = dataBase;
     }
 
-    public OpenAI getOpenAI() {
-        return openAI;
+    public OpenAI getOpenai() {
+        return openai;
     }
 
-    public void setOpenAI(OpenAI openAI) {
-        this.openAI = openAI;
+    public void setOpenai(OpenAI openai) {
+        this.openai = openai;
     }
 
     public static class HttpConfig {
