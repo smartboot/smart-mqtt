@@ -20,7 +20,9 @@ public class PluginConfig {
     private HttpConfig http;
 
     private DataBaseConfig database;
+    private OpenAI openAI;
     private String registry;
+
 
     public HttpConfig getHttp() {
         return http;
@@ -45,6 +47,14 @@ public class PluginConfig {
 
     public void setDatabase(DataBaseConfig dataBase) {
         this.database = dataBase;
+    }
+
+    public OpenAI getOpenAI() {
+        return openAI;
+    }
+
+    public void setOpenAI(OpenAI openAI) {
+        this.openAI = openAI;
     }
 
     public static class HttpConfig {
@@ -111,6 +121,36 @@ public class PluginConfig {
 
         public void setPassword(String password) {
             this.password = password;
+        }
+    }
+
+    public static class OpenAI {
+        private String url;
+        private String apiKey;
+        private String model;
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
+
+        public String getApiKey() {
+            return apiKey;
+        }
+
+        public void setApiKey(String apiKey) {
+            this.apiKey = apiKey;
+        }
+
+        public String getModel() {
+            return model;
+        }
+
+        public void setModel(String model) {
+            this.model = model;
         }
     }
 
