@@ -8,7 +8,7 @@
 
 smart-mqtt 是用 Java 语言开发的 MQTT Broker 服务，也是 smartboot 组织下首款真正意义上面向物联网的解决方案。旨在帮助企业以较低的成本快速搭建稳定、可靠的物联网服务，助力万物互联互通。
 
-![项目架构](https://smartboot.tech/assets/img/framework.87b57b29.svg)
+![项目架构](https://smartboot.tech/smart-mqtt/_astro/framework.Bj8Uk056_1FS6vN.svg)
 
 smart-mqtt 底层通信采用了异步非阻塞通信框架 smart-socket，现已实现了完整的 MQTT v3.1.1/v5.0 协议。
 
