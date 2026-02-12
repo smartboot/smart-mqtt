@@ -1,7 +1,11 @@
 package tech.smartboot.mqtt.plugin.openapi.controller;
 
 import tech.smartboot.feat.ai.FeatAI;
+import tech.smartboot.feat.ai.agent.AgentAction;
 import tech.smartboot.feat.ai.agent.FeatAgent;
+import tech.smartboot.feat.ai.agent.hook.Hook;
+import tech.smartboot.feat.ai.agent.tools.SearchTool;
+import tech.smartboot.feat.ai.agent.tools.WebPageReaderTool;
 import tech.smartboot.feat.ai.chat.ChatModelVendor;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.cloud.annotation.Autowired;
@@ -15,6 +19,7 @@ import tech.smartboot.feat.core.server.upgrade.sse.SSEUpgrade;
 import tech.smartboot.feat.core.server.upgrade.sse.SseEmitter;
 import tech.smartboot.mqtt.plugin.PluginConfig;
 import tech.smartboot.mqtt.plugin.openapi.OpenApi;
+import tech.smartboot.mqtt.plugin.openapi.to.AiChunkTO;
 
 import java.io.IOException;
 import java.util.List;
@@ -46,18 +51,41 @@ public class AiController {
         for (Message message : messages) {
             sb.append(message.getRole()).append(": ").append(message.getContent()).append("\n");
         }
-        FeatAgent agent = FeatAI.agent(agentOptions -> agentOptions.chatOptions()
+        FeatAgent agent = FeatAI.agent(agentOptions -> agentOptions.addTool(new SearchTool()).addTool(new WebPageReaderTool()).chatOptions()
+                .system("你需要为用户提供关于 smart-mqtt 相关的专业性答疑服务，可从[产品官网](https://smartboot.tech/smart-mqtt/)获取相关内容。如果用户提问内容与本产品或者MQTT、物联网等无关，要给出提醒")
                 .model(new ChatModelVendor(openAI.getUrl(), openAI.getModel())).apiKey(openAI.getApiKey()));
         request.upgrade(new SSEUpgrade() {
 
             @Override
             public void onOpen(SseEmitter sseEmitter) {
+                agent.options().hook(new Hook() {
+                    @Override
+                    public void preCall(List<Message> message) {
+                        Hook.super.preCall(message);
+                    }
+
+                    @Override
+                    public void postCall(Message message) {
+                        Hook.super.postCall(message);
+                    }
+
+                    @Override
+                    public void preTool(AgentAction agentAction) {
+                        sseEmitter.sendAsJson(AiChunkTO.ofToolCall(agentAction.getThought()));
+                    }
+
+                    @Override
+                    public void postTool(AgentAction agentAction, String observation) {
+                        sseEmitter.sendAsJson(AiChunkTO.ofToolCall(observation));
+                    }
+                });
                 CompletableFuture<String> completableFuture = agent.execute(sb.toString());
                 completableFuture.thenAccept(result -> {
+
                     try {
-                        sseEmitter.send(result);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+                        sseEmitter.sendAsJson(AiChunkTO.ofReason(result));
+                    } finally {
+                        sseEmitter.complete();
                     }
                 });
             }
