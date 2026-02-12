@@ -90,6 +90,13 @@ public class AiController {
                     } finally {
                         sseEmitter.complete();
                     }
+                }).exceptionally(throwable -> {
+                    try {
+                        sseEmitter.sendAsJson(AiChunkTO.ofResult(throwable.getMessage()));
+                    } finally {
+                        sseEmitter.complete();
+                    }
+                    return null;
                 });
             }
 
