@@ -51,22 +51,22 @@ public class AiController {
         for (Message message : messages) {
             sb.append(message.getRole()).append(": ").append(message.getContent()).append("\n");
         }
-        FeatAgent agent = FeatAI.agent(agentOptions -> agentOptions.addTool(new SearchTool()).addTool(new WebPageReaderTool()).chatOptions().system("你需要为用户提供关于 smart-mqtt 相关的专业性答疑服务，可从[产品官网](https://smartboot.tech/smart-mqtt/)获取相关内容。如果用户提问内容与本产品或者MQTT、物联网等无关，要给出提醒").model(new ChatModelVendor(openAI.getUrl(), openAI.getModel())).apiKey(openAI.getApiKey()));
+
+        FeatAgent agent = FeatAI.agent(agentOptions -> agentOptions
+                .addTool(new SearchTool())
+                .addTool(new WebPageReaderTool())
+                .chatOptions()
+                .system("你需要为用户提供关于 smart-mqtt 相关的专业性答疑服务，如果用户提问内容与本产品或者MQTT、物联网等无关，要给出提醒。\n" +
+                        "- [产品官网](https://smartboot.tech/smart-mqtt/)获取相关内容。\n" +
+                        "- [Gitee仓库](https://gitee.com/smartboot/smart-mqtt/)\n" +
+                        "- [Github仓库](https://github.com/smartboot/smart-mqtt/)\n")
+                .model(new ChatModelVendor(openAI.getUrl(), openAI.getModel())).apiKey(openAI.getApiKey()));
+
         request.upgrade(new SSEUpgrade() {
 
             @Override
             public void onOpen(SseEmitter sseEmitter) {
                 agent.options().hook(new Hook() {
-                    @Override
-                    public void preCall(List<Message> message) {
-                        Hook.super.preCall(message);
-                    }
-
-                    @Override
-                    public void postCall(Message message) {
-                        Hook.super.postCall(message);
-                    }
-
                     @Override
                     public void preTool(ToolCaller toolCaller) {
                         sseEmitter.sendAsJson(AiChunkTO.ofToolCall(toolCaller));
