@@ -86,7 +86,7 @@ public class AiController {
                 completableFuture.thenAccept(result -> {
 
                     try {
-                        sseEmitter.sendAsJson(AiChunkTO.ofReason(result));
+                        sseEmitter.sendAsJson(AiChunkTO.ofResult(result));
                     } finally {
                         sseEmitter.complete();
                     }
