@@ -1,32 +1,34 @@
 package tech.smartboot.mqtt.plugin.openapi.to;
 
+import tech.smartboot.feat.ai.agent.ToolCaller;
+
 /**
  * @author 三刀
  * @version v1.0 2/12/26
  */
-public class AiChunkTO {
+public class AiChunkTO<T> {
     public static final String TYPE_REASON = "reason";
     public static final String TYPE_TOOL_CALL = "tool_call";
     public static final String TYPE_RESULT = "result";
     private String type;
-    private String data;
+    private T data;
 
-    public static AiChunkTO ofReason(String reason) {
-        AiChunkTO aiChunkTO = new AiChunkTO();
+    public static AiChunkTO<String> ofReason(String reason) {
+        AiChunkTO<String> aiChunkTO = new AiChunkTO<>();
         aiChunkTO.setType(TYPE_REASON);
         aiChunkTO.setData(reason);
         return aiChunkTO;
     }
 
-    public static AiChunkTO ofToolCall(String toolCall) {
-        AiChunkTO aiChunkTO = new AiChunkTO();
+    public static AiChunkTO<ToolCaller> ofToolCall(ToolCaller toolCall) {
+        AiChunkTO<ToolCaller> aiChunkTO = new AiChunkTO<>();
         aiChunkTO.setType(TYPE_TOOL_CALL);
         aiChunkTO.setData(toolCall);
         return aiChunkTO;
     }
 
-    public static AiChunkTO ofResult(String result) {
-        AiChunkTO aiChunkTO = new AiChunkTO();
+    public static AiChunkTO<String> ofResult(String result) {
+        AiChunkTO<String> aiChunkTO = new AiChunkTO<>();
         aiChunkTO.setType(TYPE_RESULT);
         aiChunkTO.setData(result);
         return aiChunkTO;
@@ -40,11 +42,11 @@ public class AiChunkTO {
         this.type = type;
     }
 
-    public String getData() {
+    public T getData() {
         return data;
     }
 
-    public void setData(String data) {
+    public void setData(T data) {
         this.data = data;
     }
 }

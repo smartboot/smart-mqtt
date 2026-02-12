@@ -1,8 +1,8 @@
 package tech.smartboot.mqtt.plugin.openapi.controller;
 
 import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.agent.AgentAction;
 import tech.smartboot.feat.ai.agent.FeatAgent;
+import tech.smartboot.feat.ai.agent.ToolCaller;
 import tech.smartboot.feat.ai.agent.hook.Hook;
 import tech.smartboot.feat.ai.agent.tools.SearchTool;
 import tech.smartboot.feat.ai.agent.tools.WebPageReaderTool;
@@ -51,9 +51,7 @@ public class AiController {
         for (Message message : messages) {
             sb.append(message.getRole()).append(": ").append(message.getContent()).append("\n");
         }
-        FeatAgent agent = FeatAI.agent(agentOptions -> agentOptions.addTool(new SearchTool()).addTool(new WebPageReaderTool()).chatOptions()
-                .system("你需要为用户提供关于 smart-mqtt 相关的专业性答疑服务，可从[产品官网](https://smartboot.tech/smart-mqtt/)获取相关内容。如果用户提问内容与本产品或者MQTT、物联网等无关，要给出提醒")
-                .model(new ChatModelVendor(openAI.getUrl(), openAI.getModel())).apiKey(openAI.getApiKey()));
+        FeatAgent agent = FeatAI.agent(agentOptions -> agentOptions.addTool(new SearchTool()).addTool(new WebPageReaderTool()).chatOptions().system("你需要为用户提供关于 smart-mqtt 相关的专业性答疑服务，可从[产品官网](https://smartboot.tech/smart-mqtt/)获取相关内容。如果用户提问内容与本产品或者MQTT、物联网等无关，要给出提醒").model(new ChatModelVendor(openAI.getUrl(), openAI.getModel())).apiKey(openAI.getApiKey()));
         request.upgrade(new SSEUpgrade() {
 
             @Override
@@ -70,13 +68,18 @@ public class AiController {
                     }
 
                     @Override
-                    public void preTool(AgentAction agentAction) {
-                        sseEmitter.sendAsJson(AiChunkTO.ofToolCall(agentAction.getThought()));
+                    public void preTool(ToolCaller toolCaller) {
+                        sseEmitter.sendAsJson(AiChunkTO.ofToolCall(toolCaller));
                     }
 
                     @Override
-                    public void postTool(AgentAction agentAction, String observation) {
-                        sseEmitter.sendAsJson(AiChunkTO.ofToolCall(observation));
+                    public void postTool(ToolCaller toolCaller) {
+                        sseEmitter.sendAsJson(AiChunkTO.ofToolCall(toolCaller));
+                    }
+
+                    @Override
+                    public void onReasoning(String agentAction) {
+                        sseEmitter.sendAsJson(AiChunkTO.ofReason(agentAction));
                     }
                 });
                 CompletableFuture<String> completableFuture = agent.execute(sb.toString());
