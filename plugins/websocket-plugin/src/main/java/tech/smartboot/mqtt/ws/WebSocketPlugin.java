@@ -25,6 +25,8 @@ import tech.smartboot.mqtt.common.message.MqttMessage;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
+import tech.smartboot.mqtt.plugin.spec.schema.Item;
+import tech.smartboot.mqtt.plugin.spec.schema.Schema;
 
 import java.nio.ByteBuffer;
 
@@ -104,5 +106,12 @@ public class WebSocketPlugin extends Plugin {
     @Override
     public String pluginName() {
         return "websocket-plugin";
+    }
+
+    @Override
+    public Schema schema() {
+        Schema schema = new Schema();
+        schema.addItem(Item.Int("port", "mqtt over websocket服务的监听端口"));
+        return schema;
     }
 }
