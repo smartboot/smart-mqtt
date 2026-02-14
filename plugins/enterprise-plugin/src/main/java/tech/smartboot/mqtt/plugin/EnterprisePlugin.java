@@ -121,7 +121,7 @@ public class EnterprisePlugin extends Plugin {
 
         Item openapi = Item.Object("openai", "openai服务配置").col(6);
         openapi.addItems(Item.String("url", "OpenAI URL"));
-        openapi.addItems(Item.String("apiKey", "API秘钥"));
+        openapi.addItems(Item.Password("apiKey", "API秘钥"));
         openapi.addItems(Item.String("model", "模型"));
         schema.addItem(openapi);
 
