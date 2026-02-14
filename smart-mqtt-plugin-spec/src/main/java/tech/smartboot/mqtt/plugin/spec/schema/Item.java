@@ -70,6 +70,10 @@ public class Item {
         };
     }
 
+    public static Item ItemArray(String name, String desc) {
+        return new Item(name, "item_array", desc);
+    }
+
     public static Item Password(String name, String desc) {
         return new Item(name, "password", desc) {
             @Override

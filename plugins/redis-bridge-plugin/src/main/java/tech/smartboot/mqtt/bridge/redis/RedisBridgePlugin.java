@@ -5,6 +5,9 @@ import tech.smartboot.mqtt.common.util.MqttUtil;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
+import tech.smartboot.mqtt.plugin.spec.schema.Enum;
+import tech.smartboot.mqtt.plugin.spec.schema.Item;
+import tech.smartboot.mqtt.plugin.spec.schema.Schema;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,5 +56,14 @@ public class RedisBridgePlugin extends Plugin {
     @Override
     public String pluginName() {
         return "redis-bridge-plugin";
+    }
+
+    @Override
+    public Schema schema() {
+        Schema schema = new Schema();
+        Item array = Item.ItemArray("redis", "redis服务配置").col(12);
+        array.addItems(Item.String("address", "redis服务地址").col(6), Item.Int("database", "redis数据库").col(6), Item.String("password", "redis密码").col(6), Item.String("encode", "redis编码").col(6).addEnums(Enum.of("bytes", "bytes"), Enum.of("string", "string"), Enum.of("base64", "base64")));
+        schema.addItem(array);
+        return schema;
     }
 }
