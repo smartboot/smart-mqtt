@@ -26,6 +26,7 @@ import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
+import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.annotation.mcp.Tool;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -83,6 +84,9 @@ import java.util.stream.Collectors;
  * @version V1.0 , 2023/2/21
  */
 @Controller
+@McpEndpoint(sseEndpoint = "/mcp/sse"
+        , sseMessageEndpoint = "/mcp/sse/message"
+        , streamableEndpoint = "/mcp/stream", loggingEnable = false)
 public class MetricController {
     private static final Logger LOGGER = LoggerFactory.getLogger(MetricController.class);
     @Autowired
