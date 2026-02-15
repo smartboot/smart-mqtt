@@ -124,7 +124,7 @@ public class EnterprisePlugin extends Plugin {
         openapi.addItems(Item.Password("apiKey", "API秘钥"));
         openapi.addItems(Item.String("model", "模型"));
 
-        Item mcp = Item.ItemArray("mcp", "MCP服务配置").col(6);
+        Item mcp = Item.ItemArray("mcp", "MCP服务配置");
         mcp.addItems(Item.String("address", "MCP服务地址"));
         openapi.addItems(mcp);
         schema.addItem(openapi);
