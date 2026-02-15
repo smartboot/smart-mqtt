@@ -1,6 +1,7 @@
 ---
 title: 快速开始
 ---
+import { Aside } from '@astrojs/starlight/components';
 
 本文将帮助你在 5 分钟内快速启动并运行 smart-mqtt。
 
@@ -16,7 +17,7 @@ smart-mqtt 提供了 Docker 镜像，这是最简单的部署方式。
 
 ### 1. 使用 docker-compose
 
-```yaml
+```yaml title="docker-compose.yaml"
 version: '3.8'
 services:
   smart-mqtt:
@@ -97,13 +98,6 @@ http://localhost:8083
 - 账号：`smart-mqtt`
 - 密码：`smart-mqtt`
 
-## 下一步
-
-- [产品手册](/smart-mqtt/product/introduction/) - 深入了解 smart-mqtt 的功能特性
-- [插件开发](/smart-mqtt/development/plugin/) - 学习如何开发自定义插件
-- [性能压测](/smart-mqtt/development/benchmark/) - 了解如何进行性能测试
-
-## 常见问题
-
-### Q: 启动失败，提示端口被占用？
-A: 检查 1883（MQTT）或 18083（HTTP/Dashboard）端口是否已被其他服务占用。
+<Aside type="note">
+出于安全考虑，生产环境请尽快修改成安全性更高的密码。
+</Aside>
