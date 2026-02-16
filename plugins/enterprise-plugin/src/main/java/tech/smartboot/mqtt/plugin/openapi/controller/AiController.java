@@ -52,9 +52,9 @@ public class AiController {
             sb.append(message.getRole()).append(": ").append(message.getContent()).append("\n");
         }
 
-        FeatAgent agent = FeatAI.agent(agentOptions -> agentOptions
-                .addTool(new SearchTool())
-                .addTool(new WebPageReaderTool())
+        FeatAgent agent = FeatAI.agent(options -> options
+                .tool(new SearchTool())
+                .tool(new WebPageReaderTool())
                 .chatOptions()
                 .system("你需要为用户提供关于 smart-mqtt 相关的专业性答疑服务，如果用户提问内容与本产品或者MQTT、物联网等无关，要给出提醒。\n" +
                         "- [产品官网](https://smartboot.tech/smart-mqtt/)获取相关内容。\n" +
