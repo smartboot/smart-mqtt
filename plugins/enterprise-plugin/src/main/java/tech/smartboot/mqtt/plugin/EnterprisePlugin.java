@@ -125,7 +125,7 @@ public class EnterprisePlugin extends Plugin {
         openapi.addItems(Item.String("model", "模型"));
 
         Item mcp = Item.ItemArray("mcp", "MCP服务配置");
-        mcp.addItems(Item.String("address", "MCP服务地址"));
+        mcp.addItems(Item.String("url", "MCP服务地址"));
         openapi.addItems(mcp);
         schema.addItem(openapi);
 

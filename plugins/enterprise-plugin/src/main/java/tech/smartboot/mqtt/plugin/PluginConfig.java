@@ -12,6 +12,8 @@ package tech.smartboot.mqtt.plugin;
 
 import com.alibaba.fastjson2.annotation.JSONField;
 
+import java.util.List;
+
 /**
  * @author 三刀
  * @version v1.0 4/27/25
@@ -21,6 +23,8 @@ public class PluginConfig {
 
     private DataBaseConfig database;
     private OpenAI openai;
+    private List<Mcp> mcp;
+
     private String registry;
 
 
@@ -55,6 +59,14 @@ public class PluginConfig {
 
     public void setOpenai(OpenAI openai) {
         this.openai = openai;
+    }
+
+    public List<Mcp> getMcp() {
+        return mcp;
+    }
+
+    public void setMcp(List<Mcp> mcp) {
+        this.mcp = mcp;
     }
 
     public static class HttpConfig {
@@ -154,4 +166,15 @@ public class PluginConfig {
         }
     }
 
+    public static class Mcp {
+        private String url;
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
+    }
 }
