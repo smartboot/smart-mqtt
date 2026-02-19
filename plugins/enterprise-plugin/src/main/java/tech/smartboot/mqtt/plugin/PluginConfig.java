@@ -23,7 +23,7 @@ public class PluginConfig {
 
     private DataBaseConfig database;
     private OpenAI openai;
-    private List<Mcp> mcp;
+
 
     private String registry;
 
@@ -59,14 +59,6 @@ public class PluginConfig {
 
     public void setOpenai(OpenAI openai) {
         this.openai = openai;
-    }
-
-    public List<Mcp> getMcp() {
-        return mcp;
-    }
-
-    public void setMcp(List<Mcp> mcp) {
-        this.mcp = mcp;
     }
 
     public static class HttpConfig {
@@ -140,6 +132,7 @@ public class PluginConfig {
         private String url;
         private String apiKey;
         private String model;
+        private List<Mcp> mcp;
 
         public String getUrl() {
             return url;
@@ -163,6 +156,14 @@ public class PluginConfig {
 
         public void setModel(String model) {
             this.model = model;
+        }
+
+        public List<Mcp> getMcp() {
+            return mcp;
+        }
+
+        public void setMcp(List<Mcp> mcp) {
+            this.mcp = mcp;
         }
     }
 

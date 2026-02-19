@@ -5,8 +5,6 @@ import tech.smartboot.feat.ai.agent.FeatAgent;
 import tech.smartboot.feat.ai.agent.ToolCaller;
 import tech.smartboot.feat.ai.agent.hook.Hook;
 import tech.smartboot.feat.ai.agent.tools.McpTool;
-import tech.smartboot.feat.ai.agent.tools.SearchTool;
-import tech.smartboot.feat.ai.agent.tools.WebPageReaderTool;
 import tech.smartboot.feat.ai.chat.ChatModelVendor;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.mcp.client.McpClient;
@@ -14,6 +12,7 @@ import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
+import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -38,14 +37,14 @@ public class AiController {
 
     @Autowired
     private PluginConfig pluginConfig;
-    private List<McpClient> mcpList = new ArrayList<>();
+    private final List<McpClient> mcpList = new ArrayList<>();
 
     @PostConstruct
     public void init() {
         // 初始化mcp
-        if (FeatUtils.isNotEmpty(pluginConfig.getMcp())) {
-            for (PluginConfig.Mcp mcp : pluginConfig.getMcp()) {
-                McpClient mcpClient = McpClient.streamable(opt -> opt.url(mcp.getUrl()));
+        if (pluginConfig.getOpenai() != null && FeatUtils.isNotEmpty(pluginConfig.getOpenai().getMcp())) {
+            for (PluginConfig.Mcp mcp : pluginConfig.getOpenai().getMcp()) {
+                McpClient mcpClient = McpClient.streamable(opt -> opt.debug(true).url(mcp.getUrl()));
                 mcpClient.asyncInitialize().thenAccept(rsp -> {
                     mcpClient.asyncListTools(null).thenAccept(list -> {
                         mcpList.add(mcpClient);
@@ -72,7 +71,10 @@ public class AiController {
             sb.append(message.getRole()).append(": ").append(message.getContent()).append("\n");
         }
 
-        FeatAgent agent = FeatAI.agent(options -> options.tool(new SearchTool()).tool(new WebPageReaderTool()).chatOptions().system("你需要为用户提供关于 smart-mqtt 相关的专业性答疑服务，如果用户提问内容与本产品或者MQTT、物联网等无关，要给出提醒。\n" + "- [产品官网](https://smartboot.tech/smart-mqtt/)获取相关内容。\n" + "- [Gitee仓库](https://gitee.com/smartboot/smart-mqtt/)\n" + "- [smart-mqtt llms.txt](https://smartboot.tech/smart-mqtt/llms.txt)\n").model(new ChatModelVendor(openAI.getUrl(), openAI.getModel())).apiKey(openAI.getApiKey()));
+        FeatAgent agent = FeatAI.agent(options -> options
+//                .tool(new SearchTool())
+//                .tool(new WebPageReaderTool())
+                .chatOptions().system("你需要为用户提供关于 smart-mqtt 相关的专业性答疑服务，如果用户提问内容与本产品或者MQTT、物联网等无关，要给出提醒。\n" + "- [产品官网](https://smartboot.tech/smart-mqtt/)获取相关内容。\n" + "- [Gitee仓库](https://gitee.com/smartboot/smart-mqtt/)\n" + "- [smart-mqtt llms.txt](https://smartboot.tech/smart-mqtt/llms.txt)\n").model(new ChatModelVendor(openAI.getUrl(), openAI.getModel())).apiKey(openAI.getApiKey()));
         mcpList.forEach(mcp -> McpTool.register(agent, mcp));
         request.upgrade(new SSEUpgrade() {
 
@@ -118,6 +120,13 @@ public class AiController {
             }
         });
 
+    }
+
+    @PreDestroy
+    public void destroy() {
+        for (McpClient mcpClient : mcpList) {
+            mcpClient.close();
+        }
     }
 
     public void setPluginConfig(PluginConfig pluginConfig) {
