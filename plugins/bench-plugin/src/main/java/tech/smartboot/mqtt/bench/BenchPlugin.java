@@ -17,13 +17,18 @@ import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.BrokerTopic;
 import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
+import tech.smartboot.mqtt.plugin.spec.schema.Item;
+import tech.smartboot.mqtt.plugin.spec.schema.Schema;
 
 import java.nio.channels.AsynchronousChannelGroup;
 import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -38,12 +43,20 @@ public class BenchPlugin extends Plugin {
     private static final String SCENARIO_PUBLISH = "publish";
     private static final String SCENARIO_SUBSCRIBE = "subscribe";
 
+    // 资源管理
+    private final List<AsynchronousChannelGroup> channelGroups = new CopyOnWriteArrayList<>();
+    private final List<ScheduledExecutorService> scheduledExecutors = new CopyOnWriteArrayList<>();
+    private final List<MqttClient> clients = new CopyOnWriteArrayList<>();
+    private final AtomicBoolean running = new AtomicBoolean(false);
+
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
         PluginConfig config = loadPluginConfig(PluginConfig.class);
 
         String scenario = config.getScenario();
         System.out.println("[bench-plugin] 压测场景: " + scenario);
+
+        running.set(true);
 
         if (SCENARIO_PUBLISH.equals(scenario)) {
             runPublishBenchmark(config.getPublish());
@@ -52,6 +65,56 @@ public class BenchPlugin extends Plugin {
         } else {
             System.out.println("[bench-plugin] 未知场景: " + scenario + ", 支持: publish, subscribe");
         }
+    }
+
+    @Override
+    protected void destroyPlugin() {
+        System.out.println("[bench-plugin] 开始优雅关闭...");
+        running.set(false);
+
+        // 1. 关闭所有MQTT客户端连接
+        System.out.println("[bench-plugin] 关闭客户端连接...");
+        for (MqttClient client : clients) {
+            try {
+                if (client != null) {
+                    client.disconnect();
+                }
+            } catch (Exception e) {
+                // 忽略关闭异常
+            }
+        }
+        clients.clear();
+
+        // 2. 关闭调度执行器
+        System.out.println("[bench-plugin] 关闭调度执行器...");
+        for (ScheduledExecutorService executor : scheduledExecutors) {
+            executor.shutdown();
+            try {
+                if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                    executor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
+        scheduledExecutors.clear();
+
+        // 3. 关闭异步通道组
+        System.out.println("[bench-plugin] 关闭通道组...");
+        for (AsynchronousChannelGroup channelGroup : channelGroups) {
+            try {
+                channelGroup.shutdown();
+                if (!channelGroup.isTerminated()) {
+                    channelGroup.shutdownNow();
+                }
+            } catch (Exception e) {
+                // 忽略关闭异常
+            }
+        }
+        channelGroups.clear();
+
+        System.out.println("[bench-plugin] 优雅关闭完成");
     }
 
     /**
@@ -80,8 +143,9 @@ public class BenchPlugin extends Plugin {
                 Boolean.parseBoolean(System.getenv("BROKER_LOWMEMORY")))
                 .openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(),
                         r -> new Thread(r, "bench-publish-pool"));
+        channelGroups.add(channelGroup);
 
-        MqttClient[] clients = new MqttClient[connections];
+        MqttClient[] clientsArray = new MqttClient[connections];
         CountDownLatch latch = new CountDownLatch(connections);
 
         // 创建连接
@@ -93,8 +157,11 @@ public class BenchPlugin extends Plugin {
                             .setAutomaticReconnect(true)
                             .setClientId("bench-pub-" + clientId));
 
+            clients.add(client);
+            clientsArray[clientId] = client;
+
             client.connect(mqttConnAckMessage -> {
-                clients[clientId] = client;
+                clientsArray[clientId] = client;
                 latch.countDown();
             });
         }
@@ -109,9 +176,13 @@ public class BenchPlugin extends Plugin {
 
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(
                 Runtime.getRuntime().availableProcessors());
+        scheduledExecutors.add(executor);
 
-        for (MqttClient client : clients) {
+        for (MqttClient client : clientsArray) {
             executor.scheduleWithFixedDelay(() -> {
+                if (!running.get()) {
+                    return;
+                }
                 try {
                     for (int j = 0; j < publishCount; j++) {
                         String topic = "/topic" + (topicIndex.incrementAndGet() % topicCount);
@@ -125,8 +196,12 @@ public class BenchPlugin extends Plugin {
         }
 
         // 定时打印TPS
-        Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(() -> {
-            System.out.println("[bench-plugin] 发布压测运行中...");
+        ScheduledExecutorService monitorExecutor = Executors.newSingleThreadScheduledExecutor();
+        scheduledExecutors.add(monitorExecutor);
+        monitorExecutor.scheduleWithFixedDelay(() -> {
+            if (running.get()) {
+                System.out.println("[bench-plugin] 发布压测运行中... (连接数: " + connections + ")");
+            }
         }, 10, 10, TimeUnit.SECONDS);
     }
 
@@ -158,9 +233,10 @@ public class BenchPlugin extends Plugin {
                 Boolean.parseBoolean(System.getenv("BROKER_LOWMEMORY")))
                 .openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(),
                         r -> new Thread(r, "bench-sub-pool"));
+        channelGroups.add(channelGroup);
 
         CountDownLatch subscribeLatch = new CountDownLatch(connections * topicCount);
-        MqttClient[] clients = new MqttClient[connections];
+        MqttClient[] clientsArray = new MqttClient[connections];
         CountDownLatch connectLatch = new CountDownLatch(connections);
 
         // 创建订阅连接
@@ -172,8 +248,11 @@ public class BenchPlugin extends Plugin {
                             .setAutomaticReconnect(true)
                             .setClientId("bench-sub-" + clientId));
 
+            clients.add(client);
+            clientsArray[clientId] = client;
+
             client.connect(mqttConnAckMessage -> {
-                clients[clientId] = client;
+                clientsArray[clientId] = client;
                 connectLatch.countDown();
 
                 // 连接成功后订阅主题
@@ -206,6 +285,7 @@ public class BenchPlugin extends Plugin {
             AsynchronousChannelGroup publisherGroup = new EnhanceAsynchronousChannelProvider(false)
                     .openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(),
                             r -> new Thread(r, "bench-publisher-pool"));
+            channelGroups.add(publisherGroup);
 
             AtomicInteger pubTopicIndex = new AtomicInteger();
             byte[] payload = new byte[config.getPayloadSize()];
@@ -213,6 +293,7 @@ public class BenchPlugin extends Plugin {
 
             ScheduledExecutorService executor = Executors.newScheduledThreadPool(
                     Runtime.getRuntime().availableProcessors());
+            scheduledExecutors.add(executor);
 
             for (int i = 0; i < publisherCount; i++) {
                 final int pubId = i;
@@ -222,9 +303,13 @@ public class BenchPlugin extends Plugin {
                                 .setAutomaticReconnect(true)
                                 .setClientId("bench-publisher-" + pubId));
 
+                clients.add(publisher);
                 publisher.connect();
 
                 executor.scheduleWithFixedDelay(() -> {
+                    if (!running.get()) {
+                        return;
+                    }
                     try {
                         for (int j = 0; j < publishCount; j++) {
                             String topic = "topic_" + random + "_" + (pubTopicIndex.incrementAndGet() % topicCount);
@@ -239,8 +324,12 @@ public class BenchPlugin extends Plugin {
         }
 
         // 定时打印状态
-        Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(() -> {
-            System.out.println("[bench-plugin] 订阅压测运行中...");
+        ScheduledExecutorService monitorExecutor = Executors.newSingleThreadScheduledExecutor();
+        scheduledExecutors.add(monitorExecutor);
+        monitorExecutor.scheduleWithFixedDelay(() -> {
+            if (running.get()) {
+                System.out.println("[bench-plugin] 订阅压测运行中... (订阅者: " + connections + ", 主题: " + topicCount + ")");
+            }
         }, 10, 10, TimeUnit.SECONDS);
     }
 
@@ -252,6 +341,46 @@ public class BenchPlugin extends Plugin {
     @Override
     public String getVendor() {
         return Options.VENDOR;
+    }
+
+    @Override
+    public Schema schema() {
+        Schema schema = new Schema();
+
+        // 主配置
+        Item scenarioItem = Item.String("scenario", "压测场景").tip("publish: 发布压测, subscribe: 订阅压测");
+        schema.addItem(scenarioItem);
+
+        // Publish配置
+        Item publishItem = Item.Object("publish", "发布压测配置");
+        publishItem.addItems(
+                Item.String("host", "MQTT服务器地址").tip("默认: 127.0.0.1"),
+                Item.Int("port", "MQTT服务器端口").tip("默认: 1883"),
+                Item.Int("connections", "并发连接数").tip("默认: 1000"),
+                Item.Int("payloadSize", "消息负载大小(字节)").tip("默认: 1024"),
+                Item.Int("topicCount", "主题数量").tip("默认: 128"),
+                Item.Int("publishCount", "每次发布数").tip("默认: 1"),
+                Item.Int("period", "发布间隔(毫秒)").tip("默认: 1"),
+                Item.Int("qos", "QoS等级").tip("0: AtMostOnce, 1: AtLeastOnce, 2: ExactlyOnce")
+        );
+        schema.addItem(publishItem);
+
+        // Subscribe配置
+        Item subscribeItem = Item.Object("subscribe", "订阅压测配置");
+        subscribeItem.addItems(
+                Item.String("host", "MQTT服务器地址").tip("默认: 127.0.0.1"),
+                Item.Int("port", "MQTT服务器端口").tip("默认: 1883"),
+                Item.Int("connections", "并发连接数").tip("默认: 1000"),
+                Item.Int("topicCount", "主题数量").tip("默认: 128"),
+                Item.Int("qos", "QoS等级").tip("0: AtMostOnce, 1: AtLeastOnce, 2: ExactlyOnce"),
+                Item.Int("publisherCount", "发布者数量").tip("0: 不启动发布者, 默认: 1"),
+                Item.Int("publishCount", "每次发布数").tip("默认: 1"),
+                Item.Int("publishPeriod", "发布间隔(毫秒)").tip("默认: 1"),
+                Item.Int("payloadSize", "消息负载大小(字节)").tip("默认: 128")
+        );
+        schema.addItem(subscribeItem);
+
+        return schema;
     }
 
     @Override
