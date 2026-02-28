@@ -14,6 +14,7 @@ import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.timer.TimerTask;
 import org.smartboot.socket.transport.AioQuickClient;
+import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.mqtt.common.AbstractSession;
 import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.DefaultMqttWriter;
@@ -50,6 +51,7 @@ import tech.smartboot.mqtt.common.util.MqttUtil;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -148,7 +150,15 @@ public class MqttClient extends AbstractSession {
 //        LOGGER.info("mqtt client config:{}", clientConfigure);
 //        messageProcessor.addPlugin(new StreamMonitorPlugin<>());
 
-        client = new AioQuickClient(options.getHost(), options.getPort(), new MqttProtocol(options.getMaxPacketSize()), messageProcessor);
+        client = new AioQuickClient(options.getHost(), options.getPort(), new MqttProtocol(options.getMaxPacketSize()) {
+            @Override
+            public MqttMessage decode(ByteBuffer buffer, AioSession session) {
+                if (buffer.hasRemaining()) {
+                    return super.decode(buffer, session);
+                }
+                return null;
+            }
+        }, messageProcessor);
         try {
             client.setReadBufferSize(options.getBufferSize()).setWriteBuffer(options.getBufferSize(), 8).connectTimeout(options.getConnectionTimeout());
             if (options.group() != null) {
