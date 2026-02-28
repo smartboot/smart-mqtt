@@ -1,0 +1,43 @@
+# MQTT压测插件配置
+# 支持两种场景: publish (发布压测) 和 subscribe (订阅压测)
+
+# 压测场景: publish-发布压测, subscribe-订阅压测
+scenario: publish
+
+# 发布压测配置
+publish:
+  # MQTT服务器地址
+  host: 127.0.0.1
+  port: 1883
+  # 连接数
+  connections: 1000
+  # 消息负载大小（字节）
+  payloadSize: 1024
+  # 主题数量
+  topicCount: 128
+  # 每次发布的消息数量
+  publishCount: 1
+  # 发布间隔（毫秒）
+  period: 1
+  # QoS等级: 0-AtMostOnce, 1-AtLeastOnce, 2-ExactlyOnce
+  qos: 0
+
+# 订阅压测配置
+subscribe:
+  # MQTT服务器地址
+  host: 127.0.0.1
+  port: 1883
+  # 连接数
+  connections: 1000
+  # 主题数量
+  topicCount: 128
+  # QoS等级: 0-AtMostOnce, 1-AtLeastOnce, 2-ExactlyOnce
+  qos: 0
+  # 发布者数量（0表示不启动发布者）
+  publisherCount: 1
+  # 每次发布的消息数量
+  publishCount: 1
+  # 发布间隔（毫秒）
+  publishPeriod: 1
+  # 消息负载大小（字节）
+  payloadSize: 128

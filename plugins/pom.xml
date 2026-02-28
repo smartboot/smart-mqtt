@@ -31,6 +31,7 @@
         <module>simple-auth-plugin</module>
         <module>websocket-plugin</module>
         <module>cluster-plugin</module>
+        <module>bench-plugin</module>
     </modules>
 
     <dependencies>
