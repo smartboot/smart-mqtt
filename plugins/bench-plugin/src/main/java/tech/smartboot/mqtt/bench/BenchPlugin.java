@@ -19,8 +19,11 @@ import tech.smartboot.mqtt.plugin.spec.schema.Enum;
 import tech.smartboot.mqtt.plugin.spec.schema.Item;
 import tech.smartboot.mqtt.plugin.spec.schema.Schema;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -55,7 +58,11 @@ public class BenchPlugin extends Plugin {
             running.set(true);
 
             if (SCENARIO_PUBLISH.equals(scenario)) {
-                runPublishBenchmark(brokerContext, config);
+                try {
+                    runPublishBenchmark(brokerContext, config);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             } else if (SCENARIO_SUBSCRIBE.equals(scenario)) {
                 runSubscribeBenchmark(brokerContext, config);
             } else {
@@ -73,7 +80,7 @@ public class BenchPlugin extends Plugin {
     /**
      * 运行发布压测
      */
-    private void runPublishBenchmark(BrokerContext brokerContext, PluginConfig config) {
+    private void runPublishBenchmark(BrokerContext brokerContext, PluginConfig config) throws InterruptedException {
         // 使用PluginConfig中的公共参数
         String host = config.getHost();
         int port = config.getPort();
@@ -101,33 +108,41 @@ public class BenchPlugin extends Plugin {
         byte[] payload = new byte[payloadSize];
         Arrays.fill(payload, (byte) 1);
 
+        List<MqttClient> clients = new ArrayList<>(connections);
+        CountDownLatch latch = new CountDownLatch(connections);
         // 创建连接
         for (int i = 0; i < connections; i++) {
             final int clientId = i;
             MqttClient client = new MqttClient(host, port, opt -> opt.setGroup(brokerContext.Options().getChannelGroup()).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-pub-" + clientId));
-
+            clients.add(client);
             client.connect(mqttConnAckMessage -> {
-                Thread publishThread = new Thread(() -> {
-                    try {
-                        while (running.get()) {
-                            try {
-                                Thread.sleep(period);
-                                for (int j = 0; j < publishCount; j++) {
-                                    String topic = "/topic" + (topicIndex.incrementAndGet() % topicCount);
-                                    client.publish(topic, MqttQoS.valueOf(qos), payload, false, false);
-                                }
-                                client.flush();
-                            } catch (Throwable e) {
-                                System.err.println("[bench-plugin] 发布异常: " + e.getMessage());
-                            }
-                        }
-                    } finally {
-                        client.disconnect();
-                    }
-                }, "bench-publish-" + hashCode());
-                publishThread.start();
+                latch.countDown();
             });
         }
+        latch.await();
+        Thread publishThread = new Thread(() -> {
+            try {
+                while (running.get()) {
+                    try {
+                        Thread.sleep(period);
+                        for (MqttClient client : clients) {
+                            for (int j = 0; j < publishCount; j++) {
+                                String topic = "/topic" + (topicIndex.incrementAndGet() % topicCount);
+                                client.publish(topic, MqttQoS.valueOf(qos), payload, false, false);
+                            }
+                            client.flush();
+                        }
+                    } catch (Throwable e) {
+                        System.err.println("[bench-plugin] 发布异常: " + e.getMessage());
+                    }
+                }
+            } finally {
+                for (MqttClient client : clients) {
+                    client.disconnect();
+                }
+            }
+        }, "bench-publish-" + hashCode());
+        publishThread.start();
     }
 
     /**
