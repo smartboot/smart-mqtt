@@ -140,6 +140,7 @@ public class BenchPlugin extends Plugin {
                 for (MqttClient client : clients) {
                     client.disconnect();
                 }
+                System.out.println("[bench-plugin] 压测结束");
             }
         }, "bench-publish-" + hashCode());
         publishThread.start();
@@ -228,6 +229,7 @@ public class BenchPlugin extends Plugin {
                             client.disconnect();
                             client = clients.poll();
                         }
+                        System.out.println("[bench-plugin] 压测结束");
                     }
                 }, "bench-publisher-" + pubId);
                 publisherThread.start();
