@@ -240,12 +240,12 @@ public class BenchPlugin extends Plugin {
         schema.addItem(scenarioItem);
 
         // Publish配置
-        Item publishItem = Item.Object("publish", "发布压测配置");
+        Item publishItem = Item.Object("publish", "发布压测配置").col(6);
         publishItem.addItems(Item.String("host", "MQTT服务器地址").tip("默认: 127.0.0.1"), Item.Int("port", "MQTT服务器端口").tip("默认: 1883"), Item.Int("connections", "并发连接数").tip("默认: 1000"), Item.Int("payloadSize", "消息负载大小(字节)").tip("默认: 1024"), Item.Int("topicCount", "主题数量").tip("默认: 128"), Item.Int("publishCount", "每次发布数").tip("默认: 1"), Item.Int("period", "发布间隔(毫秒)").tip("默认: 1"), Item.Int("qos", "QoS等级").tip("0: AtMostOnce, 1: AtLeastOnce, 2: ExactlyOnce"));
         schema.addItem(publishItem);
 
         // Subscribe配置
-        Item subscribeItem = Item.Object("subscribe", "订阅压测配置");
+        Item subscribeItem = Item.Object("subscribe", "订阅压测配置").col(6);
         subscribeItem.addItems(Item.String("host", "MQTT服务器地址").tip("默认: 127.0.0.1"), Item.Int("port", "MQTT服务器端口").tip("默认: 1883"), Item.Int("connections", "并发连接数").tip("默认: 1000"), Item.Int("topicCount", "主题数量").tip("默认: 128"), Item.Int("qos", "QoS等级").tip("0: AtMostOnce, 1: AtLeastOnce, 2: ExactlyOnce"), Item.Int("publisherCount", "发布者数量").tip("0: 不启动发布者, 默认: 1"), Item.Int("publishCount", "每次发布数").tip("默认: 1"), Item.Int("publishPeriod", "发布间隔(毫秒)").tip("默认: 1"), Item.Int("payloadSize", "消息负载大小(字节)").tip("默认: 128"));
         schema.addItem(subscribeItem);
 
