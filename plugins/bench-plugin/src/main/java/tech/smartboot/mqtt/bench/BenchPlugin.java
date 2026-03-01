@@ -17,6 +17,7 @@ import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
 import tech.smartboot.mqtt.plugin.spec.bus.DisposableEventBusSubscriber;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
+import tech.smartboot.mqtt.plugin.spec.schema.Enum;
 import tech.smartboot.mqtt.plugin.spec.schema.Item;
 import tech.smartboot.mqtt.plugin.spec.schema.Schema;
 
@@ -236,7 +237,7 @@ public class BenchPlugin extends Plugin {
         Schema schema = new Schema();
 
         // 主配置
-        Item scenarioItem = Item.String("scenario", "压测场景").tip("publish: 发布压测, subscribe: 订阅压测");
+        Item scenarioItem = Item.String("scenario", "压测场景").tip("publish: 发布压测, subscribe: 订阅压测").addEnums(Enum.of("publish", "发布压测"), Enum.of("subscribe", "订阅压测"));
         schema.addItem(scenarioItem);
 
         // Publish配置
