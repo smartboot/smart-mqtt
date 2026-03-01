@@ -27,6 +27,12 @@
             <groupId>tech.smartboot.mqtt</groupId>
             <artifactId>smart-mqtt-client</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>tech.smartboot.mqtt</groupId>
+                    <artifactId>smart-mqtt-common</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 </project>
