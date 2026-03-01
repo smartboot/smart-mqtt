@@ -111,12 +111,12 @@ public class BenchPlugin extends Plugin {
                     try {
                         while (running.get()) {
                             try {
+                                Thread.sleep(period);
                                 for (int j = 0; j < publishCount; j++) {
                                     String topic = "/topic" + (topicIndex.incrementAndGet() % topicCount);
                                     client.publish(topic, MqttQoS.valueOf(qos), payload, false, false);
                                 }
                                 client.flush();
-                                Thread.sleep(period);
                             } catch (InterruptedException e) {
                                 break;
                             } catch (Exception e) {
@@ -198,12 +198,12 @@ public class BenchPlugin extends Plugin {
                     try {
                         while (running.get()) {
                             try {
+                                Thread.sleep(publishPeriod);
                                 for (int j = 0; j < publishCount; j++) {
                                     String topic = "topic_" + random + "_" + (pubTopicIndex.incrementAndGet() % topicCount);
                                     publisher.publish(topic, MqttQoS.AT_MOST_ONCE, payload, false, false);
                                 }
                                 publisher.flush();
-                                Thread.sleep(publishPeriod);
                             } catch (Exception e) {
                                 System.err.println("[bench-plugin] 发布者异常: " + e.getMessage());
                             }
