@@ -117,9 +117,7 @@ public class BenchPlugin extends Plugin {
                                     client.publish(topic, MqttQoS.valueOf(qos), payload, false, false);
                                 }
                                 client.flush();
-                            } catch (InterruptedException e) {
-                                break;
-                            } catch (Exception e) {
+                            } catch (Throwable e) {
                                 System.err.println("[bench-plugin] 发布异常: " + e.getMessage());
                             }
                         }
