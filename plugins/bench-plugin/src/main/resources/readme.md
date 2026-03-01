@@ -3,7 +3,7 @@
 ## 功能特性
 
 - 支持两种压测场景：Publish（发布压测）和 Subscribe（订阅压测）
-- 独立的配置结构，便于理解和使用
+- 公共参数统一配置，减少重复
 - 可配置连接数、主题数、消息大小、QoS等参数
 - 支持高并发连接
 - 实时显示压测状态
@@ -16,28 +16,37 @@
 # 压测场景: publish-发布压测, subscribe-订阅压测
 scenario: publish
 
-# 发布压测配置
-publish:
-  host: 127.0.0.1
-  port: 1883
-  connections: 1000
-  payloadSize: 1024
-  topicCount: 128
-  publishCount: 1
-  period: 1
-  qos: 0
+# ==================== 公共压测配置 ===================
+# MQTT服务器地址
+host: 127.0.0.1
+# MQTT服务器端口
+port: 1883
+# 消息负载大小（字节）
+payloadSize: 1024
+# 主题数量
+topicCount: 128
+# QoS等级: 0-AtMostOnce, 1-AtLeastOnce, 2-ExactlyOnce
+qos: 0
 
-# 订阅压测配置
-subscribe:
-  host: 127.0.0.1
-  port: 1883
+# ==================== 发布压测配置 ===================
+publish:
+  # 发布者数量
   connections: 1000
-  topicCount: 128
-  qos: 0
-  publisherCount: 1
+  # 每次发布的消息数量
   publishCount: 1
+  # 发布间隔（毫秒）
+  period: 1
+
+# ==================== 订阅压测配置 ===================
+subscribe:
+  # 订阅者数量
+  connections: 1000
+  # 发布者数量（0表示不启动发布者）
+  publisherCount: 1
+  # 每次发布的消息数量
+  publishCount: 1
+  # 发布间隔（毫秒）
   publishPeriod: 1
-  payloadSize: 128
 ```
 
 ## 使用说明
@@ -50,32 +59,32 @@ subscribe:
 
 配置 `scenario: subscribe`，然后在 `subscribe` 下配置参数。插件将创建多个MQTT客户端连接并订阅主题，同时可以启动发布者向这些主题发送消息以测试消息分发性能。
 
-## PublishConfig 参数说明
+## 公共参数说明（PluginConfig）
 
 | 参数 | 说明 | 默认值 |
 |------|------|--------|
 | host | MQTT服务器地址 | 127.0.0.1 |
 | port | MQTT服务器端口 | 1883 |
-| connections | 并发连接数 | 1000 |
 | payloadSize | 消息负载大小（字节） | 1024 |
 | topicCount | 主题数量 | 128 |
+| qos | QoS等级：0/1/2 | 0 |
+
+## PublishConfig 参数说明
+
+| 参数 | 说明 | 默认值 |
+|------|------|--------|
+| connections | 发布者数量 | 1000 |
 | publishCount | 每次发布的消息数量 | 1 |
 | period | 发布间隔（毫秒） | 1 |
-| qos | QoS等级：0/1/2 | 0 |
 
 ## SubscribeConfig 参数说明
 
 | 参数 | 说明 | 默认值 |
 |------|------|--------|
-| host | MQTT服务器地址 | 127.0.0.1 |
-| port | MQTT服务器端口 | 1883 |
-| connections | 并发连接数 | 1000 |
-| topicCount | 主题数量 | 128 |
-| qos | QoS等级：0/1/2 | 0 |
+| connections | 订阅者数量 | 1000 |
 | publisherCount | 发布者数量（0表示不启动） | 1 |
 | publishCount | 每次发布的消息数量 | 1 |
 | publishPeriod | 发布间隔（毫秒） | 1 |
-| payloadSize | 消息负载大小（字节） | 128 |
 
 ## 使用示例
 
