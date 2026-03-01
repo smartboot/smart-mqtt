@@ -24,6 +24,33 @@ public class PluginConfig {
      */
     private String scenario = "publish";
 
+    // ==================== 公共参数（Publish和Subscribe共用）====================
+    /**
+     * MQTT服务器主机
+     */
+    private String host = "127.0.0.1";
+
+    /**
+     * MQTT服务器端口
+     */
+    private int port = 1883;
+
+    /**
+     * 主题数量
+     */
+    private int topicCount = 128;
+
+    /**
+     * QoS等级: 0-AtMostOnce, 1-AtLeastOnce, 2-ExactlyOnce
+     */
+    private int qos = 0;
+
+    /**
+     * 消息 payload 大小（字节）
+     */
+    private int payloadSize = 1024;
+    // =======================================================================
+
     /**
      * 发布压测配置
      */
@@ -40,6 +67,46 @@ public class PluginConfig {
 
     public void setScenario(String scenario) {
         this.scenario = scenario;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    public int getTopicCount() {
+        return topicCount;
+    }
+
+    public void setTopicCount(int topicCount) {
+        this.topicCount = topicCount;
+    }
+
+    public int getQos() {
+        return qos;
+    }
+
+    public void setQos(int qos) {
+        this.qos = qos;
+    }
+
+    public int getPayloadSize() {
+        return payloadSize;
+    }
+
+    public void setPayloadSize(int payloadSize) {
+        this.payloadSize = payloadSize;
     }
 
     public PublishConfig getPublish() {

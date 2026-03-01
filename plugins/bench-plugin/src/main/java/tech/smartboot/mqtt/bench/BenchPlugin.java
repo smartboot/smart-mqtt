@@ -66,9 +66,9 @@ public class BenchPlugin extends Plugin {
         running.set(true);
 
         if (SCENARIO_PUBLISH.equals(scenario)) {
-            runPublishBenchmark(brokerContext, config.getPublish());
+            runPublishBenchmark(brokerContext, config);
         } else if (SCENARIO_SUBSCRIBE.equals(scenario)) {
-            runSubscribeBenchmark(brokerContext, config.getSubscribe());
+            runSubscribeBenchmark(brokerContext, config);
         } else {
             System.out.println("[bench-plugin] 未知场景: " + scenario + ", 支持: publish, subscribe");
         }
@@ -84,16 +84,22 @@ public class BenchPlugin extends Plugin {
     /**
      * 运行发布压测
      */
-    private void runPublishBenchmark(BrokerContext brokerContext, PublishConfig config) {
-        int connections = config.getConnections();
+    private void runPublishBenchmark(BrokerContext brokerContext, PluginConfig config) {
+        // 使用PluginConfig中的公共参数
+        String host = config.getHost();
+        int port = config.getPort();
         int payloadSize = config.getPayloadSize();
         int topicCount = config.getTopicCount();
-        int publishCount = config.getPublishCount();
-        int period = config.getPeriod();
         int qos = config.getQos();
 
+        // 使用PublishConfig中的参数
+        PublishConfig publishConfig = config.getPublish();
+        int connections = publishConfig.getConnections();
+        int publishCount = publishConfig.getPublishCount();
+        int period = publishConfig.getPeriod();
+
         System.out.println("[bench-plugin] 启动发布压测:");
-        System.out.println("  连接数: " + connections);
+        System.out.println("  发布者数: " + connections);
         System.out.println("  负载大小: " + payloadSize + " bytes");
         System.out.println("  主题数: " + topicCount);
         System.out.println("  每次发布数: " + publishCount);
@@ -109,7 +115,7 @@ public class BenchPlugin extends Plugin {
         // 创建连接
         for (int i = 0; i < connections; i++) {
             final int clientId = i;
-            MqttClient client = new MqttClient(config.getHost(), config.getPort(), opt -> opt.setGroup(brokerContext.Options().getChannelGroup()).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-pub-" + clientId));
+            MqttClient client = new MqttClient(host, port, opt -> opt.setGroup(brokerContext.Options().getChannelGroup()).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-pub-" + clientId));
 
             client.connect(mqttConnAckMessage -> {
                 Thread publishThread = new Thread(() -> {
@@ -140,13 +146,23 @@ public class BenchPlugin extends Plugin {
     /**
      * 运行订阅压测
      */
-    private void runSubscribeBenchmark(BrokerContext brokerContext, SubscribeConfig config) {
-        int connections = config.getConnections();
+    private void runSubscribeBenchmark(BrokerContext brokerContext, PluginConfig config) {
+        // 使用PluginConfig中的公共参数
+        String host = config.getHost();
+        int port = config.getPort();
         int topicCount = config.getTopicCount();
         int qos = config.getQos();
+        int payloadSize = config.getPayloadSize();
+
+        // 使用SubscribeConfig中的参数
+        SubscribeConfig subscribeConfig = config.getSubscribe();
+        int connections = subscribeConfig.getConnections();
+        int publisherCount = subscribeConfig.getPublisherCount();
+        int publishCount = subscribeConfig.getPublishCount();
+        int publishPeriod = subscribeConfig.getPublishPeriod();
 
         System.out.println("[bench-plugin] 启动订阅压测:");
-        System.out.println("  连接数: " + connections);
+        System.out.println("  订阅者数: " + connections);
         System.out.println("  主题数: " + topicCount);
         System.out.println("  QoS: " + qos);
 
@@ -162,7 +178,7 @@ public class BenchPlugin extends Plugin {
         // 创建订阅连接
         for (int i = 0; i < connections; i++) {
             final int clientId = i;
-            MqttClient client = new MqttClient(config.getHost(), config.getPort(), opt -> opt.setGroup(brokerContext.Options().getChannelGroup()).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-sub-" + clientId));
+            MqttClient client = new MqttClient(host, port, opt -> opt.setGroup(brokerContext.Options().getChannelGroup()).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-sub-" + clientId));
             clients.offer(client);
 
             client.connect(mqttConnAckMessage -> {
@@ -176,22 +192,17 @@ public class BenchPlugin extends Plugin {
             });
         }
 
-        // 创建发布者来触发消息
-        int publisherCount = config.getPublisherCount();
-        int publishCount = config.getPublishCount();
-        int publishPeriod = config.getPublishPeriod();
-
         System.out.println("[bench-plugin] 启动发布者数量: " + publisherCount);
 
 
         AtomicInteger pubTopicIndex = new AtomicInteger();
-        byte[] payload = new byte[config.getPayloadSize()];
+        byte[] payload = new byte[payloadSize];
         Arrays.fill(payload, (byte) 1);
 
         // 创建发布者线程
         for (int i = 0; i < publisherCount; i++) {
             final int pubId = i;
-            MqttClient publisher = new MqttClient(config.getHost(), config.getPort(), opt -> opt.setGroup(brokerContext.Options().getChannelGroup()).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-publisher-" + pubId));
+            MqttClient publisher = new MqttClient(host, port, opt -> opt.setGroup(brokerContext.Options().getChannelGroup()).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-publisher-" + pubId));
 
             publisher.connect(mqttConnAckMessage -> {
                 Thread publisherThread = new Thread(() -> {
@@ -239,15 +250,21 @@ public class BenchPlugin extends Plugin {
         // 主配置
         Item scenarioItem = Item.String("scenario", "压测场景").tip("publish: 发布压测, subscribe: 订阅压测").addEnums(Enum.of("publish", "发布压测"), Enum.of("subscribe", "订阅压测"));
         schema.addItem(scenarioItem);
+        schema.addItem(Item.String("host", "MQTT服务器地址").tip("默认: 127.0.0.1").col(6));
+        schema.addItem(Item.Int("port", "MQTT服务器端口").tip("默认: 1883").col(6));
+        schema.addItem(Item.Int("payloadSize", "消息负载大小(字节)").tip("默认: 1024").col(6));
+        schema.addItem(Item.Int("topicCount", "主题数量").tip("默认: 128").col(6));
+        schema.addItem(Item.Int("qos", "QoS等级").addEnums(Enum.of("0", "Qos0"), Enum.of("1", "Qos1"), Enum.of("2", "Qos2")));
+
 
         // Publish配置
         Item publishItem = Item.Object("publish", "发布压测配置").col(6);
-        publishItem.addItems(Item.String("host", "MQTT服务器地址").tip("默认: 127.0.0.1"), Item.Int("port", "MQTT服务器端口").tip("默认: 1883"), Item.Int("connections", "并发连接数").tip("默认: 1000"), Item.Int("payloadSize", "消息负载大小(字节)").tip("默认: 1024"), Item.Int("topicCount", "主题数量").tip("默认: 128"), Item.Int("publishCount", "每次发布数").tip("默认: 1"), Item.Int("period", "发布间隔(毫秒)").tip("默认: 1"), Item.Int("qos", "QoS等级").tip("0: AtMostOnce, 1: AtLeastOnce, 2: ExactlyOnce"));
+        publishItem.addItems(Item.Int("connections", "发布者数量").tip("默认: 1000"), Item.Int("publishCount", "每次发布数").tip("默认: 1"), Item.Int("period", "发布间隔(毫秒)").tip("默认: 1"));
         schema.addItem(publishItem);
 
         // Subscribe配置
         Item subscribeItem = Item.Object("subscribe", "订阅压测配置").col(6);
-        subscribeItem.addItems(Item.String("host", "MQTT服务器地址").tip("默认: 127.0.0.1"), Item.Int("port", "MQTT服务器端口").tip("默认: 1883"), Item.Int("connections", "并发连接数").tip("默认: 1000"), Item.Int("topicCount", "主题数量").tip("默认: 128"), Item.Int("qos", "QoS等级").tip("0: AtMostOnce, 1: AtLeastOnce, 2: ExactlyOnce"), Item.Int("publisherCount", "发布者数量").tip("0: 不启动发布者, 默认: 1"), Item.Int("publishCount", "每次发布数").tip("默认: 1"), Item.Int("publishPeriod", "发布间隔(毫秒)").tip("默认: 1"), Item.Int("payloadSize", "消息负载大小(字节)").tip("默认: 128"));
+        subscribeItem.addItems(Item.Int("connections", "订阅者数量").tip("默认: 1000"), Item.Int("publisherCount", "发布者数量").tip("0: 不启动发布者, 默认: 1"), Item.Int("publishCount", "每次发布数").tip("默认: 1"), Item.Int("publishPeriod", "发布间隔(毫秒)").tip("默认: 1"));
         schema.addItem(subscribeItem);
 
         return schema;

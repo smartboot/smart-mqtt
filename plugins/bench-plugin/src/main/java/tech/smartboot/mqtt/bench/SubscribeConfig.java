@@ -13,35 +13,17 @@ package tech.smartboot.mqtt.bench;
 /**
  * 订阅压测配置
  *
+ * 公共参数（host, port, topicCount, qos, payloadSize）已提取到 PluginConfig
+ *
  * @author 三刀
  * @version v1.5.1
  */
 public class SubscribeConfig {
 
     /**
-     * MQTT服务器主机
-     */
-    private String host = "127.0.0.1";
-
-    /**
-     * MQTT服务器端口
-     */
-    private int port = 1883;
-
-    /**
-     * 连接数
+     * 订阅者数量
      */
     private int connections = 1000;
-
-    /**
-     * 主题数量
-     */
-    private int topicCount = 128;
-
-    /**
-     * QoS等级: 0-AtMostOnce, 1-AtLeastOnce, 2-ExactlyOnce
-     */
-    private int qos = 0;
 
     /**
      * 发布者数量
@@ -58,49 +40,12 @@ public class SubscribeConfig {
      */
     private int publishPeriod = 1;
 
-    /**
-     * 消息 payload 大小（字节）
-     */
-    private int payloadSize = 128;
-
-    public String getHost() {
-        return host;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-    }
-
     public int getConnections() {
         return connections;
     }
 
     public void setConnections(int connections) {
         this.connections = connections;
-    }
-
-    public int getTopicCount() {
-        return topicCount;
-    }
-
-    public void setTopicCount(int topicCount) {
-        this.topicCount = topicCount;
-    }
-
-    public int getQos() {
-        return qos;
-    }
-
-    public void setQos(int qos) {
-        this.qos = qos;
     }
 
     public int getPublisherCount() {
@@ -125,13 +70,5 @@ public class SubscribeConfig {
 
     public void setPublishPeriod(int publishPeriod) {
         this.publishPeriod = publishPeriod;
-    }
-
-    public int getPayloadSize() {
-        return payloadSize;
-    }
-
-    public void setPayloadSize(int payloadSize) {
-        this.payloadSize = payloadSize;
     }
 }
