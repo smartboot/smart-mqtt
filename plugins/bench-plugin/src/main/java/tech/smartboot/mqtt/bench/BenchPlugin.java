@@ -23,6 +23,7 @@ import tech.smartboot.mqtt.plugin.spec.schema.Schema;
 
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -39,19 +40,24 @@ public class BenchPlugin extends Plugin {
     private static final String SCENARIO_SUBSCRIBE = "subscribe";
 
     private final AtomicBoolean running = new AtomicBoolean(false);
-    private boolean started;
+    private final Semaphore semaphore = new Semaphore(1);
 
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
         brokerContext.getEventBus().subscribe(EventType.BROKER_STARTED, new DisposableEventBusSubscriber<BrokerContext>() {
             @Override
             public void consumer(EventType<BrokerContext> eventType, BrokerContext object) {
-                started = true;
+                init(brokerContext);
             }
         });
-        if (!started) {
+        init(brokerContext);
+    }
+
+    private void init(BrokerContext brokerContext) {
+        if (!semaphore.tryAcquire()) {
             return;
         }
+
         PluginConfig config = loadPluginConfig(PluginConfig.class);
 
         String scenario = config.getScenario();
