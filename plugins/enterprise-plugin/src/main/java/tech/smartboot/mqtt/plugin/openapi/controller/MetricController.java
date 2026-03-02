@@ -116,8 +116,7 @@ public class MetricController {
     public void init() {
         h2 = pluginConfig.getDatabase().getDbType().contains("h2");
         initMetric(brokerContext);
-        PluginConfig.Record recordConfig = pluginConfig.getRecord();
-        metricRecordEnabled = recordConfig != null && recordConfig.isMetric();
+        metricRecordEnabled = pluginConfig.getDatabase().isMetricRecord();
         //周期性重置指标值
         brokerContext.getTimer().scheduleWithFixedDelay(new AsyncTask() {
             @Override

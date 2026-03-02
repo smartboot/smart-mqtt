@@ -66,8 +66,7 @@ public class TopicController {
 
     @PostConstruct
     public void init() {
-        PluginConfig.Record recordConfig = pluginConfig.getRecord();
-        if (recordConfig == null || !recordConfig.isSubscribe()) {
+        if (!pluginConfig.getDatabase().isSubscribeRecord()) {
             LOGGER.debug("subscribe record is disabled");
             return;
         }

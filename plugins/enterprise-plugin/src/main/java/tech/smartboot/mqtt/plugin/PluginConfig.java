@@ -24,11 +24,6 @@ public class PluginConfig {
     private DataBaseConfig database;
     private OpenAI openai;
 
-    /**
-     * 记录配置
-     */
-    private Record record;
-
     private String registry;
 
     /**
@@ -77,14 +72,6 @@ public class PluginConfig {
         this.openai = openai;
     }
 
-    public Record getRecord() {
-        return record;
-    }
-
-    public void setRecord(Record record) {
-        this.record = record;
-    }
-
     public static class HttpConfig {
         private String host;
         private int port = 18083;
@@ -119,6 +106,21 @@ public class PluginConfig {
         @JSONField(serialize = false)
         private String password;
 
+        /**
+         * 连接记录开关
+         */
+        private boolean connectRecord = false;
+
+        /**
+         * 订阅记录开关
+         */
+        private boolean subscribeRecord = false;
+
+        /**
+         * 指标记录开关
+         */
+        private boolean metricRecord = false;
+
         public String getDbType() {
             return dbType;
         }
@@ -149,6 +151,30 @@ public class PluginConfig {
 
         public void setPassword(String password) {
             this.password = password;
+        }
+
+        public boolean isConnectRecord() {
+            return connectRecord;
+        }
+
+        public void setConnectRecord(boolean connectRecord) {
+            this.connectRecord = connectRecord;
+        }
+
+        public boolean isSubscribeRecord() {
+            return subscribeRecord;
+        }
+
+        public void setSubscribeRecord(boolean subscribeRecord) {
+            this.subscribeRecord = subscribeRecord;
+        }
+
+        public boolean isMetricRecord() {
+            return metricRecord;
+        }
+
+        public void setMetricRecord(boolean metricRecord) {
+            this.metricRecord = metricRecord;
         }
     }
 
@@ -200,50 +226,6 @@ public class PluginConfig {
 
         public void setUrl(String url) {
             this.url = url;
-        }
-    }
-
-    /**
-     * 记录配置类，用于控制各类记录功能是否启用
-     */
-    public static class Record {
-        /**
-         * 连接记录开关
-         */
-        private boolean connection = false;
-
-        /**
-         * 订阅记录开关
-         */
-        private boolean subscribe = false;
-
-        /**
-         * 指标记录开关
-         */
-        private boolean metric = false;
-
-        public boolean isConnectRecord() {
-            return connection;
-        }
-
-        public void setConnectRecord(boolean connectRecord) {
-            this.connection = connectRecord;
-        }
-
-        public boolean isSubscribe() {
-            return subscribe;
-        }
-
-        public void setSubscribe(boolean subscribe) {
-            this.subscribe = subscribe;
-        }
-
-        public boolean isMetric() {
-            return metric;
-        }
-
-        public void setMetric(boolean metric) {
-            this.metric = metric;
         }
     }
 }

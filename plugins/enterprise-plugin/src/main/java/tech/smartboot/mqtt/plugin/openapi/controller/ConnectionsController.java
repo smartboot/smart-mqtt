@@ -72,8 +72,7 @@ public class ConnectionsController {
 
     @PostConstruct
     public void init() {
-        PluginConfig.Record recordConfig = pluginConfig.getRecord();
-        if (recordConfig == null || !recordConfig.isConnectRecord()) {
+        if (!pluginConfig.getDatabase().isConnectRecord()) {
             LOGGER.debug("connect record is disabled");
             return;
         }
