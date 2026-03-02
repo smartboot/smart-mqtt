@@ -11,16 +11,13 @@
 package tech.smartboot.mqtt.plugin.openapi.enums;
 
 public enum SystemConfigEnum {
-    ACL("acl", "连接认证"),
     LICENSE("license", "授权LICENSE"),
     CONNECT_RECORD("connectRecord", "连接记录"),
     SUBSCRIBE_RECORD("subscribeRecord", "订阅记录"),
 
     METRIC_RECORD("metricRecord", "指标记录"),
 
-    WS_MQTT_CONFIG("wsMqttConfig", "Websocket配置"),
 
-    SHOW_METRICS("showMetrics", "显示的指标项"),
     UNKNOWN("unknown", "未知");
 
     private String code;
