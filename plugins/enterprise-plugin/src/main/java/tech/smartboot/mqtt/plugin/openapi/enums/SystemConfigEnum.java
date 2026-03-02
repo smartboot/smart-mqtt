@@ -12,11 +12,6 @@ package tech.smartboot.mqtt.plugin.openapi.enums;
 
 public enum SystemConfigEnum {
     LICENSE("license", "授权LICENSE"),
-    CONNECT_RECORD("connectRecord", "连接记录"),
-    SUBSCRIBE_RECORD("subscribeRecord", "订阅记录"),
-
-    METRIC_RECORD("metricRecord", "指标记录"),
-
 
     UNKNOWN("unknown", "未知");
 

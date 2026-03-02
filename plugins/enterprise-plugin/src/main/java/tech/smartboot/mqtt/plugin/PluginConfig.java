@@ -24,6 +24,10 @@ public class PluginConfig {
     private DataBaseConfig database;
     private OpenAI openai;
 
+    /**
+     * 记录配置
+     */
+    private Record record;
 
     private String registry;
 
@@ -71,6 +75,14 @@ public class PluginConfig {
 
     public void setOpenai(OpenAI openai) {
         this.openai = openai;
+    }
+
+    public Record getRecord() {
+        return record;
+    }
+
+    public void setRecord(Record record) {
+        this.record = record;
     }
 
     public static class HttpConfig {
@@ -188,6 +200,50 @@ public class PluginConfig {
 
         public void setUrl(String url) {
             this.url = url;
+        }
+    }
+
+    /**
+     * 记录配置类，用于控制各类记录功能是否启用
+     */
+    public static class Record {
+        /**
+         * 连接记录开关
+         */
+        private boolean connection = false;
+
+        /**
+         * 订阅记录开关
+         */
+        private boolean subscribe = false;
+
+        /**
+         * 指标记录开关
+         */
+        private boolean metric = false;
+
+        public boolean isConnectRecord() {
+            return connection;
+        }
+
+        public void setConnectRecord(boolean connectRecord) {
+            this.connection = connectRecord;
+        }
+
+        public boolean isSubscribe() {
+            return subscribe;
+        }
+
+        public void setSubscribe(boolean subscribe) {
+            this.subscribe = subscribe;
+        }
+
+        public boolean isMetric() {
+            return metric;
+        }
+
+        public void setMetric(boolean metric) {
+            this.metric = metric;
         }
     }
 }

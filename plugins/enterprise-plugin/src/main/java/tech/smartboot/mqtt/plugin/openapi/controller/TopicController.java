@@ -26,15 +26,13 @@ import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.EnterprisePlugin;
+import tech.smartboot.mqtt.plugin.PluginConfig;
 import tech.smartboot.mqtt.plugin.convert.SubscriptionConvert;
 import tech.smartboot.mqtt.plugin.dao.mapper.SubscriberMapper;
-import tech.smartboot.mqtt.plugin.dao.mapper.SystemConfigMapper;
 import tech.smartboot.mqtt.plugin.dao.model.SubscriptionDO;
 import tech.smartboot.mqtt.plugin.dao.model.TopicStatisticsDO;
 import tech.smartboot.mqtt.plugin.dao.query.SubscriberQuery;
 import tech.smartboot.mqtt.plugin.openapi.OpenApi;
-import tech.smartboot.mqtt.plugin.openapi.enums.RecordTypeEnum;
-import tech.smartboot.mqtt.plugin.openapi.enums.SystemConfigEnum;
 import tech.smartboot.mqtt.plugin.openapi.to.Pagination;
 import tech.smartboot.mqtt.plugin.openapi.to.SubscriptionTO;
 import tech.smartboot.mqtt.plugin.openapi.to.TopicStatisticsTO;
@@ -62,15 +60,15 @@ public class TopicController {
     private SqlSessionFactory sessionFactory;
 
     @Autowired
-    private SystemConfigMapper systemConfigMapper;
+    private PluginConfig pluginConfig;
     private final ConcurrentLinkedQueue<Consumer<SqlSession>> consumers = new ConcurrentLinkedQueue<>();
     private long lastestTime = System.currentTimeMillis();
 
     @PostConstruct
     public void init() {
-        String value = systemConfigMapper.getConfig(SystemConfigEnum.SUBSCRIBE_RECORD.getCode());
-        if (!RecordTypeEnum.DB.getCode().equals(value)) {
-            LOGGER.debug("subscribe record type:{}", value);
+        PluginConfig.Record recordConfig = pluginConfig.getRecord();
+        if (recordConfig == null || !recordConfig.isSubscribe()) {
+            LOGGER.debug("subscribe record is disabled");
             return;
         }
         brokerContext.getEventBus().subscribe(EventType.SUBSCRIBE_ACCEPT, (eventType, object) -> {
@@ -156,7 +154,7 @@ public class TopicController {
         this.sessionFactory = sessionFactory;
     }
 
-    public void setSystemConfigMapper(SystemConfigMapper systemConfigMapper) {
-        this.systemConfigMapper = systemConfigMapper;
+    public void setPluginConfig(PluginConfig pluginConfig) {
+        this.pluginConfig = pluginConfig;
     }
 }

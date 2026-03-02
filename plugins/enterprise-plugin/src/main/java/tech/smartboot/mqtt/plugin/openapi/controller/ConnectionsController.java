@@ -28,6 +28,7 @@ import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.EnterprisePlugin;
+import tech.smartboot.mqtt.plugin.PluginConfig;
 import tech.smartboot.mqtt.plugin.convert.ConnectionConvert;
 import tech.smartboot.mqtt.plugin.dao.mapper.ConnectionMapper;
 import tech.smartboot.mqtt.plugin.dao.mapper.SubscriberMapper;
@@ -36,8 +37,6 @@ import tech.smartboot.mqtt.plugin.dao.model.ConnectionDO;
 import tech.smartboot.mqtt.plugin.dao.query.ConnectionQuery;
 import tech.smartboot.mqtt.plugin.openapi.OpenApi;
 import tech.smartboot.mqtt.plugin.openapi.enums.ConnectionStatusEnum;
-import tech.smartboot.mqtt.plugin.openapi.enums.RecordTypeEnum;
-import tech.smartboot.mqtt.plugin.openapi.enums.SystemConfigEnum;
 import tech.smartboot.mqtt.plugin.openapi.to.ConnectionTO;
 import tech.smartboot.mqtt.plugin.openapi.to.Pagination;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
@@ -67,15 +66,15 @@ public class ConnectionsController {
     @Autowired
     private SqlSessionFactory sessionFactory;
     @Autowired
-    private SystemConfigMapper systemConfigMapper;
+    private PluginConfig pluginConfig;
     private final ConcurrentLinkedQueue<Consumer<SqlSession>> consumers = new ConcurrentLinkedQueue<>();
     private long lastestTime = System.currentTimeMillis();
 
     @PostConstruct
     public void init() {
-        String value = systemConfigMapper.getConfig(SystemConfigEnum.CONNECT_RECORD.getCode());
-        if (!RecordTypeEnum.DB.getCode().equals(value)) {
-            LOGGER.debug("connect record type:{}", value);
+        PluginConfig.Record recordConfig = pluginConfig.getRecord();
+        if (recordConfig == null || !recordConfig.isConnectRecord()) {
+            LOGGER.debug("connect record is disabled");
             return;
         }
         //可能因Broker异常退出导致原连接状态依旧处于Connected状态，启动时统一订正
@@ -197,7 +196,7 @@ public class ConnectionsController {
         this.sessionFactory = sessionFactory;
     }
 
-    public void setSystemConfigMapper(SystemConfigMapper systemConfigMapper) {
-        this.systemConfigMapper = systemConfigMapper;
+    public void setPluginConfig(PluginConfig pluginConfig) {
+        this.pluginConfig = pluginConfig;
     }
 }

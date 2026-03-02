@@ -81,6 +81,18 @@ public class Item {
         return new Item(name, "multi_enum", desc);
     }
 
+    /**
+     * 开关类型，用于布尔值配置项
+     */
+    public static Item Switch(String name, String desc) {
+        return new Item(name, "switch", desc) {
+            @Override
+            public void addItems(Item... items) {
+                throw new UnsupportedOperationException("switch类型不能添加子集");
+            }
+        };
+    }
+
     public static Item Password(String name, String desc) {
         return new Item(name, "password", desc) {
             @Override

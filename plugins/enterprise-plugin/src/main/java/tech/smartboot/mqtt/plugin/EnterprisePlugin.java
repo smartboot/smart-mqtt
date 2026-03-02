@@ -129,6 +129,13 @@ public class EnterprisePlugin extends Plugin {
         openapi.addItems(mcp);
         schema.addItem(openapi);
 
+        // 记录配置
+        Item record = Item.Object("record", "记录配置").col(6).tip("控制各类记录功能的启用状态");
+        record.addItems(Item.Switch("connection", "连接记录").col(4).tip("启用后将记录客户端连接信息到数据库").addEnums(Enum.of("true", "启用"), Enum.of("false", "禁用")));
+        record.addItems(Item.Switch("subscribe", "订阅记录").col(4).tip("启用后将记录订阅信息到数据库").addEnums(Enum.of("true", "启用"), Enum.of("false", "禁用")));
+        record.addItems(Item.Switch("metric", "指标记录").col(4).tip("启用后将记录指标数据到数据库").addEnums(Enum.of("true", "启用"), Enum.of("false", "禁用")));
+        schema.addItem(record);
+
         Item registry = Item.String("registry", "插件市场").col(6);
         schema.addItem(registry);
 

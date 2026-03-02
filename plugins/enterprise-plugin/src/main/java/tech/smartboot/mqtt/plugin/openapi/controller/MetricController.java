@@ -41,14 +41,11 @@ import tech.smartboot.mqtt.plugin.cluster.NodeProcessInfo;
 import tech.smartboot.mqtt.plugin.convert.NodeConvert;
 import tech.smartboot.mqtt.plugin.dao.mapper.ConnectionMapper;
 import tech.smartboot.mqtt.plugin.dao.mapper.MetricMapper;
-import tech.smartboot.mqtt.plugin.dao.mapper.SystemConfigMapper;
 import tech.smartboot.mqtt.plugin.dao.model.BrokerNodeDO;
 import tech.smartboot.mqtt.plugin.dao.model.MetricDO;
 import tech.smartboot.mqtt.plugin.dao.model.RegionDO;
 import tech.smartboot.mqtt.plugin.openapi.enums.BrokerStatueEnum;
 import tech.smartboot.mqtt.plugin.openapi.enums.MqttMetricEnum;
-import tech.smartboot.mqtt.plugin.openapi.enums.RecordTypeEnum;
-import tech.smartboot.mqtt.plugin.openapi.enums.SystemConfigEnum;
 import tech.smartboot.mqtt.plugin.openapi.to.BrokerNodeTO;
 import tech.smartboot.mqtt.plugin.openapi.to.MetricItemTO;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
@@ -99,15 +96,15 @@ public class MetricController {
     private ConnectionMapper connectionMapper;
 
     @Autowired
-    private SystemConfigMapper systemConfigMapper;
-
-    @Autowired
     private SqlSessionFactory sessionFactory;
 
     private final Map<MqttMetricEnum, MetricItemTO> metrics = new HashMap<>();
     private boolean h2;
 
-    private RecordTypeEnum recordTypeEnum;
+    /**
+     * 是否启用指标记录到数据库
+     */
+    private boolean metricRecordEnabled;
 
     private final Map<MqttMetricEnum, List<MetricDO>> metricMap = new HashMap<>();
     private static final long START_TIME = System.currentTimeMillis();
@@ -119,7 +116,8 @@ public class MetricController {
     public void init() {
         h2 = pluginConfig.getDatabase().getDbType().contains("h2");
         initMetric(brokerContext);
-        recordTypeEnum = RecordTypeEnum.getByCode(systemConfigMapper.getConfig(SystemConfigEnum.METRIC_RECORD.getCode()));
+        PluginConfig.Record recordConfig = pluginConfig.getRecord();
+        metricRecordEnabled = recordConfig != null && recordConfig.isMetric();
         //周期性重置指标值
         brokerContext.getTimer().scheduleWithFixedDelay(new AsyncTask() {
             @Override
@@ -156,7 +154,7 @@ public class MetricController {
                         }
                         value.setLatestValue(currentValue);
 //                LOGGER.info("insert metric:{} value:{}", metricDO.getCode(), metricDO.getValue());
-                        if (recordTypeEnum == RecordTypeEnum.DB) {
+                        if (metricRecordEnabled) {
                             metricMapper.insert(metricDO);
                         } else {
                             List<MetricDO> list = metricMap.computeIfAbsent(entry.getKey(), mqttMetricEnum -> new LinkedList<>());
@@ -169,7 +167,7 @@ public class MetricController {
                     }
                     session.commit(true);
                 }
-                if (recordTypeEnum == RecordTypeEnum.DB) {
+                if (metricRecordEnabled) {
                     //定期清除3天前的数据
                     int count = metricMapper.deleteBefore(new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(3)));
                     LOGGER.debug("clean {} metric data", count);
@@ -371,7 +369,7 @@ public class MetricController {
             step = 1;
         }
         List<MetricDO> publishReceiveCount;
-        if (RecordTypeEnum.DB != recordTypeEnum) {
+        if (!metricRecordEnabled) {
             publishReceiveCount = new ArrayList<>();
             if ((System.currentTimeMillis() - START_TIME) > 10000) {
                 metrics.forEach(code -> publishReceiveCount.addAll(metricMap.get(MqttMetricEnum.getByCode(code))));
@@ -444,9 +442,6 @@ public class MetricController {
         this.connectionMapper = connectionMapper;
     }
 
-    public void setSystemConfigMapper(SystemConfigMapper systemConfigMapper) {
-        this.systemConfigMapper = systemConfigMapper;
-    }
 
     public void setPluginConfig(PluginConfig pluginConfig) {
         this.pluginConfig = pluginConfig;
