@@ -43,11 +43,6 @@
             <artifactId>smart-mqtt-broker</artifactId>
             <version>1.5.1</version>
         </dependency>
-        <dependency>
-            <groupId>tech.smartboot.mqtt</groupId>
-            <artifactId>smart-mqtt-client</artifactId>
-            <version>1.5.1</version>
-        </dependency>
     </dependencies>
     <distributionManagement>
         <snapshotRepository>

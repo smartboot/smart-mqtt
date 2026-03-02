@@ -183,6 +183,11 @@
                         <artifactId>feat-cloud-starter</artifactId>
                         <version>${feat.version}</version>
                     </dependency>
+                    <dependency>
+                        <groupId>tech.smartboot.mqtt</groupId>
+                        <artifactId>smart-mqtt-client</artifactId>
+                        <version>${project.version}</version>
+                    </dependency>
                 </dependencies>
             </plugin>
         </plugins>
