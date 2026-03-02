@@ -47,9 +47,10 @@ public enum MqttMetricEnum {
     MESSAGE_QOS1_SENT("messages_qos1_sent", "发送给客户端的 QoS 1 消息数量"),
     MESSAGE_QOS2_SENT("messages_qos2_sent", "发送给客户端的 QoS 2 消息数量"),
 
-    PERIOD_MESSAGE_RECEIVED("period_message_received", "周期内接收消息数"),
+//    PERIOD_MESSAGE_RECEIVED("period_message_received", "周期内接收消息数"),
 
-    PERIOD_MESSAGE_SENT("period_message_sent", "周期内发送消息数");
+//    PERIOD_MESSAGE_SENT("period_message_sent", "周期内发送消息数")
+    ;
 
     private final String code;
     private final String desc;

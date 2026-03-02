@@ -157,8 +157,6 @@ public class EnterprisePlugin extends Plugin {
         showMetrics.addEnums(Enum.of("messages_qos0_sent", "发送给客户端的 QoS 0 消息数量"));
         showMetrics.addEnums(Enum.of("messages_qos1_sent", "发送给客户端的 QoS 1 消息数量"));
         showMetrics.addEnums(Enum.of("messages_qos2_sent", "发送给客户端的 QoS 2 消息数量"));
-        showMetrics.addEnums(Enum.of("period_message_received", "周期内接收消息数"));
-        showMetrics.addEnums(Enum.of("period_message_sent", "周期内发送消息数"));
         schema.addItem(showMetrics);
         return schema;
     }
