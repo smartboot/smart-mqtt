@@ -26,6 +26,7 @@
         <dependency>
             <groupId>tech.smartboot.mqtt</groupId>
             <artifactId>smart-mqtt-client</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>
