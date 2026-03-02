@@ -74,6 +74,13 @@ public class Item {
         return new Item(name, "item_array", desc);
     }
 
+    /**
+     * 多选枚举类型，用于从预定义的枚举列表中选择多个值
+     */
+    public static Item MultiEnum(String name, String desc) {
+        return new Item(name, "multi_enum", desc);
+    }
+
     public static Item Password(String name, String desc) {
         return new Item(name, "password", desc) {
             @Override

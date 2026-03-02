@@ -353,11 +353,11 @@ public class MetricController {
 
     @RequestMapping("/api/cluster/metricCodes")
     public RestResult<List<String>> metrics() throws IOException {
-        String showMetrics = systemConfigMapper.getConfig(SystemConfigEnum.SHOW_METRICS.getCode());
-        if (FeatUtils.isBlank(showMetrics)) {
+        List<String> showMetrics = pluginConfig.getShowMetrics();
+        if (showMetrics == null || showMetrics.isEmpty()) {
             return RestResult.ok(Collections.emptyList());
         } else {
-            return RestResult.ok(Arrays.asList(FeatUtils.split(showMetrics, ",")));
+            return RestResult.ok(showMetrics);
         }
     }
 

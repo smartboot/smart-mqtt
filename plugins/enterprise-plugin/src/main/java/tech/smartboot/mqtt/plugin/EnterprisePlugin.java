@@ -131,6 +131,35 @@ public class EnterprisePlugin extends Plugin {
 
         Item registry = Item.String("registry", "插件市场").col(6);
         schema.addItem(registry);
+
+        Item showMetrics = Item.MultiEnum("showMetrics", "显示的指标项").tip("配置需要显示的监控指标，留空则显示所有指标").col(6);
+        // 添加所有指标枚举选项
+        showMetrics.addEnums(Enum.of("client_online", "客户端在线数"));
+        showMetrics.addEnums(Enum.of("client_connect", "客户端连接次数"));
+        showMetrics.addEnums(Enum.of("client_disconnected", "客户端断开连接次数"));
+        showMetrics.addEnums(Enum.of("client_subscribe", "订阅次数"));
+        showMetrics.addEnums(Enum.of("client_unsubscribe", "取消订阅次数"));
+        showMetrics.addEnums(Enum.of("subscribe_relation", "订阅关系数"));
+        showMetrics.addEnums(Enum.of("bytes_received", "已接收字节数"));
+        showMetrics.addEnums(Enum.of("bytes_sent", "已发送字节数"));
+        showMetrics.addEnums(Enum.of("packets_connect_received", "接收的 CONNECT 报文数量"));
+        showMetrics.addEnums(Enum.of("packets_connack_sent", "发送的 CONNACK 报文数量"));
+        showMetrics.addEnums(Enum.of("packets_publish_received", "接收的 PUBLISH 报文数量"));
+        showMetrics.addEnums(Enum.of("packets_expect_publish_sent", "期望发送的 PUBLISH 报文数量"));
+        showMetrics.addEnums(Enum.of("packets_publish_sent", "发送的 PUBLISH 报文数量"));
+        showMetrics.addEnums(Enum.of("packets_publish_rate", "消息推送率"));
+        showMetrics.addEnums(Enum.of("packets_received", "接收的报文数量"));
+        showMetrics.addEnums(Enum.of("packets_sent", "发送的报文数量"));
+        showMetrics.addEnums(Enum.of("topic_count", "Topic数量"));
+        showMetrics.addEnums(Enum.of("messages_qos0_received", "接收来自客户端的 QoS 0 消息数量"));
+        showMetrics.addEnums(Enum.of("messages_qos1_received", "接收来自客户端的 QoS 1 消息数量"));
+        showMetrics.addEnums(Enum.of("messages_qos2_received", "接收来自客户端的 QoS 2 消息数量"));
+        showMetrics.addEnums(Enum.of("messages_qos0_sent", "发送给客户端的 QoS 0 消息数量"));
+        showMetrics.addEnums(Enum.of("messages_qos1_sent", "发送给客户端的 QoS 1 消息数量"));
+        showMetrics.addEnums(Enum.of("messages_qos2_sent", "发送给客户端的 QoS 2 消息数量"));
+        showMetrics.addEnums(Enum.of("period_message_received", "周期内接收消息数"));
+        showMetrics.addEnums(Enum.of("period_message_sent", "周期内发送消息数"));
+        schema.addItem(showMetrics);
         return schema;
     }
 }

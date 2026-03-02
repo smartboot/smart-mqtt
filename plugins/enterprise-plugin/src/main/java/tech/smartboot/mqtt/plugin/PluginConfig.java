@@ -27,6 +27,11 @@ public class PluginConfig {
 
     private String registry;
 
+    /**
+     * 显示的指标项列表
+     */
+    private List<String> showMetrics;
+
 
     public HttpConfig getHttp() {
         return http;
@@ -44,6 +49,13 @@ public class PluginConfig {
         this.registry = registry;
     }
 
+    public List<String> getShowMetrics() {
+        return showMetrics;
+    }
+
+    public void setShowMetrics(List<String> showMetrics) {
+        this.showMetrics = showMetrics;
+    }
 
     public DataBaseConfig getDatabase() {
         return database;
