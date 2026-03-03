@@ -27,8 +27,10 @@ import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * MQTT压测插件
@@ -44,6 +46,7 @@ public class BenchPlugin extends Plugin {
 
     private final AtomicBoolean running = new AtomicBoolean(true);
     private AsynchronousChannelGroup group;
+    public final LongAdder countAdder = new LongAdder();
 
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
@@ -139,7 +142,7 @@ public class BenchPlugin extends Plugin {
                         for (MqttClient client : clients) {
                             for (int j = 0; j < publishCount; j++) {
                                 String topic = "/topic" + (topicIndex.incrementAndGet() % topicCount);
-                                client.publish(topic, MqttQoS.valueOf(qos), payload, false, false);
+                                client.publish(topic, MqttQoS.valueOf(qos), payload, false, integer -> countAdder.increment(), false);
                             }
                             client.flush();
                         }
@@ -156,6 +159,11 @@ public class BenchPlugin extends Plugin {
             }
         }, "bench-publish-" + hashCode());
         publishThread.start();
+        timer().scheduleWithFixedDelay(() -> {
+            int c = countAdder.intValue();
+            countAdder.add(-c);
+            System.out.println("total: " + c + "\tTPS: " + (c / 5));
+        }, 5, TimeUnit.SECONDS);
     }
 
     /**
@@ -202,6 +210,7 @@ public class BenchPlugin extends Plugin {
                     String topicName = "topic_" + random + "_" + j;
                     client.subscribe(topicName, MqttQoS.valueOf(qos), (mqttClient, message) -> {
                         // 收到消息的回调
+                        countAdder.increment();
                     });
                 }
             });
