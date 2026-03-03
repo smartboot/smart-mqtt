@@ -15,9 +15,9 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.introspector.Property;
 import org.yaml.snakeyaml.introspector.PropertyUtils;
-import tech.smartboot.mqtt.plugin.spec.bus.EventBus;
 import tech.smartboot.mqtt.plugin.spec.bus.EventBusConsumer;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
+import tech.smartboot.mqtt.plugin.spec.bus.MessageBusConsumer;
 import tech.smartboot.mqtt.plugin.spec.schema.Schema;
 
 import java.io.ByteArrayOutputStream;
@@ -44,7 +44,7 @@ public abstract class Plugin implements PluginSubscriber {
 
     private boolean destroyed;
 
-    private EventBus eventBus;
+    private BrokerContext brokerContext;
     /**
      * 启动异常
      */
@@ -75,7 +75,7 @@ public abstract class Plugin implements PluginSubscriber {
                     super.print("[" + pluginName() + "] " + x);
                 }
             });
-            eventBus = brokerContext.getEventBus();
+            this.brokerContext = brokerContext;
             initPlugin(brokerContext);
             installed = true;
         } catch (Throwable e) {
@@ -122,7 +122,7 @@ public abstract class Plugin implements PluginSubscriber {
 
     @Override
     public <T> void subscribe(EventType<T> type, EventBusConsumer<T> subscriber) {
-        eventBus.subscribe(type, new EventBusConsumer<T>() {
+        brokerContext.getEventBus().subscribe(type, new EventBusConsumer<T>() {
             @Override
             public void consumer(EventType<T> eventType, T object) {
                 subscriber.consumer(eventType, object);
@@ -131,6 +131,21 @@ public abstract class Plugin implements PluginSubscriber {
             @Override
             public boolean enable() {
                 return !destroyed && subscriber.enable();
+            }
+        });
+    }
+
+    @Override
+    public void consumer(MessageBusConsumer consumer) {
+        brokerContext.getMessageBus().consumer(new MessageBusConsumer() {
+            @Override
+            public void consume(MqttSession session, Message message) {
+                consumer.consume(session, message);
+            }
+
+            @Override
+            public boolean enable() {
+                return consumer.enable() && !destroyed;
             }
         });
     }
