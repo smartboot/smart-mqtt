@@ -10,6 +10,7 @@
 
 package tech.smartboot.mqtt.bench;
 
+import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import tech.smartboot.mqtt.client.MqttClient;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
@@ -19,11 +20,13 @@ import tech.smartboot.mqtt.plugin.spec.schema.Enum;
 import tech.smartboot.mqtt.plugin.spec.schema.Item;
 import tech.smartboot.mqtt.plugin.spec.schema.Schema;
 
+import java.nio.channels.AsynchronousChannelGroup;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -40,10 +43,19 @@ public class BenchPlugin extends Plugin {
     private static final String SCENARIO_SUBSCRIBE = "subscribe";
 
     private final AtomicBoolean running = new AtomicBoolean(true);
+    private AsynchronousChannelGroup group;
 
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
         running.set(true);
+        group = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
+            int i;
+
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "bench-plugin-" + (++i));
+            }
+        });
         new Thread(() -> {
             //延迟启动
             try {
@@ -112,7 +124,7 @@ public class BenchPlugin extends Plugin {
         // 创建连接
         for (int i = 0; i < connections; i++) {
             final int clientId = i;
-            MqttClient client = new MqttClient(host, port, opt -> opt.setGroup(brokerContext.Options().getChannelGroup()).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-pub-" + clientId));
+            MqttClient client = new MqttClient(host, port, opt -> opt.setGroup(group).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-pub-" + clientId));
             clients.add(client);
             client.connect(mqttConnAckMessage -> {
                 latch.countDown();
@@ -139,6 +151,7 @@ public class BenchPlugin extends Plugin {
                 for (MqttClient client : clients) {
                     client.disconnect();
                 }
+                group.shutdown();
                 System.out.println("[bench-plugin] 压测结束");
             }
         }, "bench-publish-" + hashCode());
@@ -180,7 +193,7 @@ public class BenchPlugin extends Plugin {
         // 创建订阅连接
         for (int i = 0; i < connections; i++) {
             final int clientId = i;
-            MqttClient client = new MqttClient(host, port, opt -> opt.setGroup(brokerContext.Options().getChannelGroup()).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-sub-" + clientId));
+            MqttClient client = new MqttClient(host, port, opt -> opt.setGroup(group).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-sub-" + clientId));
             clients.offer(client);
 
             client.connect(mqttConnAckMessage -> {
@@ -228,6 +241,7 @@ public class BenchPlugin extends Plugin {
                             client.disconnect();
                             client = clients.poll();
                         }
+                        group.shutdown();
                         System.out.println("[bench-plugin] 压测结束");
                     }
                 }, "bench-publisher-" + pubId);
