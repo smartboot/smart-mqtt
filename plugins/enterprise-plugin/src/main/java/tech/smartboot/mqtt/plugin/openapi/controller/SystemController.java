@@ -37,7 +37,6 @@ import tech.smartboot.mqtt.plugin.openapi.OpenApi;
 import tech.smartboot.mqtt.plugin.openapi.to.Pagination;
 import tech.smartboot.mqtt.plugin.openapi.to.SettingsTO;
 import tech.smartboot.mqtt.plugin.openapi.to.UserTO;
-import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.utils.SecureUtil;
 
 import java.util.List;
@@ -57,8 +56,6 @@ public class SystemController {
     @Autowired
     private SystemConfigMapper systemConfigMapper;
 
-    @Autowired
-    private BrokerContext brokerContext;
 
 //    @Interceptor(patterns = {"/**"})
 //    public void cross(HttpRequest request, HttpResponse response) {
@@ -207,7 +204,4 @@ public class SystemController {
         this.systemConfigMapper = systemConfigMapper;
     }
 
-    public void setBrokerContext(BrokerContext brokerContext) {
-        this.brokerContext = brokerContext;
-    }
 }

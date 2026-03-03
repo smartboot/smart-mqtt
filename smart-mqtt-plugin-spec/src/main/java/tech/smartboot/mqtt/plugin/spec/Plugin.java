@@ -10,6 +10,8 @@
 
 package tech.smartboot.mqtt.plugin.spec;
 
+import org.smartboot.socket.timer.HashedWheelTimer;
+import org.smartboot.socket.timer.Timer;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
@@ -51,6 +53,9 @@ public abstract class Plugin implements PluginSubscriber {
     private Throwable throwable;
 
     private List<PluginPort> usagePorts;
+
+    private Timer timer;
+    private Timer selfRescueTimer;
 
     /**
      * 获取插件名称
@@ -116,6 +121,12 @@ public abstract class Plugin implements PluginSubscriber {
             destroyPlugin();
         } finally {
             destroyed = true;
+            if (timer != null) {
+                timer.shutdown();
+            }
+            if (selfRescueTimer != null) {
+                selfRescueTimer.shutdown();
+            }
             System.setOut(out);
         }
     }
@@ -148,6 +159,28 @@ public abstract class Plugin implements PluginSubscriber {
                 return consumer.enable() && !destroyed;
             }
         });
+    }
+
+    public synchronized Timer selfRescueTimer() {
+        if (selfRescueTimer == null) {
+            selfRescueTimer = new HashedWheelTimer(r -> {
+                Thread thread = new Thread(r, "plugin-" + pluginName() + "-self-rescue-timer");
+                thread.setDaemon(true);
+                return thread;
+            });
+        }
+        return selfRescueTimer;
+    }
+
+    public synchronized Timer timer() {
+        if (timer == null) {
+            timer = new HashedWheelTimer(r -> {
+                Thread thread = new Thread(r, "plugin-" + pluginName() + "-tiemr");
+                thread.setDaemon(true);
+                return thread;
+            });
+        }
+        return timer;
     }
 
     /**

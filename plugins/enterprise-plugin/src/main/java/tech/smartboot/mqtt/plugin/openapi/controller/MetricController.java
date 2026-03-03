@@ -114,8 +114,6 @@ public class MetricController {
     @Autowired
     private PluginConfig pluginConfig;
 
-    private TimerTask timerTask;
-
     @Autowired
     private Plugin plugin;
 
@@ -125,7 +123,7 @@ public class MetricController {
         initMetric(brokerContext);
         metricRecordEnabled = pluginConfig.getDatabase().isMetricRecord();
         //周期性重置指标值
-        timerTask = brokerContext.getTimer().scheduleWithFixedDelay(new AsyncTask() {
+        plugin.timer().scheduleWithFixedDelay(new AsyncTask() {
             @Override
             public void execute() {
                 //推送成功率
@@ -183,13 +181,6 @@ public class MetricController {
             }
         }, 5, TimeUnit.SECONDS);
 
-    }
-
-    @PreDestroy
-    public void destroy() {
-        if (timerTask != null) {
-            timerTask.cancel();
-        }
     }
 
     private void setNodeDO(BrokerNodeDO nodeDO) {

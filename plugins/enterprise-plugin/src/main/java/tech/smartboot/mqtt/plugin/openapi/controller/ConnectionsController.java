@@ -15,15 +15,11 @@ import com.github.pagehelper.PageHelper;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-import org.smartboot.socket.timer.HashedWheelTimer;
-import org.smartboot.socket.timer.Timer;
-import org.smartboot.socket.timer.TimerTask;
 import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
-import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -74,11 +70,6 @@ public class ConnectionsController {
 
     @Autowired
     private Plugin plugin;
-
-    @Autowired
-    private Timer selfRescueTimer;
-
-    private TimerTask timerTask;
 
     @PostConstruct
     public void init() {
@@ -133,7 +124,7 @@ public class ConnectionsController {
             });
         }));
 
-        selfRescueTimer.scheduleWithFixedDelay(new AsyncTask() {
+        plugin.selfRescueTimer().scheduleWithFixedDelay(new AsyncTask() {
             @Override
             public void execute() {
                 if (System.currentTimeMillis() - lastestTime < 20000) {
@@ -146,7 +137,7 @@ public class ConnectionsController {
                 LOGGER.error("discard consume {} records", i);
             }
         }, 10000, TimeUnit.MILLISECONDS);
-        timerTask = HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(new AsyncTask() {
+        plugin.timer().scheduleWithFixedDelay(new AsyncTask() {
             @Override
             public void execute() {
                 lastestTime = System.currentTimeMillis();
@@ -171,12 +162,6 @@ public class ConnectionsController {
         }, 1000, TimeUnit.MILLISECONDS);
     }
 
-    @PreDestroy
-    public void destroy() {
-        if (timerTask != null) {
-            timerTask.cancel();
-        }
-    }
 
     @RequestMapping(OpenApi.CONNECTIONS)
     public RestResult<Pagination<ConnectionTO>> connections(ConnectionQuery query) {
@@ -218,9 +203,5 @@ public class ConnectionsController {
 
     public void setPlugin(Plugin plugin) {
         this.plugin = plugin;
-    }
-
-    public void setSelfRescueTimer(Timer selfRescueTimer) {
-        this.selfRescueTimer = selfRescueTimer;
     }
 }

@@ -11,12 +11,10 @@
 package tech.smartboot.mqtt.plugin.openapi.controller;
 
 import com.alibaba.fastjson2.JSONArray;
-import org.smartboot.socket.timer.HashedWheelTimer;
-import org.smartboot.socket.timer.TimerTask;
 import tech.smartboot.feat.cloud.RestResult;
+import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
-import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.mcp.Tool;
 import tech.smartboot.feat.core.client.HttpClient;
@@ -26,6 +24,7 @@ import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.plugin.openapi.OpenApi;
 import tech.smartboot.mqtt.plugin.openapi.to.VersionTO;
+import tech.smartboot.mqtt.plugin.spec.Plugin;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -35,23 +34,17 @@ import java.util.function.Consumer;
 public class VersionController {
     private static final Logger LOGGER = LoggerFactory.getLogger(VersionController.class);
     private VersionTO version;
-    private TimerTask timerTask;
+    @Autowired
+    private Plugin plugin;
 
     @PostConstruct
     public void init() throws ExecutionException, InterruptedException {
-        timerTask = HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(new AsyncTask() {
+        plugin.timer().scheduleWithFixedDelay(new AsyncTask() {
             @Override
             public void execute() {
                 version = null;
             }
         }, 1, TimeUnit.DAYS);
-    }
-
-    @PreDestroy
-    public void destroy() {
-        if (timerTask != null) {
-            timerTask.cancel();
-        }
     }
 
     private void getVersion() {
@@ -77,6 +70,10 @@ public class VersionController {
             getVersion();
         }
         return RestResult.ok(version);
+    }
+
+    public void setPlugin(Plugin plugin) {
+        this.plugin = plugin;
     }
 
     public static void main(String[] args) {

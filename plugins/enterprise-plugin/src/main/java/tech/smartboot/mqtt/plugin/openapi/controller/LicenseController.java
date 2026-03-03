@@ -37,6 +37,7 @@ import tech.smartboot.mqtt.plugin.openapi.enums.SystemConfigEnum;
 import tech.smartboot.mqtt.plugin.openapi.to.LicenseTO;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
+import tech.smartboot.mqtt.plugin.spec.Plugin;
 import tech.smartboot.mqtt.plugin.spec.bus.AsyncEventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 import tech.smartboot.mqtt.plugin.utils.Streams;
@@ -62,6 +63,8 @@ public class LicenseController {
     @Autowired
     private License license;
 
+    @Autowired
+    private Plugin plugin;
     private LicenseTO licenseTO;
     private final AtomicInteger requestCount = new AtomicInteger(0);
 
@@ -109,7 +112,7 @@ public class LicenseController {
             }
         });
 
-        brokerContext.getEventBus().subscribe(EventType.CONNECT, AsyncEventObject.syncConsumer((eventType, object) -> {
+        plugin.subscribe(EventType.CONNECT, AsyncEventObject.syncConsumer((eventType, object) -> {
             MqttSession session = object.getSession();
             if (session.isDisconnect()) {
                 return;
@@ -223,5 +226,9 @@ public class LicenseController {
 
     public void setLicense(License license) {
         this.license = license;
+    }
+
+    public void setPlugin(Plugin plugin) {
+        this.plugin = plugin;
     }
 }

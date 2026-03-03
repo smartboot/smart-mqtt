@@ -12,8 +12,6 @@ package tech.smartboot.mqtt.plugin;
 
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import org.smartboot.socket.extension.plugins.MonitorPlugin;
-import org.smartboot.socket.timer.HashedWheelTimer;
-import org.smartboot.socket.timer.Timer;
 import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -34,11 +32,6 @@ import java.util.concurrent.ThreadFactory;
  * @version V1.0 , 2022/4/2
  */
 public class EnterprisePlugin extends Plugin {
-    private final Timer SelfRescueTimer = new HashedWheelTimer(r -> {
-        Thread t = new Thread(r, "self-rescue-timer");
-        t.setDaemon(true);
-        return t;
-    }, 1000, 16);
     private static final Logger LOGGER = LoggerFactory.getLogger(EnterprisePlugin.class);
     private AsynchronousChannelGroup asynchronousChannelGroup;
     private HttpServer httpServer;
@@ -68,7 +61,6 @@ public class EnterprisePlugin extends Plugin {
                 .registerBean("brokerContext", brokerContext)
                 .registerBean("pluginConfig", config)
                 .registerBean("plugin", this)//当前的插件ID
-                .registerBean("selfRescueTimer", SelfRescueTimer)
                 .registerBean("storage", storage()).group(asynchronousChannelGroup));
         httpServer.listen(config.getHttp().getHost(), config.getHttp().getPort());
         System.out.println("openapi server start success!");
@@ -76,7 +68,6 @@ public class EnterprisePlugin extends Plugin {
 
     @Override
     protected void destroyPlugin() {
-        SelfRescueTimer.shutdown();
         if (httpServer != null) {
             httpServer.shutdown();
         }
