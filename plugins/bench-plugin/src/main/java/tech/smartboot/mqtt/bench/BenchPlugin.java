@@ -217,7 +217,7 @@ public class BenchPlugin extends Plugin {
         // 创建发布者线程
         for (int i = 0; i < publisherCount; i++) {
             final int pubId = i;
-            MqttClient publisher = new MqttClient(host, port, opt -> opt.setGroup(brokerContext.Options().getChannelGroup()).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-publisher-" + pubId));
+            MqttClient publisher = new MqttClient(host, port, opt -> opt.setGroup(group).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-publisher-" + pubId));
 
             publisher.connect(mqttConnAckMessage -> {
                 Thread publisherThread = new Thread(() -> {
