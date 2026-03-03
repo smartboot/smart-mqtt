@@ -24,8 +24,6 @@ import java.nio.channels.AsynchronousChannelGroup;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -45,20 +43,12 @@ public class BenchPlugin extends Plugin {
     private static final String SCENARIO_SUBSCRIBE = "subscribe";
 
     private final AtomicBoolean running = new AtomicBoolean(true);
-    private AsynchronousChannelGroup group;
     public final LongAdder countAdder = new LongAdder();
 
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
         running.set(true);
-        group = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
-            int i;
 
-            @Override
-            public Thread newThread(Runnable r) {
-                return new Thread(r, "bench-plugin-" + (++i));
-            }
-        });
         new Thread(() -> {
             //延迟启动
             try {
@@ -70,17 +60,30 @@ public class BenchPlugin extends Plugin {
 
             String scenario = config.getScenario();
             System.out.println("[bench-plugin] 压测场景: " + scenario);
+            AsynchronousChannelGroup group = null;
+            try {
+                group = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
+                    int i;
 
-            if (SCENARIO_PUBLISH.equals(scenario)) {
-                try {
-                    runPublishBenchmark(config);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    @Override
+                    public Thread newThread(Runnable r) {
+                        return new Thread(r, "bench-plugin-" + (++i));
+                    }
+                });
+                if (SCENARIO_PUBLISH.equals(scenario)) {
+                    runPublishBenchmark(config, group);
+                } else if (SCENARIO_SUBSCRIBE.equals(scenario)) {
+                    runSubscribeBenchmark(brokerContext, config, group);
+                } else {
+                    System.out.println("[bench-plugin] 未知场景: " + scenario + ", 支持: publish, subscribe");
                 }
-            } else if (SCENARIO_SUBSCRIBE.equals(scenario)) {
-                runSubscribeBenchmark(brokerContext, config);
-            } else {
-                System.out.println("[bench-plugin] 未知场景: " + scenario + ", 支持: publish, subscribe");
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            } finally {
+                System.out.println("[bench-plugin] 压测结束");
+                if (group != null) {
+                    group.shutdown();
+                }
             }
         }).start();
         timer().scheduleWithFixedDelay(() -> {
@@ -99,7 +102,7 @@ public class BenchPlugin extends Plugin {
     /**
      * 运行发布压测
      */
-    private void runPublishBenchmark(PluginConfig config) throws InterruptedException {
+    private void runPublishBenchmark(PluginConfig config, AsynchronousChannelGroup group) throws InterruptedException {
         // 使用PluginConfig中的公共参数
         String host = config.getHost();
         int port = config.getPort();
@@ -128,48 +131,34 @@ public class BenchPlugin extends Plugin {
         Arrays.fill(payload, (byte) 1);
 
         List<MqttClient> clients = new ArrayList<>(connections);
-        CountDownLatch latch = new CountDownLatch(connections);
         // 创建连接
         for (int i = 0; i < connections; i++) {
             final int clientId = i;
             MqttClient client = new MqttClient(host, port, opt -> opt.setGroup(group).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-pub-" + clientId));
             clients.add(client);
-            client.connect(mqttConnAckMessage -> {
-                latch.countDown();
-            });
+            client.connect();
         }
-        latch.await();
-        Thread publishThread = new Thread(() -> {
+        while (running.get()) {
             try {
-                while (running.get()) {
-                    try {
-                        Thread.sleep(period);
-                        for (MqttClient client : clients) {
-                            for (int j = 0; j < publishCount; j++) {
-                                String topic = "/topic" + (topicIndex.incrementAndGet() % topicCount);
-                                client.publish(topic, MqttQoS.valueOf(qos), payload, false, integer -> countAdder.increment(), false);
-                            }
-                            client.flush();
-                        }
-                    } catch (Throwable e) {
-                        System.err.println("[bench-plugin] 发布异常: " + e.getMessage());
-                    }
-                }
-            } finally {
+                Thread.sleep(period);
                 for (MqttClient client : clients) {
-                    client.disconnect();
+                    for (int j = 0; j < publishCount; j++) {
+                        String topic = "/topic" + (topicIndex.incrementAndGet() % topicCount);
+                        client.publish(topic, MqttQoS.valueOf(qos), payload, false, integer -> countAdder.increment(), false);
+                    }
+                    client.flush();
                 }
-                group.shutdown();
-                System.out.println("[bench-plugin] 压测结束");
+            } catch (Throwable e) {
+                System.err.println("[bench-plugin] 发布异常: " + e.getMessage());
             }
-        }, "bench-publish-" + hashCode());
-        publishThread.start();
+        }
+        clients.forEach(MqttClient::disconnect);
     }
 
     /**
      * 运行订阅压测
      */
-    private void runSubscribeBenchmark(BrokerContext brokerContext, PluginConfig config) {
+    private void runSubscribeBenchmark(BrokerContext brokerContext, PluginConfig config, AsynchronousChannelGroup group) throws Throwable {
         // 使用PluginConfig中的公共参数
         String host = config.getHost();
         int port = config.getPort();
@@ -197,12 +186,12 @@ public class BenchPlugin extends Plugin {
         }
         System.out.println("[bench-plugin] 测试主题已创建");
 
-        ConcurrentLinkedQueue<MqttClient> clients = new ConcurrentLinkedQueue<>();
+        List<MqttClient> clients = new ArrayList<>(connections);
         // 创建订阅连接
         for (int i = 0; i < connections; i++) {
             final int clientId = i;
             MqttClient client = new MqttClient(host, port, opt -> opt.setGroup(group).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-sub-" + clientId));
-            clients.offer(client);
+            clients.add(client);
 
             client.connect(mqttConnAckMessage -> {
                 // 连接成功后订阅主题
@@ -224,39 +213,25 @@ public class BenchPlugin extends Plugin {
         Arrays.fill(payload, (byte) 1);
 
         // 创建发布者线程
+        List<MqttClient> publishers = new ArrayList<>(publisherCount);
         for (int i = 0; i < publisherCount; i++) {
             final int pubId = i;
             MqttClient publisher = new MqttClient(host, port, opt -> opt.setGroup(group).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-publisher-" + pubId));
-
-            publisher.connect(mqttConnAckMessage -> {
-                Thread publisherThread = new Thread(() -> {
-                    try {
-                        while (running.get()) {
-                            try {
-                                Thread.sleep(publishPeriod);
-                                for (int j = 0; j < publishCount; j++) {
-                                    String topic = "topic_" + random + "_" + (pubTopicIndex.incrementAndGet() % topicCount);
-                                    publisher.publish(topic, MqttQoS.AT_MOST_ONCE, payload, false, false);
-                                }
-                                publisher.flush();
-                            } catch (Exception e) {
-                                System.err.println("[bench-plugin] 发布者异常: " + e.getMessage());
-                            }
-                        }
-                    } finally {
-                        publisher.disconnect();
-                        MqttClient client = clients.poll();
-                        while (client != null) {
-                            client.disconnect();
-                            client = clients.poll();
-                        }
-                        group.shutdown();
-                        System.out.println("[bench-plugin] 压测结束");
-                    }
-                }, "bench-publisher-" + pubId);
-                publisherThread.start();
-            });
+            publisher.connect();
+            publishers.add(publisher);
         }
+        while (running.get()) {
+            Thread.sleep(publishPeriod);
+            for (MqttClient publisher : publishers) {
+                for (int j = 0; j < publishCount; j++) {
+                    String topic = "topic_" + random + "_" + (pubTopicIndex.incrementAndGet() % topicCount);
+                    publisher.publish(topic, MqttQoS.AT_MOST_ONCE, payload, false, false);
+                }
+                publisher.flush();
+            }
+        }
+        publishers.forEach(MqttClient::disconnect);
+        clients.forEach(MqttClient::disconnect);
     }
 
     @Override
