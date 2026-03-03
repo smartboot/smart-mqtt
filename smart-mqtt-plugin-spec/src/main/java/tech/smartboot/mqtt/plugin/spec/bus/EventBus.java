@@ -21,11 +21,11 @@ public interface EventBus {
 
     <T> void subscribe(EventType<T> type, EventBusConsumer<T> subscriber);
 
-    default <T> void subscribe(List<EventType<T>> types, EventBusConsumer<T> subscriber) {
-        for (EventType<T> eventType : types) {
-            subscribe(eventType, subscriber);
-        }
-    }
+//    default <T> void subscribe(List<EventType<T>> types, EventBusConsumer<T> subscriber) {
+//        for (EventType<T> eventType : types) {
+//            subscribe(eventType, subscriber);
+//        }
+//    }
 
     /**
      * 发布消息至总线

@@ -15,6 +15,9 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.introspector.Property;
 import org.yaml.snakeyaml.introspector.PropertyUtils;
+import tech.smartboot.mqtt.plugin.spec.bus.EventBus;
+import tech.smartboot.mqtt.plugin.spec.bus.EventBusConsumer;
+import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 import tech.smartboot.mqtt.plugin.spec.schema.Schema;
 
 import java.io.ByteArrayOutputStream;
@@ -30,7 +33,7 @@ import java.util.List;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/4/1
  */
-public abstract class Plugin {
+public abstract class Plugin implements PluginSubscriber {
     public static final String CONFIG_FILE_NAME = "plugin.yaml";
 
     private File storage;
@@ -39,6 +42,9 @@ public abstract class Plugin {
      */
     private boolean installed;
 
+    private boolean destroyed;
+
+    private EventBus eventBus;
     /**
      * 启动异常
      */
@@ -69,6 +75,7 @@ public abstract class Plugin {
                     super.print("[" + pluginName() + "] " + x);
                 }
             });
+            eventBus = brokerContext.getEventBus();
             initPlugin(brokerContext);
             installed = true;
         } catch (Throwable e) {
@@ -108,8 +115,24 @@ public abstract class Plugin {
             });
             destroyPlugin();
         } finally {
+            destroyed = true;
             System.setOut(out);
         }
+    }
+
+    @Override
+    public <T> void subscribe(EventType<T> type, EventBusConsumer<T> subscriber) {
+        eventBus.subscribe(type, new EventBusConsumer<T>() {
+            @Override
+            public void consumer(EventType<T> eventType, T object) {
+                subscriber.consumer(eventType, object);
+            }
+
+            @Override
+            public boolean enable() {
+                return !destroyed && subscriber.enable();
+            }
+        });
     }
 
     /**
@@ -224,8 +247,7 @@ public abstract class Plugin {
             // 后续部分首字母大写
             for (int i = 1; i < parts.length; i++) {
                 if (!parts[i].isEmpty()) {
-                    result.append(Character.toUpperCase(parts[i].charAt(0)))
-                            .append(parts[i].substring(1));
+                    result.append(Character.toUpperCase(parts[i].charAt(0))).append(parts[i].substring(1));
                 }
             }
 
