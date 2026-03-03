@@ -12,11 +12,12 @@ package tech.smartboot.mqtt.plugin.openapi.controller;
 
 import com.alibaba.fastjson2.JSONArray;
 import org.smartboot.socket.timer.HashedWheelTimer;
+import org.smartboot.socket.timer.TimerTask;
 import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
+import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
-import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.annotation.mcp.Tool;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
@@ -34,15 +35,23 @@ import java.util.function.Consumer;
 public class VersionController {
     private static final Logger LOGGER = LoggerFactory.getLogger(VersionController.class);
     private VersionTO version;
+    private TimerTask timerTask;
 
     @PostConstruct
     public void init() throws ExecutionException, InterruptedException {
-        HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(new AsyncTask() {
+        timerTask = HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(new AsyncTask() {
             @Override
             public void execute() {
                 version = null;
             }
         }, 1, TimeUnit.DAYS);
+    }
+
+    @PreDestroy
+    public void destroy() {
+        if (timerTask != null) {
+            timerTask.cancel();
+        }
     }
 
     private void getVersion() {

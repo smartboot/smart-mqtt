@@ -18,6 +18,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.extension.plugins.AbstractPlugin;
+import org.smartboot.socket.timer.TimerTask;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Autowired;
@@ -25,6 +26,7 @@ import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
+import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.annotation.mcp.Tool;
@@ -52,8 +54,8 @@ import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.Options;
+import tech.smartboot.mqtt.plugin.spec.Plugin;
 import tech.smartboot.mqtt.plugin.spec.bus.AsyncEventObject;
-import tech.smartboot.mqtt.plugin.spec.bus.EventBus;
 import tech.smartboot.mqtt.plugin.spec.bus.EventBusConsumer;
 import tech.smartboot.mqtt.plugin.spec.bus.EventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
@@ -112,13 +114,18 @@ public class MetricController {
     @Autowired
     private PluginConfig pluginConfig;
 
+    private TimerTask timerTask;
+
+    @Autowired
+    private Plugin plugin;
+
     @PostConstruct
     public void init() {
         h2 = pluginConfig.getDatabase().getDbType().contains("h2");
         initMetric(brokerContext);
         metricRecordEnabled = pluginConfig.getDatabase().isMetricRecord();
         //周期性重置指标值
-        brokerContext.getTimer().scheduleWithFixedDelay(new AsyncTask() {
+        timerTask = brokerContext.getTimer().scheduleWithFixedDelay(new AsyncTask() {
             @Override
             public void execute() {
                 //推送成功率
@@ -176,6 +183,13 @@ public class MetricController {
             }
         }, 5, TimeUnit.SECONDS);
 
+    }
+
+    @PreDestroy
+    public void destroy() {
+        if (timerTask != null) {
+            timerTask.cancel();
+        }
     }
 
     private void setNodeDO(BrokerNodeDO nodeDO) {
@@ -239,14 +253,13 @@ public class MetricController {
                 }
             }
         });
-        EventBus eventBus = context.getEventBus();
-        eventBus.subscribe(EventType.CONNECT, AsyncEventObject.syncConsumer((eventType, object) -> metrics.get(MqttMetricEnum.CLIENT_CONNECT).getMetric().increment()));
-        eventBus.subscribe(EventType.DISCONNECT, (eventType, object) -> metrics.get(MqttMetricEnum.CLIENT_DISCONNECT).getMetric().increment());
-        eventBus.subscribe(EventType.SUBSCRIBE_ACCEPT, (eventType, object) -> metrics.get(MqttMetricEnum.CLIENT_SUBSCRIBE).getMetric().increment());
-        eventBus.subscribe(EventType.UNSUBSCRIBE_ACCEPT, (eventType, object) -> metrics.get(MqttMetricEnum.CLIENT_UNSUBSCRIBE).getMetric().increment());
-        eventBus.subscribe(EventType.SUBSCRIBE_TOPIC, (eventType, object) -> metrics.get(MqttMetricEnum.SUBSCRIBE_RELATION).getMetric().increment());
-        eventBus.subscribe(EventType.UNSUBSCRIBE_TOPIC, (eventType, object) -> metrics.get(MqttMetricEnum.SUBSCRIBE_RELATION).getMetric().decrement());
-        eventBus.subscribe(EventType.RECEIVE_MESSAGE, new EventBusConsumer<EventObject<MqttMessage>>() {
+        plugin.subscribe(EventType.CONNECT, AsyncEventObject.syncConsumer((eventType, object) -> metrics.get(MqttMetricEnum.CLIENT_CONNECT).getMetric().increment()));
+        plugin.subscribe(EventType.DISCONNECT, (eventType, object) -> metrics.get(MqttMetricEnum.CLIENT_DISCONNECT).getMetric().increment());
+        plugin.subscribe(EventType.SUBSCRIBE_ACCEPT, (eventType, object) -> metrics.get(MqttMetricEnum.CLIENT_SUBSCRIBE).getMetric().increment());
+        plugin.subscribe(EventType.UNSUBSCRIBE_ACCEPT, (eventType, object) -> metrics.get(MqttMetricEnum.CLIENT_UNSUBSCRIBE).getMetric().increment());
+        plugin.subscribe(EventType.SUBSCRIBE_TOPIC, (eventType, object) -> metrics.get(MqttMetricEnum.SUBSCRIBE_RELATION).getMetric().increment());
+        plugin.subscribe(EventType.UNSUBSCRIBE_TOPIC, (eventType, object) -> metrics.get(MqttMetricEnum.SUBSCRIBE_RELATION).getMetric().decrement());
+        plugin.subscribe(EventType.RECEIVE_MESSAGE, new EventBusConsumer<EventObject<MqttMessage>>() {
             final LongAdder packetsReceived = metrics.get(MqttMetricEnum.PACKETS_RECEIVED).getMetric();
             final LongAdder connectReceived = metrics.get(MqttMetricEnum.PACKETS_CONNECT_RECEIVED).getMetric();
 
@@ -258,7 +271,7 @@ public class MetricController {
                 }
             }
         });
-        eventBus.subscribe(EventType.WRITE_MESSAGE, new EventBusConsumer<EventObject<MqttMessage>>() {
+        plugin.subscribe(EventType.WRITE_MESSAGE, new EventBusConsumer<EventObject<MqttMessage>>() {
             final LongAdder packetsSent = metrics.get(MqttMetricEnum.PACKETS_SENT).getMetric();
             final LongAdder connAckSent = metrics.get(MqttMetricEnum.PACKETS_CONNACK_SENT).getMetric();
             final LongAdder publishSent = metrics.get(MqttMetricEnum.PACKETS_PUBLISH_SENT).getMetric();
@@ -290,8 +303,8 @@ public class MetricController {
                 }
             }
         });
-        eventBus.subscribe(EventType.TOPIC_CREATE, (eventType, object) -> metrics.get(MqttMetricEnum.TOPIC_COUNT).getMetric().increment());
-        context.getMessageBus().consumer(new MessageBusConsumer() {
+        plugin.subscribe(EventType.TOPIC_CREATE, (eventType, object) -> metrics.get(MqttMetricEnum.TOPIC_COUNT).getMetric().increment());
+        plugin.consumer(new MessageBusConsumer() {
             final LongAdder publishReceived = metrics.get(MqttMetricEnum.PACKETS_PUBLISH_RECEIVED).getMetric();
             final LongAdder expectPublishSent = metrics.get(MqttMetricEnum.PACKETS_EXPECT_PUBLISH_SENT).getMetric();
             final LongAdder qos0Received = metrics.get(MqttMetricEnum.MESSAGE_QOS0_RECEIVED).getMetric();
@@ -448,5 +461,9 @@ public class MetricController {
 
     public void setSessionFactory(SqlSessionFactory sessionFactory) {
         this.sessionFactory = sessionFactory;
+    }
+
+    public void setPlugin(Plugin plugin) {
+        this.plugin = plugin;
     }
 }

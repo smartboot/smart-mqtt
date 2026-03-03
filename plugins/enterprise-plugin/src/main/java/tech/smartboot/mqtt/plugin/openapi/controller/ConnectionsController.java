@@ -16,23 +16,24 @@ import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.smartboot.socket.timer.HashedWheelTimer;
+import org.smartboot.socket.timer.Timer;
+import org.smartboot.socket.timer.TimerTask;
 import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
+import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
-import tech.smartboot.mqtt.plugin.EnterprisePlugin;
 import tech.smartboot.mqtt.plugin.PluginConfig;
 import tech.smartboot.mqtt.plugin.convert.ConnectionConvert;
 import tech.smartboot.mqtt.plugin.dao.mapper.ConnectionMapper;
 import tech.smartboot.mqtt.plugin.dao.mapper.SubscriberMapper;
-import tech.smartboot.mqtt.plugin.dao.mapper.SystemConfigMapper;
 import tech.smartboot.mqtt.plugin.dao.model.ConnectionDO;
 import tech.smartboot.mqtt.plugin.dao.query.ConnectionQuery;
 import tech.smartboot.mqtt.plugin.openapi.OpenApi;
@@ -41,6 +42,7 @@ import tech.smartboot.mqtt.plugin.openapi.to.ConnectionTO;
 import tech.smartboot.mqtt.plugin.openapi.to.Pagination;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
+import tech.smartboot.mqtt.plugin.spec.Plugin;
 import tech.smartboot.mqtt.plugin.spec.bus.AsyncEventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 import tech.smartboot.mqtt.plugin.utils.IpUtil;
@@ -70,6 +72,14 @@ public class ConnectionsController {
     private final ConcurrentLinkedQueue<Consumer<SqlSession>> consumers = new ConcurrentLinkedQueue<>();
     private long lastestTime = System.currentTimeMillis();
 
+    @Autowired
+    private Plugin plugin;
+
+    @Autowired
+    private Timer selfRescueTimer;
+
+    private TimerTask timerTask;
+
     @PostConstruct
     public void init() {
         if (!pluginConfig.getDatabase().isConnectRecord()) {
@@ -81,14 +91,14 @@ public class ConnectionsController {
         connectionMapper.updateStatusByBroker("smart-mqtt", ConnectionStatusEnum.DIS_CONNECT.getStatus());
 //        });
 
-        brokerContext.getEventBus().subscribe(EventType.DISCONNECT, (eventType, object) -> {
+        plugin.subscribe(EventType.DISCONNECT, (eventType, object) -> {
             String clientId = object.getClientId();
             consumers.offer(session -> {
                 ConnectionMapper connectionMapper = session.getMapper(ConnectionMapper.class);
                 connectionMapper.updateStatus(clientId, ConnectionStatusEnum.DIS_CONNECT.getStatus());
             });
         });
-        brokerContext.getEventBus().subscribe(EventType.CONNECT, AsyncEventObject.syncConsumer((eventType, object) -> {
+        plugin.subscribe(EventType.CONNECT, AsyncEventObject.syncConsumer((eventType, object) -> {
             ConnectionDO connectionDO = new ConnectionDO();
             connectionDO.setClientId(object.getSession().getClientId());
             connectionDO.setUsername(object.getObject().getPayload().userName());
@@ -123,7 +133,7 @@ public class ConnectionsController {
             });
         }));
 
-        EnterprisePlugin.SelfRescueTimer.scheduleWithFixedDelay(new AsyncTask() {
+        selfRescueTimer.scheduleWithFixedDelay(new AsyncTask() {
             @Override
             public void execute() {
                 if (System.currentTimeMillis() - lastestTime < 20000) {
@@ -136,7 +146,7 @@ public class ConnectionsController {
                 LOGGER.error("discard consume {} records", i);
             }
         }, 10000, TimeUnit.MILLISECONDS);
-        HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(new AsyncTask() {
+        timerTask = HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(new AsyncTask() {
             @Override
             public void execute() {
                 lastestTime = System.currentTimeMillis();
@@ -159,6 +169,13 @@ public class ConnectionsController {
                 LOGGER.info("batch consume {} records, cost: {}ms", i, (System.currentTimeMillis() - lastestTime));
             }
         }, 1000, TimeUnit.MILLISECONDS);
+    }
+
+    @PreDestroy
+    public void destroy() {
+        if (timerTask != null) {
+            timerTask.cancel();
+        }
     }
 
     @RequestMapping(OpenApi.CONNECTIONS)
@@ -197,5 +214,13 @@ public class ConnectionsController {
 
     public void setPluginConfig(PluginConfig pluginConfig) {
         this.pluginConfig = pluginConfig;
+    }
+
+    public void setPlugin(Plugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public void setSelfRescueTimer(Timer selfRescueTimer) {
+        this.selfRescueTimer = selfRescueTimer;
     }
 }

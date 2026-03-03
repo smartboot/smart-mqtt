@@ -34,7 +34,7 @@ import java.util.concurrent.ThreadFactory;
  * @version V1.0 , 2022/4/2
  */
 public class EnterprisePlugin extends Plugin {
-    public static final Timer SelfRescueTimer = new HashedWheelTimer(r -> {
+    private final Timer SelfRescueTimer = new HashedWheelTimer(r -> {
         Thread t = new Thread(r, "self-rescue-timer");
         t.setDaemon(true);
         return t;
@@ -64,7 +64,11 @@ public class EnterprisePlugin extends Plugin {
             }
         });
 
-        httpServer = FeatCloud.cloudServer(serverOptions -> serverOptions.registerBean("brokerContext", brokerContext).registerBean("pluginConfig", config).registerBean("plugin", this)//当前的插件ID
+        httpServer = FeatCloud.cloudServer(serverOptions -> serverOptions
+                .registerBean("brokerContext", brokerContext)
+                .registerBean("pluginConfig", config)
+                .registerBean("plugin", this)//当前的插件ID
+                .registerBean("selfRescueTimer", SelfRescueTimer)
                 .registerBean("storage", storage()).group(asynchronousChannelGroup));
         httpServer.listen(config.getHttp().getHost(), config.getHttp().getPort());
         System.out.println("openapi server start success!");
@@ -72,10 +76,10 @@ public class EnterprisePlugin extends Plugin {
 
     @Override
     protected void destroyPlugin() {
+        SelfRescueTimer.shutdown();
         if (httpServer != null) {
             httpServer.shutdown();
         }
-
         asynchronousChannelGroup.shutdown();
     }
 
