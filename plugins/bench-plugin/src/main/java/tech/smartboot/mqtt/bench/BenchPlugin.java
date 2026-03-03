@@ -83,6 +83,11 @@ public class BenchPlugin extends Plugin {
                 System.out.println("[bench-plugin] 未知场景: " + scenario + ", 支持: publish, subscribe");
             }
         }).start();
+        timer().scheduleWithFixedDelay(() -> {
+            int c = countAdder.intValue();
+            countAdder.add(-c);
+            System.out.println("total: " + c + "\tTPS: " + (c / 5));
+        }, 5, TimeUnit.SECONDS);
     }
 
     @Override
@@ -159,11 +164,6 @@ public class BenchPlugin extends Plugin {
             }
         }, "bench-publish-" + hashCode());
         publishThread.start();
-        timer().scheduleWithFixedDelay(() -> {
-            int c = countAdder.intValue();
-            countAdder.add(-c);
-            System.out.println("total: " + c + "\tTPS: " + (c / 5));
-        }, 5, TimeUnit.SECONDS);
     }
 
     /**
