@@ -123,15 +123,6 @@ public class EnterprisePlugin extends Plugin {
         database.addItems(Item.Switch("metricRecord", "指标记录").col(4).tip("启用后将记录指标数据到数据库"));
         schema.addItem(database);
 
-        Item openapi = Item.Object("openai", "openai服务配置").col(6);
-        openapi.addItems(Item.String("url", "OpenAI URL"));
-        openapi.addItems(Item.Password("apiKey", "API秘钥"));
-        openapi.addItems(Item.String("model", "模型"));
-
-        Item mcp = Item.ItemArray("mcp", "MCP服务配置");
-        mcp.addItems(Item.String("url", "MCP服务地址"));
-        openapi.addItems(mcp);
-        schema.addItem(openapi);
 
         Item registry = Item.String("registry", "插件市场").col(6);
         schema.addItem(registry);
@@ -162,6 +153,16 @@ public class EnterprisePlugin extends Plugin {
         showMetrics.addEnums(Enum.of("messages_qos1_sent", "发送给客户端的 QoS 1 消息数量"));
         showMetrics.addEnums(Enum.of("messages_qos2_sent", "发送给客户端的 QoS 2 消息数量"));
         schema.addItem(showMetrics);
+
+        Item openapi = Item.Object("openai", "openai服务配置").col(6);
+        openapi.addItems(Item.String("url", "OpenAI URL"));
+        openapi.addItems(Item.Password("apiKey", "API秘钥"));
+        openapi.addItems(Item.String("model", "模型"));
+
+        Item mcp = Item.ItemArray("mcp", "MCP服务配置");
+        mcp.addItems(Item.String("url", "MCP服务地址"));
+        openapi.addItems(mcp);
+        schema.addItem(openapi);
         return schema;
     }
 }
