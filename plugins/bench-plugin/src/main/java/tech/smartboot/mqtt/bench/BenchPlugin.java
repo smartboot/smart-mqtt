@@ -39,10 +39,11 @@ public class BenchPlugin extends Plugin {
     private static final String SCENARIO_PUBLISH = "publish";
     private static final String SCENARIO_SUBSCRIBE = "subscribe";
 
-    private final AtomicBoolean running = new AtomicBoolean(false);
+    private final AtomicBoolean running = new AtomicBoolean(true);
 
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
+        running.set(true);
         new Thread(() -> {
             //延迟启动
             try {
@@ -54,8 +55,6 @@ public class BenchPlugin extends Plugin {
 
             String scenario = config.getScenario();
             System.out.println("[bench-plugin] 压测场景: " + scenario);
-
-            running.set(true);
 
             if (SCENARIO_PUBLISH.equals(scenario)) {
                 try {
