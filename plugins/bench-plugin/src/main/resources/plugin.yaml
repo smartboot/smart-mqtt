@@ -2,7 +2,7 @@
 # 支持两种场景: publish (发布压测) 和 subscribe (订阅压测)
 
 # 压测场景: publish-发布压测, subscribe-订阅压测
-scenario: publish
+scenario: subscribe
 
 # ==================== 公共压测配置 ===================
 # MQTT服务器地址
@@ -28,9 +28,9 @@ publish:
 # ==================== 订阅压测配置 ===================
 subscribe:
   # 订阅者数量
-  connections: 1000
+  connections: 2000
   # 发布者数量（0表示不启动发布者）
-  publisherCount: 1
+  publisherCount: 10
   # 每次发布的消息数量
   publishCount: 1
   # 发布间隔（毫秒）
