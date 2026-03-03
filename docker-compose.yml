@@ -26,50 +26,27 @@ services:
         max-size: "100m"
         max-file: "1"
 
-#  mqtt-broker:
-#    container_name: comqtt
-#    hostname: mqtt-broker
-#    image: comqtt:latest
-#    networks:
-#      mqtt-network: null
-#    restart: always
-#    security_opt:
-#      - no-new-privileges:true
-#    user: root:root
-#    logging:
-#      driver: "json-file"
-#      options:
-#        max-size: "100m"
-#        max-file: "1"
+  mqtt-broker-2:
+    container_name: smart-mqtt-2
+    hostname: mqtt-broker-2
+    image: smartboot/smart-mqtt:latest
+    networks:
+      mqtt-network: null
+    environment:
+      ENTERPRISE_ENABLE: true
+      #      BROKER_LOWMEMORY: true
+      BROKER_MAXINFLIGHT: 256
+    restart: always
+    privileged: true
+    security_opt:
+      - no-new-privileges:true
+    user: root:root
+    ports:
+      - 18084:18083
+      - 1884:1883
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "1"
 
-  #  mqtt-broker:
-  #    container_name: bifromq
-  #    hostname: mqtt-broker
-  #    image: bifromq/bifromq:latest
-  #    networks:
-  #      mqtt-network: null
-  #    restart: always
-  #    security_opt:
-  #      - no-new-privileges:true
-  #    user: root:root
-  #    logging:
-  #      driver: "json-file"
-  #      options:
-  #        max-size: "100m"
-  #        max-file: "1"
-
-  #  mqtt-broker:
-  #    container_name: emqx
-  #    hostname: mqtt-broker
-  #    image: emqx/emqx:5.0.24
-  #    networks:
-  #      mqtt-network: null
-  #    restart: always
-  #    security_opt:
-  #      - no-new-privileges:true
-  #    user: root:root
-  #    logging:
-  #      driver: "json-file"
-  #      options:
-  #        max-size: "100m"
-  #        max-file: "1"
