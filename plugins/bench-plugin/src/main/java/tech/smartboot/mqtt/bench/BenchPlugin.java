@@ -70,7 +70,7 @@ public class BenchPlugin extends Plugin {
 
             if (SCENARIO_PUBLISH.equals(scenario)) {
                 try {
-                    runPublishBenchmark(brokerContext, config);
+                    runPublishBenchmark(config);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -91,7 +91,7 @@ public class BenchPlugin extends Plugin {
     /**
      * 运行发布压测
      */
-    private void runPublishBenchmark(BrokerContext brokerContext, PluginConfig config) throws InterruptedException {
+    private void runPublishBenchmark(PluginConfig config) throws InterruptedException {
         // 使用PluginConfig中的公共参数
         String host = config.getHost();
         int port = config.getPort();
