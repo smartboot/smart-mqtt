@@ -13,6 +13,85 @@ sidebar:
 - 实时输出 TPS（每秒事务数）统计数据
 - 支持灵活的压测参数配置
 
+## 压测场景
+
+bench-plugin 支持三种压测模式，适用于不同的测试需求：
+
+### 场景一：进程内压测（自测模式）
+
+```mermaid
+graph LR
+    subgraph smart-mqtt 进程
+        A[压测插件] -->|发布/订阅| B[Broker]
+    end
+    
+    style A fill:#e1f5fe
+    style B fill:#e8f5e8
+```
+
+**说明**：smart-mqtt broker 和插件处于同一个进程中，即自己压测自己。
+
+- **优点**：架构简单，部署方便
+- **缺点**：存在资源竞争，会对测试结果造成波动，无法测出极限能力
+- **适用场景**：快速验证功能、简单的性能摸底
+
+### 场景二：单节点压测（横向对比）
+
+```mermaid
+graph LR
+    subgraph 压测机
+        A[smart-mqtt<br/>压测插件]
+    end
+    
+    subgraph 被测机
+        B[Broker<br/>EMQX/Moquitto/smart-mqtt]
+    end
+    
+    A -->|MQTT| B
+    
+    style A fill:#e1f5fe
+    style B fill:#fff3e0
+```
+
+**说明**：分开部署，smart-mqtt 启动压测插件对其他节点的 broker 进行压测。这些 broker 可以是 smart-mqtt，也可以是其他类型的 broker（如 EMQX、Moquitto、ActiveMQ 等）。
+
+- **优点**：数据更准确，无资源竞争干扰
+- **适用场景**：各 broker 产品的横向性能对比、单节点性能评估
+
+### 场景三：集群压测
+
+```mermaid
+graph TB
+    subgraph 压测机
+        A[smart-mqtt<br/>压测插件]
+    end
+    
+    subgraph Broker集群
+        B[Load Balancer] --> C[Broker 节点1]
+        B --> D[Broker 节点2]
+        B --> E[Broker 节点N]
+    end
+    
+    A -->|MQTT| B
+    
+    style A fill:#e1f5fe
+    style B fill:#fff3e0
+    style C fill:#e8f5e8
+    style D fill:#e8f5e8
+    style E fill:#e8f5e8
+```
+
+**说明**：分开部署，被压测对象是一套完整的 Broker 集群，通常包含负载均衡器和多个 Broker 节点。
+
+- **优点**：真实模拟生产环境，评估集群整体吞吐能力
+- **适用场景**：集群性能评估、容量规划
+
+| 场景 | 部署方式 | 准确性 | 适用场景 |
+|------|----------|--------|----------|
+| 进程内压测 | 同一进程 | ⭐⭐ | 功能验证、快速摸底 |
+| 单节点压测 | 分开部署 | ⭐⭐⭐⭐ | 横向对比、单节点评估 |
+| 集群压测 | 分开部署 | ⭐⭐⭐⭐⭐ | 生产环境评估、容量规划 |
+
 ## 核心组件
 
 - **BenchPlugin**：插件入口，负责初始化压测任务和调度
