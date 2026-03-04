@@ -93,18 +93,29 @@ public class AiController {
                     }
 
                     @Override
-                    public void onReasoning(String agentAction) {
+                    public void onModelReasoning(String agentAction) {
                         sseEmitter.sendAsJson(AiChunkTO.ofReason(agentAction));
+                    }
+
+                    @Override
+                    public void onAgentReasoning(String agentAction) {
+                        sseEmitter.sendAsJson(AiChunkTO.ofReason(agentAction));
+                    }
+
+
+                    @Override
+                    public void onStreamResponse(String content) {
+                        sseEmitter.sendAsJson(AiChunkTO.ofResult(content));
                     }
                 });
                 CompletableFuture<String> completableFuture = agent.execute(sb.toString());
                 completableFuture.thenAccept(result -> {
 
-                    try {
-                        sseEmitter.sendAsJson(AiChunkTO.ofResult(result));
-                    } finally {
-                        sseEmitter.complete();
-                    }
+//                    try {
+//                        sseEmitter.sendAsJson(AiChunkTO.ofResult(result));
+//                    } finally {
+                    sseEmitter.complete();
+//                    }
                 }).exceptionally(throwable -> {
                     try {
                         sseEmitter.sendAsJson(AiChunkTO.ofResult(throwable.getMessage()));
