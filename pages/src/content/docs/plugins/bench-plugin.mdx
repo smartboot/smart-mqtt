@@ -1,0 +1,144 @@
+---
+title: 压测插件
+sidebar:
+  order: 10
+---
+
+`bench-plugin` 是 smart-mqtt broker 的压测插件，支持 **发布压测** 和 **订阅压测** 两种场景，帮助开发者评估 MQTT broker 的性能表现。
+
+## 功能概述
+
+- **发布压测**：模拟大量客户端同时向 MQTT broker 发布消息，测试 broker 的消息接收和处理能力
+- **订阅压测**：模拟大量订阅者订阅主题，同时可选启动发布者向这些主题发布消息，测试 broker 的消息分发能力
+- 实时输出 TPS（每秒事务数）统计数据
+- 支持灵活的压测参数配置
+
+## 核心组件
+
+- **BenchPlugin**：插件入口，负责初始化压测任务和调度
+- **PluginConfig**：压测插件配置，包含公共参数和场景特定参数
+- **PublishConfig**：发布压测配置
+- **SubscribeConfig**：订阅压测配置
+
+## 配置参数
+
+在 `plugin.yaml` 中配置压测插件，支持以下参数：
+
+### 公共参数
+
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `scenario` | String | `publish` | 压测场景：`publish`=发布压测，`subscribe`=订阅压测 |
+| `host` | String | `127.0.0.1` | MQTT 服务器地址 |
+| `port` | int | `1883` | MQTT 服务器端口 |
+| `topicCount` | int | `128` | 主题数量 |
+| `qos` | int | `0` | QoS 等级：`0`=AtMostOnce，`1`=AtLeastOnce，`2`=ExactlyOnce |
+| `payloadSize` | int | `1024` | 消息负载大小（字节） |
+
+### 发布压测配置 (publish)
+
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `connections` | int | `1000` | 发布者数量（并发连接数） |
+| `publishCount` | int | `1` | 每次发布的消息数量 |
+| `period` | int | `1` | 发布间隔（毫秒） |
+
+### 订阅压测配置 (subscribe)
+
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `connections` | int | `1000` | 订阅者数量（并发连接数） |
+| `publisherCount` | int | `1` | 发布者数量，设为 `0` 表示不启动发布者 |
+| `publishCount` | int | `1` | 每次发布的消息数量 |
+| `publishPeriod` | int | `1` | 发布间隔（毫秒） |
+
+## 配置示例
+
+### 发布压测配置
+
+```yaml
+# 压测场景: publish-发布压测, subscribe-订阅压测
+scenario: publish
+
+# MQTT服务器地址
+host: 127.0.0.1
+# MQTT服务器端口
+port: 1883
+# 消息负载大小（字节）
+payloadSize: 128
+# 主题数量
+topicCount: 128
+# QoS等级: 0-AtMostOnce, 1-AtLeastOnce, 2-ExactlyOnce
+qos: 0
+
+# 发布压测配置
+publish:
+  # 发布者数量
+  connections: 1000
+  # 每次发布的消息数量
+  publishCount: 1
+  # 发布间隔（毫秒）
+  period: 1
+```
+
+### 订阅压测配置
+
+```yaml
+# 压测场景: subscribe-订阅压测
+scenario: subscribe
+
+# MQTT服务器地址
+host: 127.0.0.1
+# MQTT服务器端口
+port: 1883
+# 消息负载大小（字节）
+payloadSize: 128
+# 主题数量
+topicCount: 128
+# QoS等级
+qos: 0
+
+# 订阅压测配置
+subscribe:
+  # 订阅者数量
+  connections: 2000
+  # 发布者数量（0表示不启动发布者）
+  publisherCount: 10
+  # 每次发布的消息数量
+  publishCount: 1
+  # 发布间隔（毫秒）
+  publishPeriod: 1
+```
+
+## 使用说明
+
+1. 将压测插件及其配置文件放置于 smart-mqtt 的 `plugins` 目录下
+2. 根据压测需求编辑 `plugin.yaml` 配置文件
+3. 启动 smart-mqtt 服务，插件会自动加载并延迟 5 秒后开始压测
+4. 观察控制台输出的压测数据，包括：
+   - `total`: 消息总数
+   - `TPS`: 每秒处理的事务数
+
+## 输出示例
+
+```
+[bench-plugin] 压测场景: publish
+[bench-plugin] 启动发布压测:
+  发布者数: 1000
+  负载大小: 128 bytes
+  主题数: 128
+  每次发布数: 1
+  发布间隔: 1ms
+  QoS: 0
+total: 50000	TPS: 10000
+total: 50000	TPS: 10000
+total: 50000	TPS: 10000
+```
+
+## 注意事项
+
+- 压测插件会在服务启动后延迟 5 秒开始执行，以便 broker 完全初始化
+- 压测过程中可以随时停止 smart-mqtt 服务，插件会优雅关闭所有连接
+- 建议在压测前确保服务器资源充足，避免因资源耗尽影响测试结果
+- 订阅压测场景下，`publisherCount` 设为 `0` 时只会创建订阅者连接，不会发送消息，适用于测试订阅性能
+- 高并发压测时注意调整系统文件描述符限制（ulimit）
