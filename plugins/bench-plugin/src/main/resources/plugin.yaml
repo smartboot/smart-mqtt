@@ -10,7 +10,7 @@ host: 127.0.0.1
 # MQTT服务器端口
 port: 1883
 # 消息负载大小（字节）
-payloadSize: 1024
+payloadSize: 128
 # 主题数量
 topicCount: 128
 # QoS等级: 0-AtMostOnce, 1-AtLeastOnce, 2-ExactlyOnce

@@ -24,7 +24,7 @@ host: 127.0.0.1
 # MQTT 服务器端口
 port: 1883
 # 消息负载大小（字节）
-payloadSize: 1024
+payloadSize: 128
 # 主题数量
 topicCount: 128
 # QoS 等级: 0 (AtMostOnce) | 1 (AtLeastOnce) | 2 (ExactlyOnce)
@@ -78,7 +78,7 @@ subscribe:
 | `scenario` | 压测场景 | `publish` | `publish` / `subscribe` |
 | `host` | MQTT 服务器地址 | `127.0.0.1` | IP 地址或域名 |
 | `port` | MQTT 服务器端口 | `1883` | 有效端口号 |
-| `payloadSize` | 消息负载大小（字节） | `1024` | 0 - 1048576 |
+| `payloadSize` | 消息负载大小（字节） | `128` | 0 - 1048576 |
 | `topicCount` | 主题数量 | `128` | 1 - 10000 |
 | `qos` | QoS 等级 | `0` | `0` / `1` / `2` |
 
