@@ -142,4 +142,13 @@ public class BaseMessageDeliver implements MessageDeliver, Runnable {
             return new AdvancedMessageDeliver(topic, sessionSubscribeRelation, nextConsumerOffset);
         }
     }
+
+    protected boolean hasPendingWrite() {
+        if (subscribeRelation.getMqttSession().hasQueuedThreads()) {
+            topic.registerMessageDeliver(this);
+            topic.addVersion();
+            return true;
+        }
+        return false;
+    }
 }

@@ -95,6 +95,10 @@ class SimpleMessageDeliver extends BaseMessageDeliver {
      * @return 如果成功推送消息返回true，如果没有新消息返回false
      */
     private boolean push0() {
+        if (hasPendingWrite()) {
+            System.out.println("push0...");
+            return false;
+        }
         Message message = topic.getMessageQueue().get(nextConsumerOffset);
         if (message == null) {
             topic.registerMessageDeliver(this);

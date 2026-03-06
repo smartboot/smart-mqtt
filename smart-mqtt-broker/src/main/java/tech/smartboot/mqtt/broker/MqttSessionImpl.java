@@ -120,6 +120,10 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
         mqttContext.getMessageBus().publish(this, message);
     }
 
+    public boolean hasQueuedThreads() {
+        return writeLock.hasQueuedThreads();
+    }
+
     @Override
     public void write(MqttMessage mqttMessage, boolean autoFlush) {
         super.write(mqttMessage, autoFlush);

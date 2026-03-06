@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.Hashtable;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 /**
@@ -68,22 +69,23 @@ public abstract class AbstractSession {
 
     protected abstract void accepted(MqttPublishMessage mqttMessage);
 
+    protected final ReentrantLock writeLock = new ReentrantLock();
 
     public void write(MqttMessage mqttMessage, boolean autoFlush) {
         ValidateUtils.isTrue(!disconnect, "已断开连接,无法发送消息");
+        writeLock.lock();
         try {
-            synchronized (mqttWriter) {
-                if (disconnect) {
-                    ValidateUtils.throwException("session is disconnect");
-                }
-                mqttMessage.write(mqttWriter);
+            if (disconnect) {
+                ValidateUtils.throwException("session is disconnect");
             }
-
-            if (autoFlush) {
-                mqttWriter.flush();
-            }
+            mqttMessage.write(mqttWriter);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        } finally {
+            writeLock.unlock();
+        }
+        if (autoFlush) {
+            mqttWriter.flush();
         }
     }
 
