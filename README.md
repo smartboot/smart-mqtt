@@ -89,7 +89,7 @@ cd smart-mqtt-*
 
 - **Domestic Origin**: From underlying communication (smart-socket) to application-layer Broker service (smart-mqtt), all are self-developed
 - **Extremely Lightweight**: Minimal external dependencies, distribution package under 800KB
-- **High Performance, Low Consumption**: Utilizes design and algorithm techniques to fully leverage hardware capabilities, TPS up to 7.9 million/second
+- **High Performance, Low Consumption**: Utilizes design and algorithm techniques to fully leverage hardware capabilities, TPS up to 10 million/second
 
 ### 🚀 Deployment Experience
 
@@ -107,7 +107,7 @@ cd smart-mqtt-*
 
 | Scenario | QoS0 | QoS1 | QoS2 |
 |:---------|:----:|:----:|:----:|
-| Message Subscription (2000 subscribers, 128 Topics) | 7.9M/s | 3.2M/s | 1.9M/s |
+| Message Subscription (2000 subscribers, 128 Topics) | 10M/s | 5.4M/s | 3.2M/s |
 | Message Publishing (2000 publishers, 128 Topics) | 970K/s | 630K/s | 520K/s |
 
 ## 📦 Download
