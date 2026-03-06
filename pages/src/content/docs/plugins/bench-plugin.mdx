@@ -135,34 +135,32 @@ graph TB
 
 ## 使用说明
 
-1. 将压测插件及其配置文件放置于 smart-mqtt 的 `plugins` 目录下
-2. 根据压测需求编辑 `plugin.yaml` 配置文件
-3. 启动 smart-mqtt 服务，插件会自动加载并延迟 5 秒后开始压测
-4. 观察控制台输出的压测数据，包括：
-   - `total`: 消息总数
-   - `TPS`: 每秒处理的事务数
+通过 smart-mqtt 后台管理控制台的插件管理功能，可以方便地进行压测场景的设置和启停。
 
-## 输出示例
+1. **登录管理控制台**：访问 smart-mqtt 管理控制台（默认端口 18083），登录后台管理系统
 
-```
-[bench-plugin] 压测场景: publish
-[bench-plugin] 启动发布压测:
-  发布者数: 1000
-  负载大小: 128 bytes
-  主题数: 128
-  每次发布数: 1
-  发布间隔: 1ms
-  QoS: 0
-total: 50000	TPS: 10000
-total: 50000	TPS: 10000
-total: 50000	TPS: 10000
-```
+2. **进入插件管理**：在左侧导航栏选择「插件管理」菜单，找到「压测插件」
 
----
+3. **配置压测参数**：
+   - 点击插件的「配置」按钮
+   - 根据压测需求设置参数（场景、连接数、payload 大小、QoS 等）
+   - 保存配置
+
+4. **启动压测**：
+   - 点击插件的「启动」按钮开始压测
+   - 插件会自动加载配置并开始执行压测任务
+
+5. **查看压测数据**：
+   - 在插件详情页或控制台日志中观察压测数据
+   - 包括：`total`（消息总数）、`TPS`（每秒事务数）
+
+6. **停止压测**：
+   - 点击插件的「停止」按钮结束压测
+   - 插件会优雅关闭所有连接
 
 ## 性能测试数据
 
-很多用户比较关心 smart-mqtt 的性能表现，为了得出一个相对准确的结论，我们通过自研的压测工具分别对 smart-mqtt 和同类产品进行压测。
+以下是通过本压测插件对 smart-mqtt 进行压测的性能数据，供参考。
 
 ### 环境准备
 
@@ -181,11 +179,11 @@ total: 50000	TPS: 10000
 - Topic 数量：128
 - 消息 payload 大小：128 字节
 
-| 消息质量 | smart-mqtt | emqx | bifromq |
-|:--------:|:----------:|:----:|:-------:|
-| QoS0 | 1000W/s | - | - |
-| QoS1 | 540W/s | - | - |
-| QoS2 | 320W/s | - | - |
+| 消息质量 | smart-mqtt | emqx |
+|:--------:|:----------:|:----:|
+| QoS0 | 1000W/s | - |
+| QoS1 | 540W/s | - |
+| QoS2 | 320W/s | - |
 
 ### 消息发布压测
 
@@ -194,130 +192,126 @@ total: 50000	TPS: 10000
 - Topic 数量：128
 - 消息 payload 大小：128 字节
 
-| 消息质量 | smart-mqtt | emqx | bifromq |
-|:--------:|:----------:|:----:|:-------:|
-| QoS0 | 97W/s | - | - |
-| QoS1 | 63W/s | - | - |
-| QoS2 | 52W/s | - | - |
+| 消息质量 | smart-mqtt | emqx |
+|:--------:|:----------:|:----:|
+| QoS0 | 97W/s | - |
+| QoS1 | 63W/s | - |
+| QoS2 | 52W/s | - |
 
-### 海量连接压测
-
-**场景设计**：
-- Topic 订阅数：2 个
-- 消息 payload 大小：128 字节
-
-| 连接量 | smart-mqtt | emqx | bifromq |
-|:------:|:----------:|:----:|:-------:|
-| 10万 | - | - | - |
-| 30万 | - | - | - |
-| 50万 | - | - | - |
-| 80万 | - | - | - |
-| 100万 | - | - | - |
 
 :::tip[说明]
 以上性能数据仅供参考，实际性能受硬件配置、网络环境、JVM 参数等多种因素影响。
 :::
 
----
+## 横向对比测试
 
-## Docker 环境压测
+使用压测插件可以对第三方 MQTT Broker 进行横向对比测试。项目提供了 Docker Compose 配置文件，方便快速搭建测试环境。
 
-在 smart-mqtt 的仓库根目录下，提供了用于性能测试的 [docker-compose.yml](https://gitee.com/smartboot/smart-mqtt/blob/master/docker-compose.yml) 文件。
+### 测试环境架构
 
-在这个文件中包含了多款 MQTT Broker，对应的 docker 服务名皆为：`mqtt-broker`。当需要对某个 broker 进行测试时，只需移除其注释，将另外的同名服务注释掉便可（即同时刻只能存在一个服务名为 `mqtt-broker` 的 docker 容器）。
+```mermaid
+graph LR
+    subgraph 压测容器
+        A[smart-mqtt<br/>压测插件]
+    end
+    
+    subgraph 被测容器
+        B[EMQX/Mosquitto/<br/>smart-mqtt]
+    end
+    
+    A -->|MQTT:1883| B
+    
+    style A fill:#e1f5fe
+    style B fill:#fff3e0
+```
 
-目前已支持的有：
-- smart-mqtt
-- emqx
-- BifroMQ
+### Docker Compose 配置
 
-### Docker Compose 配置说明
+在项目根目录的 [docker-compose.yml](https://gitee.com/smartboot/smart-mqtt/blob/master/docker-compose.yml) 中预置了测试环境：
 
 ```yaml
 networks:
   mqtt-network:
     driver: bridge
+
 services:
-  # smart-mqtt 服务（带企业版特性）
+  # 压测端：运行 smart-mqtt 压测插件
   smart-mqtt:
     container_name: smart-mqtt
-    hostname: smart-mqtt
     image: smartboot/smart-mqtt:latest
-    networks:
-      mqtt-network: null
     environment:
       ENTERPRISE_ENABLE: true      # 启用企业版特性
-      BROKER_MAXINFLIGHT: 256      # 最大飞行消息数
-    ports:
-      - 18083:18083                 # 管理控制台端口
-      - 1883:1883                   # MQTT 端口
-
-  # 被测 Broker（用于横向对比测试）
-  mqtt-broker:
-    container_name: mqtt-broker
-    hostname: mqtt-broker
-    image: smartboot/smart-mqtt:latest
-    networks:
-      mqtt-network: null
-    environment:
-      ENTERPRISE_ENABLE: false      # 不启用企业版特性
       BROKER_MAXINFLIGHT: 256
     ports:
-      - 18084:18083
-      - 1884:1883
+      - 18083:18083                 # 管理控制台
+      - 1883:1883                   # MQTT 端口
+
+  # 被测端：待测试的 MQTT Broker
+  mqtt-broker:
+    container_name: mqtt-broker
+    image: smartboot/smart-mqtt:latest
+    environment:
+      ENTERPRISE_ENABLE: false
+      BROKER_MAXINFLIGHT: 256
 ```
 
-### 环境变量说明
+### 测试第三方 Broker
 
-| 环境变量 | 说明 | 默认值 |
-|----------|------|--------|
-| `ENTERPRISE_ENABLE` | 是否启用企业版特性 | `false` |
-| `BROKER_MAXINFLIGHT` | 最大飞行消息数 | `256` |
-| `BROKER_LOWMEMORY` | 低内存模式 | 未启用 |
-
-### 横向对比测试
-
-如需对比测试其他 MQTT Broker（如 EMQX），可修改 `mqtt-broker` 服务配置：
+如需测试其他 Broker（如 EMQX），修改 `mqtt-broker` 服务配置：
 
 ```yaml
-  mqtt-broker:
-    container_name: emqx
-    hostname: mqtt-broker
-    image: emqx/emqx:5.0.24
-    networks:
-      mqtt-network: null
-    restart: always
-    ports:
-      - 18083:18083
-      - 1883:1883
+mqtt-broker:
+  container_name: emqx
+  hostname: mqtt-broker
+  image: emqx/emqx:5.0.24
+  networks:
+    mqtt-network: null
+  restart: always
+  security_opt:
+    - no-new-privileges:true
+  user: root:root
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "100m"
+      max-file: "1"
 ```
 
 <Aside type="note">
-同时只能存在一个服务名为 `mqtt-broker` 的容器，测试不同 Broker 时需注释掉其他同名服务。
+同一时刻只能存在一个服务名为 `mqtt-broker` 的容器，测试不同 Broker 时需注释掉其他同名服务。
 </Aside>
 
-### 执行压测
 
-1. **启动 Broker 和压测客户端**：
+### 执行测试步骤
+
+1. **启动测试环境**：
 
 ```bash
 docker-compose up -d
 ```
 
-2. **查看压测结果**：
+2. **配置压测插件**：
+   - 访问 smart-mqtt 管理控制台：http://localhost:18083
+   - 进入「插件管理」→「压测插件」→「配置」
+   - 设置 `host` 为 `mqtt-broker`（被测容器名称）
+   - 设置 `port` 为 `1883`（被测容器 MQTT 端口）
+
+3. **启动压测**：
+   - 点击「启动」按钮开始压测
+   - 在控制台日志中查看实时 TPS 数据
+
+4. **查看结果**：
 
 ```bash
-# 查看 smart-mqtt-bench 容器的日志
-docker-compose logs -f smart-mqtt-bench
+# 查看 smart-mqtt 容器日志
+docker-compose logs -f smart-mqtt
 ```
 
-3. **停止压测**：
+5. **停止测试**：
 
 ```bash
 docker-compose down
 ```
-
----
 
 ## 注意事项
 
