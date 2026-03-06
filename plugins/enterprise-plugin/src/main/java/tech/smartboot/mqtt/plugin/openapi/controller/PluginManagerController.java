@@ -24,6 +24,7 @@ import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.mcp.Tool;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.multipart.Part;
@@ -413,6 +414,7 @@ public class PluginManagerController {
 
     @RequestMapping("/:id/logs")
     public void logs(@PathParam("id") int id, HttpRequest request) throws Throwable {
+        request.getResponse().addHeader(HeaderName.CONNECTION, "keep-alive");
         request.upgrade(new SSEUpgrade() {
             boolean enabled = true;
 
@@ -420,7 +422,7 @@ public class PluginManagerController {
             public void onOpen(SseEmitter sseEmitter) throws IOException {
                 Plugin plugin = brokerContext.pluginRegistry().getPlugin(id);
                 if (plugin == null) {
-                    sseEmitter.sendAsJson(RestResult.fail("插件不存在"));
+                    sseEmitter.sendAsJson(RestResult.fail("插件不存在或未启动"));
                     return;
                 }
 
