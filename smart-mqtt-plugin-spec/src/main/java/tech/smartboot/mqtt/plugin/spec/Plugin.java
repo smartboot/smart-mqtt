@@ -155,7 +155,7 @@ public abstract class Plugin implements PluginSubscriber {
         brokerContext.getEventBus().subscribe(PLUGIN_LOG, new EventBusConsumer<Pair<Plugin, String>>() {
             @Override
             public void consumer(EventType<Pair<Plugin, String>> eventType, Pair<Plugin, String> object) {
-                if (object.getLeft() == Plugin.this) {
+                if (object.getLeft().id() == id()) {
                     consumer.consumer(null, object.getRight());
                 }
             }

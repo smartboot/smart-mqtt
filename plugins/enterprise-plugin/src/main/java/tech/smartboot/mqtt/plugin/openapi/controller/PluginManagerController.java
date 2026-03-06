@@ -413,35 +413,19 @@ public class PluginManagerController {
 
     @RequestMapping("/:id/logs")
     public void logs(@PathParam("id") int id, HttpRequest request) throws Throwable {
-        Plugin targetPlugin = brokerContext.pluginRegistry().getPlugin(id);
-        if (targetPlugin == null) {
-            // 插件未启用，检查本地插件
-            PluginUnit unit = localPlugins.get(id);
-            if (unit == null) {
-                request.upgrade(new SSEUpgrade() {
-                    @Override
-                    public void onOpen(SseEmitter sseEmitter) throws IOException {
-                        sseEmitter.sendAsJson(RestResult.fail("插件不存在或未启用"));
-                        sseEmitter.complete();
-                    }
-                });
-                return;
-            }
-            targetPlugin = unit.plugin;
-        }
-
-        final Plugin finalPlugin = targetPlugin;
-        final int pluginId = id;
-
         request.upgrade(new SSEUpgrade() {
             boolean enabled = true;
 
             @Override
             public void onOpen(SseEmitter sseEmitter) throws IOException {
-                logger.info("Plugin log stream opened for plugin: {} (id: {})", finalPlugin.pluginName(), pluginId);
+                Plugin plugin = brokerContext.pluginRegistry().getPlugin(id);
+                if (plugin == null) {
+                    sseEmitter.sendAsJson(RestResult.fail("插件不存在"));
+                    return;
+                }
 
                 // 发送连接成功消息
-                sseEmitter.sendAsJson(RestResult.ok("日志流已连接，开始监听插件 [" + finalPlugin.pluginName() + "] 的日志..."));
+                sseEmitter.sendAsJson(RestResult.ok("日志流已连接，开始监听插件 [" + plugin.pluginName() + "] 的日志..."));
                 plugin.subLog(new EventBusConsumer<String>() {
                     @Override
                     public void consumer(EventType<String> eventType, String object) {
