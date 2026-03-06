@@ -411,8 +411,8 @@ public class PluginManagerController {
         return RestResult.ok(null);
     }
 
-    @RequestMapping("/logs")
-    public void logs(@Param("id") int id, HttpRequest request) throws Throwable {
+    @RequestMapping("/:id/logs")
+    public void logs(@PathParam("id") int id, HttpRequest request) throws Throwable {
         Plugin targetPlugin = brokerContext.pluginRegistry().getPlugin(id);
         if (targetPlugin == null) {
             // 插件未启用，检查本地插件
