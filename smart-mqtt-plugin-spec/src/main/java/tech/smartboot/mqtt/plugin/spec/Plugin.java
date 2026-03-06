@@ -36,6 +36,7 @@ import java.util.List;
  * @version V1.0 , 2022/4/1
  */
 public abstract class Plugin implements PluginSubscriber {
+    private static final EventType<Pair<Plugin, String>> PLUGIN_LOG = new EventType<>("plugin_log");
     public static final String CONFIG_FILE_NAME = "plugin.yaml";
 
     private File storage;
@@ -142,6 +143,26 @@ public abstract class Plugin implements PluginSubscriber {
             @Override
             public boolean enable() {
                 return !destroyed && subscriber.enable();
+            }
+        });
+    }
+
+    public void log(String log) {
+        brokerContext.getEventBus().publish(PLUGIN_LOG, new Pair<>(this, log));
+    }
+
+    public void subLog(EventBusConsumer<String> consumer) {
+        brokerContext.getEventBus().subscribe(PLUGIN_LOG, new EventBusConsumer<Pair<Plugin, String>>() {
+            @Override
+            public void consumer(EventType<Pair<Plugin, String>> eventType, Pair<Plugin, String> object) {
+                if (object.getLeft() == Plugin.this) {
+                    consumer.consumer(null, object.getRight());
+                }
+            }
+
+            @Override
+            public boolean enable() {
+                return consumer.enable();
             }
         });
     }
@@ -327,5 +348,23 @@ public abstract class Plugin implements PluginSubscriber {
 
     public Schema schema() {
         return null;
+    }
+
+    public static class Pair<L, R> {
+        public final L left;
+        public final R right;
+
+        public Pair(L left, R right) {
+            this.left = left;
+            this.right = right;
+        }
+
+        public L getLeft() {
+            return left;
+        }
+
+        public R getRight() {
+            return right;
+        }
     }
 }

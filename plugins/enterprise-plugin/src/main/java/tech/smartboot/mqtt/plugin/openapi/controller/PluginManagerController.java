@@ -39,6 +39,7 @@ import tech.smartboot.mqtt.plugin.openapi.to.RepositoryPlugin;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
 import tech.smartboot.mqtt.plugin.spec.bus.DisposableEventBusSubscriber;
+import tech.smartboot.mqtt.plugin.spec.bus.EventBusConsumer;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 import tech.smartboot.mqtt.plugin.spec.schema.Schema;
 
@@ -409,6 +410,62 @@ public class PluginManagerController {
         brokerContext.pluginRegistry().startPlugin(id);
         return RestResult.ok(null);
     }
+
+    @RequestMapping("/logs")
+    public void logs(@Param("id") int id, HttpRequest request) throws Throwable {
+        Plugin targetPlugin = brokerContext.pluginRegistry().getPlugin(id);
+        if (targetPlugin == null) {
+            // 插件未启用，检查本地插件
+            PluginUnit unit = localPlugins.get(id);
+            if (unit == null) {
+                request.upgrade(new SSEUpgrade() {
+                    @Override
+                    public void onOpen(SseEmitter sseEmitter) throws IOException {
+                        sseEmitter.sendAsJson(RestResult.fail("插件不存在或未启用"));
+                        sseEmitter.complete();
+                    }
+                });
+                return;
+            }
+            targetPlugin = unit.plugin;
+        }
+
+        final Plugin finalPlugin = targetPlugin;
+        final int pluginId = id;
+
+        request.upgrade(new SSEUpgrade() {
+            boolean enabled = true;
+
+            @Override
+            public void onOpen(SseEmitter sseEmitter) throws IOException {
+                logger.info("Plugin log stream opened for plugin: {} (id: {})", finalPlugin.pluginName(), pluginId);
+
+                // 发送连接成功消息
+                sseEmitter.sendAsJson(RestResult.ok("日志流已连接，开始监听插件 [" + finalPlugin.pluginName() + "] 的日志..."));
+                plugin.subLog(new EventBusConsumer<String>() {
+                    @Override
+                    public void consumer(EventType<String> eventType, String object) {
+                        try {
+                            sseEmitter.send(object);
+                        } catch (IOException e) {
+                            sseEmitter.complete();
+                        }
+                    }
+
+                    @Override
+                    public boolean enable() {
+                        return enabled;
+                    }
+                });
+            }
+
+            @Override
+            public void destroy() {
+                enabled = false;
+            }
+        });
+    }
+
 
     @RequestMapping("/disable")
     public RestResult<Void> disable(@Param("id") int id) {
