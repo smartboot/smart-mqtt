@@ -422,7 +422,7 @@ public class PluginManagerController {
             public void onOpen(SseEmitter sseEmitter) throws IOException {
                 Plugin plugin = brokerContext.pluginRegistry().getPlugin(id);
                 if (plugin == null) {
-                    sseEmitter.sendAsJson(RestResult.fail("插件不存在或未启动"));
+                    sseEmitter.sendAsJson(RestResult.fail("该插件未启动"));
                     return;
                 }
 
