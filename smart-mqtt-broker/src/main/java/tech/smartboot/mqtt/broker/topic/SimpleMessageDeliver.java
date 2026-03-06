@@ -96,7 +96,7 @@ class SimpleMessageDeliver extends BaseMessageDeliver {
      */
     private boolean push0() {
         if (hasPendingWrite()) {
-            System.out.println("push0...");
+//            System.out.println("push0...");
             return false;
         }
         Message message = topic.getMessageQueue().get(nextConsumerOffset);
