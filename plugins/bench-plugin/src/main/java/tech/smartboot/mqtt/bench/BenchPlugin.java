@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
@@ -86,11 +85,18 @@ public class BenchPlugin extends Plugin {
                 }
             }
         }).start();
-        timer().scheduleWithFixedDelay(() -> {
-            int c = countAdder.intValue();
-            countAdder.add(-c);
-            System.out.println("total: " + c + "\tTPS: " + (c / 5));
-        }, 5, TimeUnit.SECONDS);
+        new Thread(() -> {
+            while (running.get()) {
+                try {
+                    Thread.sleep(5000);
+                    int c = countAdder.intValue();
+                    countAdder.add(-c);
+                    System.out.println("total: " + c + "\tTPS: " + (c / 5));
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }).start();
     }
 
     @Override
