@@ -1,7 +1,7 @@
 # Smart-MQTT
 
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.5.2-green.svg)](https://github.com/smartboot/smart-mqtt/releases)
+[![Version](https://img.shields.io/badge/version-1.5.2-green.svg)](https://gitee.com/smartboot/smart-mqtt/releases)
 [![Docker Pulls](https://img.shields.io/docker/pulls/smartboot/smart-mqtt.svg)](https://hub.docker.com/r/smartboot/smart-mqtt)
 
 ## 项目介绍
@@ -72,8 +72,8 @@ docker-compose up -d
 
 ```bash
 # 下载最新版本的安装包
-# 请前往 GitHub Release 页面下载：
-# https://github.com/smartboot/smart-mqtt/releases
+# 请前往 Gitee Release 页面下载：
+# https://gitee.com/smartboot/smart-mqtt/releases
 
 # 解压安装包
 tar -xzf smart-mqtt-*.tar.gz
@@ -170,7 +170,7 @@ smart-mqtt 采用插件化架构设计，通过 enterprise-plugin 提供功能�
 
 - **官方文档**: [https://smartboot.tech/smart-mqtt/](https://smartboot.tech/smart-mqtt/)
 - **在线体验**: [http://115.190.30.166:8083/](http://115.190.30.166:8083/)（账号密码：smart-mqtt / smart-mqtt）
-- **问题反馈**: [GitHub Issues](https://github.com/smartboot/smart-mqtt/issues)
+- **问题反馈**: [Gitee Issues](https://gitee.com/smartboot/smart-mqtt/issues)
 
 ## 📝 发版记录
 
