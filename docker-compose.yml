@@ -2,9 +2,9 @@ networks:
   mqtt-network:
     driver: bridge
 services:
-  mqtt-broker:
+  smart-mqtt:
     container_name: smart-mqtt
-    hostname: mqtt-broker
+    hostname: smart-mqtt
     image: smartboot/smart-mqtt:latest
     networks:
       mqtt-network: null
@@ -26,9 +26,9 @@ services:
         max-size: "100m"
         max-file: "1"
 
-  mqtt-broker-2:
-    container_name: smart-mqtt-2
-    hostname: mqtt-broker-2
+  mqtt-broker:
+    container_name: mqtt-broker
+    hostname: mqtt-broker
     image: smartboot/smart-mqtt:latest
     networks:
       mqtt-network: null
@@ -50,3 +50,19 @@ services:
         max-size: "100m"
         max-file: "1"
 
+
+  #  mqtt-broker:
+  #    container_name: emqx
+  #    hostname: mqtt-broker
+  #    image: emqx/emqx:5.0.24
+  #    networks:
+  #      mqtt-network: null
+  #    restart: always
+  #    security_opt:
+  #      - no-new-privileges:true
+  #    user: root:root
+  #    logging:
+  #      driver: "json-file"
+  #      options:
+  #        max-size: "100m"
+  #        max-file: "1"

@@ -3,8 +3,9 @@ title: 压测插件
 sidebar:
   order: 10
 ---
+import { Aside } from '@astrojs/starlight/components';
 
-`bench-plugin` 是一款通用的 MQTT 压测插件，可用于测试任意 MQTT Broker（如 EMQX、Moquitto、ActiveMQ 等），支持 **发布压测** 和 **订阅压测** 两种场景，帮助开发者评估 MQTT broker 的性能表现。
+`bench-plugin` 是一款通用的 MQTT 压测插件，可用于测试任意 MQTT Broker（如 EMQX、Mosquitto、ActiveMQ 等），支持 **发布压测** 和 **订阅压测** 两种场景，帮助开发者评估 MQTT broker 的性能表现。
 
 ## 功能概述
 
@@ -44,7 +45,7 @@ graph LR
     end
     
     subgraph 被测机
-        B[Broker<br/>EMQX/Moquitto/smart-mqtt]
+        B[Broker<br/>EMQX/Mosquitto/smart-mqtt]
     end
     
     A -->|MQTT| B
@@ -53,7 +54,7 @@ graph LR
     style B fill:#fff3e0
 ```
 
-**说明**：分开部署，smart-mqtt 启动压测插件对其他节点的 broker 进行压测。这些 broker 可以是 smart-mqtt，也可以是其他类型的 broker（如 EMQX、Moquitto、ActiveMQ 等）。
+**说明**：分开部署，smart-mqtt 启动压测插件对其他节点的 broker 进行压测。这些 broker 可以是 smart-mqtt，也可以是其他类型的 broker（如 EMQX、Mosquitto、ActiveMQ 等）。
 
 - **优点**：数据更准确，无资源竞争干扰
 - **适用场景**：各 broker 产品的横向性能对比、单节点性能评估
@@ -131,63 +132,6 @@ graph TB
 | `publishCount` | int | `1` | 每次发布的消息数量 |
 | `publishPeriod` | int | `1` | 发布间隔（毫秒） |
 
-## 配置示例
-
-### 发布压测配置
-
-```yaml
-# 压测场景: publish-发布压测, subscribe-订阅压测
-scenario: publish
-
-# MQTT服务器地址
-host: 127.0.0.1
-# MQTT服务器端口
-port: 1883
-# 消息负载大小（字节）
-payloadSize: 128
-# 主题数量
-topicCount: 128
-# QoS等级: 0-AtMostOnce, 1-AtLeastOnce, 2-ExactlyOnce
-qos: 0
-
-# 发布压测配置
-publish:
-  # 发布者数量
-  connections: 1000
-  # 每次发布的消息数量
-  publishCount: 1
-  # 发布间隔（毫秒）
-  period: 1
-```
-
-### 订阅压测配置
-
-```yaml
-# 压测场景: subscribe-订阅压测
-scenario: subscribe
-
-# MQTT服务器地址
-host: 127.0.0.1
-# MQTT服务器端口
-port: 1883
-# 消息负载大小（字节）
-payloadSize: 128
-# 主题数量
-topicCount: 128
-# QoS等级
-qos: 0
-
-# 订阅压测配置
-subscribe:
-  # 订阅者数量
-  connections: 2000
-  # 发布者数量（0表示不启动发布者）
-  publisherCount: 10
-  # 每次发布的消息数量
-  publishCount: 1
-  # 发布间隔（毫秒）
-  publishPeriod: 1
-```
 
 ## 使用说明
 
@@ -213,6 +157,167 @@ total: 50000	TPS: 10000
 total: 50000	TPS: 10000
 total: 50000	TPS: 10000
 ```
+
+---
+
+## 性能测试数据
+
+很多用户比较关心 smart-mqtt 的性能表现，为了得出一个相对准确的结论，我们通过自研的压测工具分别对 smart-mqtt 和同类产品进行压测。
+
+### 环境准备
+
+一台装有 Docker 的 Linux 服务器、Windows 或者 Macbook。
+
+> 支持主流的 amd64 和 arm64 架构。
+
+<Aside type="tip">
+若进行海量连接测试，需要配置文件描述符限制：**`ulimit -n 65535`**
+</Aside>
+
+### 消息订阅压测
+
+**场景设计**：
+- MQTT Client 订阅者数量：2000
+- Topic 数量：128
+- 消息 payload 大小：128 字节
+
+| 消息质量 | smart-mqtt | emqx | bifromq |
+|:--------:|:----------:|:----:|:-------:|
+| QoS0 | 1000W/s | - | - |
+| QoS1 | 540W/s | - | - |
+| QoS2 | 320W/s | - | - |
+
+### 消息发布压测
+
+**场景设计**：
+- MQTT Client 发布者数量：2000
+- Topic 数量：128
+- 消息 payload 大小：128 字节
+
+| 消息质量 | smart-mqtt | emqx | bifromq |
+|:--------:|:----------:|:----:|:-------:|
+| QoS0 | 97W/s | - | - |
+| QoS1 | 63W/s | - | - |
+| QoS2 | 52W/s | - | - |
+
+### 海量连接压测
+
+**场景设计**：
+- Topic 订阅数：2 个
+- 消息 payload 大小：128 字节
+
+| 连接量 | smart-mqtt | emqx | bifromq |
+|:------:|:----------:|:----:|:-------:|
+| 10万 | - | - | - |
+| 30万 | - | - | - |
+| 50万 | - | - | - |
+| 80万 | - | - | - |
+| 100万 | - | - | - |
+
+:::tip[说明]
+以上性能数据仅供参考，实际性能受硬件配置、网络环境、JVM 参数等多种因素影响。
+:::
+
+---
+
+## Docker 环境压测
+
+在 smart-mqtt 的仓库根目录下，提供了用于性能测试的 [docker-compose.yml](https://gitee.com/smartboot/smart-mqtt/blob/master/docker-compose.yml) 文件。
+
+在这个文件中包含了多款 MQTT Broker，对应的 docker 服务名皆为：`mqtt-broker`。当需要对某个 broker 进行测试时，只需移除其注释，将另外的同名服务注释掉便可（即同时刻只能存在一个服务名为 `mqtt-broker` 的 docker 容器）。
+
+目前已支持的有：
+- smart-mqtt
+- emqx
+- BifroMQ
+
+### Docker Compose 配置说明
+
+```yaml
+networks:
+  mqtt-network:
+    driver: bridge
+services:
+  # smart-mqtt 服务（带企业版特性）
+  smart-mqtt:
+    container_name: smart-mqtt
+    hostname: smart-mqtt
+    image: smartboot/smart-mqtt:latest
+    networks:
+      mqtt-network: null
+    environment:
+      ENTERPRISE_ENABLE: true      # 启用企业版特性
+      BROKER_MAXINFLIGHT: 256      # 最大飞行消息数
+    ports:
+      - 18083:18083                 # 管理控制台端口
+      - 1883:1883                   # MQTT 端口
+
+  # 被测 Broker（用于横向对比测试）
+  mqtt-broker:
+    container_name: mqtt-broker
+    hostname: mqtt-broker
+    image: smartboot/smart-mqtt:latest
+    networks:
+      mqtt-network: null
+    environment:
+      ENTERPRISE_ENABLE: false      # 不启用企业版特性
+      BROKER_MAXINFLIGHT: 256
+    ports:
+      - 18084:18083
+      - 1884:1883
+```
+
+### 环境变量说明
+
+| 环境变量 | 说明 | 默认值 |
+|----------|------|--------|
+| `ENTERPRISE_ENABLE` | 是否启用企业版特性 | `false` |
+| `BROKER_MAXINFLIGHT` | 最大飞行消息数 | `256` |
+| `BROKER_LOWMEMORY` | 低内存模式 | 未启用 |
+
+### 横向对比测试
+
+如需对比测试其他 MQTT Broker（如 EMQX），可修改 `mqtt-broker` 服务配置：
+
+```yaml
+  mqtt-broker:
+    container_name: emqx
+    hostname: mqtt-broker
+    image: emqx/emqx:5.0.24
+    networks:
+      mqtt-network: null
+    restart: always
+    ports:
+      - 18083:18083
+      - 1883:1883
+```
+
+<Aside type="note">
+同时只能存在一个服务名为 `mqtt-broker` 的容器，测试不同 Broker 时需注释掉其他同名服务。
+</Aside>
+
+### 执行压测
+
+1. **启动 Broker 和压测客户端**：
+
+```bash
+docker-compose up -d
+```
+
+2. **查看压测结果**：
+
+```bash
+# 查看 smart-mqtt-bench 容器的日志
+docker-compose logs -f smart-mqtt-bench
+```
+
+3. **停止压测**：
+
+```bash
+docker-compose down
+```
+
+---
 
 ## 注意事项
 
