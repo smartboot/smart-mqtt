@@ -103,11 +103,11 @@ public class EnterprisePlugin extends Plugin {
     @Override
     public Schema schema() {
         Schema schema = new Schema();
-        Item http = Item.Object("http", "http服务配置").col(6);
+        Item http = Item.Object("http", "http服务配置");
         http.addItems(Item.Int("port", "http服务监听端口"));
         http.addItems(Item.String("host", "http服务监听地址"));
         schema.addItem(http);
-        Item database = Item.Object("database", "数据库配置").tip("数据库配置，默认使用h2文件模式，对于稳定性和性能有更高要求的建议采用mysql").col(6);
+        Item database = Item.Object("database", "数据库配置").tip("数据库配置，默认使用h2文件模式，对于稳定性和性能有更高要求的建议采用mysql");
         database.addItems(Item.String("dbType", "数据库类型").col(3).addEnums(Enum.of("h2_mem", "h2内存模式"), Enum.of("mysql", "mysql"), Enum.of("h2", "h2文件模式")));
         database.addItems(Item.String("url", "数据库连接地址").col(9).tip("仅在dbType为 mysql 时有效，例如：jdbc:mysql://127.0.0.1:3306/smart-mqtt"));
         database.addItems(Item.String("username", "数据库用户名").col(6).tip("仅在dbType为 mysql 时有效"));
@@ -149,7 +149,7 @@ public class EnterprisePlugin extends Plugin {
         showMetrics.addEnums(Enum.of("messages_qos2_sent", "发送给客户端的 QoS 2 消息数量"));
         schema.addItem(showMetrics);
 
-        Item openapi = Item.Object("openai", "openai服务配置").col(6);
+        Item openapi = Item.Object("openai", "openai服务配置");
         openapi.addItems(Item.String("url", "OpenAI URL"));
         openapi.addItems(Item.Password("apiKey", "API秘钥"));
         openapi.addItems(Item.String("model", "模型"));
