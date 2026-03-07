@@ -1,0 +1,155 @@
+---
+// 完全自定义的首页 - 不使用 Starlight 布局
+import Hero from '../components/Hero.astro';
+import FeatureCards from '../components/FeatureCards.astro';
+import DeploymentSection from '../components/DeploymentSection.astro';
+import VerificationSection from '../components/VerificationSection.astro';
+---
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="smart-mqtt 是 smartboot 开源组织推出的商业化 MQTT Broker 产品，专为拥有上万级设备连接量的企业级物联网场景设计。">
+  <meta name="keywords" content="smart-mqtt,mqtt,broker,mqtt broker">
+  <title>smart-mqtt - 企业级物联网消息中间件</title>
+  <link rel="icon" type="image/svg+xml" href="/smart-mqtt/favicon.svg">
+  <style is:global>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans SC', sans-serif;
+      line-height: 1.6;
+      color: #e2e8f0;
+      background: #0a0a0f;
+      overflow-x: hidden;
+    }
+    
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <!-- Hero Section -->
+  <Hero />
+  
+  <!-- Features Section -->
+  <FeatureCards />
+  
+  <!-- Deployment Section -->
+  <DeploymentSection />
+  
+  <!-- Verification Section -->
+  <VerificationSection />
+  
+  <!-- Footer -->
+  <footer class="custom-footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <span class="footer-logo">smart-mqtt</span>
+        <p class="footer-desc">企业级物联网消息中间件</p>
+      </div>
+      <div class="footer-links">
+        <a href="./product/introduction/">产品手册</a>
+        <a href="https://github.com/smartboot/smart-mqtt" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://gitee.com/smartboot/smart-mqtt" target="_blank" rel="noopener">Gitee</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2024 smartboot. All rights reserved.</p>
+    </div>
+  </footer>
+  
+  <style>
+    .custom-footer {
+      background: rgba(13, 13, 18, 0.8);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 60px 24px 30px;
+    }
+    
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 40px;
+    }
+    
+    .footer-brand {
+      flex: 1;
+      min-width: 200px;
+    }
+    
+    .footer-logo {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .footer-desc {
+      color: #a0a0b0;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+    
+    .footer-links {
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+    }
+    
+    .footer-links a {
+      color: #a0a0b0;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    
+    .footer-links a:hover {
+      color: #6366f1;
+    }
+    
+    .footer-bottom {
+      max-width: 1200px;
+      margin: 40px auto 0;
+      padding-top: 30px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      text-align: center;
+      color: #6b7280;
+      font-size: 13px;
+    }
+    
+    @media (max-width: 640px) {
+      .footer-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+      
+      .footer-links {
+        justify-content: center;
+      }
+    }
+  </style>
+</body>
+</html>

@@ -86,10 +86,6 @@ export default defineConfig({
             },
             sidebar: [
                 {
-                    label: '快速开始',
-                    link: '/',
-                },
-                {
                     label: '产品手册',
                     autogenerate: {directory: 'product'}
                 },

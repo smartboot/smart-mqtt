@@ -1,0 +1,688 @@
+---
+---
+
+<section class="hero-section">
+  <div class="hero-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="grid-bg"></div>
+  </div>
+  
+  <div class="hero-main">
+    <div class="content-col">
+      <div class="badge">
+        <span class="badge-dot"></span>
+        <span>开源 MQTT Broker</span>
+      </div>
+      
+      <h1 class="title">
+        <span class="gradient-text">smart-mqtt</span>
+        <span class="subtitle">企业级物联网消息中间件</span>
+      </h1>
+      
+      <p class="desc">
+        专为拥有上万级设备连接量的企业级物联网场景设计，
+        支持百万级并发连接，毫秒级消息延迟。
+      </p>
+      
+      <div class="btn-group">
+        <a href="./product/introduction/" class="btn-primary">
+          <span>快速开始</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </a>
+        <a href="https://github.com/smartboot/smart-mqtt" class="btn-secondary" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+      
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-num">100万+</div>
+          <div class="stat-label">并发连接</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <div class="stat-num">毫秒级</div>
+          <div class="stat-label">消息延迟</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <div class="stat-num">10万+</div>
+          <div class="stat-label">TPS</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <div class="stat-num">99.99%</div>
+          <div class="stat-label">可用性</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="visual-col">
+      <div class="terminal-window">
+        <div class="terminal-header">
+          <div class="window-btns">
+            <span class="win-btn close"></span>
+            <span class="win-btn minimize"></span>
+            <span class="win-btn maximize"></span>
+          </div>
+          <div class="window-title">smart-mqtt</div>
+        </div>
+        <div class="terminal-body">
+          <div class="line">
+            <span class="prompt">$</span>
+            <span class="cmd">docker run -p 1883:1883 smartboot/smart-mqtt</span>
+          </div>
+          <div class="line out">
+            <span class="check">✓</span> Pulling from smartboot/smart-mqtt
+          </div>
+          <div class="line out">
+            <span class="check">✓</span> Starting MQTT Broker on port 1883...
+          </div>
+          <div class="line out">
+            <span class="check">✓</span> Server started successfully!
+          </div>
+          <div class="line out blank"></div>
+          <div class="line">
+            <span class="prompt">$</span>
+            <span class="cmd">mqtt pub -t "test/topic" -m "Hello MQTT"</span>
+          </div>
+          <div class="line out pub">
+            <span class="arrow">→</span> Published to test/topic
+          </div>
+          <div class="line out blank"></div>
+          <div class="line">
+            <span class="prompt">$</span>
+            <span class="cursor">▊</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="float-card card-devices">
+        <div class="card-icon">📡</div>
+        <div class="card-info">
+          <div class="card-value">12,847</div>
+          <div class="card-text">在线设备</div>
+        </div>
+      </div>
+      
+      <div class="float-card card-latency">
+        <div class="card-icon">⚡</div>
+        <div class="card-info">
+          <div class="card-value">2.3ms</div>
+          <div class="card-text">平均延迟</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="scroll-hint">
+    <div class="mouse-icon">
+      <div class="wheel"></div>
+    </div>
+    <span>向下滚动</span>
+  </div>
+</section>
+
+<style is:global>
+  /* Reset all inherited styles */
+  .hero-section,
+  .hero-section *,
+  .hero-section *::before,
+  .hero-section *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .hero-section {
+    --hero-bg: #0a0a0f;
+    --hero-text: #ffffff;
+    --hero-text-muted: #a0a0b0;
+    --hero-accent: #6366f1;
+    --hero-accent-light: #818cf8;
+    --hero-accent-dark: #4f46e5;
+    --hero-border: rgba(255, 255, 255, 0.1);
+    --hero-card-bg: rgba(255, 255, 255, 0.03);
+    
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px 24px;
+    background: var(--hero-bg);
+    color: var(--hero-text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  
+  /* Background Effects */
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+  }
+  
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.4;
+  }
+  
+  .orb-1 {
+    width: 600px;
+    height: 600px;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    top: -200px;
+    right: -150px;
+    animation: orbFloat 20s ease-in-out infinite;
+  }
+  
+  .orb-2 {
+    width: 500px;
+    height: 500px;
+    background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+    bottom: -150px;
+    left: -150px;
+    animation: orbFloat 25s ease-in-out infinite reverse;
+  }
+  
+  @keyframes orbFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(30px, -30px) scale(1.1); }
+  }
+  
+  .grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
+  }
+  
+  /* Main Content */
+  .hero-main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+    max-width: 1280px;
+    width: 100%;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Left Column - Content */
+  .content-col {
+    animation: fadeInLeft 0.8s ease-out;
+  }
+  
+  @keyframes fadeInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--hero-card-bg);
+    border: 1px solid var(--hero-border);
+    border-radius: 9999px;
+    font-size: 14px;
+    color: var(--hero-text-muted);
+    margin-bottom: 24px;
+  }
+  
+  .badge-dot {
+    width: 8px;
+    height: 8px;
+    background: #22c55e;
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.9); }
+  }
+  
+  .title {
+    font-size: clamp(40px, 5vw, 64px);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 24px;
+  }
+  
+  .gradient-text {
+    display: block;
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+  
+  .subtitle {
+    display: block;
+    font-size: 0.6em;
+    font-weight: 700;
+    color: var(--hero-text);
+  }
+  
+  .desc {
+    font-size: 18px;
+    color: var(--hero-text-muted);
+    line-height: 1.7;
+    margin-bottom: 32px;
+    max-width: 480px;
+  }
+  
+  /* Buttons */
+  .btn-group {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 48px;
+    flex-wrap: wrap;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 15px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: none;
+  }
+  
+  .btn-primary {
+    background: linear-gradient(135deg, var(--hero-accent) 0%, var(--hero-accent-dark) 100%);
+    color: white;
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+  }
+  
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(99, 102, 241, 0.4);
+  }
+  
+  .btn-secondary {
+    background: transparent;
+    color: var(--hero-text);
+    border: 1px solid var(--hero-border);
+  }
+  
+  .btn-secondary:hover {
+    background: var(--hero-card-bg);
+    border-color: var(--hero-accent-light);
+  }
+  
+  /* Stats */
+  .stats {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  
+  .stat {
+    text-align: left;
+  }
+  
+  .stat-num {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--hero-text);
+    margin-bottom: 4px;
+  }
+  
+  .stat-label {
+    font-size: 13px;
+    color: var(--hero-text-muted);
+  }
+  
+  .stat-divider {
+    width: 1px;
+    height: 36px;
+    background: var(--hero-border);
+  }
+  
+  /* Right Column - Visual */
+  .visual-col {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: fadeInRight 0.8s ease-out 0.2s both;
+  }
+  
+  @keyframes fadeInRight {
+    from {
+      opacity: 0;
+      transform: translateX(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  /* Terminal */
+  .terminal-window {
+    width: 100%;
+    max-width: 480px;
+    background: #0d1117;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 
+      0 25px 50px -12px rgba(0, 0, 0, 0.8),
+      0 0 0 1px rgba(255, 255, 255, 0.1),
+      0 0 100px rgba(99, 102, 241, 0.15);
+    transform: perspective(1000px) rotateY(-5deg) rotateX(2deg);
+    animation: terminalFloat 6s ease-in-out infinite;
+  }
+  
+  @keyframes terminalFloat {
+    0%, 100% { transform: perspective(1000px) rotateY(-5deg) rotateX(2deg) translateY(0); }
+    50% { transform: perspective(1000px) rotateY(-5deg) rotateX(2deg) translateY(-10px); }
+  }
+  
+  .terminal-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    background: #161b22;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .window-btns {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .win-btn {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+  
+  .win-btn.close { background: #ff5f56; }
+  .win-btn.minimize { background: #ffbd2e; }
+  .win-btn.maximize { background: #27c93f; }
+  
+  .window-title {
+    flex: 1;
+    text-align: center;
+    font-size: 13px;
+    color: #6e7681;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+  }
+  
+  .terminal-body {
+    padding: 20px;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    font-size: 13px;
+    line-height: 1.8;
+  }
+  
+  .line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 2px;
+  }
+  
+  .line.out {
+    color: #8b949e;
+    padding-left: 20px;
+  }
+  
+  .line.out.blank {
+    height: 8px;
+  }
+  
+  .line.out.pub {
+    color: #58a6ff;
+  }
+  
+  .prompt {
+    color: #7ee787;
+    font-weight: bold;
+    user-select: none;
+  }
+  
+  .cmd {
+    color: #e6edf3;
+  }
+  
+  .cursor {
+    color: #58a6ff;
+    animation: blink 1s step-end infinite;
+  }
+  
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+  
+  .check {
+    color: #3fb950;
+    margin-right: 6px;
+  }
+  
+  .arrow {
+    color: #58a6ff;
+    margin-right: 6px;
+  }
+  
+  /* Floating Cards */
+  .float-card {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: rgba(13, 13, 18, 0.9);
+    border: 1px solid var(--hero-border);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  }
+  
+  .card-devices {
+    top: -20px;
+    right: -20px;
+    animation: cardFloat1 5s ease-in-out infinite;
+  }
+  
+  .card-latency {
+    bottom: 60px;
+    right: -40px;
+    animation: cardFloat2 5s ease-in-out infinite 0.5s;
+  }
+  
+  @keyframes cardFloat1 {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  
+  @keyframes cardFloat2 {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  
+  .card-icon {
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--hero-card-bg);
+    border-radius: 10px;
+  }
+  
+  .card-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--hero-text);
+  }
+  
+  .card-text {
+    font-size: 12px;
+    color: var(--hero-text-muted);
+  }
+  
+  /* Scroll Hint */
+  .scroll-hint {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--hero-text-muted);
+    font-size: 12px;
+    animation: bounce 2s infinite;
+  }
+  
+  @keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+    40% { transform: translateX(-50%) translateY(-10px); }
+    60% { transform: translateX(-50%) translateY(-5px); }
+  }
+  
+  .mouse-icon {
+    width: 24px;
+    height: 36px;
+    border: 2px solid var(--hero-border);
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    padding-top: 8px;
+  }
+  
+  .wheel {
+    width: 4px;
+    height: 6px;
+    background: var(--hero-text-muted);
+    border-radius: 2px;
+    animation: scrollWheel 1.5s infinite;
+  }
+  
+  @keyframes scrollWheel {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(8px); opacity: 0; }
+  }
+  
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .hero-main {
+      grid-template-columns: 1fr;
+      gap: 48px;
+      text-align: center;
+    }
+    
+    .visual-col {
+      order: -1;
+    }
+    
+    .terminal-window {
+      max-width: 100%;
+      transform: none;
+      animation: terminalFloatMobile 6s ease-in-out infinite;
+    }
+    
+    @keyframes terminalFloatMobile {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    .float-card {
+      display: none;
+    }
+    
+    .desc {
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .btn-group,
+    .stats {
+      justify-content: center;
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .hero-section {
+      padding: 60px 16px;
+      min-height: auto;
+    }
+    
+    .title {
+      font-size: 36px;
+    }
+    
+    .subtitle {
+      font-size: 20px;
+    }
+    
+    .btn-group {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+      justify-content: center;
+    }
+    
+    .stats {
+      gap: 16px;
+    }
+    
+    .stat-divider {
+      display: none;
+    }
+    
+    .stat {
+      text-align: center;
+    }
+    
+    .scroll-hint {
+      display: none;
+    }
+    
+    .terminal-body {
+      font-size: 12px;
+      padding: 16px;
+    }
+  }
+</style>

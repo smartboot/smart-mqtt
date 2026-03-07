@@ -1,0 +1,518 @@
+---
+---
+
+<section class="deployment-section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">快速部署</span>
+      <h2 class="section-title">选择适合你的部署方式</h2>
+      <p class="section-description">
+        提供 Docker 和手动部署两种方式，5 分钟内即可启动服务
+      </p>
+    </div>
+
+    <div class="deployment-tabs">
+      <div class="tab-header">
+        <button class="tab-btn active" data-tab="docker">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+            <path d="M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.185.185 0 00-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.186m0 2.716h2.118a.187.187 0 00.186-.186V6.29a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.887c0 .102.082.185.185.186m-2.93 0h2.12a.186.186 0 00.184-.186V6.29a.185.185 0 00-.185-.185H8.1a.185.185 0 00-.185.185v1.887c0 .102.083.185.185.186m-2.964 0h2.119a.186.186 0 00.185-.186V6.29a.185.185 0 00-.185-.185H5.136a.186.186 0 00-.186.185v1.887c0 .102.084.185.186.186m5.893 2.715h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.184-.186h-2.12a.186.186 0 00-.186.186v1.887c0 .102.084.185.186.185m-2.92 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.082.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338.001-.676.03-1.01.087-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.226.327c-.284.438-.49.922-.612 1.43-.23.97-.09 1.882.403 2.661-.595.332-1.55.413-1.744.42H.751a.751.751 0 00-.75.748 11.376 11.376 0 00.692 4.062c.545 1.428 1.355 2.48 2.41 3.124 1.18.723 3.1 1.137 5.275 1.137.983.003 1.963-.086 2.93-.266a12.248 12.248 0 00.824-1.389c.98-.567 1.86-1.288 2.61-2.136 1.252-1.418 1.998-2.997 2.553-4.4h.221c1.372 0 2.215-.549 2.68-1.009.309-.293.55-.65.707-1.046l.098-.288Z"/>
+          </svg>
+          Docker 部署（推荐）
+        </button>
+        <button class="tab-btn" data-tab="manual">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+          手动部署
+        </button>
+      </div>
+
+      <div class="tab-content">
+        <div class="tab-panel active" id="docker-panel">
+          <div class="method-cards">
+            <div class="method-card">
+              <div class="method-header">
+                <span class="method-number">01</span>
+                <h3>使用 Docker Compose</h3>
+              </div>
+              <p class="method-desc">最简单的部署方式，一键启动完整服务</p>
+              <div class="code-block-wrapper">
+                <div class="code-header">
+                  <span>docker-compose.yaml</span>
+                  <button class="copy-btn" onclick="copyCode(this)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    </svg>
+                    复制
+                  </button>
+                </div>
+                <pre class="code-content"><code>version: '3.8'
+services:
+  smart-mqtt:
+    image: smartboot/smart-mqtt:latest
+    container_name: smart-mqtt
+    ports:
+      - "1883:1883"
+      - "18083:18083"</code></pre>
+              </div>
+              <div class="command-block">
+                <span class="command-prompt">$</span>
+                <code>docker-compose up -d</code>
+                <button class="copy-btn" onclick="copyCode(this)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="method-card">
+              <div class="method-header">
+                <span class="method-number">02</span>
+                <h3>直接运行 Docker</h3>
+              </div>
+              <p class="method-desc">快速启动单个容器</p>
+              <div class="code-block-wrapper">
+                <div class="code-header">
+                  <span>终端命令</span>
+                  <button class="copy-btn" onclick="copyCode(this)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    </svg>
+                    复制
+                  </button>
+                </div>
+                <pre class="code-content"><code>docker run -d \
+  --name smart-mqtt \
+  -p 1883:1883 \
+  -p 18083:18083 \
+  smartboot/smart-mqtt:latest</code></pre>
+              </div>
+              <div class="port-info">
+                <div class="port-item">
+                  <span class="port-label">1883</span>
+                  <span class="port-desc">MQTT 协议端口</span>
+                </div>
+                <div class="port-item">
+                  <span class="port-label">18083</span>
+                  <span class="port-desc">Dashboard 端口</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="manual-panel">
+          <div class="method-cards">
+            <div class="method-card">
+              <div class="method-header">
+                <span class="method-number">01</span>
+                <h3>下载发行包</h3>
+              </div>
+              <p class="method-desc">从 Gitee 或 GitHub Releases 下载最新版本</p>
+              <div class="code-block-wrapper">
+                <div class="code-header">
+                  <span>下载并解压</span>
+                  <button class="copy-btn" onclick="copyCode(this)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    </svg>
+                    复制
+                  </button>
+                </div>
+                <pre class="code-content"><code>wget https://gitee.com/smartboot/smart-mqtt/releases/download/v1.5.1/smart-mqtt-full-v1.5.1.zip
+unzip smart-mqtt-full-v1.5.1.zip
+cd smart-mqtt-full-v1.5.1</code></pre>
+              </div>
+              <div class="download-links">
+                <a href="https://gitee.com/smartboot/smart-mqtt/releases" target="_blank" class="download-link">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M11.984 0A12.01 12.01 0 0 0 0 12c0 5.285 3.42 9.767 8.16 11.354.6.113.82-.26.82-.578 0-.286-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.386-1.332-1.755-1.332-1.755-1.09-.745.082-.73.082-.73 1.205.085 1.84 1.237 1.84 1.237 1.07 1.835 2.807 1.305 3.492.998.108-.776.42-1.305.76-1.605-2.67-.3-5.46-1.332-5.46-5.93 0-1.31.465-2.385 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23A11.51 11.51 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.29-1.552 3.297-1.23 3.297-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.905 1.23 3.225 0 4.61-2.805 5.625-5.475 5.925.435.375.81 1.096.81 2.22 0 1.605-.015 2.896-.015 3.286 0 .315.225.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12.016-12z"/>
+                  </svg>
+                  Gitee Releases
+                </a>
+                <a href="https://github.com/smartboot/smart-mqtt/releases" target="_blank" class="download-link">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+                  </svg>
+                  GitHub Releases
+                </a>
+              </div>
+            </div>
+
+            <div class="method-card">
+              <div class="method-header">
+                <span class="method-number">02</span>
+                <h3>启动服务</h3>
+              </div>
+              <p class="method-desc">执行启动脚本运行 smart-mqtt</p>
+              <div class="code-block-wrapper">
+                <div class="code-header">
+                  <span>启动命令</span>
+                  <button class="copy-btn" onclick="copyCode(this)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    </svg>
+                    复制
+                  </button>
+                </div>
+                <pre class="code-content"><code>./bin/start.sh</code></pre>
+              </div>
+              <div class="note-box">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="16" x2="12" y2="12"/>
+                  <line x1="12" y1="8" x2="12.01" y2="8"/>
+                </svg>
+                <span>确保已安装 JDK 8 或更高版本</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  function copyCode(btn) {
+    const codeBlock = btn.closest('.method-card').querySelector('.code-content code, .command-block code');
+    if (codeBlock) {
+      navigator.clipboard.writeText(codeBlock.textContent).then(() => {
+        const originalText = btn.innerHTML;
+        btn.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          已复制
+        `;
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+        }, 2000);
+      });
+    }
+  }
+
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab + '-panel').classList.add('active');
+    });
+  });
+</script>
+
+<style>
+  .deployment-section {
+    padding: 5rem 1.5rem;
+    background: var(--sl-color-bg-nav);
+    border-bottom: 1px solid var(--sl-color-hairline);
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+
+  .section-tag {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: var(--sl-color-bg-inline-code);
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 9999px;
+    color: var(--sl-color-accent);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+  }
+
+  .section-title {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 700;
+    color: var(--sl-color-text);
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+  }
+
+  .section-description {
+    font-size: 1.125rem;
+    color: var(--sl-color-text-muted);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  .deployment-tabs {
+    background: var(--sl-color-bg);
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
+
+  .tab-header {
+    display: flex;
+    border-bottom: 1px solid var(--sl-color-hairline);
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    background: transparent;
+    border: none;
+    color: var(--sl-color-text-muted);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+  }
+
+  .tab-btn:hover {
+    color: var(--sl-color-text);
+    background: var(--sl-color-bg-inline-code);
+  }
+
+  .tab-btn.active {
+    color: var(--sl-color-text);
+    background: var(--sl-color-bg-inline-code);
+    border-bottom: 2px solid var(--sl-color-accent);
+  }
+
+  .tab-content {
+    padding: 1.5rem;
+  }
+
+  .tab-panel {
+    display: none;
+  }
+
+  .tab-panel.active {
+    display: block;
+  }
+
+  .method-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .method-card {
+    background: var(--sl-color-bg-nav);
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+  }
+
+  .method-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .method-number {
+    width: 24px;
+    height: 24px;
+    background: var(--sl-color-accent);
+    color: var(--sl-color-text-invert);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .method-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--sl-color-text);
+  }
+
+  .method-desc {
+    color: var(--sl-color-text-muted);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+    margin-left: 2rem;
+  }
+
+  .code-block-wrapper {
+    background: var(--sl-color-bg-inline-code);
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 0.375rem;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+  }
+
+  .code-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    background: var(--sl-color-bg-nav);
+    border-bottom: 1px solid var(--sl-color-hairline);
+  }
+
+  .code-header span {
+    font-size: 0.75rem;
+    color: var(--sl-color-text-muted);
+  }
+
+  .copy-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    background: transparent;
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 0.25rem;
+    color: var(--sl-color-text-muted);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .copy-btn:hover {
+    background: var(--sl-color-bg);
+    color: var(--sl-color-text);
+    border-color: var(--sl-color-accent);
+  }
+
+  .code-content {
+    margin: 0;
+    padding: 0.75rem;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--sl-color-text);
+  }
+
+  .code-content code {
+    font-family: inherit;
+  }
+
+  .command-block {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 0.75rem;
+    background: var(--sl-color-bg-inline-code);
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 0.375rem;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.8125rem;
+  }
+
+  .command-block code {
+    flex: 1;
+    color: var(--sl-color-text);
+  }
+
+  .command-prompt {
+    color: var(--sl-color-accent);
+    font-weight: 600;
+  }
+
+  .port-info {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .port-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.625rem;
+    background: var(--sl-color-bg-inline-code);
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 0.25rem;
+  }
+
+  .port-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--sl-color-accent);
+  }
+
+  .port-desc {
+    font-size: 0.75rem;
+    color: var(--sl-color-text-muted);
+  }
+
+  .download-links {
+    display: flex;
+    gap: 0.625rem;
+    flex-wrap: wrap;
+  }
+
+  .download-link {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.875rem;
+    background: var(--sl-color-bg-inline-code);
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 0.375rem;
+    color: var(--sl-color-text);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+  }
+
+  .download-link:hover {
+    background: var(--sl-color-bg-nav);
+    border-color: var(--sl-color-accent);
+  }
+
+  .note-box {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 0.875rem;
+    background: var(--sl-color-orange-low);
+    border: 1px solid var(--sl-color-orange);
+    border-radius: 0.375rem;
+    color: var(--sl-color-orange-high);
+    font-size: 0.875rem;
+  }
+
+  @media (max-width: 768px) {
+    .deployment-section {
+      padding: 3rem 1rem;
+    }
+
+    .tab-header {
+      flex-direction: column;
+    }
+
+    .tab-content {
+      padding: 1rem;
+    }
+
+    .method-desc {
+      margin-left: 0;
+    }
+  }
+</style>
