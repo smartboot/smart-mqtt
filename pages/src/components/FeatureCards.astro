@@ -122,8 +122,9 @@
 <style>
   .features-section {
     padding: 100px 24px;
-    background: #0a0a0f;
+    background: var(--bg-primary);
     position: relative;
+    transition: background-color 0.3s ease;
   }
 
   .features-container {
@@ -139,10 +140,10 @@
   .features-tag {
     display: inline-block;
     padding: 8px 16px;
-    background: rgba(99, 91, 255, 0.1);
-    border: 1px solid rgba(99, 91, 255, 0.2);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
     border-radius: 9999px;
-    color: #635bff;
+    color: var(--accent-primary);
     font-size: 14px;
     font-weight: 500;
     margin-bottom: 16px;
@@ -151,14 +152,14 @@
   .features-title {
     font-size: clamp(28px, 4vw, 40px);
     font-weight: 700;
-    color: white;
+    color: var(--text-primary);
     margin-bottom: 16px;
     letter-spacing: -0.02em;
   }
 
   .features-description {
     font-size: 18px;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-muted);
     max-width: 600px;
     margin: 0 auto;
     line-height: 1.6;
@@ -172,8 +173,8 @@
   }
 
   .feature-card {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 32px;
     transition: all 0.3s ease;
@@ -188,7 +189,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, rgba(99, 91, 255, 0.08) 0%, transparent 50%);
+    background: linear-gradient(135deg, var(--accent-bg) 0%, transparent 50%);
     opacity: 0;
     transition: opacity 0.3s;
     pointer-events: none;
@@ -196,8 +197,8 @@
 
   .feature-card:hover {
     transform: translateY(-4px);
-    border-color: rgba(99, 91, 255, 0.3);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    border-color: var(--accent-border);
+    box-shadow: var(--shadow-lg);
   }
 
   .feature-card:hover::before {
@@ -225,7 +226,7 @@
   .feature-metric {
     font-size: 28px;
     font-weight: 700;
-    background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.8) 100%);
+    background: var(--gradient-text);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -236,14 +237,14 @@
   .feature-name {
     font-size: 18px;
     font-weight: 600;
-    color: white;
+    color: var(--text-primary);
     margin-bottom: 12px;
     position: relative;
   }
 
   .feature-text {
     font-size: 14px;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-muted);
     line-height: 1.6;
     margin-bottom: 16px;
     position: relative;
@@ -258,11 +259,11 @@
 
   .feature-tag {
     padding: 4px 12px;
-    background: rgba(99, 91, 255, 0.1);
-    border: 1px solid rgba(99, 91, 255, 0.2);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
     border-radius: 9999px;
     font-size: 12px;
-    color: #635bff;
+    color: var(--accent-primary);
     font-weight: 500;
   }
 

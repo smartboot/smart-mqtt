@@ -197,8 +197,9 @@
 <style>
   .verification-section {
     padding: 100px 24px;
-    background: #0a0a0f;
+    background: var(--bg-secondary);
     position: relative;
+    transition: background-color 0.3s ease;
   }
 
   .verification-container {
@@ -214,10 +215,10 @@
   .verification-tag {
     display: inline-block;
     padding: 8px 16px;
-    background: rgba(99, 91, 255, 0.1);
-    border: 1px solid rgba(99, 91, 255, 0.2);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
     border-radius: 9999px;
-    color: #635bff;
+    color: var(--accent-primary);
     font-size: 14px;
     font-weight: 500;
     margin-bottom: 16px;
@@ -226,14 +227,14 @@
   .verification-title {
     font-size: clamp(28px, 4vw, 40px);
     font-weight: 700;
-    color: white;
+    color: var(--text-primary);
     margin-bottom: 16px;
     letter-spacing: -0.02em;
   }
 
   .verification-description {
     font-size: 18px;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-muted);
     max-width: 500px;
     margin: 0 auto;
     line-height: 1.6;
@@ -246,16 +247,16 @@
   }
 
   .verify-card {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
     border-radius: 20px;
     padding: 28px;
     transition: all 0.3s ease;
   }
 
   .verify-card:hover {
-    border-color: rgba(99, 91, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border-color: var(--accent-border);
+    box-shadow: var(--shadow-lg);
   }
 
   .verify-card.wide {
@@ -272,13 +273,13 @@
   .verify-icon {
     width: 44px;
     height: 44px;
-    background: linear-gradient(135deg, rgba(99, 91, 255, 0.2) 0%, rgba(99, 91, 255, 0.1) 100%);
-    border: 1px solid rgba(99, 91, 255, 0.2);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #635bff;
+    color: var(--accent-primary);
   }
 
   .verify-icon svg {
@@ -287,15 +288,15 @@
   }
 
   .verify-icon.dashboard {
-    background: linear-gradient(135deg, rgba(0, 212, 170, 0.2) 0%, rgba(0, 212, 170, 0.1) 100%);
+    background: rgba(0, 212, 170, 0.1);
     border-color: rgba(0, 212, 170, 0.2);
-    color: #00d4aa;
+    color: var(--accent-success);
   }
 
   .verify-header h3 {
     font-size: 18px;
     font-weight: 600;
-    color: white;
+    color: var(--text-primary);
   }
 
   .verify-steps {
@@ -328,7 +329,7 @@
   }
 
   .step-title {
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--text-muted);
     font-size: 14px;
     font-weight: 500;
     margin-bottom: 8px;
@@ -339,9 +340,13 @@
     align-items: center;
     gap: 8px;
     padding: 12px 16px;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--bg-code);
+    border: 1px solid var(--border-color);
     border-radius: 10px;
+  }
+
+  :root[data-theme="light"] .code-block {
+    background: #1e1e2e;
   }
 
   .code-block code {
@@ -358,18 +363,17 @@
     justify-content: center;
     width: 28px;
     height: 28px;
-    background: rgba(99, 91, 255, 0.1);
-    border: 1px solid rgba(99, 91, 255, 0.2);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
     border-radius: 6px;
-    color: #635bff;
+    color: var(--accent-primary);
     cursor: pointer;
     transition: all 0.2s;
     flex-shrink: 0;
   }
 
   .copy-btn:hover {
-    background: rgba(99, 91, 255, 0.2);
-    border-color: rgba(99, 91, 255, 0.3);
+    background: var(--accent-border);
   }
 
   .client-links {
@@ -378,8 +382,8 @@
     gap: 8px;
     margin-top: 20px;
     padding-top: 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-    color: rgba(255, 255, 255, 0.5);
+    border-top: 1px solid var(--border-color);
+    color: var(--text-subtle);
     font-size: 13px;
     flex-wrap: wrap;
   }
@@ -388,21 +392,21 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    color: #635bff;
+    color: var(--accent-primary);
     font-weight: 500;
     transition: color 0.2s;
   }
 
   .client-link:hover {
-    color: #8b5cf6;
+    color: var(--accent-secondary);
   }
 
   .divider {
-    color: rgba(255, 255, 255, 0.2);
+    color: var(--text-subtle);
   }
 
   .client-text {
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--text-subtle);
   }
 
   .dashboard-content {
@@ -416,12 +420,12 @@
     align-items: center;
     gap: 16px;
     padding: 16px 20px;
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--bg-tertiary);
     border-radius: 12px;
   }
 
   .url-label {
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--text-subtle);
     font-size: 14px;
     flex-shrink: 0;
   }
@@ -430,7 +434,7 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    color: #635bff;
+    color: var(--accent-primary);
     font-family: 'JetBrains Mono', monospace;
     font-size: 15px;
     font-weight: 500;
@@ -438,15 +442,15 @@
   }
 
   .url-link:hover {
-    color: #8b5cf6;
+    color: var(--accent-secondary);
   }
 
   .credentials {
     display: flex;
     gap: 24px;
     padding: 16px 20px;
-    background: rgba(99, 91, 255, 0.05);
-    border: 1px solid rgba(99, 91, 255, 0.1);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
     border-radius: 12px;
   }
 
@@ -457,17 +461,22 @@
   }
 
   .credential-label {
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--text-subtle);
     font-size: 14px;
   }
 
   .credential-value {
     padding: 6px 12px;
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--bg-code);
     border-radius: 6px;
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
-    color: white;
+    color: var(--text-primary);
+  }
+
+  :root[data-theme="light"] .credential-value {
+    background: #1e1e2e;
+    color: rgba(255, 255, 255, 0.85);
   }
 
   .security-note {
@@ -481,12 +490,12 @@
   }
 
   .security-note svg {
-    color: #ffc107;
+    color: var(--accent-warning);
     flex-shrink: 0;
   }
 
   .security-note span {
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--text-muted);
     font-size: 13px;
   }
 

@@ -128,10 +128,11 @@
 <style is:global>
   .logo-marquee-section {
     padding: 60px 0;
-    background: #0a0a0f;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
     overflow: hidden;
+    transition: background-color 0.3s ease;
   }
   
   .marquee-container {
@@ -142,7 +143,7 @@
   
   .marquee-label {
     text-align: center;
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--text-subtle);
     font-size: 14px;
     font-weight: 500;
     margin-bottom: 32px;
@@ -188,9 +189,16 @@
   
   .logo-item {
     flex-shrink: 0;
-    opacity: 0.4;
-    filter: grayscale(100%) brightness(1.5);
+    opacity: 0.5;
     transition: all 0.3s ease;
+  }
+  
+  :root[data-theme="light"] .logo-item {
+    filter: grayscale(100%);
+  }
+  
+  :root[data-theme="dark"] .logo-item {
+    filter: grayscale(100%) brightness(1.5);
   }
   
   .logo-item:hover {
@@ -201,7 +209,7 @@
   .logo-item svg {
     height: 40px;
     width: auto;
-    color: white;
+    color: var(--text-primary);
   }
   
   .logo-item img {

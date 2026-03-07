@@ -134,8 +134,9 @@
 <style is:global>
   .performance-section {
     padding: 100px 24px;
-    background: linear-gradient(180deg, #0a0a0f 0%, #0d0d14 50%, #0a0a0f 100%);
+    background: var(--bg-secondary);
     position: relative;
+    transition: background-color 0.3s ease;
   }
   
   .performance-section::before {
@@ -145,7 +146,7 @@
     left: 0;
     right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(99, 91, 255, 0.3), transparent);
+    background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
   }
 
   .container {
@@ -161,10 +162,10 @@
   .section-tag {
     display: inline-block;
     padding: 8px 16px;
-    background: rgba(99, 91, 255, 0.1);
-    border: 1px solid rgba(99, 91, 255, 0.2);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
     border-radius: 9999px;
-    color: #635bff;
+    color: var(--accent-primary);
     font-size: 14px;
     font-weight: 500;
     margin-bottom: 16px;
@@ -173,14 +174,14 @@
   .section-title {
     font-size: clamp(28px, 4vw, 40px);
     font-weight: 700;
-    color: white;
+    color: var(--text-primary);
     margin-bottom: 16px;
     letter-spacing: -0.02em;
   }
 
   .section-description {
     font-size: 18px;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-muted);
     max-width: 600px;
     margin: 0 auto;
     line-height: 1.6;
@@ -195,8 +196,8 @@
 
   /* 图表区域 */
   .chart-container {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
     border-radius: 20px;
     padding: 40px;
   }
@@ -204,7 +205,7 @@
   .chart-title {
     font-size: 18px;
     font-weight: 600;
-    color: white;
+    color: var(--text-primary);
     margin-bottom: 32px;
     text-align: center;
   }
@@ -223,7 +224,7 @@
 
   .chart-bar {
     height: 48px;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-tertiary);
     border-radius: 8px;
     overflow: hidden;
     position: relative;
@@ -239,7 +240,7 @@
   }
 
   .bar-fill.competitor {
-    background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+    background: linear-gradient(90deg, var(--text-subtle) 0%, var(--text-muted) 100%);
   }
 
   .bar-glow {
@@ -266,12 +267,12 @@
   .bar-value {
     font-size: 16px;
     font-weight: 600;
-    color: white;
+    color: var(--text-primary);
   }
 
   .bar-label {
     font-size: 14px;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--text-subtle);
   }
 
   /* 指标卡片 */
@@ -282,8 +283,8 @@
   }
 
   .metric-card {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 28px;
     transition: all 0.3s ease;
@@ -291,24 +292,24 @@
 
   .metric-card:hover {
     transform: translateY(-4px);
-    border-color: rgba(99, 91, 255, 0.2);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    border-color: var(--accent-border);
+    box-shadow: var(--shadow-lg);
   }
 
   .metric-card.highlight {
-    background: linear-gradient(135deg, rgba(99, 91, 255, 0.1) 0%, rgba(99, 91, 255, 0.05) 100%);
-    border-color: rgba(99, 91, 255, 0.3);
+    background: var(--accent-bg);
+    border-color: var(--accent-border);
   }
 
   .metric-icon {
     width: 44px;
     height: 44px;
-    background: rgba(99, 91, 255, 0.1);
+    background: var(--accent-bg);
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #635bff;
+    color: var(--accent-primary);
     margin-bottom: 16px;
   }
 
@@ -327,7 +328,7 @@
   .metric-value .number {
     font-size: 36px;
     font-weight: 700;
-    background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%);
+    background: var(--gradient-text);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -337,19 +338,19 @@
   .metric-value .unit {
     font-size: 18px;
     font-weight: 600;
-    color: #635bff;
+    color: var(--accent-primary);
   }
 
   .metric-label {
     font-size: 15px;
     font-weight: 600;
-    color: white;
+    color: var(--text-primary);
     margin-bottom: 4px;
   }
 
   .metric-desc {
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--text-subtle);
   }
 
   /* 压测说明 */
@@ -360,14 +361,15 @@
     gap: 8px;
     margin-top: 48px;
     padding: 16px 24px;
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--text-subtle);
     font-size: 14px;
   }
 
   .benchmark-note svg {
-    color: #635bff;
+    color: var(--accent-primary);
     flex-shrink: 0;
   }
 

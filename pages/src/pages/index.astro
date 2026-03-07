@@ -1,5 +1,5 @@
 ---
-// 完全自定义的首页 - Stripe 风格设计
+// 完全自定义的首页 - Stripe 风格设计，支持浅色/深色主题切换
 import Navbar from '../components/Navbar.astro';
 import Hero from '../components/Hero.astro';
 import LogoMarquee from '../components/LogoMarquee.astro';
@@ -11,7 +11,7 @@ import CTASection from '../components/CTASection.astro';
 ---
 
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,6 +26,75 @@ import CTASection from '../components/CTASection.astro';
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <style is:global>
+    /* ===== 主题 CSS 变量定义 ===== */
+    :root {
+      /* 主题色 */
+      --accent-primary: #635bff;
+      --accent-secondary: #8b5cf6;
+      --accent-success: #00d4aa;
+      --accent-warning: #ffc107;
+      --accent-error: #ff5f56;
+      
+      /* 浅色主题变量 */
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8fafc;
+      --bg-tertiary: #f1f5f9;
+      --bg-card: #ffffff;
+      --bg-code: #f1f5f9;
+      
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --text-subtle: #94a3b8;
+      
+      --border-color: #e2e8f0;
+      --border-color-light: #f1f5f9;
+      
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      
+      --accent-bg: rgba(99, 91, 255, 0.08);
+      --accent-border: rgba(99, 91, 255, 0.2);
+      
+      --gradient-text: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+      --gradient-accent: linear-gradient(135deg, #635bff 0%, #8b5cf6 100%);
+      
+      --overlay-bg: rgba(0, 0, 0, 0.5);
+    }
+    
+    /* 深色主题变量 */
+    :root[data-theme="dark"] {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #0d0d14;
+      --bg-tertiary: #111119;
+      --bg-card: rgba(255, 255, 255, 0.02);
+      --bg-code: rgba(0, 0, 0, 0.4);
+      
+      --text-primary: #ffffff;
+      --text-secondary: #e2e8f0;
+      --text-muted: rgba(255, 255, 255, 0.7);
+      --text-subtle: rgba(255, 255, 255, 0.5);
+      
+      --border-color: rgba(255, 255, 255, 0.06);
+      --border-color-light: rgba(255, 255, 255, 0.1);
+      
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
+      
+      --accent-bg: rgba(99, 91, 255, 0.1);
+      --accent-border: rgba(99, 91, 255, 0.2);
+      
+      --gradient-text: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.8) 100%);
+      --gradient-accent: linear-gradient(135deg, #635bff 0%, #8b5cf6 100%);
+      
+      --overlay-bg: rgba(0, 0, 0, 0.8);
+    }
+    
+    /* ===== 基础样式 ===== */
     *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
@@ -39,11 +108,12 @@ import CTASection from '../components/CTASection.astro';
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       line-height: 1.6;
-      color: #e2e8f0;
-      background: #0a0a0f;
+      color: var(--text-primary);
+      background: var(--bg-primary);
       overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
     
     a {
@@ -63,16 +133,16 @@ import CTASection from '../components/CTASection.astro';
     }
     
     ::-webkit-scrollbar-track {
-      background: #0a0a0f;
+      background: var(--bg-primary);
     }
     
     ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2);
+      background: var(--text-subtle);
       border-radius: 4px;
     }
     
     ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.3);
+      background: var(--text-muted);
     }
     
     /* 选中文字样式 */
@@ -81,6 +151,23 @@ import CTASection from '../components/CTASection.astro';
       color: white;
     }
   </style>
+  
+  <script>
+    // 主题初始化（防止闪烁）
+    (function() {
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const html = document.documentElement;
+      
+      if (savedTheme) {
+        html.setAttribute('data-theme', savedTheme);
+      } else if (prefersDark) {
+        html.setAttribute('data-theme', 'dark');
+      } else {
+        html.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
 </head>
 <body>
   <!-- 导航栏 -->
@@ -187,9 +274,10 @@ import CTASection from '../components/CTASection.astro';
   
   <style>
     .custom-footer {
-      background: #0a0a0f;
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      background: var(--bg-primary);
+      border-top: 1px solid var(--border-color);
       padding: 80px 24px 0;
+      transition: background-color 0.3s ease;
     }
     
     .footer-content {
@@ -226,11 +314,11 @@ import CTASection from '../components/CTASection.astro';
     .footer-logo-text {
       font-size: 18px;
       font-weight: 700;
-      color: white;
+      color: var(--text-primary);
     }
     
     .footer-desc {
-      color: rgba(255, 255, 255, 0.5);
+      color: var(--text-subtle);
       font-size: 14px;
       margin-top: 2px;
     }
@@ -246,15 +334,17 @@ import CTASection from '../components/CTASection.astro';
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
       border-radius: 10px;
-      color: rgba(255, 255, 255, 0.6);
+      color: var(--text-muted);
       transition: all 0.2s;
     }
     
     .footer-social a:hover {
-      background: rgba(99, 91, 255, 0.1);
-      color: #635bff;
+      background: var(--accent-bg);
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
     }
     
     .footer-links {
@@ -272,22 +362,22 @@ import CTASection from '../components/CTASection.astro';
     .link-column h4 {
       font-size: 14px;
       font-weight: 600;
-      color: white;
+      color: var(--text-primary);
       margin-bottom: 4px;
     }
     
     .link-column a {
-      color: rgba(255, 255, 255, 0.5);
+      color: var(--text-subtle);
       font-size: 14px;
       transition: color 0.2s;
     }
     
     .link-column a:hover {
-      color: white;
+      color: var(--accent-primary);
     }
     
     .footer-bottom {
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      border-top: 1px solid var(--border-color);
       padding: 24px;
     }
     
@@ -302,7 +392,7 @@ import CTASection from '../components/CTASection.astro';
     }
     
     .footer-bottom p {
-      color: rgba(255, 255, 255, 0.4);
+      color: var(--text-subtle);
       font-size: 14px;
     }
     
@@ -316,18 +406,18 @@ import CTASection from '../components/CTASection.astro';
       display: flex;
       align-items: center;
       gap: 6px;
-      color: rgba(255, 255, 255, 0.5);
+      color: var(--text-subtle);
       font-size: 14px;
     }
     
     .stat-item svg {
-      color: #635bff;
+      color: var(--accent-primary);
     }
     
     .stat-divider {
       width: 1px;
       height: 16px;
-      background: rgba(255, 255, 255, 0.1);
+      background: var(--border-color);
     }
     
     @media (max-width: 1024px) {

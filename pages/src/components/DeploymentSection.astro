@@ -235,8 +235,9 @@ cd smart-mqtt-full-v1.5.1</code></pre>
 <style>
   .deployment-section {
     padding: 100px 24px;
-    background: linear-gradient(180deg, #0d0d14 0%, #0a0a0f 100%);
+    background: var(--bg-primary);
     position: relative;
+    transition: background-color 0.3s ease;
   }
 
   .deployment-container {
@@ -252,10 +253,10 @@ cd smart-mqtt-full-v1.5.1</code></pre>
   .deployment-tag {
     display: inline-block;
     padding: 8px 16px;
-    background: rgba(99, 91, 255, 0.1);
-    border: 1px solid rgba(99, 91, 255, 0.2);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
     border-radius: 9999px;
-    color: #635bff;
+    color: var(--accent-primary);
     font-size: 14px;
     font-weight: 500;
     margin-bottom: 16px;
@@ -264,30 +265,30 @@ cd smart-mqtt-full-v1.5.1</code></pre>
   .deployment-title {
     font-size: clamp(28px, 4vw, 40px);
     font-weight: 700;
-    color: white;
+    color: var(--text-primary);
     margin-bottom: 16px;
     letter-spacing: -0.02em;
   }
 
   .deployment-description {
     font-size: 18px;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-muted);
     max-width: 500px;
     margin: 0 auto;
     line-height: 1.6;
   }
 
   .deployment-tabs {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
     border-radius: 20px;
     overflow: hidden;
   }
 
   .tab-header {
     display: flex;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-tertiary);
   }
 
   .tab-btn {
@@ -295,7 +296,7 @@ cd smart-mqtt-full-v1.5.1</code></pre>
     padding: 16px 24px;
     background: transparent;
     border: none;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--text-subtle);
     font-size: 15px;
     font-weight: 500;
     cursor: pointer;
@@ -319,17 +320,17 @@ cd smart-mqtt-full-v1.5.1</code></pre>
   }
 
   .tab-btn:hover {
-    color: rgba(255, 255, 255, 0.8);
-    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-muted);
+    background: var(--bg-secondary);
   }
 
   .tab-btn.active {
-    color: white;
-    background: rgba(99, 91, 255, 0.1);
+    color: var(--text-primary);
+    background: var(--accent-bg);
   }
 
   .tab-btn.active::after {
-    background: #635bff;
+    background: var(--accent-primary);
   }
 
   .tab-content {
@@ -351,8 +352,8 @@ cd smart-mqtt-full-v1.5.1</code></pre>
   }
 
   .method-card {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 24px;
   }
@@ -381,22 +382,27 @@ cd smart-mqtt-full-v1.5.1</code></pre>
   .method-header h3 {
     font-size: 17px;
     font-weight: 600;
-    color: white;
+    color: var(--text-primary);
   }
 
   .method-desc {
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--text-subtle);
     font-size: 14px;
     margin-bottom: 16px;
     margin-left: 40px;
   }
 
   .code-block {
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--bg-code);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     overflow: hidden;
     margin-bottom: 12px;
+  }
+
+  /* 浅色模式下代码块使用深色背景 */
+  :root[data-theme="light"] .code-block {
+    background: #1e1e2e;
   }
 
   .code-header {
@@ -419,10 +425,10 @@ cd smart-mqtt-full-v1.5.1</code></pre>
     align-items: center;
     gap: 6px;
     padding: 6px 12px;
-    background: rgba(99, 91, 255, 0.1);
-    border: 1px solid rgba(99, 91, 255, 0.2);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
     border-radius: 6px;
-    color: #635bff;
+    color: var(--accent-primary);
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
@@ -430,8 +436,7 @@ cd smart-mqtt-full-v1.5.1</code></pre>
   }
 
   .copy-btn:hover {
-    background: rgba(99, 91, 255, 0.2);
-    border-color: rgba(99, 91, 255, 0.3);
+    background: var(--accent-border);
   }
 
   .code-content {
@@ -453,9 +458,13 @@ cd smart-mqtt-full-v1.5.1</code></pre>
     align-items: center;
     gap: 8px;
     padding: 12px 16px;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--bg-code);
+    border: 1px solid var(--border-color);
     border-radius: 10px;
+  }
+
+  :root[data-theme="light"] .command-block {
+    background: #1e1e2e;
   }
 
   .command-prompt {
@@ -468,7 +477,7 @@ cd smart-mqtt-full-v1.5.1</code></pre>
     flex: 1;
     font-family: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
     font-size: 13px;
-    color: white;
+    color: rgba(255, 255, 255, 0.85);
   }
 
   .port-info {
@@ -476,7 +485,7 @@ cd smart-mqtt-full-v1.5.1</code></pre>
     gap: 16px;
     margin-top: 12px;
     padding: 12px 16px;
-    background: rgba(99, 91, 255, 0.05);
+    background: var(--accent-bg);
     border-radius: 10px;
   }
 
@@ -488,16 +497,16 @@ cd smart-mqtt-full-v1.5.1</code></pre>
 
   .port-label {
     padding: 4px 10px;
-    background: rgba(99, 91, 255, 0.15);
+    background: var(--accent-border);
     border-radius: 6px;
-    color: #635bff;
+    color: var(--accent-primary);
     font-size: 13px;
     font-weight: 600;
     font-family: 'JetBrains Mono', monospace;
   }
 
   .port-desc {
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--text-subtle);
     font-size: 13px;
   }
 
@@ -512,19 +521,19 @@ cd smart-mqtt-full-v1.5.1</code></pre>
     align-items: center;
     gap: 8px;
     padding: 10px 16px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 10px;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--text-muted);
     font-size: 14px;
     font-weight: 500;
     transition: all 0.2s;
   }
 
   .download-link:hover {
-    background: rgba(99, 91, 255, 0.1);
-    border-color: rgba(99, 91, 255, 0.2);
-    color: white;
+    background: var(--accent-bg);
+    border-color: var(--accent-border);
+    color: var(--text-primary);
   }
 
   .note-box {
@@ -539,12 +548,12 @@ cd smart-mqtt-full-v1.5.1</code></pre>
   }
 
   .note-box svg {
-    color: #00d4aa;
+    color: var(--accent-success);
     flex-shrink: 0;
   }
 
   .note-box span {
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--text-muted);
     font-size: 13px;
   }
 
@@ -568,7 +577,7 @@ cd smart-mqtt-full-v1.5.1</code></pre>
     }
 
     .tab-btn.active {
-      border-left: 3px solid #635bff;
+      border-left: 3px solid var(--accent-primary);
     }
 
     .method-desc {

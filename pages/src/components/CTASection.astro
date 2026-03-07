@@ -162,8 +162,9 @@
   .enterprise-section {
     position: relative;
     padding: 120px 24px;
-    background: linear-gradient(180deg, #0a0a0f 0%, #0f0f18 50%, #0a0a0f 100%);
+    background: var(--bg-primary);
     overflow: hidden;
+    transition: background-color 0.3s ease;
   }
   
   .enterprise-container {
@@ -179,12 +180,12 @@
   .enterprise-tag {
     display: inline-block;
     padding: 8px 20px;
-    background: linear-gradient(135deg, rgba(99, 91, 255, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
-    border: 1px solid rgba(99, 91, 255, 0.3);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
     border-radius: 50px;
     font-size: 13px;
     font-weight: 600;
-    color: #a5b4fc;
+    color: var(--accent-primary);
     margin-bottom: 24px;
     letter-spacing: 0.5px;
   }
@@ -192,10 +193,10 @@
   .enterprise-title {
     font-size: clamp(32px, 5vw, 48px);
     font-weight: 700;
-    color: white;
+    color: var(--text-primary);
     margin-bottom: 16px;
     letter-spacing: -0.02em;
-    background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%);
+    background: var(--gradient-text);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -203,7 +204,7 @@
   
   .enterprise-description {
     font-size: 18px;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-muted);
     max-width: 600px;
     margin: 0 auto;
     line-height: 1.7;
@@ -217,8 +218,8 @@
   }
   
   .enterprise-feature {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 32px 24px;
     text-align: center;
@@ -226,8 +227,8 @@
   }
   
   .enterprise-feature:hover {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(99, 91, 255, 0.3);
+    background: var(--bg-secondary);
+    border-color: var(--accent-border);
     transform: translateY(-4px);
   }
   
@@ -238,26 +239,26 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, rgba(99, 91, 255, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+    background: var(--accent-bg);
     border-radius: 14px;
   }
   
   .enterprise-feature .feature-icon svg {
     width: 28px;
     height: 28px;
-    color: #a5b4fc;
+    color: var(--accent-primary);
   }
   
   .enterprise-feature h3 {
     font-size: 18px;
     font-weight: 600;
-    color: white;
+    color: var(--text-primary);
     margin-bottom: 12px;
   }
   
   .enterprise-feature p {
     font-size: 14px;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--text-subtle);
     line-height: 1.6;
   }
   
@@ -309,12 +310,13 @@
   .cta-section {
     position: relative;
     padding: 140px 24px;
-    background: #0a0a0f;
+    background: var(--bg-primary);
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 60vh;
+    transition: background-color 0.3s ease;
   }
 
   .cta-bg-effects {
@@ -328,6 +330,11 @@
     border-radius: 50%;
     filter: blur(100px);
     opacity: 0.4;
+  }
+
+  /* 浅色模式下降低渐变球透明度 */
+  :root[data-theme="light"] .glow-orb {
+    opacity: 0.2;
   }
 
   .orb-1 {
@@ -357,10 +364,11 @@
   .grid-pattern {
     position: absolute;
     inset: 0;
-    background-image: 
-      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-image:
+      linear-gradient(var(--border-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
     background-size: 60px 60px;
+    opacity: 0.5;
     mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
     -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
   }
@@ -375,10 +383,10 @@
   .cta-title {
     font-size: clamp(32px, 5vw, 48px);
     font-weight: 700;
-    color: white;
+    color: var(--text-primary);
     margin-bottom: 20px;
     letter-spacing: -0.02em;
-    background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%);
+    background: var(--gradient-text);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -386,7 +394,7 @@
 
   .cta-description {
     font-size: 18px;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-muted);
     line-height: 1.7;
     margin-bottom: 40px;
   }
@@ -429,14 +437,14 @@
   }
 
   .btn-secondary {
-    background: transparent;
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
   }
 
   .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.3);
+    background: var(--bg-tertiary);
+    border-color: var(--accent-primary);
   }
 
   .cta-trust {
@@ -450,7 +458,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--text-subtle);
     font-size: 14px;
   }
 
@@ -508,7 +516,7 @@
   .qr-modal-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.85);
+    background: var(--overlay-bg);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     animation: overlayFadeIn 0.3s ease;
@@ -521,15 +529,23 @@
 
   .qr-modal-content {
     position: relative;
-    background: linear-gradient(145deg, #1e1e2a 0%, #12121a 100%);
-    border: 1px solid rgba(99, 91, 255, 0.2);
+    background: var(--bg-card);
+    border: 1px solid var(--accent-border);
     border-radius: 24px;
     padding: 32px;
     text-align: center;
     max-width: 340px;
     width: 100%;
     animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 100px rgba(99, 91, 255, 0.1);
+    box-shadow: var(--shadow-xl);
+  }
+
+  :root[data-theme="light"] .qr-modal-content {
+    background: #ffffff;
+  }
+
+  :root[data-theme="dark"] .qr-modal-content {
+    background: linear-gradient(145deg, #1e1e2a 0%, #12121a 100%);
   }
 
   @keyframes modalSlideIn {
@@ -555,14 +571,14 @@
     background: transparent;
     border: none;
     border-radius: 8px;
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--text-subtle);
     cursor: pointer;
     transition: all 0.2s;
   }
 
   .qr-modal-close:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
   }
 
   .qr-modal-header {
@@ -588,12 +604,12 @@
   .qr-modal-title {
     font-size: 20px;
     font-weight: 700;
-    color: white;
+    color: var(--text-primary);
     margin: 0;
   }
 
   .qr-modal-desc {
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-muted);
     font-size: 14px;
     margin: 0 0 20px;
   }
@@ -608,14 +624,14 @@
     width: 200px;
     height: 200px;
     border-radius: 16px;
-    border: 3px solid rgba(99, 91, 255, 0.3);
+    border: 3px solid var(--accent-border);
     background: white;
     display: block;
     transition: border-color 0.3s;
   }
 
   .qr-image:hover {
-    border-color: rgba(99, 91, 255, 0.5);
+    border-color: var(--accent-primary);
   }
 
   .qr-loading {
@@ -638,7 +654,7 @@
     width: 40px;
     height: 40px;
     border: 3px solid #e0e0e0;
-    border-top-color: #635bff;
+    border-top-color: var(--accent-primary);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
@@ -649,11 +665,11 @@
 
   .qr-modal-footer {
     padding-top: 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: 1px solid var(--border-color);
   }
 
   .qr-modal-tip {
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--text-subtle);
     font-size: 12px;
     margin: 0;
   }
