@@ -116,59 +116,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 环境要求 -->
-    <div class="requirements-box">
-      <h3 class="requirements-title">环境要求</h3>
-      <div class="requirements-list">
-        <div class="requirement-card">
-          <div class="requirement-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-              <path d="M2 17l10 5 10-5"/>
-              <path d="M2 12l10 5 10-5"/>
-            </svg>
-          </div>
-          <div class="requirement-info">
-            <strong>Java</strong>
-            <span>JDK 8 或更高版本</span>
-          </div>
-        </div>
-        <div class="requirement-card">
-          <div class="requirement-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-              <line x1="8" y1="21" x2="16" y2="21"/>
-              <line x1="12" y1="17" x2="12" y2="21"/>
-            </svg>
-          </div>
-          <div class="requirement-info">
-            <strong>操作系统</strong>
-            <span>Linux / Windows / macOS</span>
-          </div>
-        </div>
-        <div class="requirement-card">
-          <div class="requirement-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="4" y="4" width="16" height="16" rx="2" ry="2"/>
-              <rect x="9" y="9" width="6" height="6"/>
-              <line x1="9" y1="1" x2="9" y2="4"/>
-              <line x1="15" y1="1" x2="15" y2="4"/>
-              <line x1="9" y1="20" x2="9" y2="23"/>
-              <line x1="15" y1="20" x2="15" y2="23"/>
-              <line x1="20" y1="9" x2="23" y2="9"/>
-              <line x1="20" y1="14" x2="23" y2="14"/>
-              <line x1="1" y1="9" x2="4" y2="9"/>
-              <line x1="1" y1="14" x2="4" y2="14"/>
-            </svg>
-          </div>
-          <div class="requirement-info">
-            <strong>Docker</strong>
-            <span>可选，用于容器化部署</span>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </section>
 
@@ -319,85 +266,6 @@
     font-weight: 500;
   }
 
-  /* 环境要求 */
-  .requirements-box {
-    padding: 40px;
-    background: linear-gradient(135deg, rgba(99, 91, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
-    border: 1px solid rgba(99, 91, 255, 0.15);
-    border-radius: 20px;
-    margin-top: 16px;
-  }
-
-  .requirements-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
-    margin-bottom: 24px;
-    text-align: center;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-  }
-
-  .requirements-list {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-  }
-
-  .requirement-card {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 20px 24px;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 14px;
-    transition: all 0.2s ease;
-  }
-
-  .requirement-card:hover {
-    background: rgba(99, 91, 255, 0.1);
-    border-color: rgba(99, 91, 255, 0.2);
-    transform: translateY(-2px);
-  }
-
-  .requirement-icon {
-    width: 48px;
-    height: 48px;
-    background: linear-gradient(135deg, rgba(99, 91, 255, 0.2) 0%, rgba(99, 91, 255, 0.1) 100%);
-    border: 1px solid rgba(99, 91, 255, 0.2);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #635bff;
-    flex-shrink: 0;
-  }
-
-  .requirement-icon svg {
-    width: 24px;
-    height: 24px;
-  }
-
-  .requirement-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .requirement-info strong {
-    color: white;
-    font-size: 15px;
-    font-weight: 600;
-    line-height: 1.4;
-  }
-
-  .requirement-info span {
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 13px;
-    line-height: 1.4;
-  }
-
   /* 响应式 */
   @media (max-width: 1024px) {
     .features-grid {
@@ -418,14 +286,6 @@
 
     .feature-card {
       padding: 24px;
-    }
-
-    .requirements-box {
-      padding: 24px;
-    }
-
-    .requirements-list {
-      grid-template-columns: 1fr;
     }
 
     .features-title {
