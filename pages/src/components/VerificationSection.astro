@@ -2,16 +2,17 @@
 ---
 
 <section class="verification-section">
-  <div class="container">
-    <div class="section-header">
-      <span class="section-tag">验证部署</span>
-      <h2 class="section-title">验证服务运行状态</h2>
-      <p class="section-description">
+  <div class="verification-container">
+    <div class="verification-header">
+      <span class="verification-tag">验证部署</span>
+      <h2 class="verification-title">验证服务运行状态</h2>
+      <p class="verification-description">
         通过多种方式验证 smart-mqtt 是否成功运行
       </p>
     </div>
 
     <div class="verification-grid">
+      <!-- 检查服务状态 -->
       <div class="verify-card">
         <div class="verify-header">
           <div class="verify-icon">
@@ -31,7 +32,7 @@
               <p class="step-title">查看进程</p>
               <div class="code-block">
                 <code>ps aux | grep smart-mqtt</code>
-                <button class="copy-btn" onclick="copyCode(this)">
+                <button class="copy-btn" data-code="ps aux | grep smart-mqtt">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
@@ -47,7 +48,7 @@
               <p class="step-title">查看端口监听</p>
               <div class="code-block">
                 <code>netstat -tlnp | grep 1883</code>
-                <button class="copy-btn" onclick="copyCode(this)">
+                <button class="copy-btn" data-code="netstat -tlnp | grep 1883">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
@@ -59,6 +60,7 @@
         </div>
       </div>
 
+      <!-- MQTT 客户端测试 -->
       <div class="verify-card">
         <div class="verify-header">
           <div class="verify-icon">
@@ -78,7 +80,7 @@
               <p class="step-title">订阅主题（终端 1）</p>
               <div class="code-block">
                 <code>mosquitto_sub -h localhost -p 1883 -t test/topic</code>
-                <button class="copy-btn" onclick="copyCode(this)">
+                <button class="copy-btn" data-code="mosquitto_sub -h localhost -p 1883 -t test/topic">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
@@ -93,8 +95,8 @@
             <div class="step-content">
               <p class="step-title">发布消息（终端 2）</p>
               <div class="code-block">
-                <code>mosquitto_pub -h localhost -p 1883 -t test/topic -m "Hello smart-mqtt"</code>
-                <button class="copy-btn" onclick="copyCode(this)">
+                <code>mosquitto_pub -h localhost -p 1883 -t test/topic -m "Hello"</code>
+                <button class="copy-btn" data-code='mosquitto_pub -h localhost -p 1883 -t test/topic -m "Hello"'>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
@@ -107,7 +109,7 @@
 
         <div class="client-links">
           <span>推荐客户端：</span>
-          <a href="https://mqttx.app/" target="_blank" class="client-link">
+          <a href="https://mqttx.app/" target="_blank" rel="noopener" class="client-link">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
               <polyline points="15 3 21 3 21 9"/>
@@ -120,6 +122,7 @@
         </div>
       </div>
 
+      <!-- 访问 Dashboard -->
       <div class="verify-card wide">
         <div class="verify-header">
           <div class="verify-icon dashboard">
@@ -135,7 +138,7 @@
         <div class="dashboard-content">
           <div class="dashboard-url">
             <span class="url-label">访问地址</span>
-            <a href="http://localhost:18083" target="_blank" class="url-link">
+            <a href="http://localhost:18083" target="_blank" rel="noopener" class="url-link">
               http://localhost:18083
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
@@ -171,62 +174,67 @@
 </section>
 
 <script>
-  function copyCode(btn) {
-    const code = btn.previousElementSibling.textContent;
-    navigator.clipboard.writeText(code).then(() => {
-      const originalHTML = btn.innerHTML;
-      btn.innerHTML = `
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
-      `;
-      setTimeout(() => {
-        btn.innerHTML = originalHTML;
-      }, 2000);
+  document.querySelectorAll('.verification-section .copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const code = btn.dataset.code;
+      if (code) {
+        navigator.clipboard.writeText(code).then(() => {
+          const originalHTML = btn.innerHTML;
+          btn.innerHTML = `
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          `;
+          setTimeout(() => {
+            btn.innerHTML = originalHTML;
+          }, 2000);
+        });
+      }
     });
-  }
+  });
 </script>
 
 <style>
   .verification-section {
-    padding: 5rem 1.5rem;
-    background: var(--sl-color-bg);
+    padding: 100px 24px;
+    background: #0a0a0f;
+    position: relative;
   }
 
-  .container {
-    max-width: 900px;
+  .verification-container {
+    max-width: 1000px;
     margin: 0 auto;
   }
 
-  .section-header {
+  .verification-header {
     text-align: center;
-    margin-bottom: 2.5rem;
+    margin-bottom: 48px;
   }
 
-  .section-tag {
+  .verification-tag {
     display: inline-block;
-    padding: 0.5rem 1rem;
-    background: var(--sl-color-bg-inline-code);
-    border: 1px solid var(--sl-color-hairline);
+    padding: 8px 16px;
+    background: rgba(99, 91, 255, 0.1);
+    border: 1px solid rgba(99, 91, 255, 0.2);
     border-radius: 9999px;
-    color: var(--sl-color-accent);
-    font-size: 0.875rem;
+    color: #635bff;
+    font-size: 14px;
     font-weight: 500;
-    margin-bottom: 1rem;
+    margin-bottom: 16px;
   }
 
-  .section-title {
-    font-size: clamp(1.75rem, 4vw, 2.5rem);
+  .verification-title {
+    font-size: clamp(28px, 4vw, 40px);
     font-weight: 700;
-    color: var(--sl-color-text);
-    margin-bottom: 1rem;
+    color: white;
+    margin-bottom: 16px;
     letter-spacing: -0.02em;
   }
 
-  .section-description {
-    font-size: 1.125rem;
-    color: var(--sl-color-text-muted);
-    max-width: 600px;
+  .verification-description {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.6);
+    max-width: 500px;
     margin: 0 auto;
     line-height: 1.6;
   }
@@ -234,19 +242,20 @@
   .verification-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 1.25rem;
+    gap: 24px;
   }
 
   .verify-card {
-    background: var(--sl-color-bg-nav);
-    border: 1px solid var(--sl-color-hairline);
-    border-radius: 0.75rem;
-    padding: 1.25rem;
-    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 20px;
+    padding: 28px;
+    transition: all 0.3s ease;
   }
 
   .verify-card:hover {
-    border-color: var(--sl-color-accent);
+    border-color: rgba(99, 91, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
 
   .verify-card.wide {
@@ -256,222 +265,235 @@
   .verify-header {
     display: flex;
     align-items: center;
-    gap: 0.625rem;
-    margin-bottom: 1.25rem;
+    gap: 12px;
+    margin-bottom: 24px;
   }
 
   .verify-icon {
-    width: 36px;
-    height: 36px;
-    background: var(--sl-color-accent-low);
-    border-radius: 0.5rem;
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, rgba(99, 91, 255, 0.2) 0%, rgba(99, 91, 255, 0.1) 100%);
+    border: 1px solid rgba(99, 91, 255, 0.2);
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--sl-color-accent);
-  }
-
-  .verify-icon.dashboard {
-    background: var(--sl-color-orange-low);
-    color: var(--sl-color-orange-high);
+    color: #635bff;
   }
 
   .verify-icon svg {
-    width: 18px;
-    height: 18px;
+    width: 22px;
+    height: 22px;
+  }
+
+  .verify-icon.dashboard {
+    background: linear-gradient(135deg, rgba(0, 212, 170, 0.2) 0%, rgba(0, 212, 170, 0.1) 100%);
+    border-color: rgba(0, 212, 170, 0.2);
+    color: #00d4aa;
   }
 
   .verify-header h3 {
-    font-size: 1rem;
+    font-size: 18px;
     font-weight: 600;
-    color: var(--sl-color-text);
+    color: white;
   }
 
   .verify-steps {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 20px;
   }
 
   .step {
     display: flex;
-    gap: 0.625rem;
+    gap: 16px;
   }
 
   .step-number {
-    width: 22px;
-    height: 22px;
-    background: var(--sl-color-accent-low);
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #635bff 0%, #8b5cf6 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--sl-color-accent);
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
     flex-shrink: 0;
   }
 
   .step-content {
     flex: 1;
-    min-width: 0;
   }
 
   .step-title {
-    font-size: 0.8125rem;
-    color: var(--sl-color-text-muted);
-    margin-bottom: 0.375rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
   }
 
   .code-block {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.625rem;
-    background: var(--sl-color-bg-inline-code);
-    border: 1px solid var(--sl-color-hairline);
-    border-radius: 0.375rem;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
-    font-size: 0.75rem;
+    gap: 8px;
+    padding: 12px 16px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
   }
 
   .code-block code {
     flex: 1;
-    color: var(--sl-color-text);
-    overflow-x: auto;
-    white-space: nowrap;
+    font-family: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.85);
+    word-break: break-all;
   }
 
   .copy-btn {
-    padding: 0.25rem;
-    background: transparent;
-    border: none;
-    color: var(--sl-color-text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: rgba(99, 91, 255, 0.1);
+    border: 1px solid rgba(99, 91, 255, 0.2);
+    border-radius: 6px;
+    color: #635bff;
     cursor: pointer;
-    transition: color 0.2s;
+    transition: all 0.2s;
     flex-shrink: 0;
   }
 
   .copy-btn:hover {
-    color: var(--sl-color-text);
+    background: rgba(99, 91, 255, 0.2);
+    border-color: rgba(99, 91, 255, 0.3);
   }
 
   .client-links {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--sl-color-hairline);
-    font-size: 0.8125rem;
-    color: var(--sl-color-text-muted);
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 13px;
     flex-wrap: wrap;
   }
 
   .client-link {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
-    color: var(--sl-color-accent);
-    text-decoration: none;
+    gap: 6px;
+    color: #635bff;
+    font-weight: 500;
     transition: color 0.2s;
   }
 
   .client-link:hover {
-    color: var(--sl-color-accent-high);
+    color: #8b5cf6;
   }
 
   .divider {
-    color: var(--sl-color-hairline);
+    color: rgba(255, 255, 255, 0.2);
   }
 
   .client-text {
-    color: var(--sl-color-text-muted);
+    color: rgba(255, 255, 255, 0.4);
   }
 
   .dashboard-content {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
   }
 
   .dashboard-url {
     display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
   }
 
   .url-label {
-    font-size: 0.8125rem;
-    color: var(--sl-color-text-muted);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
+    flex-shrink: 0;
   }
 
   .url-link {
     display: inline-flex;
     align-items: center;
-    gap: 0.375rem;
-    padding: 0.625rem 0.875rem;
-    background: var(--sl-color-orange-low);
-    border: 1px solid var(--sl-color-orange);
-    border-radius: 0.375rem;
-    color: var(--sl-color-orange-high);
-    text-decoration: none;
+    gap: 8px;
+    color: #635bff;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.8125rem;
+    font-size: 15px;
     font-weight: 500;
-    transition: all 0.2s;
-    width: fit-content;
+    transition: color 0.2s;
   }
 
   .url-link:hover {
-    background: var(--sl-color-orange);
-    color: var(--sl-color-text-invert);
+    color: #8b5cf6;
   }
 
   .credentials {
     display: flex;
-    flex-direction: column;
-    gap: 0.625rem;
+    gap: 24px;
+    padding: 16px 20px;
+    background: rgba(99, 91, 255, 0.05);
+    border: 1px solid rgba(99, 91, 255, 0.1);
+    border-radius: 12px;
   }
 
   .credential-item {
     display: flex;
     align-items: center;
-    gap: 0.625rem;
+    gap: 12px;
   }
 
   .credential-label {
-    font-size: 0.8125rem;
-    color: var(--sl-color-text-muted);
-    min-width: 70px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
   }
 
   .credential-value {
-    padding: 0.3125rem 0.625rem;
-    background: var(--sl-color-bg-inline-code);
-    border: 1px solid var(--sl-color-hairline);
-    border-radius: 0.25rem;
+    padding: 6px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--sl-color-text);
+    font-size: 13px;
+    color: white;
   }
 
   .security-note {
-    grid-column: span 2;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 0.875rem;
-    background: var(--sl-color-orange-low);
-    border: 1px solid var(--sl-color-orange);
-    border-radius: 0.375rem;
-    color: var(--sl-color-orange-high);
-    font-size: 0.8125rem;
+    gap: 10px;
+    padding: 12px 16px;
+    background: rgba(255, 193, 7, 0.08);
+    border: 1px solid rgba(255, 193, 7, 0.15);
+    border-radius: 10px;
   }
 
+  .security-note svg {
+    color: #ffc107;
+    flex-shrink: 0;
+  }
+
+  .security-note span {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+  }
+
+  /* 响应式 */
   @media (max-width: 768px) {
     .verification-section {
-      padding: 3rem 1rem;
+      padding: 60px 16px;
     }
 
     .verification-grid {
@@ -482,12 +504,19 @@
       grid-column: span 1;
     }
 
-    .dashboard-content {
-      grid-template-columns: 1fr;
+    .credentials {
+      flex-direction: column;
+      gap: 12px;
     }
 
-    .security-note {
-      grid-column: span 1;
+    .verification-title {
+      font-size: 24px;
+    }
+
+    .dashboard-url {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
     }
   }
 </style>
