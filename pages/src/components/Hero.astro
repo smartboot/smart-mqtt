@@ -43,35 +43,6 @@
         </a>
       </div>
       
-      <!-- 信任指标 -->
-      <div class="trust-indicators">
-        <div class="trust-item">
-          <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
-          </svg>
-          <span>900+ Stars</span>
-        </div>
-        <div class="trust-divider"></div>
-        <div class="trust-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          <span>15k+ 下载</span>
-        </div>
-        <div class="trust-divider"></div>
-        <div class="trust-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-          <span>1+ 企业</span>
-        </div>
-      </div>
-      
       <!-- 环境要求 -->
       <div class="requirements-bar">
         <div class="requirements-label">
@@ -163,44 +134,6 @@
           </div>
         </div>
         
-        <!-- 浮动数据卡片 -->
-        <div class="float-card card-devices">
-          <div class="card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-              <line x1="8" y1="21" x2="16" y2="21"/>
-              <line x1="12" y1="17" x2="12" y2="21"/>
-            </svg>
-          </div>
-          <div class="card-info">
-            <div class="card-value" data-count="12847">0</div>
-            <div class="card-text">在线设备</div>
-          </div>
-        </div>
-        
-        <div class="float-card card-latency">
-          <div class="card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-            </svg>
-          </div>
-          <div class="card-info">
-            <div class="card-value"><span data-count="2.3">0</span>ms</div>
-            <div class="card-text">平均延迟</div>
-          </div>
-        </div>
-        
-        <div class="float-card card-messages">
-          <div class="card-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-            </svg>
-          </div>
-          <div class="card-info">
-            <div class="card-value"><span data-count="1.2">0</span>M/s</div>
-            <div class="card-text">消息吞吐</div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -422,32 +355,6 @@
     border-color: var(--accent-primary);
   }
   
-  /* 信任指标 */
-  .trust-indicators {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-  
-  .trust-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--text-subtle);
-    font-size: 14px;
-  }
-  
-  .trust-item svg {
-    color: var(--accent-primary);
-  }
-  
-  .trust-divider {
-    width: 1px;
-    height: 16px;
-    background: var(--border-color);
-  }
-  
   /* 环境要求 */
   .requirements-bar {
     display: flex;
@@ -657,89 +564,6 @@
     margin-right: 6px;
   }
   
-  /* 浮动卡片 */
-  .float-card {
-    position: absolute;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px 20px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow: var(--shadow-lg);
-    transition: transform 0.3s ease;
-  }
-  
-  :root[data-theme="light"] .float-card {
-    background: #ffffff;
-  }
-  
-  :root[data-theme="dark"] .float-card {
-    background: rgba(20, 20, 28, 0.9);
-  }
-  
-  .float-card:hover {
-    transform: scale(1.05);
-  }
-  
-  .card-devices {
-    top: -20px;
-    right: -20px;
-    animation: cardFloat1 5s ease-in-out infinite;
-  }
-  
-  .card-latency {
-    bottom: 60px;
-    right: -40px;
-    animation: cardFloat2 5s ease-in-out infinite 0.5s;
-  }
-  
-  .card-messages {
-    bottom: -20px;
-    left: -30px;
-    animation: cardFloat3 5s ease-in-out infinite 1s;
-  }
-  
-  @keyframes cardFloat1 {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
-  }
-  
-  @keyframes cardFloat2 {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
-  }
-  
-  @keyframes cardFloat3 {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-  }
-  
-  .card-icon {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--accent-bg);
-    border-radius: 10px;
-    color: var(--accent-primary);
-  }
-  
-  .card-value {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text-primary);
-  }
-  
-  .card-text {
-    font-size: 12px;
-    color: var(--text-subtle);
-  }
-  
   /* 响应式 */
   @media (max-width: 1024px) {
     .hero-main {
@@ -761,10 +585,6 @@
       justify-content: center;
     }
     
-    .trust-indicators {
-      justify-content: center;
-    }
-    
     .requirements-bar {
       justify-content: center;
     }
@@ -778,9 +598,6 @@
       transform: translateY(-5px);
     }
     
-    .float-card {
-      display: none;
-    }
   }
   
   @media (max-width: 640px) {
@@ -802,14 +619,6 @@
       justify-content: center;
     }
     
-    .trust-indicators {
-      justify-content: center;
-    }
-    
-    .trust-divider {
-      display: none;
-    }
-    
     .requirements-bar {
       flex-direction: column;
       gap: 12px;
@@ -826,60 +635,3 @@
   }
 </style>
 
-<script>
-  // 数字滚动动画
-  function animateValue(element, start, end, duration, isDecimal = false) {
-    const range = end - start;
-    const minTimer = 50;
-    let stepTime = Math.abs(Math.floor(duration / range));
-    stepTime = Math.max(stepTime, minTimer);
-    
-    let startTime = new Date().getTime();
-    let endTime = startTime + duration;
-    let timer;
-    
-    function run() {
-      let now = new Date().getTime();
-      let remaining = Math.max((endTime - now) / duration, 0);
-      let value = Math.round(end - (remaining * range));
-      
-      if (isDecimal) {
-        element.textContent = (end - (remaining * range)).toFixed(1);
-      } else {
-        element.textContent = value.toLocaleString();
-      }
-      
-      if (value == end) {
-        clearInterval(timer);
-      }
-    }
-    
-    timer = setInterval(run, stepTime);
-    run();
-  }
-  
-  // 滚动触发动画
-  const observerOptions = {
-    threshold: 0.5
-  };
-  
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const valueEl = entry.target.querySelector('.card-value');
-        if (valueEl) {
-          const countEl = valueEl.querySelector('[data-count]') || valueEl;
-          const targetValue = parseFloat(countEl.dataset.count);
-          const isDecimal = countEl.dataset.count.includes('.');
-          
-          animateValue(countEl, 0, targetValue, 2000, isDecimal);
-        }
-        observer.unobserve(entry.target);
-      }
-    });
-  }, observerOptions);
-  
-  document.querySelectorAll('.float-card').forEach(card => {
-    observer.observe(card);
-  });
-</script>
