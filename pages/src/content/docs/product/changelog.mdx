@@ -8,17 +8,38 @@ sidebar:
 
 ## smart-mqtt broker v1.5.2（2026-03-04）
 
+- **AI Agent 智能助手**：集成 Feat AI Agent 能力，为企业版注入智能化交互体验，支持 7×24 小时技术答疑
+- **压测模块插件化**：将原 `smart-mqtt-bench` 独立模块重构为 `bench-plugin` 插件，开箱即用
+- **llms.txt 规范**：遵循 llms.txt 标准，为大模型提供优化的内容格式
+
 发版详情：《[smart-mqtt v1.5.2发布，个人开发者如何用1/10的投入撬动10倍产品价值](https://mp.weixin.qq.com/s/dVSzcgNHoWOWddtyPBoyww)》
 
 ## smart-mqtt broker v1.5.1（2026-02-08）
+
+- **异步事件总线**：引入异步特性，大幅提升三方连接认证模式下的并发处理能力
+- **Schema 配置规范**：插件接口新增 Schema 规范，实现配置页面的自适应渲染
+- **后台 UI 全面升级**：采用全新前端框架重构，包体积降至 9.89MB，完美适配手机端
+- **模力方舟上架**：正式入驻模力方舟应用市场，提供更便捷的购买渠道
 
 发版详情：《[smart-mqtt v1.5.1发布，一人产品比一人公司靠谱多了](https://mp.weixin.qq.com/s/pe3hAz3GHCyXuDwnZBD5JQ)》
 
 ## smart-mqtt broker v1.5.0（2025-11-2）
 
+- **企业版极致瘦身**：完整软件包从 29.3MB 下降至 12.6MB，减少约 57%
+- **Redis 桥接插件优化**：自研 Redis 客户端框架 Redisun，使 redis 桥接插件从 15.5MB 降至 81KB
+- **问题修复**：解决了在特定场景下通配符订阅不生效的问题
+- **smart-socket 升级至 1.7.5**：底层通信框架更新，增强网络通信稳定性
+
 发版详情：《[smart-mqtt v1.5.0：仅需淘汰netty，便可实现企业版软件包瘦身57%](https://mp.weixin.qq.com/s/fRCAF_wSqG5NL5czpBNJnw)》
 
 ## smart-mqtt broker v1.4.0（2025-10-15）
+
+- **发行包极致瘦身**：开源版发行包体积从 3MB 降至不足 800KB，减少约 73%
+- **配置方式全面革新**：废弃传统的 YAML 配置，拥抱云原生标准的系统属性和环境变量
+- **性能提升**：QoS0 吞吐量达到 1000W/秒
+- **内存优化**：针对海量 Topic 和订阅关系场景进行深度内存优化
+- **集群插件优化**：重连逻辑稳定性提升
+- **企业级插件增强**：新增故障自愈机制，优化存储结构
 
 发版详情：《[smart-mqtt v1.4.0极致瘦身，以不足 800KB 的包体积承载1000万/秒消息洪流](https://mp.weixin.qq.com/s/eSgmHLqN3iMuZ5XXl64eFg)》
 
