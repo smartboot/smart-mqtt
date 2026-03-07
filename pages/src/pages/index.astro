@@ -1,9 +1,13 @@
 ---
-// 完全自定义的首页 - 不使用 Starlight 布局
+// 完全自定义的首页 - Stripe 风格设计
+import Navbar from '../components/Navbar.astro';
 import Hero from '../components/Hero.astro';
+import LogoMarquee from '../components/LogoMarquee.astro';
 import FeatureCards from '../components/FeatureCards.astro';
+import PerformanceSection from '../components/PerformanceSection.astro';
 import DeploymentSection from '../components/DeploymentSection.astro';
 import VerificationSection from '../components/VerificationSection.astro';
+import CTASection from '../components/CTASection.astro';
 ---
 
 <!DOCTYPE html>
@@ -15,6 +19,12 @@ import VerificationSection from '../components/VerificationSection.astro';
   <meta name="keywords" content="smart-mqtt,mqtt,broker,mqtt broker">
   <title>smart-mqtt - 企业级物联网消息中间件</title>
   <link rel="icon" type="image/svg+xml" href="/smart-mqtt/favicon.svg">
+  
+  <!-- Inter 字体 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
   <style is:global>
     *, *::before, *::after {
       box-sizing: border-box;
@@ -27,11 +37,13 @@ import VerificationSection from '../components/VerificationSection.astro';
     }
     
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans SC', sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       line-height: 1.6;
       color: #e2e8f0;
       background: #0a0a0f;
       overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
     
     a {
@@ -43,14 +55,48 @@ import VerificationSection from '../components/VerificationSection.astro';
       max-width: 100%;
       height: auto;
     }
+    
+    /* 滚动条样式 */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #0a0a0f;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    
+    /* 选中文字样式 */
+    ::selection {
+      background: rgba(99, 91, 255, 0.3);
+      color: white;
+    }
   </style>
 </head>
 <body>
+  <!-- 导航栏 -->
+  <Navbar />
+  
   <!-- Hero Section -->
   <Hero />
   
+  <!-- Logo Marquee -->
+  <LogoMarquee />
+  
   <!-- Features Section -->
   <FeatureCards />
+  
+  <!-- Performance Section -->
+  <PerformanceSection />
   
   <!-- Deployment Section -->
   <DeploymentSection />
@@ -58,96 +104,262 @@ import VerificationSection from '../components/VerificationSection.astro';
   <!-- Verification Section -->
   <VerificationSection />
   
+  <!-- CTA Section -->
+  <CTASection />
+  
   <!-- Footer -->
   <footer class="custom-footer">
     <div class="footer-content">
-      <div class="footer-brand">
-        <span class="footer-logo">smart-mqtt</span>
-        <p class="footer-desc">企业级物联网消息中间件</p>
+      <div class="footer-main">
+        <div class="footer-brand">
+          <svg class="footer-logo-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="32" height="32" rx="8" fill="url(#footer-logo-gradient)"/>
+            <path d="M8 16h16M8 12h12M8 20h10" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="footer-logo-gradient" x1="0" y1="0" x2="32" y2="32">
+                <stop offset="0%" stop-color="#635bff"/>
+                <stop offset="100%" stop-color="#8b5cf6"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="footer-brand-info">
+            <span class="footer-logo-text">smart-mqtt</span>
+            <p class="footer-desc">企业级物联网消息中间件</p>
+          </div>
+        </div>
+        
+        <div class="footer-social">
+          <a href="https://github.com/smartboot/smart-mqtt" target="_blank" rel="noopener" aria-label="GitHub">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+          </a>
+          <a href="https://gitee.com/smartboot/smart-mqtt" target="_blank" rel="noopener" aria-label="Gitee">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+              <path d="M11.984 0A12.01 12.01 0 0 0 0 12c0 5.285 3.42 9.767 8.16 11.354.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+            </svg>
+          </a>
+        </div>
       </div>
+      
       <div class="footer-links">
-        <a href="./product/introduction/">产品手册</a>
-        <a href="https://github.com/smartboot/smart-mqtt" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://gitee.com/smartboot/smart-mqtt" target="_blank" rel="noopener">Gitee</a>
+        <div class="link-column">
+          <h4>产品</h4>
+          <a href="#features">功能特性</a>
+          <a href="./plugins/">插件市场</a>
+          <a href="#enterprise">企业版</a>
+        </div>
+        <div class="link-column">
+          <h4>开发者</h4>
+          <a href="./product/introduction/">快速开始</a>
+          <a href="./development/plugin/">插件开发</a>
+          <a href="https://github.com/smartboot/smart-mqtt" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="link-column">
+          <h4>资源</h4>
+          <a href="./product/changelog/">更新日志</a>
+          <a href="./product/choosing-broker/">选型指南</a>
+          <a href="./plugins/enterprise-plugin/">企业插件</a>
+        </div>
+        <div class="link-column">
+          <h4>关于</h4>
+          <a href="https://smartboot.cn" target="_blank" rel="noopener">smartboot</a>
+          <a href="#">联系我们</a>
+          <a href="#">加入社区</a>
+        </div>
       </div>
     </div>
+    
     <div class="footer-bottom">
-      <p>&copy; 2024 smartboot. All rights reserved.</p>
+      <div class="footer-bottom-content">
+        <p>&copy; 2024 smartboot. All rights reserved.</p>
+        <div class="footer-stats">
+          <span class="stat-item">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+            1,200+ Stars
+          </span>
+          <span class="stat-divider"></span>
+          <span class="stat-item">v1.5.2</span>
+        </div>
+      </div>
     </div>
   </footer>
   
   <style>
     .custom-footer {
-      background: rgba(13, 13, 18, 0.8);
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 60px 24px 30px;
+      background: #0a0a0f;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 80px 24px 0;
     }
     
     .footer-content {
       max-width: 1200px;
       margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 80px;
+      padding-bottom: 60px;
+    }
+    
+    .footer-main {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      flex-wrap: wrap;
-      gap: 40px;
+      flex-direction: column;
+      gap: 24px;
     }
     
     .footer-brand {
-      flex: 1;
-      min-width: 200px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
     
-    .footer-logo {
-      font-size: 24px;
+    .footer-logo-icon {
+      width: 36px;
+      height: 36px;
+    }
+    
+    .footer-brand-info {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .footer-logo-text {
+      font-size: 18px;
       font-weight: 700;
-      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      color: white;
     }
     
     .footer-desc {
-      color: #a0a0b0;
-      margin-top: 8px;
+      color: rgba(255, 255, 255, 0.5);
       font-size: 14px;
+      margin-top: 2px;
+    }
+    
+    .footer-social {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .footer-social a {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      color: rgba(255, 255, 255, 0.6);
+      transition: all 0.2s;
+    }
+    
+    .footer-social a:hover {
+      background: rgba(99, 91, 255, 0.1);
+      color: #635bff;
     }
     
     .footer-links {
-      display: flex;
-      gap: 30px;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 40px;
     }
     
-    .footer-links a {
-      color: #a0a0b0;
+    .link-column {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .link-column h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 4px;
+    }
+    
+    .link-column a {
+      color: rgba(255, 255, 255, 0.5);
       font-size: 14px;
       transition: color 0.2s;
     }
     
-    .footer-links a:hover {
-      color: #6366f1;
+    .link-column a:hover {
+      color: white;
     }
     
     .footer-bottom {
-      max-width: 1200px;
-      margin: 40px auto 0;
-      padding-top: 30px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-      text-align: center;
-      color: #6b7280;
-      font-size: 13px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 24px;
     }
     
-    @media (max-width: 640px) {
+    .footer-bottom-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    
+    .footer-bottom p {
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 14px;
+    }
+    
+    .footer-stats {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 14px;
+    }
+    
+    .stat-item svg {
+      color: #635bff;
+    }
+    
+    .stat-divider {
+      width: 1px;
+      height: 16px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    @media (max-width: 1024px) {
       .footer-content {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
+        grid-template-columns: 1fr;
+        gap: 48px;
       }
       
       .footer-links {
-        justify-content: center;
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (max-width: 640px) {
+      .custom-footer {
+        padding: 60px 16px 0;
+      }
+      
+      .footer-content {
+        padding-bottom: 40px;
+      }
+      
+      .footer-links {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+      
+      .footer-bottom-content {
+        flex-direction: column;
+        text-align: center;
       }
     }
   </style>

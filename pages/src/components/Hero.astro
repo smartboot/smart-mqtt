@@ -2,9 +2,11 @@
 ---
 
 <section class="hero-section">
+  <!-- 渐变球背景效果 -->
   <div class="hero-bg">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
+    <div class="gradient-ball ball-purple"></div>
+    <div class="gradient-ball ball-cyan"></div>
+    <div class="gradient-ball ball-pink"></div>
     <div class="grid-bg"></div>
   </div>
   
@@ -16,215 +18,239 @@
       </div>
       
       <h1 class="title">
-        <span class="gradient-text">smart-mqtt</span>
-        <span class="subtitle">企业级物联网消息中间件</span>
+        <span class="title-line">百万级设备并发</span>
+        <span class="title-line">毫秒级消息延迟</span>
       </h1>
       
       <p class="desc">
-        专为拥有上万级设备连接量的企业级物联网场景设计，
-        支持百万级并发连接，毫秒级消息延迟。
+        专为物联网场景设计的企业级 MQTT Broker，支持单机 10万+ 连接，99.99% 服务可用性。
       </p>
       
       <div class="btn-group">
         <a href="./product/introduction/" class="btn-primary">
-          <span>快速开始</span>
+          <span>立即开始</span>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </a>
-        <a href="https://github.com/smartboot/smart-mqtt" class="btn-secondary" target="_blank" rel="noopener">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+        <a href="#enterprise" class="btn-secondary">
+          <span>查看企业版</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 12L10 8L6 4" stroke-linecap="round"/>
           </svg>
-          <span>GitHub</span>
         </a>
       </div>
       
-      <div class="stats">
-        <div class="stat">
-          <div class="stat-num">10万+</div>
-          <div class="stat-label">并发连接</div>
+      <!-- 信任指标 -->
+      <div class="trust-indicators">
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          <span>1,200+ Stars</span>
         </div>
-        <div class="stat-divider"></div>
-        <div class="stat">
-          <div class="stat-num">毫秒级</div>
-          <div class="stat-label">消息延迟</div>
+        <div class="trust-divider"></div>
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span>50k+ 下载</span>
         </div>
-        <div class="stat-divider"></div>
-        <div class="stat">
-          <div class="stat-num">1000万+</div>
-          <div class="stat-label">TPS</div>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat">
-          <div class="stat-num">99.99%</div>
-          <div class="stat-label">可用性</div>
+        <div class="trust-divider"></div>
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <span>100+ 企业</span>
         </div>
       </div>
     </div>
     
     <div class="visual-col">
-      <div class="terminal-window">
-        <div class="terminal-header">
-          <div class="window-btns">
-            <span class="win-btn close"></span>
-            <span class="win-btn minimize"></span>
-            <span class="win-btn maximize"></span>
+      <div class="terminal-wrapper">
+        <div class="terminal-window">
+          <div class="terminal-header">
+            <div class="window-btns">
+              <span class="win-btn close"></span>
+              <span class="win-btn minimize"></span>
+              <span class="win-btn maximize"></span>
+            </div>
+            <div class="window-title">smart-mqtt</div>
           </div>
-          <div class="window-title">smart-mqtt</div>
+          <div class="terminal-body">
+            <div class="line">
+              <span class="prompt">$</span>
+              <span class="cmd">docker run -p 1883:1883 smartboot/smart-mqtt</span>
+            </div>
+            <div class="line out">
+              <span class="check">✓</span> Pulling from smartboot/smart-mqtt
+            </div>
+            <div class="line out">
+              <span class="check">✓</span> Starting MQTT Broker on port 1883...
+            </div>
+            <div class="line out">
+              <span class="check">✓</span> Server started successfully!
+            </div>
+            <div class="line out blank"></div>
+            <div class="line">
+              <span class="prompt">$</span>
+              <span class="cmd">mqtt pub -t "test/topic" -m "Hello MQTT"</span>
+            </div>
+            <div class="line out pub">
+              <span class="arrow">→</span> Published to test/topic
+            </div>
+            <div class="line out blank"></div>
+            <div class="line">
+              <span class="prompt">$</span>
+              <span class="cursor">▊</span>
+            </div>
+          </div>
         </div>
-        <div class="terminal-body">
-          <div class="line">
-            <span class="prompt">$</span>
-            <span class="cmd">docker run -p 1883:1883 smartboot/smart-mqtt</span>
+        
+        <!-- 浮动数据卡片 -->
+        <div class="float-card card-devices">
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
           </div>
-          <div class="line out">
-            <span class="check">✓</span> Pulling from smartboot/smart-mqtt
-          </div>
-          <div class="line out">
-            <span class="check">✓</span> Starting MQTT Broker on port 1883...
-          </div>
-          <div class="line out">
-            <span class="check">✓</span> Server started successfully!
-          </div>
-          <div class="line out blank"></div>
-          <div class="line">
-            <span class="prompt">$</span>
-            <span class="cmd">mqtt pub -t "test/topic" -m "Hello MQTT"</span>
-          </div>
-          <div class="line out pub">
-            <span class="arrow">→</span> Published to test/topic
-          </div>
-          <div class="line out blank"></div>
-          <div class="line">
-            <span class="prompt">$</span>
-            <span class="cursor">▊</span>
+          <div class="card-info">
+            <div class="card-value" data-count="12847">0</div>
+            <div class="card-text">在线设备</div>
           </div>
         </div>
-      </div>
-      
-      <div class="float-card card-devices">
-        <div class="card-icon">📡</div>
-        <div class="card-info">
-          <div class="card-value">12,847</div>
-          <div class="card-text">在线设备</div>
+        
+        <div class="float-card card-latency">
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </div>
+          <div class="card-info">
+            <div class="card-value"><span data-count="2.3">0</span>ms</div>
+            <div class="card-text">平均延迟</div>
+          </div>
         </div>
-      </div>
-      
-      <div class="float-card card-latency">
-        <div class="card-icon">⚡</div>
-        <div class="card-info">
-          <div class="card-value">2.3ms</div>
-          <div class="card-text">平均延迟</div>
+        
+        <div class="float-card card-messages">
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+            </svg>
+          </div>
+          <div class="card-info">
+            <div class="card-value"><span data-count="1.2">0</span>M/s</div>
+            <div class="card-text">消息吞吐</div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-  
-  <div class="scroll-hint">
-    <div class="mouse-icon">
-      <div class="wheel"></div>
-    </div>
-    <span>向下滚动</span>
   </div>
 </section>
 
 <style is:global>
-  /* Reset all inherited styles */
-  .hero-section,
-  .hero-section *,
-  .hero-section *::before,
-  .hero-section *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-  
   .hero-section {
     --hero-bg: #0a0a0f;
     --hero-text: #ffffff;
-    --hero-text-muted: #a0a0b0;
-    --hero-accent: #6366f1;
-    --hero-accent-light: #818cf8;
-    --hero-accent-dark: #4f46e5;
-    --hero-border: rgba(255, 255, 255, 0.1);
-    --hero-card-bg: rgba(255, 255, 255, 0.03);
+    --hero-text-muted: rgba(255, 255, 255, 0.7);
+    --hero-text-subtle: rgba(255, 255, 255, 0.5);
+    --hero-accent: #635bff;
+    --hero-accent-light: #8b5cf6;
+    --hero-success: #00d4aa;
     
     position: relative;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 80px 24px;
+    padding: 120px 24px 80px;
     background: var(--hero-bg);
     color: var(--hero-text);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     overflow: hidden;
     isolation: isolate;
   }
   
-  /* Background Effects */
+  /* 渐变球背景 */
   .hero-bg {
     position: absolute;
     inset: 0;
     z-index: -1;
+    overflow: hidden;
   }
   
-  .orb {
+  .gradient-ball {
     position: absolute;
     border-radius: 50%;
-    filter: blur(100px);
-    opacity: 0.4;
+    filter: blur(80px);
+    opacity: 0.6;
+    animation: ballFloat 20s ease-in-out infinite;
   }
   
-  .orb-1 {
+  .ball-purple {
     width: 600px;
     height: 600px;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    background: radial-gradient(circle, #635bff 0%, transparent 70%);
     top: -200px;
-    right: -150px;
-    animation: orbFloat 20s ease-in-out infinite;
+    right: -100px;
   }
   
-  .orb-2 {
-    width: 500px;
-    height: 500px;
-    background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
-    bottom: -150px;
-    left: -150px;
-    animation: orbFloat 25s ease-in-out infinite reverse;
+  .ball-cyan {
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, #00d4aa 0%, transparent 70%);
+    bottom: -100px;
+    left: 10%;
+    animation-delay: -5s;
   }
   
-  @keyframes orbFloat {
+  .ball-pink {
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, #ff6b9d 0%, transparent 70%);
+    top: 40%;
+    left: -50px;
+    animation-delay: -10s;
+  }
+  
+  @keyframes ballFloat {
     0%, 100% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(30px, -30px) scale(1.1); }
+    33% { transform: translate(30px, -30px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
   }
   
   .grid-bg {
     position: absolute;
     inset: 0;
     background-image: 
-      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
     background-size: 60px 60px;
     mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
     -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
   }
   
-  /* Main Content */
+  /* 主内容区 */
   .hero-main {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 64px;
+    gap: 80px;
     align-items: center;
-    max-width: 1280px;
+    max-width: 1200px;
     width: 100%;
     margin: 0 auto;
     position: relative;
     z-index: 1;
   }
   
-  /* Left Column - Content */
+  /* 左侧内容 */
   .content-col {
     animation: fadeInLeft 0.8s ease-out;
   }
@@ -245,18 +271,19 @@
     align-items: center;
     gap: 8px;
     padding: 8px 16px;
-    background: var(--hero-card-bg);
-    border: 1px solid var(--hero-border);
+    background: rgba(99, 91, 255, 0.1);
+    border: 1px solid rgba(99, 91, 255, 0.2);
     border-radius: 9999px;
     font-size: 14px;
-    color: var(--hero-text-muted);
+    color: var(--hero-accent);
     margin-bottom: 24px;
+    font-weight: 500;
   }
   
   .badge-dot {
     width: 8px;
     height: 8px;
-    background: #22c55e;
+    background: var(--hero-success);
     border-radius: 50%;
     animation: pulse 2s ease-in-out infinite;
   }
@@ -267,26 +294,29 @@
   }
   
   .title {
-    font-size: clamp(40px, 5vw, 64px);
+    font-size: clamp(36px, 5vw, 56px);
     font-weight: 800;
     line-height: 1.1;
     margin-bottom: 24px;
+    letter-spacing: -0.02em;
   }
   
-  .gradient-text {
+  .title-line {
     display: block;
-    background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+  }
+  
+  .title-line:first-child {
+    background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin-bottom: 8px;
   }
   
-  .subtitle {
-    display: block;
-    font-size: 0.6em;
-    font-weight: 700;
-    color: var(--hero-text);
+  .title-line:last-child {
+    background: linear-gradient(135deg, #635bff 0%, #00d4aa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
   
   .desc {
@@ -297,11 +327,11 @@
     max-width: 480px;
   }
   
-  /* Buttons */
+  /* 按钮 */
   .btn-group {
     display: flex;
     gap: 12px;
-    margin-bottom: 48px;
+    margin-bottom: 40px;
     flex-wrap: wrap;
   }
   
@@ -321,58 +351,54 @@
   }
   
   .btn-primary {
-    background: linear-gradient(135deg, var(--hero-accent) 0%, var(--hero-accent-dark) 100%);
+    background: linear-gradient(135deg, #635bff 0%, #8b5cf6 100%);
     color: white;
-    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 4px 20px rgba(99, 91, 255, 0.3);
   }
   
   .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 30px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 8px 30px rgba(99, 91, 255, 0.4);
   }
   
   .btn-secondary {
     background: transparent;
     color: var(--hero-text);
-    border: 1px solid var(--hero-border);
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
   
   .btn-secondary:hover {
-    background: var(--hero-card-bg);
-    border-color: var(--hero-accent-light);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.3);
   }
   
-  /* Stats */
-  .stats {
+  /* 信任指标 */
+  .trust-indicators {
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: 16px;
     flex-wrap: wrap;
   }
   
-  .stat {
-    text-align: left;
+  .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--hero-text-subtle);
+    font-size: 14px;
   }
   
-  .stat-num {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--hero-text);
-    margin-bottom: 4px;
+  .trust-item svg {
+    color: var(--hero-accent);
   }
   
-  .stat-label {
-    font-size: 13px;
-    color: var(--hero-text-muted);
-  }
-  
-  .stat-divider {
+  .trust-divider {
     width: 1px;
-    height: 36px;
-    background: var(--hero-border);
+    height: 16px;
+    background: rgba(255, 255, 255, 0.1);
   }
   
-  /* Right Column - Visual */
+  /* 右侧视觉区 */
   .visual-col {
     position: relative;
     display: flex;
@@ -392,32 +418,36 @@
     }
   }
   
-  /* Terminal */
+  .terminal-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 520px;
+  }
+  
   .terminal-window {
     width: 100%;
-    max-width: 480px;
-    background: #0d1117;
-    border-radius: 12px;
+    background: linear-gradient(145deg, #1a1a2e 0%, #0f0f1a 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
     overflow: hidden;
     box-shadow: 
       0 25px 50px -12px rgba(0, 0, 0, 0.8),
-      0 0 0 1px rgba(255, 255, 255, 0.1),
-      0 0 100px rgba(99, 102, 241, 0.15);
-    transform: perspective(1000px) rotateY(-5deg) rotateX(2deg);
-    animation: terminalFloat 6s ease-in-out infinite;
+      0 0 0 1px rgba(255, 255, 255, 0.05),
+      0 0 60px rgba(99, 91, 255, 0.15);
+    transform: perspective(1000px) rotateY(-8deg) rotateX(3deg);
+    transition: transform 0.3s ease;
   }
   
-  @keyframes terminalFloat {
-    0%, 100% { transform: perspective(1000px) rotateY(-5deg) rotateX(2deg) translateY(0); }
-    50% { transform: perspective(1000px) rotateY(-5deg) rotateX(2deg) translateY(-10px); }
+  .terminal-window:hover {
+    transform: perspective(1000px) rotateY(-5deg) rotateX(2deg) translateY(-5px);
   }
   
   .terminal-header {
     display: flex;
     align-items: center;
-    padding: 12px 16px;
-    background: #161b22;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 14px 18px;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   }
   
   .window-btns {
@@ -439,13 +469,13 @@
     flex: 1;
     text-align: center;
     font-size: 13px;
-    color: #6e7681;
-    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    color: rgba(255, 255, 255, 0.4);
+    font-family: 'JetBrains Mono', 'SF Mono', monospace;
   }
   
   .terminal-body {
-    padding: 20px;
-    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    padding: 24px;
+    font-family: 'JetBrains Mono', 'SF Mono', monospace;
     font-size: 13px;
     line-height: 1.8;
   }
@@ -458,7 +488,7 @@
   }
   
   .line.out {
-    color: #8b949e;
+    color: rgba(255, 255, 255, 0.5);
     padding-left: 20px;
   }
   
@@ -471,7 +501,7 @@
   }
   
   .prompt {
-    color: #7ee787;
+    color: #00d4aa;
     font-weight: bold;
     user-select: none;
   }
@@ -481,7 +511,7 @@
   }
   
   .cursor {
-    color: #58a6ff;
+    color: #635bff;
     animation: blink 1s step-end infinite;
   }
   
@@ -490,28 +520,33 @@
   }
   
   .check {
-    color: #3fb950;
+    color: #00d4aa;
     margin-right: 6px;
   }
   
   .arrow {
-    color: #58a6ff;
+    color: #635bff;
     margin-right: 6px;
   }
   
-  /* Floating Cards */
+  /* 浮动卡片 */
   .float-card {
     position: absolute;
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 16px 20px;
-    background: rgba(13, 13, 18, 0.9);
-    border: 1px solid var(--hero-border);
+    background: rgba(20, 20, 28, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    transition: transform 0.3s ease;
+  }
+  
+  .float-card:hover {
+    transform: scale(1.05);
   }
   
   .card-devices {
@@ -526,6 +561,12 @@
     animation: cardFloat2 5s ease-in-out infinite 0.5s;
   }
   
+  .card-messages {
+    bottom: -20px;
+    left: -30px;
+    animation: cardFloat3 5s ease-in-out infinite 1s;
+  }
+  
   @keyframes cardFloat1 {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-8px); }
@@ -536,73 +577,34 @@
     50% { transform: translateY(-6px); }
   }
   
+  @keyframes cardFloat3 {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  
   .card-icon {
-    font-size: 24px;
     width: 40px;
     height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--hero-card-bg);
+    background: rgba(99, 91, 255, 0.1);
     border-radius: 10px;
+    color: #635bff;
   }
   
   .card-value {
     font-size: 18px;
     font-weight: 700;
-    color: var(--hero-text);
+    color: white;
   }
   
   .card-text {
     font-size: 12px;
-    color: var(--hero-text-muted);
+    color: rgba(255, 255, 255, 0.5);
   }
   
-  /* Scroll Hint */
-  .scroll-hint {
-    position: absolute;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    color: var(--hero-text-muted);
-    font-size: 12px;
-    animation: bounce 2s infinite;
-  }
-  
-  @keyframes bounce {
-    0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
-    40% { transform: translateX(-50%) translateY(-10px); }
-    60% { transform: translateX(-50%) translateY(-5px); }
-  }
-  
-  .mouse-icon {
-    width: 24px;
-    height: 36px;
-    border: 2px solid var(--hero-border);
-    border-radius: 12px;
-    display: flex;
-    justify-content: center;
-    padding-top: 8px;
-  }
-  
-  .wheel {
-    width: 4px;
-    height: 6px;
-    background: var(--hero-text-muted);
-    border-radius: 2px;
-    animation: scrollWheel 1.5s infinite;
-  }
-  
-  @keyframes scrollWheel {
-    0% { transform: translateY(0); opacity: 1; }
-    100% { transform: translateY(8px); opacity: 0; }
-  }
-  
-  /* Responsive */
+  /* 响应式 */
   @media (max-width: 1024px) {
     .hero-main {
       grid-template-columns: 1fr;
@@ -614,44 +616,40 @@
       order: -1;
     }
     
-    .terminal-window {
-      max-width: 100%;
-      transform: none;
-      animation: terminalFloatMobile 6s ease-in-out infinite;
-    }
-    
-    @keyframes terminalFloatMobile {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
-    }
-    
-    .float-card {
-      display: none;
-    }
-    
     .desc {
       margin-left: auto;
       margin-right: auto;
     }
     
-    .btn-group,
-    .stats {
+    .btn-group {
       justify-content: center;
+    }
+    
+    .trust-indicators {
+      justify-content: center;
+    }
+    
+    .terminal-window {
+      max-width: 100%;
+      transform: none;
+    }
+    
+    .terminal-window:hover {
+      transform: translateY(-5px);
+    }
+    
+    .float-card {
+      display: none;
     }
   }
   
   @media (max-width: 640px) {
     .hero-section {
-      padding: 60px 16px;
-      min-height: auto;
+      padding: 100px 16px 60px;
     }
     
     .title {
-      font-size: 36px;
-    }
-    
-    .subtitle {
-      font-size: 20px;
+      font-size: 32px;
     }
     
     .btn-group {
@@ -664,25 +662,75 @@
       justify-content: center;
     }
     
-    .stats {
-      gap: 16px;
+    .trust-indicators {
+      justify-content: center;
     }
     
-    .stat-divider {
-      display: none;
-    }
-    
-    .stat {
-      text-align: center;
-    }
-    
-    .scroll-hint {
+    .trust-divider {
       display: none;
     }
     
     .terminal-body {
-      font-size: 12px;
+      font-size: 11px;
       padding: 16px;
     }
   }
 </style>
+
+<script>
+  // 数字滚动动画
+  function animateValue(element, start, end, duration, isDecimal = false) {
+    const range = end - start;
+    const minTimer = 50;
+    let stepTime = Math.abs(Math.floor(duration / range));
+    stepTime = Math.max(stepTime, minTimer);
+    
+    let startTime = new Date().getTime();
+    let endTime = startTime + duration;
+    let timer;
+    
+    function run() {
+      let now = new Date().getTime();
+      let remaining = Math.max((endTime - now) / duration, 0);
+      let value = Math.round(end - (remaining * range));
+      
+      if (isDecimal) {
+        element.textContent = (end - (remaining * range)).toFixed(1);
+      } else {
+        element.textContent = value.toLocaleString();
+      }
+      
+      if (value == end) {
+        clearInterval(timer);
+      }
+    }
+    
+    timer = setInterval(run, stepTime);
+    run();
+  }
+  
+  // 滚动触发动画
+  const observerOptions = {
+    threshold: 0.5
+  };
+  
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const valueEl = entry.target.querySelector('.card-value');
+        if (valueEl) {
+          const countEl = valueEl.querySelector('[data-count]') || valueEl;
+          const targetValue = parseFloat(countEl.dataset.count);
+          const isDecimal = countEl.dataset.count.includes('.');
+          
+          animateValue(countEl, 0, targetValue, 2000, isDecimal);
+        }
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+  
+  document.querySelectorAll('.float-card').forEach(card => {
+    observer.observe(card);
+  });
+</script>
