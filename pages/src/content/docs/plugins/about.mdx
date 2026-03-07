@@ -1,16 +1,99 @@
 ---
-title: 插件开发
+title: 关于 Plugin
+sidebar:
+  order: 1
 ---
 
-smart-mqtt 是一款非常开放的产品，在满足基本 MQTT 服务的同时，还能基于其插件化的能力衍生出多样化的功能，例如：服务指标统计、集群服务、数据路由等。
+import { Aside, CardGrid, Card } from '@astrojs/starlight/components';
+
+smart-mqtt 采用插件化架构设计，在满足基本 MQTT 服务的同时，还能基于其插件化的能力衍生出多样化的功能，例如：服务指标统计、集群服务、数据路由等。
 
 smart-mqtt 企业版的几乎每项特性都是一个插件，并且插件与插件之间各自独立自治。
+
+## 设计理念
+
+smart-mqtt 的插件体系遵循以下设计原则：
+
+- **低侵入性**：插件与 Broker 核心代码完全解耦，通过标准化的接口进行交互
+- **可插拔性**：插件可以独立部署、升级和卸载，不影响 Broker 核心服务的运行
+- **事件驱动**：插件通过订阅事件总线上的事件来响应系统行为，实现松耦合的扩展
 
 在[事件总线](/smart-mqtt/development/eventbus/)章节中为大家展示了相对细致的 smart-mqtt 内部架构。但如果从**插件**视角重新审视 smart-mqtt，则会是另外一番景象（见下图）。
 
 ![插件架构图](./img/plugin.svg)
 
 通过订阅事件总线上不同类型的事件，并配套不同的实现策略，可以实现很多实用的功能。当然，你也可以完全脱离事件总线做一些有意思的插件，譬如：插件的热插拔、Broker服务动态启停等。
+
+## 核心组件
+
+### Plugin 抽象类
+
+[`Plugin`](https://gitee.com/smartboot/smart-mqtt/tree/master/smart-mqtt-plugin-spec/src/main/java/tech/smartboot/mqtt/plugin/spec/Plugin.java) 是所有插件的基类，定义了插件的生命周期方法：
+
+| 方法 | 说明 |
+|------|------|
+| `pluginName()` | 返回插件名称，默认为类名 |
+| `getVersion()` | 返回插件版本号 |
+| `getVendor()` | 返回插件开发者信息 |
+| `order()` | 返回插件加载优先级，值越小优先级越高 |
+| `install()` | 安装插件（final 方法，不可重写） |
+| `uninstall()` | 卸载插件（final 方法，不可重写） |
+| `initPlugin()` | 插件初始化逻辑，子类实现 |
+| `destroyPlugin()` | 插件销毁逻辑，子类实现 |
+| `schema()` | 定义插件配置项的可视化表单 |
+
+### BrokerContext 接口
+
+[`BrokerContext`](https://gitee.com/smartboot/smart-mqtt/tree/master/smart-mqtt-plugin-spec/src/main/java/tech/smartboot/mqtt/plugin/spec/BrokerContext.java) 是插件与 Broker 交互的核心入口：
+
+| 方法 | 说明 |
+|------|------|
+| `Options()` | 获取 Broker 配置选项 |
+| `getSession()` | 获取指定客户端的会话 |
+| `getOrCreateTopic()` | 获取或创建主题 |
+| `getEventBus()` | 获取事件总线 |
+| `getMessageBus()` | 获取消息总线 |
+| `getProviders()` | 获取扩展点提供者 |
+| `getTimer()` | 获取定时器 |
+| `bufferPagePool()` | 获取缓冲区池 |
+
+### 事件总线（EventBus）
+
+事件总线是插件体系的核心通信机制，插件通过订阅事件来响应系统行为：
+
+```java
+// 订阅事件
+brokerContext.getEventBus().subscribe(EventType.CONNECT, event -> {
+    // 处理连接事件
+});
+
+// 发布事件
+brokerContext.getEventBus().publish(EventType.TOPIC_CREATE, "sensor/temperature");
+```
+
+#### 预定义事件类型
+
+| 事件类型 | 说明 |
+|----------|------|
+| `CONNECT` | 客户端连接请求 |
+| `DISCONNECT` | 客户端断开连接 |
+| `RECEIVE_MESSAGE` | 接收到客户端消息 |
+| `WRITE_MESSAGE` | 向客户端发送消息 |
+| `SESSION_CREATE` | 创建会话 |
+| `TOPIC_CREATE` | 创建新主题 |
+| `SUBSCRIBE_ACCEPT` | 接受订阅请求 |
+| `UNSUBSCRIBE_ACCEPT` | 接受取消订阅请求 |
+| `BROKER_STARTED` | Broker 启动完成 |
+| `BROKER_DESTROY` | Broker 即将销毁 |
+
+### Provider 扩展点
+
+[`Providers`](https://gitee.com/smartboot/smart-mqtt/tree/master/smart-mqtt-plugin-spec/src/main/java/tech/smartboot/mqtt/plugin/spec/provider/Providers.java) 提供了核心功能的扩展点：
+
+| Provider | 说明 |
+|----------|------|
+| `SessionStateProvider` | 会话状态存储扩展 |
+| `SubscribeProvider` | 订阅管理扩展 |
 
 ## 工作原理
 
@@ -94,7 +177,7 @@ plugins.forEach(Plugin::uninstall);
 plugins.clear();
 ```
 
-## 演示示例
+## 开发指南
 
 ### 1. 创建插件项目
 
@@ -222,52 +305,6 @@ public class DemoPlugin extends Plugin {
 
 运行 `mvn clean package` 打包插件，将生成的 jar 文件放入 smart-mqtt 的 `plugins` 目录下，重启服务即可生效。
 
-## 常用插件类型
-
-### 认证插件
-
-实现自定义的客户端认证逻辑：
-
-```java
-@Override
-protected void initPlugin(BrokerContext brokerContext) {
-    brokerContext.getProviders().setAuthenticationValidator((client, username, password) -> {
-        // 自定义认证逻辑
-        return "admin".equals(username) && "123456".equals(password);
-    });
-}
-```
-
-### 消息桥接插件
-
-将 MQTT 消息转发到其他系统：
-
-```java
-@Override
-protected void initPlugin(BrokerContext brokerContext) {
-    // 订阅消息接收事件
-    brokerContext.getEventBus().subscribe(EventType.RECEIVE_PUBLISH_MESSAGE, event -> {
-        MqttPublishMessage message = event.getObject();
-        // 将消息发送到 Redis、Kafka 等
-    });
-}
-```
-
-### 监控插件
-
-收集和上报服务指标：
-
-```java
-@Override
-protected void initPlugin(BrokerContext brokerContext) {
-    // 定时上报指标
-    ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    scheduler.scheduleAtFixedRate(() -> {
-        // 收集连接数、消息量等指标
-    }, 0, 60, TimeUnit.SECONDS);
-}
-```
-
 ## 插件配置
 
 ### 配置文件
@@ -334,6 +371,52 @@ public Schema schema() {
 - 使用 `.tip("提示信息")` 为配置项添加提示说明
 :::
 
+## 常用插件类型
+
+### 认证插件
+
+实现自定义的客户端认证逻辑：
+
+```java
+@Override
+protected void initPlugin(BrokerContext brokerContext) {
+    brokerContext.getProviders().setAuthenticationValidator((client, username, password) -> {
+        // 自定义认证逻辑
+        return "admin".equals(username) && "123456".equals(password);
+    });
+}
+```
+
+### 消息桥接插件
+
+将 MQTT 消息转发到其他系统：
+
+```java
+@Override
+protected void initPlugin(BrokerContext brokerContext) {
+    // 订阅消息接收事件
+    brokerContext.getEventBus().subscribe(EventType.RECEIVE_PUBLISH_MESSAGE, event -> {
+        MqttPublishMessage message = event.getObject();
+        // 将消息发送到 Redis、Kafka 等
+    });
+}
+```
+
+### 监控插件
+
+收集和上报服务指标：
+
+```java
+@Override
+protected void initPlugin(BrokerContext brokerContext) {
+    // 定时上报指标
+    ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    scheduler.scheduleAtFixedRate(() -> {
+        // 收集连接数、消息量等指标
+    }, 0, 60, TimeUnit.SECONDS);
+}
+```
+
 ## 最佳实践
 
 1. **插件职责单一**：每个插件只负责一个明确的功能
@@ -343,15 +426,27 @@ public Schema schema() {
 5. **日志规范**：使用统一的日志框架，避免直接打印到控制台
 6. **版本管理**：合理实现 `getVersion()` 方法，便于插件版本追踪
 
-## 参考插件
+## 官方插件
 
-smart-mqtt 官方提供了多个参考插件：
+smart-mqtt 官方提供了多个实用插件，你可以在 [Gitee 仓库](https://gitee.com/smartboot/smart-mqtt/tree/master/plugins) 查看这些插件的源码。
 
-- **simple-auth-plugin**：简单的用户名密码认证
-- **redis-bridge-plugin**：MQTT 消息与 Redis 集成
-- **websocket-plugin**：WebSocket 连接支持
-- **memory-session-plugin**：内存会话状态管理
-- **cluster-plugin**：集群功能支持
-- **enterprise-plugin**：企业版功能插件
-
-你可以在 [Gitee 仓库](https://gitee.com/smartboot/smart-mqtt/tree/master/plugins) 查看这些插件的源码。
+<CardGrid>
+  <Card title="压测插件" icon="chart-line" href="/smart-mqtt/plugins/bench-plugin">
+    通用的 MQTT 压测工具，支持发布压测和订阅压测
+  </Card>
+  <Card title="认证插件" icon="key" href="/smart-mqtt/plugins/simple-auth-plugin">
+    简单的用户名密码认证
+  </Card>
+  <Card title="WebSocket 插件" icon="plug" href="/smart-mqtt/plugins/websocket-plugin">
+    提供 WebSocket 连接支持
+  </Card>
+  <Card title="MQTTS 插件" icon="lock" href="/smart-mqtt/plugins/mqtts-plugin">
+    提供 SSL/TLS 加密连接支持
+  </Card>
+  <Card title="Redis 桥接插件" icon="database" href="/smart-mqtt/plugins/redis-bridge-plugin">
+    MQTT 消息与 Redis 集成
+  </Card>
+  <Card title="集群插件" icon="server" href="/smart-mqtt/plugins/cluster-plugin">
+    集群功能支持
+  </Card>
+</CardGrid>
