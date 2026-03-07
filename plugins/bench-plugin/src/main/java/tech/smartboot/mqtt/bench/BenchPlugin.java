@@ -230,11 +230,17 @@ public class BenchPlugin extends Plugin {
         while (running.get()) {
             Thread.sleep(publishPeriod);
             for (MqttClient publisher : publishers) {
-                for (int j = 0; j < publishCount; j++) {
-                    String topic = "topic_" + random + "_" + (pubTopicIndex.incrementAndGet() % topicCount);
-                    publisher.publish(topic, MqttQoS.AT_MOST_ONCE, payload, false, false);
+                try {
+                    for (int j = 0; j < publishCount; j++) {
+                        String topic = "topic_" + random + "_" + (pubTopicIndex.incrementAndGet() % topicCount);
+                        publisher.publish(topic, MqttQoS.AT_MOST_ONCE, payload, false, false);
+                    }
+                    publisher.flush();
+                } catch (Throwable e) {
+                    System.out.println("[bench-plugin] 发布异常: " + e.getMessage());
+                    log("[bench-plugin] 发布异常: " + e.getMessage());
                 }
-                publisher.flush();
+
             }
         }
         publishers.forEach(MqttClient::disconnect);
