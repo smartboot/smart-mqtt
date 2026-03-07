@@ -1,0 +1,491 @@
+---
+---
+
+<section class="cta-section" id="cta">
+  <div class="cta-bg-effects">
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="grid-pattern"></div>
+  </div>
+  
+  <div class="cta-content">
+    <h2 class="cta-title">准备好开始使用了吗？</h2>
+    <p class="cta-description">
+      5分钟完成部署，开始接入你的物联网设备。<br/>
+      专业版提供完整功能，企业版支持定制化服务。
+    </p>
+    
+    <div class="cta-buttons">
+      <a href="./product/introduction/" class="btn-primary btn-large">
+        <span>立即开始</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="5" y1="12" x2="19" y2="12"/>
+          <polyline points="12 5 19 12 12 19"/>
+        </svg>
+      </a>
+      <button class="btn-secondary btn-large" id="contactSalesBtn">
+        <span>联系销售团队</span>
+      </button>
+    </div>
+    
+    <div class="cta-trust">
+      <div class="trust-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <span>无需信用卡</span>
+      </div>
+      <div class="trust-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <span>专业技术服务</span>
+      </div>
+      <div class="trust-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <span>社区支持</span>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 微信二维码弹窗 -->
+  <div class="qr-modal" id="qrModal">
+    <div class="qr-modal-overlay"></div>
+    <div class="qr-modal-content">
+      <button class="qr-modal-close" id="qrModalClose" aria-label="关闭">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <div class="qr-modal-header">
+        <div class="qr-modal-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
+            <path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.32.32 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.12 2.361-.336a.722.722 0 0 1 .598.082l1.584.926a.272.272 0 0 0 .14.047c.134 0 .24-.111.24-.247 0-.06-.023-.12-.038-.177l-.327-1.233a.49.49 0 0 1 .176-.553C23.016 18.35 24 16.62 24 14.628c0-3.06-2.656-5.57-5.996-5.77h-.067zm-2.838 2.393c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.97-.982zm4.838 0c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.97-.982z"/>
+          </svg>
+        </div>
+        <h3 class="qr-modal-title">联系销售团队</h3>
+      </div>
+      <p class="qr-modal-desc">扫描二维码，添加微信咨询</p>
+      <div class="qr-image-wrapper">
+        <img src="https://smartboot.tech/img/qrcode/personal_wx.png" alt="微信二维码" class="qr-image" id="qrImage" />
+        <div class="qr-loading" id="qrLoading">
+          <div class="qr-loading-spinner"></div>
+        </div>
+      </div>
+      <div class="qr-modal-footer">
+        <p class="qr-modal-tip">工作时间：周一至周五 9:00-18:00</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style is:global>
+  .cta-section {
+    position: relative;
+    padding: 140px 24px;
+    background: #0a0a0f;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+  }
+
+  .cta-bg-effects {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+
+  .glow-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.4;
+  }
+
+  .orb-1 {
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, #635bff 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: pulse 8s ease-in-out infinite;
+  }
+
+  .orb-2 {
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, #00d4aa 0%, transparent 70%);
+    top: 30%;
+    right: 20%;
+    animation: pulse 8s ease-in-out infinite 2s;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.1); }
+  }
+
+  .grid-pattern {
+    position: absolute;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
+  }
+
+  .cta-content {
+    position: relative;
+    z-index: 1;
+    max-width: 700px;
+    text-align: center;
+  }
+
+  .cta-title {
+    font-size: clamp(32px, 5vw, 48px);
+    font-weight: 700;
+    color: white;
+    margin-bottom: 20px;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .cta-description {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.7;
+    margin-bottom: 40px;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: none;
+  }
+
+  .btn-large {
+    padding: 18px 36px;
+    font-size: 16px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #635bff 0%, #8b5cf6 100%);
+    color: white;
+    box-shadow: 0 4px 24px rgba(99, 91, 255, 0.4);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(99, 91, 255, 0.5);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .cta-trust {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
+  }
+
+  .trust-item svg {
+    color: #00d4aa;
+    flex-shrink: 0;
+  }
+
+  /* 响应式 */
+  @media (max-width: 640px) {
+    .cta-section {
+      padding: 80px 16px;
+      min-height: auto;
+    }
+
+    .cta-buttons {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      justify-content: center;
+    }
+
+    .cta-trust {
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .cta-title {
+      font-size: 28px;
+    }
+
+    .cta-description {
+      font-size: 16px;
+    }
+  }
+
+  /* 弹窗样式 */
+  .qr-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .qr-modal.active {
+    display: flex;
+  }
+
+  .qr-modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    animation: overlayFadeIn 0.3s ease;
+  }
+
+  @keyframes overlayFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .qr-modal-content {
+    position: relative;
+    background: linear-gradient(145deg, #1e1e2a 0%, #12121a 100%);
+    border: 1px solid rgba(99, 91, 255, 0.2);
+    border-radius: 24px;
+    padding: 32px;
+    text-align: center;
+    max-width: 340px;
+    width: 100%;
+    animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 100px rgba(99, 91, 255, 0.1);
+  }
+
+  @keyframes modalSlideIn {
+    from {
+      opacity: 0;
+      transform: scale(0.8) translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .qr-modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .qr-modal-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+  }
+
+  .qr-modal-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .qr-modal-icon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #07c160 0%, #1aad19 100%);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 24px rgba(7, 193, 96, 0.3);
+  }
+
+  .qr-modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+  }
+
+  .qr-modal-desc {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+    margin: 0 0 20px;
+  }
+
+  .qr-image-wrapper {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 20px;
+  }
+
+  .qr-image {
+    width: 200px;
+    height: 200px;
+    border-radius: 16px;
+    border: 3px solid rgba(99, 91, 255, 0.3);
+    background: white;
+    display: block;
+    transition: border-color 0.3s;
+  }
+
+  .qr-image:hover {
+    border-color: rgba(99, 91, 255, 0.5);
+  }
+
+  .qr-loading {
+    position: absolute;
+    inset: 3px;
+    background: white;
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s;
+  }
+
+  .qr-loading.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .qr-loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #e0e0e0;
+    border-top-color: #635bff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .qr-modal-footer {
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .qr-modal-tip {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 12px;
+    margin: 0;
+  }
+</style>
+
+<script>
+  const contactBtn = document.getElementById('contactSalesBtn');
+  const modal = document.getElementById('qrModal');
+  const closeBtn = document.getElementById('qrModalClose');
+  const qrImage = document.getElementById('qrImage');
+  const qrLoading = document.getElementById('qrLoading');
+
+  if (contactBtn && modal && closeBtn) {
+    // 点击按钮显示弹窗
+    contactBtn.addEventListener('click', () => {
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      
+      // 显示加载状态
+      if (qrLoading && !qrLoading.classList.contains('hidden')) {
+        qrLoading.classList.remove('hidden');
+      }
+    });
+
+    // 图片加载完成后隐藏加载动画
+    if (qrImage) {
+      if (qrImage.complete) {
+        qrLoading?.classList.add('hidden');
+      } else {
+        qrImage.addEventListener('load', () => {
+          qrLoading?.classList.add('hidden');
+        });
+      }
+    }
+
+    // 点击关闭按钮
+    closeBtn.addEventListener('click', () => {
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+    });
+
+    // 点击遮罩层关闭
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal || e.target.classList.contains('qr-modal-overlay')) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    });
+
+    // 按 ESC 键关闭
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('active')) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    });
+  }
+</script>

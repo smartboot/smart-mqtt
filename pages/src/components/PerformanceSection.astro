@@ -1,0 +1,485 @@
+---
+---
+
+<section class="performance-section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">性能表现</span>
+      <h2 class="section-title">超越同类产品的性能指标</h2>
+      <p class="section-description">
+        经过严格压测验证的数据表现，为大规模物联网场景提供坚实保障
+      </p>
+    </div>
+    
+    <div class="performance-content">
+      <!-- 性能对比图表 -->
+      <div class="chart-container">
+        <h3 class="chart-title">并发连接能力对比</h3>
+        <div class="performance-chart">
+          <div class="chart-bar-wrapper">
+            <div class="chart-bar" data-value="100000" data-label="smart-mqtt">
+              <div class="bar-fill">
+                <div class="bar-glow"></div>
+              </div>
+            </div>
+            <div class="bar-info">
+              <span class="bar-value">100,000+</span>
+              <span class="bar-label">smart-mqtt</span>
+            </div>
+          </div>
+          
+          <div class="chart-bar-wrapper">
+            <div class="chart-bar" data-value="50000" data-label="竞品 A">
+              <div class="bar-fill competitor">
+                <div class="bar-glow"></div>
+              </div>
+            </div>
+            <div class="bar-info">
+              <span class="bar-value">50,000</span>
+              <span class="bar-label">竞品 A</span>
+            </div>
+          </div>
+          
+          <div class="chart-bar-wrapper">
+            <div class="chart-bar" data-value="30000" data-label="竞品 B">
+              <div class="bar-fill competitor">
+                <div class="bar-glow"></div>
+              </div>
+            </div>
+            <div class="bar-info">
+              <span class="bar-value">30,000</span>
+              <span class="bar-label">竞品 B</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 核心指标卡片 -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <div class="metric-value">
+            <span class="number" data-target="2.3">0</span>
+            <span class="unit">ms</span>
+          </div>
+          <div class="metric-label">平均消息延迟</div>
+          <div class="metric-desc">端到端消息传输时间</div>
+        </div>
+        
+        <div class="metric-card highlight">
+          <div class="metric-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
+          <div class="metric-value">
+            <span class="number" data-target="1.2">0</span>
+            <span class="unit">M/s</span>
+          </div>
+          <div class="metric-label">消息吞吐 TPS</div>
+          <div class="metric-desc">每秒处理消息数</div>
+        </div>
+        
+        <div class="metric-card">
+          <div class="metric-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <div class="metric-value">
+            <span class="number" data-target="99.99">0</span>
+            <span class="unit">%</span>
+          </div>
+          <div class="metric-label">服务可用性</div>
+          <div class="metric-desc">SLA 保障承诺</div>
+        </div>
+        
+        <div class="metric-card">
+          <div class="metric-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+          </div>
+          <div class="metric-value">
+            <span class="number" data-target="512">0</span>
+            <span class="unit">MB</span>
+          </div>
+          <div class="metric-label">内存占用</div>
+          <div class="metric-desc">1万连接基准</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 压测说明 -->
+    <div class="benchmark-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="16" x2="12" y2="12"/>
+        <line x1="12" y1="8" x2="12.01" y2="8"/>
+      </svg>
+      <span>数据来源于官方 benchmark 测试，测试环境：8核16G 云服务器</span>
+    </div>
+  </div>
+</section>
+
+<style is:global>
+  .performance-section {
+    padding: 100px 24px;
+    background: linear-gradient(180deg, #0a0a0f 0%, #0d0d14 50%, #0a0a0f 100%);
+    position: relative;
+  }
+  
+  .performance-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(99, 91, 255, 0.3), transparent);
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 64px;
+  }
+
+  .section-tag {
+    display: inline-block;
+    padding: 8px 16px;
+    background: rgba(99, 91, 255, 0.1);
+    border: 1px solid rgba(99, 91, 255, 0.2);
+    border-radius: 9999px;
+    color: #635bff;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    color: white;
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+  }
+
+  .section-description {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.6);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  .performance-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+  }
+
+  /* 图表区域 */
+  .chart-container {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 20px;
+    padding: 40px;
+  }
+
+  .chart-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 32px;
+    text-align: center;
+  }
+
+  .performance-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .chart-bar-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .chart-bar {
+    height: 48px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .bar-fill {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, #635bff 0%, #8b5cf6 100%);
+    border-radius: 8px;
+    position: relative;
+    transition: width 1.5s ease-out;
+  }
+
+  .bar-fill.competitor {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+  }
+
+  .bar-glow {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .chart-bar-wrapper:hover .bar-glow {
+    opacity: 1;
+  }
+
+  .bar-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .bar-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+  }
+
+  .bar-label {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  /* 指标卡片 */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .metric-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 28px;
+    transition: all 0.3s ease;
+  }
+
+  .metric-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(99, 91, 255, 0.2);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .metric-card.highlight {
+    background: linear-gradient(135deg, rgba(99, 91, 255, 0.1) 0%, rgba(99, 91, 255, 0.05) 100%);
+    border-color: rgba(99, 91, 255, 0.3);
+  }
+
+  .metric-icon {
+    width: 44px;
+    height: 44px;
+    background: rgba(99, 91, 255, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #635bff;
+    margin-bottom: 16px;
+  }
+
+  .metric-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .metric-value {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+
+  .metric-value .number {
+    font-size: 36px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+
+  .metric-value .unit {
+    font-size: 18px;
+    font-weight: 600;
+    color: #635bff;
+  }
+
+  .metric-label {
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 4px;
+  }
+
+  .metric-desc {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  /* 压测说明 */
+  .benchmark-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 48px;
+    padding: 16px 24px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
+  }
+
+  .benchmark-note svg {
+    color: #635bff;
+    flex-shrink: 0;
+  }
+
+  /* 响应式 */
+  @media (max-width: 1024px) {
+    .performance-content {
+      grid-template-columns: 1fr;
+    }
+
+    .chart-container {
+      order: -1;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .performance-section {
+      padding: 60px 16px;
+    }
+
+    .chart-container {
+      padding: 24px;
+    }
+
+    .metrics-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .metric-value .number {
+      font-size: 28px;
+    }
+
+    .section-title {
+      font-size: 24px;
+    }
+  }
+</style>
+
+<script>
+  // 滚动触发动画
+  const observerOptions = {
+    threshold: 0.3,
+    rootMargin: '0px'
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        // 图表动画
+        if (entry.target.classList.contains('chart-bar-wrapper')) {
+          const bar = entry.target.querySelector('.bar-fill');
+          const value = parseInt(entry.target.querySelector('.chart-bar').dataset.value);
+          const maxValue = 100000;
+          const percentage = (value / maxValue) * 100;
+          
+          setTimeout(() => {
+            bar.style.width = percentage + '%';
+          }, 100);
+        }
+        
+        // 数字滚动动画
+        if (entry.target.classList.contains('metric-card')) {
+          const numberEl = entry.target.querySelector('.number');
+          if (numberEl) {
+            const target = parseFloat(numberEl.dataset.target);
+            const isDecimal = numberEl.dataset.target.includes('.');
+            animateNumber(numberEl, 0, target, 1500, isDecimal);
+          }
+        }
+        
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  // 观察图表
+  document.querySelectorAll('.chart-bar-wrapper').forEach(bar => {
+    observer.observe(bar);
+  });
+
+  // 观察指标卡片
+  document.querySelectorAll('.metric-card').forEach(card => {
+    observer.observe(card);
+  });
+
+  function animateNumber(element, start, end, duration, isDecimal = false) {
+    const range = end - start;
+    const minTimer = 50;
+    let stepTime = Math.abs(Math.floor(duration / range));
+    stepTime = Math.max(stepTime, minTimer);
+    
+    let startTime = new Date().getTime();
+    let endTime = startTime + duration;
+    let timer;
+    
+    function run() {
+      let now = new Date().getTime();
+      let remaining = Math.max((endTime - now) / duration, 0);
+      let value = end - (remaining * range);
+      
+      if (isDecimal) {
+        element.textContent = value.toFixed(target % 1 === 0 ? 0 : 1);
+      } else {
+        element.textContent = Math.round(value).toLocaleString();
+      }
+      
+      if (value >= end) {
+        clearInterval(timer);
+        element.textContent = isDecimal ? end.toFixed(target % 1 === 0 ? 0 : 1) : end.toLocaleString();
+      }
+    }
+    
+    timer = setInterval(run, stepTime);
+    run();
+  }
+</script>
