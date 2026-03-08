@@ -21,65 +21,67 @@ scenarios:
   
   # 场景1: 纯发布压测
   # 适用场景: 测试Broker的消息接收能力
-  - name: "publish-only"
+  - name: "publish-2k-qos0"
     subscribers: 0           # 订阅者数量为0，不启动订阅者
     publishers: 2000         # 发布者数量
     rate: 1000               # 每个连接每秒推送1000条消息
     publishQos: 0            # 发布QoS等级
     subscribeQos: 0          # 订阅QoS等级
 
-  - name: "publish-only-2"
+  - name: "publish-2k-qos1"
     subscribers: 0           # 订阅者数量为0，不启动订阅者
     publishers: 2000         # 发布者数量
     rate: 1000               # 每个连接每秒推送1000条消息
     publishQos: 1            # 发布QoS等级
     subscribeQos: 0          # 订阅QoS等级
 
-  - name: "publish-only-3"
+  - name: "publish-2k-qos2"
     subscribers: 0           # 订阅者数量为0，不启动订阅者
     publishers: 2000         # 发布者数量
     rate: 1000               # 每个连接每秒推送1000条消息
     publishQos: 2            # 发布QoS等级
     subscribeQos: 0          # 订阅QoS等级
 
-  - name: "publish-only-4"
+  - name: "publish-5k-qos0"
     subscribers: 0           # 订阅者数量为0，不启动订阅者
     publishers: 5000         # 发布者数量
     rate: 1000               # 每个连接每秒推送1000条消息
     publishQos: 0            # 发布QoS等级
     subscribeQos: 0          # 订阅QoS等级
 
-  - name: "publish-only-5"
+  - name: "publish-5k-qos1"
     subscribers: 0           # 订阅者数量为0，不启动订阅者
     publishers: 5000         # 发布者数量
     rate: 1000               # 每个连接每秒推送1000条消息
     publishQos: 1            # 发布QoS等级
     subscribeQos: 0          # 订阅QoS等级
 
-  - name: "publish-only-6"
+  - name: "publish-5k-qos2"
     subscribers: 0           # 订阅者数量为0，不启动订阅者
     publishers: 5000         # 发布者数量
     rate: 1000               # 每个连接每秒推送1000条消息
     publishQos: 2            # 发布QoS等级
     subscribeQos: 0          # 订阅QoS等级
 
-  - name: "publish-only-7"
-    subscribers: 2000           # 订阅者数量为0，不启动订阅者
-    publishers: 10         # 发布者数量
-    rate: 100               # 每个连接每秒推送1000条消息
+  # ==================== 扇出场景 ====================
+  # 适用场景: 测试Broker的消息分发能力（少量发布者，大量订阅者）
+  - name: "fanout-2k-sub-qos0"
+    subscribers: 2000        # 订阅者数量
+    publishers: 10           # 发布者数量
+    rate: 100                # 每个连接每秒推送100条消息
     publishQos: 0            # 发布QoS等级
     subscribeQos: 0          # 订阅QoS等级
 
-  - name: "publish-only-8"
-    subscribers: 2000           # 订阅者数量为0，不启动订阅者
-    publishers: 10         # 发布者数量
-    rate: 100               # 每个连接每秒推送1000条消息
+  - name: "fanout-2k-sub-qos1"
+    subscribers: 2000        # 订阅者数量
+    publishers: 10           # 发布者数量
+    rate: 100                # 每个连接每秒推送100条消息
     publishQos: 0            # 发布QoS等级
     subscribeQos: 1          # 订阅QoS等级
 
-  - name: "publish-only-9"
-    subscribers: 2000           # 订阅者数量为0，不启动订阅者
-    publishers: 10         # 发布者数量
-    rate: 100               # 每个连接每秒推送1000条消息
+  - name: "fanout-2k-sub-qos2"
+    subscribers: 2000        # 订阅者数量
+    publishers: 10           # 发布者数量
+    rate: 100                # 每个连接每秒推送100条消息
     publishQos: 0            # 发布QoS等级
     subscribeQos: 2          # 订阅QoS等级
