@@ -41,11 +41,6 @@ public class PluginConfig {
     private int topicCount = 128;
 
     /**
-     * QoS等级: 0-AtMostOnce, 1-AtLeastOnce, 2-ExactlyOnce
-     */
-    private int qos = 0;
-
-    /**
      * 消息 payload 大小（字节）
      */
     private int payloadSize = 1024;
@@ -91,14 +86,6 @@ public class PluginConfig {
 
     public void setTopicCount(int topicCount) {
         this.topicCount = topicCount;
-    }
-
-    public int getQos() {
-        return qos;
-    }
-
-    public void setQos(int qos) {
-        this.qos = qos;
     }
 
     public int getPayloadSize() {
