@@ -49,49 +49,53 @@ public class BenchPlugin extends Plugin {
         running.set(true);
         PluginConfig config = loadPluginConfig(PluginConfig.class);
         ScenarioConfig scenarioConfig = config.getScenarios().stream().filter(scenario -> Objects.equals(scenario.getName(), config.getActive())).findFirst().orElse(null);
-        if (scenarioConfig == null) {
-            return;
-        }
-        new Thread(() -> {
-            //延迟启动
-            try {
-                Thread.sleep(5000L);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-
-            AsynchronousChannelGroup group = null;
-            try {
-                group = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
-                    int i;
-
-                    @Override
-                    public Thread newThread(Runnable r) {
-                        return new Thread(r, "bench-plugin-" + (++i));
-                    }
-                });
-                runSubscribeBenchmark(brokerContext, config, scenarioConfig, group);
-            } catch (Throwable e) {
-                throw new RuntimeException(e);
-            } finally {
-                log("压测结束");
-                System.out.println("[bench-plugin] 压测结束");
-                if (group != null) {
-                    group.shutdown();
+        if (scenarioConfig != null) {
+            new Thread(() -> {
+                //延迟启动
+                try {
+                    Thread.sleep(5000L);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
-            }
-        }).start();
+
+                AsynchronousChannelGroup group = null;
+                try {
+                    group = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
+                        int i;
+
+                        @Override
+                        public Thread newThread(Runnable r) {
+                            return new Thread(r, "bench-plugin-" + (++i));
+                        }
+                    });
+                    runSubscribeBenchmark(brokerContext, config, scenarioConfig, group);
+                } catch (Throwable e) {
+                    throw new RuntimeException(e);
+                } finally {
+                    log("压测结束");
+                    System.out.println("[bench-plugin] 压测结束");
+                    if (group != null) {
+                        group.shutdown();
+                    }
+                }
+            }).start();
+        }
+
         new Thread(() -> {
-            int expectPublishCount = scenarioConfig.getPublishers() * scenarioConfig.getRate() * 5;
-            int expectSubscribeCount = expectPublishCount * scenarioConfig.getSubscribers() * 5;
             while (running.get()) {
                 try {
                     Thread.sleep(5000);
-                    int p = publishCountAdder.intValue();
-                    publishCountAdder.add(-p);
-                    int c = subscribeCountAdder.intValue();
-                    subscribeCountAdder.add(-c);
-                    String stats = String.format("消息数: %d, TPS: %d ,推送完成率: %f ,订阅触达率: %f", c, c / 5, p * 100.0 / expectPublishCount, expectSubscribeCount * 100.0 / expectPublishCount);
+                    if (scenarioConfig == null) {
+                        log("场景未配置");
+                        continue;
+                    }
+                    int expectPublishCount = scenarioConfig.getPublishers() * scenarioConfig.getRate() * 5;
+                    int expectSubscribeCount = expectPublishCount * scenarioConfig.getSubscribers() * 5;
+                    int pubCount = publishCountAdder.intValue();
+                    publishCountAdder.add(-pubCount);
+                    int subCount = subscribeCountAdder.intValue();
+                    subscribeCountAdder.add(-subCount);
+                    String stats = String.format("消息数: %d, TPS: %d ,推送完成率: %f ,订阅触达率: %f", subCount, subCount / 5, expectPublishCount == 0 ? 100 : pubCount * 100.0 / expectPublishCount, expectPublishCount == 0 ? 100 : expectSubscribeCount * 100.0 / expectPublishCount);
                     log(stats);
                     System.out.println("[bench-plugin] " + stats);
                 } catch (InterruptedException e) {
