@@ -1,7 +1,10 @@
 # MQTT压测插件配置
-# 支持配置多个压测场景，通过 activeScenario 选择激活的场景
+# 支持两种场景: publish (发布压测) 和 subscribe (订阅压测)
 
-# ==================== 公共参数 ====================
+# 压测场景: publish-发布压测, subscribe-订阅压测
+scenario: subscribe
+
+# ==================== 公共压测配置 ===================
 # MQTT服务器地址
 host: 127.0.0.1
 # MQTT服务器端口
@@ -12,26 +15,23 @@ payloadSize: 128
 topicCount: 128
 # QoS等级: 0-AtMostOnce, 1-AtLeastOnce, 2-ExactlyOnce
 qos: 0
-# ==================================================
 
-# 激活的场景名称
-active: "mixed"
+# ==================== 发布压测配置 ===================
+publish:
+  # 发布者数量
+  connections: 1000
+  # 每次发布的消息数量
+  publishCount: 1
+  # 发布间隔（毫秒）
+  period: 1
 
-# 场景配置列表
-scenarios:
-  # 场景1: 纯发布压测
-  - name: "publish-only"
-    subscribers: 0       # 订阅者数量为0，不启动订阅者
-    publishers: 10       # 发布者数量
-    rate: 1000           # 每个连接每秒推送1000条消息
-
-  # 场景2: 纯订阅压测（需要外部发布者）
-  - name: "subscribe-only"
-    subscribers: 2000    # 订阅者数量
-    publishers: 0        # 发布者数量为0，不启动内部发布者
-
-  # 场景3: 混合压测（订阅者+内部发布者）
-  - name: "mixed"
-    subscribers: 1000    # 订阅者数量
-    publishers: 10       # 发布者数量
-    rate: 1000           # 每个连接每秒推送1000条消息
+# ==================== 订阅压测配置 ===================
+subscribe:
+  # 订阅者数量
+  connections: 2000
+  # 发布者数量（0表示不启动发布者）
+  publisherCount: 10
+  # 每次发布的消息数量
+  publishCount: 1
+  # 发布间隔（毫秒）
+  publishPeriod: 1

@@ -10,19 +10,21 @@
 
 package tech.smartboot.mqtt.bench;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * 压测插件配置
- * 支持配置多个压测场景，每次选择其中一个运行
+ * 支持 publish 和 subscribe 两种独立的配置
  *
  * @author 三刀
- * @version v1.5.2
+ * @version v1.5.1
  */
 public class PluginConfig {
 
-    // ==================== 公共参数 ====================
+    /**
+     * 压测场景: publish-发布压测, subscribe-订阅压测
+     */
+    private String scenario = "publish";
+
+    // ==================== 公共参数（Publish和Subscribe共用）====================
     /**
      * MQTT服务器主机
      */
@@ -47,17 +49,25 @@ public class PluginConfig {
      * 消息 payload 大小（字节）
      */
     private int payloadSize = 1024;
-    // ==================================================
+    // =======================================================================
 
     /**
-     * 激活的场景名称
+     * 发布压测配置
      */
-    private String active = "default";
+    private PublishConfig publish = new PublishConfig();
 
     /**
-     * 场景配置列表
+     * 订阅压测配置
      */
-    private List<ScenarioConfig> scenarios = new ArrayList<>();
+    private SubscribeConfig subscribe = new SubscribeConfig();
+
+    public String getScenario() {
+        return scenario;
+    }
+
+    public void setScenario(String scenario) {
+        this.scenario = scenario;
+    }
 
     public String getHost() {
         return host;
@@ -99,20 +109,19 @@ public class PluginConfig {
         this.payloadSize = payloadSize;
     }
 
-    public String getActive() {
-        return active;
+    public PublishConfig getPublish() {
+        return publish;
     }
 
-    public void setActive(String active) {
-        this.active = active;
+    public void setPublish(PublishConfig publish) {
+        this.publish = publish;
     }
 
-    public List<ScenarioConfig> getScenarios() {
-        return scenarios;
+    public SubscribeConfig getSubscribe() {
+        return subscribe;
     }
 
-    public void setScenarios(List<ScenarioConfig> scenarios) {
-        this.scenarios = scenarios;
+    public void setSubscribe(SubscribeConfig subscribe) {
+        this.subscribe = subscribe;
     }
-
 }

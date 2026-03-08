@@ -24,7 +24,6 @@ import java.nio.channels.AsynchronousChannelGroup;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -39,14 +38,16 @@ import java.util.concurrent.atomic.LongAdder;
  */
 public class BenchPlugin extends Plugin {
 
+    private static final String SCENARIO_PUBLISH = "publish";
+    private static final String SCENARIO_SUBSCRIBE = "subscribe";
+
     private final AtomicBoolean running = new AtomicBoolean(true);
     public final LongAdder countAdder = new LongAdder();
 
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
         running.set(true);
-        PluginConfig config = loadPluginConfig(PluginConfig.class);
-        ScenarioConfig scenarioConfig = config.getScenarios().stream().filter(scenario -> Objects.equals(scenario.getName(), config.getActiveScenario())).findFirst().orElse(null);
+
         new Thread(() -> {
             //延迟启动
             try {
@@ -54,7 +55,10 @@ public class BenchPlugin extends Plugin {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
+            PluginConfig config = loadPluginConfig(PluginConfig.class);
 
+            String scenario = config.getScenario();
+            System.out.println("[bench-plugin] 压测场景: " + scenario);
             AsynchronousChannelGroup group = null;
             try {
                 group = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
@@ -65,7 +69,13 @@ public class BenchPlugin extends Plugin {
                         return new Thread(r, "bench-plugin-" + (++i));
                     }
                 });
-                runSubscribeBenchmark(brokerContext, config, scenarioConfig, group);
+                if (SCENARIO_PUBLISH.equals(scenario)) {
+                    runPublishBenchmark(config, group);
+                } else if (SCENARIO_SUBSCRIBE.equals(scenario)) {
+                    runSubscribeBenchmark(brokerContext, config, group);
+                } else {
+                    System.out.println("[bench-plugin] 未知场景: " + scenario + ", 支持: publish, subscribe");
+                }
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             } finally {
@@ -96,17 +106,84 @@ public class BenchPlugin extends Plugin {
         running.set(false);
     }
 
+    /**
+     * 运行发布压测
+     */
+    private void runPublishBenchmark(PluginConfig config, AsynchronousChannelGroup group) throws InterruptedException {
+        // 使用PluginConfig中的公共参数
+        String host = config.getHost();
+        int port = config.getPort();
+        int payloadSize = config.getPayloadSize();
+        int topicCount = config.getTopicCount();
+        int qos = config.getQos();
+
+        // 使用PublishConfig中的参数
+        PublishConfig publishConfig = config.getPublish();
+        int connections = publishConfig.getConnections();
+        int publishCount = publishConfig.getPublishCount();
+        int period = publishConfig.getPeriod();
+
+        System.out.println("[bench-plugin] 启动发布压测:");
+        System.out.println("  发布者数: " + connections);
+        System.out.println("  负载大小: " + payloadSize + " bytes");
+        System.out.println("  主题数: " + topicCount);
+        System.out.println("  每次发布数: " + publishCount);
+        System.out.println("  发布间隔: " + period + "ms");
+        System.out.println("  QoS: " + qos);
+
+
+        // 创建发布任务
+        AtomicInteger topicIndex = new AtomicInteger();
+        byte[] payload = new byte[payloadSize];
+        Arrays.fill(payload, (byte) 1);
+
+        List<MqttClient> clients = new ArrayList<>(connections);
+        // 创建连接
+        for (int i = 0; i < connections; i++) {
+            final int clientId = i;
+            MqttClient client = new MqttClient(host, port, opt -> opt.setGroup(group).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-pub-" + clientId));
+            clients.add(client);
+            client.connect();
+        }
+        while (running.get()) {
+            try {
+                Thread.sleep(period);
+                for (MqttClient client : clients) {
+                    for (int j = 0; j < publishCount; j++) {
+                        String topic = "/topic" + (topicIndex.incrementAndGet() % topicCount);
+                        client.publish(topic, MqttQoS.valueOf(qos), payload, false, integer -> countAdder.increment(), false);
+                    }
+                    client.flush();
+                }
+            } catch (Throwable e) {
+                System.err.println("[bench-plugin] 发布异常: " + e.getMessage());
+            }
+        }
+        clients.forEach(MqttClient::disconnect);
+    }
 
     /**
      * 运行订阅压测
      */
-    private void runSubscribeBenchmark(BrokerContext brokerContext, PluginConfig config, ScenarioConfig scenario, AsynchronousChannelGroup group) throws Throwable {
+    private void runSubscribeBenchmark(BrokerContext brokerContext, PluginConfig config, AsynchronousChannelGroup group) throws Throwable {
         // 使用PluginConfig中的公共参数
         String host = config.getHost();
         int port = config.getPort();
         int topicCount = config.getTopicCount();
         int qos = config.getQos();
         int payloadSize = config.getPayloadSize();
+
+        // 使用SubscribeConfig中的参数
+        SubscribeConfig subscribeConfig = config.getSubscribe();
+        int connections = subscribeConfig.getConnections();
+        int publisherCount = subscribeConfig.getPublisherCount();
+        int publishCount = subscribeConfig.getPublishCount();
+        int publishPeriod = subscribeConfig.getPublishPeriod();
+
+        System.out.println("[bench-plugin] 启动订阅压测:");
+        System.out.println("  订阅者数: " + connections);
+        System.out.println("  主题数: " + topicCount);
+        System.out.println("  QoS: " + qos);
 
         // 创建测试主题
         long random = System.currentTimeMillis() % 10000;
@@ -116,9 +193,9 @@ public class BenchPlugin extends Plugin {
         }
         System.out.println("[bench-plugin] 测试主题已创建");
 
-        List<MqttClient> clients = new ArrayList<>(scenario.getSubscribers());
+        List<MqttClient> clients = new ArrayList<>(connections);
         // 创建订阅连接
-        for (int i = 0; i < scenario.getSubscribers(); i++) {
+        for (int i = 0; i < connections; i++) {
             final int clientId = i;
             MqttClient client = new MqttClient(host, port, opt -> opt.setGroup(group).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-sub-" + clientId));
             clients.add(client);
@@ -135,7 +212,7 @@ public class BenchPlugin extends Plugin {
             });
         }
 
-        System.out.println("[bench-plugin] 启动发布者数量: " + scenario.getSubscribers());
+        System.out.println("[bench-plugin] 启动发布者数量: " + publisherCount);
 
 
         AtomicInteger pubTopicIndex = new AtomicInteger();
@@ -143,23 +220,18 @@ public class BenchPlugin extends Plugin {
         Arrays.fill(payload, (byte) 1);
 
         // 创建发布者线程
-        List<MqttClient> publishers = new ArrayList<>(scenario.getPublishers());
-        for (int i = 0; i < scenario.getPublishers(); i++) {
+        List<MqttClient> publishers = new ArrayList<>(publisherCount);
+        for (int i = 0; i < publisherCount; i++) {
             final int pubId = i;
             MqttClient publisher = new MqttClient(host, port, opt -> opt.setGroup(group).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-publisher-" + pubId));
             publisher.connect();
             publishers.add(publisher);
         }
-        long latestTime = 0;
         while (running.get()) {
-            long wait = 1000 - System.currentTimeMillis() - latestTime;
-            if (wait > 0) {
-                Thread.sleep(wait);
-            }
-            latestTime = System.currentTimeMillis();
+            Thread.sleep(publishPeriod);
             for (MqttClient publisher : publishers) {
                 try {
-                    for (int j = 0; j < scenario.getRate(); j++) {
+                    for (int j = 0; j < publishCount; j++) {
                         String topic = "topic_" + random + "_" + (pubTopicIndex.incrementAndGet() % topicCount);
                         publisher.publish(topic, MqttQoS.AT_MOST_ONCE, payload, false, false);
                     }
