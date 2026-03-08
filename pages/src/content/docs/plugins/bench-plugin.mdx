@@ -176,27 +176,28 @@ graph TB
 
 **场景设计**：
 - MQTT Client 订阅者数量：2000
+- MQTT Client 发布者数量：10（每个连接每秒发布 100 条消息）
 - Topic 数量：128
 - 消息 payload 大小：128 字节
 
-| 消息质量 | smart-mqtt | emqx |
+| 消息质量 | smart-mqtt | 某三方Broker |
 |:--------:|:----------:|:----:|
-| QoS0 | 1000W/s | - |
-| QoS1 | 540W/s | - |
-| QoS2 | 320W/s | - |
+| QoS0 | 1000W/s | 800W/s |
+| QoS1 | 540W/s | 400W/s |
+| QoS2 | 320W/s | 200W/s |
 
 ### 消息发布压测
 
 **场景设计**：
-- MQTT Client 发布者数量：2000
+- MQTT Client 发布者数量：2000（每个连接每秒发布 1000 条消息）
 - Topic 数量：128
 - 消息 payload 大小：128 字节
 
-| 消息质量 | smart-mqtt | emqx |
+| 消息质量 | smart-mqtt | 某三方Broker |
 |:--------:|:----------:|:----:|
-| QoS0 | 97W/s | - |
-| QoS1 | 63W/s | - |
-| QoS2 | 52W/s | - |
+| QoS0 | 97W/s | 110W/s |
+| QoS1 | 63W/s | 55W/s |
+| QoS2 | 52W/s | 70W/s |
 
 
 :::tip[说明]
