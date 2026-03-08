@@ -199,7 +199,7 @@ public class BenchPlugin extends Plugin {
         List<MqttClient> publishers = new ArrayList<>(scenario.getPublishers());
         for (int i = 0; i < scenario.getPublishers(); i++) {
             final int pubId = i;
-            MqttClient publisher = new MqttClient(host, port, opt -> opt.setGroup(group).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-publisher-" + pubId));
+            MqttClient publisher = new MqttClient(host, port, opt -> opt.setBufferSize(16 * 1024).setGroup(group).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-publisher-" + pubId));
             publisher.connect();
             publishers.add(publisher);
         }

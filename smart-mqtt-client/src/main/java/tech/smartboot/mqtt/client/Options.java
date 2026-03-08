@@ -569,8 +569,9 @@ public class Options {
         return bufferSize;
     }
 
-    public void setBufferSize(int bufferSize) {
+    public Options setBufferSize(int bufferSize) {
         this.bufferSize = bufferSize;
+        return this;
     }
 
     public int getMaxPacketSize() {
