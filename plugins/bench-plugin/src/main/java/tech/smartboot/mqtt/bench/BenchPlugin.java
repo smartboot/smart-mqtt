@@ -90,10 +90,8 @@ public class BenchPlugin extends Plugin {
                         continue;
                     }
 
-                    int pubCount = publishCountAdder.intValue();
-                    publishCountAdder.add(-pubCount);
-                    int subCount = subscribeCountAdder.intValue();
-                    subscribeCountAdder.add(-subCount);
+                    long pubCount = publishCountAdder.sumThenReset();
+                    long subCount = subscribeCountAdder.sumThenReset();
 
                     StringBuilder statsBuilder = new StringBuilder();
                     int publishers = scenarioConfig.getPublishers();
@@ -102,21 +100,21 @@ public class BenchPlugin extends Plugin {
 
                     // 订阅场景（存在订阅者）
                     if (subscribers > 0) {
-                        int subscribeTps = subCount / 5;
+                        long subscribeTps = subCount / 5;
                         statsBuilder.append(String.format("[订阅场景: " + scenarioConfig.getName() + "] 消息数: %d, TPS: %d", subCount, subscribeTps));
 
                         // 如果同时有发布者，计算消息触达率
                         if (publishers > 0) {
-                            int expectPublishCount = publishers * rate * 5;
-                            int expectSubscribeCount = expectPublishCount * subscribers;
+                            long expectPublishCount = (long) publishers * rate * 5;
+                            long expectSubscribeCount = expectPublishCount * subscribers;
                             double deliveryRate = expectSubscribeCount == 0 ? 100.0 : subCount * 100.0 / expectSubscribeCount;
                             statsBuilder.append(String.format(", 触达率: %.2f%%", deliveryRate));
                         }
                     }
                     // 发布场景（无订阅者）
                     else if (publishers > 0) {
-                        int expectPublishCount = publishers * rate * 5;
-                        int publishTps = pubCount / 5;
+                        long expectPublishCount = (long) publishers * rate * 5;
+                        long publishTps = pubCount / 5;
                         double publishRate = expectPublishCount == 0 ? 100.0 : pubCount * 100.0 / expectPublishCount;
                         statsBuilder.append(String.format("[发布场景: " + scenarioConfig.getName() + "] 消息数: %d, TPS: %d, 完成率: %.2f%%", pubCount, publishTps, publishRate));
                     }
