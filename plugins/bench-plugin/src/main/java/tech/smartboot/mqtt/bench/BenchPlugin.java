@@ -69,6 +69,7 @@ public class BenchPlugin extends Plugin {
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             } finally {
+                log("压测结束");
                 System.out.println("[bench-plugin] 压测结束");
                 if (group != null) {
                     group.shutdown();
@@ -81,8 +82,9 @@ public class BenchPlugin extends Plugin {
                     Thread.sleep(5000);
                     int c = countAdder.intValue();
                     countAdder.add(-c);
-                    log("total: " + c + "\tTPS: " + (c / 5));
-                    System.out.println("total: " + c + "\tTPS: " + (c / 5));
+                    String stats = String.format("消息数: %d, TPS: %d", c, c / 5);
+                    log(stats);
+                    System.out.println("[bench-plugin] " + stats);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -92,6 +94,7 @@ public class BenchPlugin extends Plugin {
 
     @Override
     protected void destroyPlugin() {
+        log("开始优雅关闭...");
         System.out.println("[bench-plugin] 开始优雅关闭...");
         running.set(false);
     }
@@ -108,13 +111,23 @@ public class BenchPlugin extends Plugin {
         int qos = config.getQos();
         int payloadSize = config.getPayloadSize();
 
+        // 输出压测配置信息
+        String configInfo = String.format("压测配置 - 服务器: %s:%d, 主题数: %d, QoS: %d, 负载大小: %d字节", host, port, topicCount, qos, payloadSize);
+        String scenarioInfo = String.format("场景配置 - 订阅者: %d, 发布者: %d, 每秒消息数/发布者: %d", scenario.getSubscribers(), scenario.getPublishers(), scenario.getRate());
+        log(configInfo);
+        log(scenarioInfo);
+        System.out.println("[bench-plugin] " + configInfo);
+        System.out.println("[bench-plugin] " + scenarioInfo);
+
         // 创建测试主题
         long random = System.currentTimeMillis() % 10000;
         for (int j = 0; j < topicCount; j++) {
             String topicName = "topic_" + random + "_" + j;
             brokerContext.getOrCreateTopic(topicName);
         }
-        System.out.println("[bench-plugin] 测试主题已创建");
+        String topicInfo = "测试主题已创建完成，主题前缀: topic_" + random + "_*";
+        log(topicInfo);
+        System.out.println("[bench-plugin] " + topicInfo);
 
         List<MqttClient> clients = new ArrayList<>(scenario.getSubscribers());
         // 创建订阅连接
@@ -134,8 +147,9 @@ public class BenchPlugin extends Plugin {
                 }
             });
         }
-
-        System.out.println("[bench-plugin] 启动发布者数量: " + scenario.getSubscribers());
+        String subInfo = "订阅者连接已建立: " + scenario.getSubscribers() + " 个";
+        log(subInfo);
+        System.out.println("[bench-plugin] " + subInfo);
 
 
         AtomicInteger pubTopicIndex = new AtomicInteger();
@@ -150,6 +164,10 @@ public class BenchPlugin extends Plugin {
             publisher.connect();
             publishers.add(publisher);
         }
+        String pubInfo = "发布者连接已建立: " + scenario.getPublishers() + " 个，压测开始...";
+        log(pubInfo);
+        System.out.println("[bench-plugin] " + pubInfo);
+
         long latestTime = 0;
         while (running.get()) {
             long wait = 1000 - System.currentTimeMillis() - latestTime;
@@ -165,8 +183,9 @@ public class BenchPlugin extends Plugin {
                     }
                     publisher.flush();
                 } catch (Throwable e) {
-                    System.out.println("[bench-plugin] 发布异常: " + e.getMessage());
-                    log("[bench-plugin] 发布异常: " + e.getMessage());
+                    String errMsg = "发布异常: " + e.getMessage();
+                    log(errMsg);
+                    System.out.println("[bench-plugin] " + errMsg);
                 }
 
             }
