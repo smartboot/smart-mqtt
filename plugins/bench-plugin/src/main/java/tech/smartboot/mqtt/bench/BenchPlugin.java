@@ -29,6 +29,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.function.Consumer;
 
 /**
  * MQTT压测插件
@@ -40,13 +41,17 @@ import java.util.concurrent.atomic.LongAdder;
 public class BenchPlugin extends Plugin {
 
     private final AtomicBoolean running = new AtomicBoolean(true);
-    public final LongAdder countAdder = new LongAdder();
+    public final LongAdder subscribeCountAdder = new LongAdder();
+    private final LongAdder publishCountAdder = new LongAdder();
 
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
         running.set(true);
         PluginConfig config = loadPluginConfig(PluginConfig.class);
         ScenarioConfig scenarioConfig = config.getScenarios().stream().filter(scenario -> Objects.equals(scenario.getName(), config.getActive())).findFirst().orElse(null);
+        if (scenarioConfig == null) {
+            return;
+        }
         new Thread(() -> {
             //延迟启动
             try {
@@ -77,12 +82,16 @@ public class BenchPlugin extends Plugin {
             }
         }).start();
         new Thread(() -> {
+            int expectPublishCount = scenarioConfig.getPublishers() * scenarioConfig.getRate() * 5;
+            int expectSubscribeCount = expectPublishCount * scenarioConfig.getSubscribers() * 5;
             while (running.get()) {
                 try {
                     Thread.sleep(5000);
-                    int c = countAdder.intValue();
-                    countAdder.add(-c);
-                    String stats = String.format("消息数: %d, TPS: %d", c, c / 5);
+                    int p = publishCountAdder.intValue();
+                    publishCountAdder.add(-p);
+                    int c = subscribeCountAdder.intValue();
+                    subscribeCountAdder.add(-c);
+                    String stats = String.format("消息数: %d, TPS: %d ,推送完成率: %f ,订阅触达率: %f", c, c / 5, p * 100.0 / expectPublishCount, expectSubscribeCount * 100.0 / expectPublishCount);
                     log(stats);
                     System.out.println("[bench-plugin] " + stats);
                 } catch (InterruptedException e) {
@@ -116,8 +125,7 @@ public class BenchPlugin extends Plugin {
 
         // 输出压测配置信息
         String configInfo = String.format("压测配置 - 服务器: %s:%d, 主题数: %d, 负载大小: %d字节", host, port, topicCount, payloadSize);
-        String scenarioInfo = String.format("场景配置 - 订阅者: %d, 发布者: %d, 每秒消息数/发布者: %d, 发布QoS: %d, 订阅QoS: %d",
-                scenario.getSubscribers(), scenario.getPublishers(), scenario.getRate(), publishQos, subscribeQos);
+        String scenarioInfo = String.format("场景配置 - 订阅者: %d, 发布者: %d, 每秒消息数/发布者: %d, 发布QoS: %d, 订阅QoS: %d", scenario.getSubscribers(), scenario.getPublishers(), scenario.getRate(), publishQos, subscribeQos);
         log(configInfo);
         log(scenarioInfo);
         System.out.println("[bench-plugin] " + configInfo);
@@ -146,7 +154,7 @@ public class BenchPlugin extends Plugin {
                     String topicName = "topic_" + random + "_" + j;
                     client.subscribe(topicName, MqttQoS.valueOf(subscribeQos), (mqttClient, message) -> {
                         // 收到消息的回调
-                        countAdder.increment();
+                        subscribeCountAdder.increment();
                     });
                 }
             });
@@ -183,7 +191,12 @@ public class BenchPlugin extends Plugin {
                 try {
                     for (int j = 0; j < scenario.getRate(); j++) {
                         String topic = "topic_" + random + "_" + (pubTopicIndex.incrementAndGet() % topicCount);
-                        publisher.publish(topic, MqttQoS.valueOf(publishQos), payload, false, false);
+                        publisher.publish(topic, MqttQoS.valueOf(publishQos), payload, false, new Consumer<Integer>() {
+                            @Override
+                            public void accept(Integer integer) {
+                                publishCountAdder.increment();
+                            }
+                        }, false);
                     }
                     publisher.flush();
                 } catch (Throwable e) {
@@ -221,14 +234,7 @@ public class BenchPlugin extends Plugin {
 
         // 场景配置数组
         Item scenariosItem = Item.ItemArray("scenarios", "压测场景配置列表");
-        scenariosItem.addItems(
-                Item.String("name", "场景名称"),
-                Item.Int("subscribers", "订阅者数量").tip("设置为0则不启动订阅者, 默认: 1000"),
-                Item.Int("publishers", "发布者数量").tip("设置为0则不启动发布者, 默认: 1"),
-                Item.Int("rate", "每秒推送消息数").tip("每个连接每秒推送的消息数, 默认: 1000"),
-                Item.Int("publishQos", "发布QoS等级").tip("默认: 0").col(6).addEnums(Enum.of("0", "Qos0"), Enum.of("1", "Qos1"), Enum.of("2", "Qos2")),
-                Item.Int("subscribeQos", "订阅QoS等级").tip("默认: 0").col(6).addEnums(Enum.of("0", "Qos0"), Enum.of("1", "Qos1"), Enum.of("2", "Qos2"))
-        );
+        scenariosItem.addItems(Item.String("name", "场景名称"), Item.Int("subscribers", "订阅者数量").tip("设置为0则不启动订阅者, 默认: 1000"), Item.Int("publishers", "发布者数量").tip("设置为0则不启动发布者, 默认: 1"), Item.Int("rate", "每秒推送消息数").tip("每个连接每秒推送的消息数, 默认: 1000"), Item.Int("publishQos", "发布QoS等级").tip("默认: 0").col(6).addEnums(Enum.of("0", "Qos0"), Enum.of("1", "Qos1"), Enum.of("2", "Qos2")), Item.Int("subscribeQos", "订阅QoS等级").tip("默认: 0").col(6).addEnums(Enum.of("0", "Qos0"), Enum.of("1", "Qos1"), Enum.of("2", "Qos2")));
         schema.addItem(scenariosItem);
 
         return schema;
