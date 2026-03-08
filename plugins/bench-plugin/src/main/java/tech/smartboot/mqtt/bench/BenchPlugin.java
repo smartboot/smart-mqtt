@@ -46,7 +46,7 @@ public class BenchPlugin extends Plugin {
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
         running.set(true);
         PluginConfig config = loadPluginConfig(PluginConfig.class);
-        ScenarioConfig scenarioConfig = config.getScenarios().stream().filter(scenario -> Objects.equals(scenario.getName(), config.getActiveScenario())).findFirst().orElse(null);
+        ScenarioConfig scenarioConfig = config.getScenarios().stream().filter(scenario -> Objects.equals(scenario.getName(), config.getActive())).findFirst().orElse(null);
         new Thread(() -> {
             //延迟启动
             try {
@@ -189,25 +189,23 @@ public class BenchPlugin extends Plugin {
     public Schema schema() {
         Schema schema = new Schema();
 
-        // 主配置
-        Item scenarioItem = Item.String("scenario", "压测场景").tip("publish: 发布压测, subscribe: 订阅压测").addEnums(Enum.of("publish", "发布压测"), Enum.of("subscribe", "订阅压测"));
-        schema.addItem(scenarioItem);
+        // 公共配置
         schema.addItem(Item.String("host", "MQTT服务器地址").tip("默认: 127.0.0.1").col(3));
         schema.addItem(Item.Int("port", "MQTT服务器端口").tip("默认: 1883").col(3));
         schema.addItem(Item.Int("payloadSize", "消息负载大小(字节)").tip("默认: 1024").col(3));
         schema.addItem(Item.Int("topicCount", "主题数量").tip("默认: 128").col(3));
-        schema.addItem(Item.Int("qos", "QoS等级").addEnums(Enum.of("0", "Qos0"), Enum.of("1", "Qos1"), Enum.of("2", "Qos2")));
+        schema.addItem(Item.Int("qos", "QoS等级").col(6).addEnums(Enum.of("0", "Qos0"), Enum.of("1", "Qos1"), Enum.of("2", "Qos2")));
+        schema.addItem(Item.String("active", "激活的场景名称").col(6).tip("默认: default"));
 
-
-        // Publish配置
-        Item publishItem = Item.Object("publish", "发布压测配置").col(6);
-        publishItem.addItems(Item.Int("connections", "发布者数量").tip("默认: 1000").col(6), Item.Int("publishCount", "每次发布数").tip("默认: 1").col(6), Item.Int("period", "发布间隔(毫秒)").tip("默认: 1").col(6));
-        schema.addItem(publishItem);
-
-        // Subscribe配置
-        Item subscribeItem = Item.Object("subscribe", "订阅压测配置").col(6);
-        subscribeItem.addItems(Item.Int("connections", "订阅者数量").tip("默认: 1000").col(6), Item.Int("publisherCount", "发布者数量").tip("0: 不启动发布者, 默认: 1").col(6), Item.Int("publishCount", "每次发布数").tip("默认: 1").col(6), Item.Int("publishPeriod", "发布间隔(毫秒)").tip("默认: 1").col(6));
-        schema.addItem(subscribeItem);
+        // 场景配置数组
+        Item scenariosItem = Item.ItemArray("scenarios", "压测场景配置列表");
+        scenariosItem.addItems(
+                Item.String("name", "场景名称"),
+                Item.Int("subscribers", "订阅者数量").tip("设置为0则不启动订阅者, 默认: 1000"),
+                Item.Int("publishers", "发布者数量").tip("设置为0则不启动发布者, 默认: 1"),
+                Item.Int("rate", "每秒推送消息数").tip("每个连接每秒推送的消息数, 默认: 1000")
+        );
+        schema.addItem(scenariosItem);
 
         return schema;
     }
