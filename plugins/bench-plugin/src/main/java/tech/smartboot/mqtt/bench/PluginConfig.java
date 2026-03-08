@@ -10,21 +10,19 @@
 
 package tech.smartboot.mqtt.bench;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 压测插件配置
- * 支持 publish 和 subscribe 两种独立的配置
+ * 支持配置多个压测场景，每次选择其中一个运行
  *
  * @author 三刀
- * @version v1.5.1
+ * @version v1.5.2
  */
 public class PluginConfig {
 
-    /**
-     * 压测场景: publish-发布压测, subscribe-订阅压测
-     */
-    private String scenario = "publish";
-
-    // ==================== 公共参数（Publish和Subscribe共用）====================
+    // ==================== 公共参数 ====================
     /**
      * MQTT服务器主机
      */
@@ -49,25 +47,17 @@ public class PluginConfig {
      * 消息 payload 大小（字节）
      */
     private int payloadSize = 1024;
-    // =======================================================================
+    // ==================================================
 
     /**
-     * 发布压测配置
+     * 激活的场景名称
      */
-    private PublishConfig publish = new PublishConfig();
+    private String active = "default";
 
     /**
-     * 订阅压测配置
+     * 场景配置列表
      */
-    private SubscribeConfig subscribe = new SubscribeConfig();
-
-    public String getScenario() {
-        return scenario;
-    }
-
-    public void setScenario(String scenario) {
-        this.scenario = scenario;
-    }
+    private List<ScenarioConfig> scenarios = new ArrayList<>();
 
     public String getHost() {
         return host;
@@ -109,19 +99,20 @@ public class PluginConfig {
         this.payloadSize = payloadSize;
     }
 
-    public PublishConfig getPublish() {
-        return publish;
+    public String getActive() {
+        return active;
     }
 
-    public void setPublish(PublishConfig publish) {
-        this.publish = publish;
+    public void setActive(String active) {
+        this.active = active;
     }
 
-    public SubscribeConfig getSubscribe() {
-        return subscribe;
+    public List<ScenarioConfig> getScenarios() {
+        return scenarios;
     }
 
-    public void setSubscribe(SubscribeConfig subscribe) {
-        this.subscribe = subscribe;
+    public void setScenarios(List<ScenarioConfig> scenarios) {
+        this.scenarios = scenarios;
     }
+
 }
