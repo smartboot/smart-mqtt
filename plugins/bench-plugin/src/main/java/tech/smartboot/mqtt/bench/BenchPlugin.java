@@ -29,7 +29,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
-import java.util.function.Consumer;
 
 /**
  * MQTT压测插件
@@ -219,12 +218,8 @@ public class BenchPlugin extends Plugin {
                 try {
                     for (int j = 0; j < scenario.getRate(); j++) {
                         String topic = "topic_" + random + "_" + (pubTopicIndex.incrementAndGet() % topicCount);
-                        publisher.publish(topic, MqttQoS.valueOf(publishQos), payload, false, new Consumer<Integer>() {
-                            @Override
-                            public void accept(Integer integer) {
-                                publishCountAdder.increment();
-                            }
-                        }, false);
+                        publishCountAdder.increment();
+                        publisher.publish(topic, MqttQoS.valueOf(publishQos), payload, false, false);
                     }
                     publisher.flush();
                 } catch (Throwable e) {
