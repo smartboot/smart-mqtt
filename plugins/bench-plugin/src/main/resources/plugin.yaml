@@ -10,8 +10,6 @@ port: 1883
 payloadSize: 128
 # 主题数量
 topicCount: 128
-# QoS等级: 0-AtMostOnce, 1-AtLeastOnce, 2-ExactlyOnce
-qos: 0
 # ==================================================
 
 # 激活的场景名称
@@ -19,19 +17,69 @@ active: "mixed"
 
 # 场景配置列表
 scenarios:
+  # ==================== 基础场景 ====================
+  
   # 场景1: 纯发布压测
+  # 适用场景: 测试Broker的消息接收能力
   - name: "publish-only"
-    subscribers: 0       # 订阅者数量为0，不启动订阅者
-    publishers: 10       # 发布者数量
-    rate: 1000           # 每个连接每秒推送1000条消息
+    subscribers: 0           # 订阅者数量为0，不启动订阅者
+    publishers: 2000         # 发布者数量
+    rate: 1000               # 每个连接每秒推送1000条消息
+    publishQos: 0            # 发布QoS等级
+    subscribeQos: 0          # 订阅QoS等级
 
-  # 场景2: 纯订阅压测（需要外部发布者）
-  - name: "subscribe-only"
-    subscribers: 2000    # 订阅者数量
-    publishers: 0        # 发布者数量为0，不启动内部发布者
+  - name: "publish-only-2"
+    subscribers: 0           # 订阅者数量为0，不启动订阅者
+    publishers: 2000         # 发布者数量
+    rate: 1000               # 每个连接每秒推送1000条消息
+    publishQos: 1            # 发布QoS等级
+    subscribeQos: 0          # 订阅QoS等级
 
-  # 场景3: 混合压测（订阅者+内部发布者）
-  - name: "mixed"
-    subscribers: 1000    # 订阅者数量
-    publishers: 10       # 发布者数量
-    rate: 1000           # 每个连接每秒推送1000条消息
+  - name: "publish-only-3"
+    subscribers: 0           # 订阅者数量为0，不启动订阅者
+    publishers: 2000         # 发布者数量
+    rate: 1000               # 每个连接每秒推送1000条消息
+    publishQos: 2            # 发布QoS等级
+    subscribeQos: 0          # 订阅QoS等级
+
+  - name: "publish-only-4"
+    subscribers: 0           # 订阅者数量为0，不启动订阅者
+    publishers: 5000         # 发布者数量
+    rate: 1000               # 每个连接每秒推送1000条消息
+    publishQos: 0            # 发布QoS等级
+    subscribeQos: 0          # 订阅QoS等级
+
+  - name: "publish-only-5"
+    subscribers: 0           # 订阅者数量为0，不启动订阅者
+    publishers: 5000         # 发布者数量
+    rate: 1000               # 每个连接每秒推送1000条消息
+    publishQos: 1            # 发布QoS等级
+    subscribeQos: 0          # 订阅QoS等级
+
+  - name: "publish-only-6"
+    subscribers: 0           # 订阅者数量为0，不启动订阅者
+    publishers: 5000         # 发布者数量
+    rate: 1000               # 每个连接每秒推送1000条消息
+    publishQos: 2            # 发布QoS等级
+    subscribeQos: 0          # 订阅QoS等级
+
+  - name: "publish-only-7"
+    subscribers: 2000           # 订阅者数量为0，不启动订阅者
+    publishers: 10         # 发布者数量
+    rate: 100               # 每个连接每秒推送1000条消息
+    publishQos: 0            # 发布QoS等级
+    subscribeQos: 0          # 订阅QoS等级
+
+  - name: "publish-only-8"
+    subscribers: 2000           # 订阅者数量为0，不启动订阅者
+    publishers: 10         # 发布者数量
+    rate: 100               # 每个连接每秒推送1000条消息
+    publishQos: 0            # 发布QoS等级
+    subscribeQos: 1          # 订阅QoS等级
+
+  - name: "publish-only-9"
+    subscribers: 2000           # 订阅者数量为0，不启动订阅者
+    publishers: 10         # 发布者数量
+    rate: 100               # 每个连接每秒推送1000条消息
+    publishQos: 0            # 发布QoS等级
+    subscribeQos: 2          # 订阅QoS等级

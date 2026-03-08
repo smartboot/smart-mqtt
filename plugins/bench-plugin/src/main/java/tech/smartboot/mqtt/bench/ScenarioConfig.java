@@ -12,8 +12,8 @@ package tech.smartboot.mqtt.bench;
 
 /**
  * 压测场景配置
- * 
- * 场景特有配置，公共参数（host, port, topicCount, qos, payloadSize）在 PluginConfig 中统一配置
+ *
+ * 场景特有配置，公共参数（host, port, topicCount, payloadSize）在 PluginConfig 中统一配置
  *
  * @author 三刀
  * @version v1.5.2
@@ -41,6 +41,16 @@ public class ScenarioConfig {
      * 每个连接每秒推送的消息数
      */
     private int rate = 1000;
+
+    /**
+     * 发布QoS等级: 0-AtMostOnce, 1-AtLeastOnce, 2-ExactlyOnce
+     */
+    private int publishQos = 0;
+
+    /**
+     * 订阅QoS等级: 0-AtMostOnce, 1-AtLeastOnce, 2-ExactlyOnce
+     */
+    private int subscribeQos = 0;
 
     public String getName() {
         return name;
@@ -72,5 +82,21 @@ public class ScenarioConfig {
 
     public void setRate(int rate) {
         this.rate = rate;
+    }
+
+    public int getPublishQos() {
+        return publishQos;
+    }
+
+    public void setPublishQos(int publishQos) {
+        this.publishQos = publishQos;
+    }
+
+    public int getSubscribeQos() {
+        return subscribeQos;
+    }
+
+    public void setSubscribeQos(int subscribeQos) {
+        this.subscribeQos = subscribeQos;
     }
 }

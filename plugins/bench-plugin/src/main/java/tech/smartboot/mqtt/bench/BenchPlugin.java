@@ -108,12 +108,16 @@ public class BenchPlugin extends Plugin {
         String host = config.getHost();
         int port = config.getPort();
         int topicCount = config.getTopicCount();
-        int qos = config.getQos();
         int payloadSize = config.getPayloadSize();
 
+        // 使用ScenarioConfig中的QoS参数
+        int publishQos = scenario.getPublishQos();
+        int subscribeQos = scenario.getSubscribeQos();
+
         // 输出压测配置信息
-        String configInfo = String.format("压测配置 - 服务器: %s:%d, 主题数: %d, QoS: %d, 负载大小: %d字节", host, port, topicCount, qos, payloadSize);
-        String scenarioInfo = String.format("场景配置 - 订阅者: %d, 发布者: %d, 每秒消息数/发布者: %d", scenario.getSubscribers(), scenario.getPublishers(), scenario.getRate());
+        String configInfo = String.format("压测配置 - 服务器: %s:%d, 主题数: %d, 负载大小: %d字节", host, port, topicCount, payloadSize);
+        String scenarioInfo = String.format("场景配置 - 订阅者: %d, 发布者: %d, 每秒消息数/发布者: %d, 发布QoS: %d, 订阅QoS: %d",
+                scenario.getSubscribers(), scenario.getPublishers(), scenario.getRate(), publishQos, subscribeQos);
         log(configInfo);
         log(scenarioInfo);
         System.out.println("[bench-plugin] " + configInfo);
@@ -140,7 +144,7 @@ public class BenchPlugin extends Plugin {
                 // 连接成功后订阅主题
                 for (int j = 0; j < topicCount; j++) {
                     String topicName = "topic_" + random + "_" + j;
-                    client.subscribe(topicName, MqttQoS.valueOf(qos), (mqttClient, message) -> {
+                    client.subscribe(topicName, MqttQoS.valueOf(subscribeQos), (mqttClient, message) -> {
                         // 收到消息的回调
                         countAdder.increment();
                     });
@@ -179,7 +183,7 @@ public class BenchPlugin extends Plugin {
                 try {
                     for (int j = 0; j < scenario.getRate(); j++) {
                         String topic = "topic_" + random + "_" + (pubTopicIndex.incrementAndGet() % topicCount);
-                        publisher.publish(topic, MqttQoS.AT_MOST_ONCE, payload, false, false);
+                        publisher.publish(topic, MqttQoS.valueOf(publishQos), payload, false, false);
                     }
                     publisher.flush();
                 } catch (Throwable e) {
@@ -213,7 +217,6 @@ public class BenchPlugin extends Plugin {
         schema.addItem(Item.Int("port", "MQTT服务器端口").tip("默认: 1883").col(3));
         schema.addItem(Item.Int("payloadSize", "消息负载大小(字节)").tip("默认: 1024").col(3));
         schema.addItem(Item.Int("topicCount", "主题数量").tip("默认: 128").col(3));
-        schema.addItem(Item.Int("qos", "QoS等级").col(6).addEnums(Enum.of("0", "Qos0"), Enum.of("1", "Qos1"), Enum.of("2", "Qos2")));
         schema.addItem(Item.String("active", "激活的场景名称").col(6).tip("默认: default"));
 
         // 场景配置数组
@@ -222,7 +225,9 @@ public class BenchPlugin extends Plugin {
                 Item.String("name", "场景名称"),
                 Item.Int("subscribers", "订阅者数量").tip("设置为0则不启动订阅者, 默认: 1000"),
                 Item.Int("publishers", "发布者数量").tip("设置为0则不启动发布者, 默认: 1"),
-                Item.Int("rate", "每秒推送消息数").tip("每个连接每秒推送的消息数, 默认: 1000")
+                Item.Int("rate", "每秒推送消息数").tip("每个连接每秒推送的消息数, 默认: 1000"),
+                Item.Int("publishQos", "发布QoS等级").tip("默认: 0").col(6).addEnums(Enum.of("0", "Qos0"), Enum.of("1", "Qos1"), Enum.of("2", "Qos2")),
+                Item.Int("subscribeQos", "订阅QoS等级").tip("默认: 0").col(6).addEnums(Enum.of("0", "Qos0"), Enum.of("1", "Qos1"), Enum.of("2", "Qos2"))
         );
         schema.addItem(scenariosItem);
 
