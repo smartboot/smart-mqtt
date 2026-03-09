@@ -18,7 +18,6 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.extension.plugins.AbstractPlugin;
-import org.smartboot.socket.timer.TimerTask;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Autowired;
@@ -26,7 +25,6 @@ import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
-import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.annotation.mcp.Tool;
@@ -220,7 +218,7 @@ public class MetricController {
             metrics.put(metricEnum, new MetricItemTO(metricEnum));
         }
 
-        context.Options().addPlugin(new AbstractPlugin<MqttMessage>() {
+        plugin.addPlugin(new AbstractPlugin<MqttMessage>() {
             @Override
             public void afterRead(AioSession session, int readSize) {
                 if (readSize > 0) {

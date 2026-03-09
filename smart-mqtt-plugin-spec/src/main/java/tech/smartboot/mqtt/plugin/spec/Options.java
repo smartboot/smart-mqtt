@@ -10,9 +10,7 @@
 
 package tech.smartboot.mqtt.plugin.spec;
 
-import org.smartboot.socket.extension.plugins.Plugin;
 import tech.smartboot.mqtt.common.MqttMessageProcessor;
-import tech.smartboot.mqtt.common.message.MqttMessage;
 
 import java.nio.channels.AsynchronousChannelGroup;
 import java.util.LinkedList;
@@ -248,18 +246,6 @@ public class Options {
      */
     private int maxMessageQueueLength = 1024;
 
-    /**
-     * MQTT消息处理插件列表。
-     * <p>
-     * 支持通过插件机制扩展功能：
-     * <ul>
-     *   <li>消息持久化</li>
-     *   <li>认证授权</li>
-     *   <li>消息转换</li>
-     *   <li>监控统计</li>
-     * </ul>
-     */
-    private final List<Plugin<MqttMessage>> plugins = new LinkedList<>();
 
     /**
      * 异步通道组，用于管理网络IO操作。
@@ -377,15 +363,6 @@ public class Options {
         this.topicLimit = topicLimit;
     }
 
-    public Options addPlugin(Plugin<MqttMessage> plugin) {
-        plugins.add(plugin);
-        return this;
-    }
-
-    public List<Plugin<MqttMessage>> getPlugins() {
-        return plugins;
-    }
-
     public AsynchronousChannelGroup getChannelGroup() {
         return channelGroup;
     }
@@ -414,19 +391,7 @@ public class Options {
 
     @Override
     public String toString() {
-        return
-                "host='" + host + '\'' +
-                        ", port=" + port +
-                        ", bufferSize=" + bufferSize +
-                        ", topicLimit=" + topicLimit +
-                        ", maxPacketSize=" + maxPacketSize +
-                        ", threadNum=" + threadNum +
-                        ", maxKeepAliveTime=" + maxKeepAliveTime +
-                        ", pushThreadNum=" + pushThreadNum +
-                        ", noConnectIdleTimeout=" + noConnectIdleTimeout +
-                        ", maxInflight=" + maxInflight +
-                        ", maxMessageQueueLength=" + maxMessageQueueLength +
-                        ", lowMemory=" + lowMemory;
+        return "host='" + host + '\'' + ", port=" + port + ", bufferSize=" + bufferSize + ", topicLimit=" + topicLimit + ", maxPacketSize=" + maxPacketSize + ", threadNum=" + threadNum + ", maxKeepAliveTime=" + maxKeepAliveTime + ", pushThreadNum=" + pushThreadNum + ", noConnectIdleTimeout=" + noConnectIdleTimeout + ", maxInflight=" + maxInflight + ", maxMessageQueueLength=" + maxMessageQueueLength + ", lowMemory=" + lowMemory;
     }
 
     public MqttMessageProcessor getProcessor() {

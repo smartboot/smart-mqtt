@@ -17,6 +17,7 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.introspector.Property;
 import org.yaml.snakeyaml.introspector.PropertyUtils;
+import tech.smartboot.mqtt.common.message.MqttMessage;
 import tech.smartboot.mqtt.plugin.spec.bus.EventBusConsumer;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 import tech.smartboot.mqtt.plugin.spec.bus.MessageBusConsumer;
@@ -202,6 +203,15 @@ public abstract class Plugin implements PluginSubscriber {
             });
         }
         return timer;
+    }
+
+    public void addPlugin(org.smartboot.socket.extension.plugins.Plugin<MqttMessage> plugin) {
+        brokerContext.addFlexiblePlugin(new FlexiblePlugin(plugin) {
+            @Override
+            public boolean enable() {
+                return !destroyed;
+            }
+        });
     }
 
     /**

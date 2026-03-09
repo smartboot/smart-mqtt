@@ -46,7 +46,7 @@ public class EnterprisePlugin extends Plugin {
         PluginConfig config = loadPluginConfig(PluginConfig.class);
         addUsagePort(config.getHttp().getPort(), (FeatUtils.isBlank(config.getHttp().getHost()) ? "0.0.0.0" : config.getHttp().getHost()) + ":" + config.getHttp().getPort());
 
-        brokerContext.Options().addPlugin(new MonitorPlugin<>(60));
+        addPlugin(new MonitorPlugin<>(60));
 
         asynchronousChannelGroup = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
             int i;

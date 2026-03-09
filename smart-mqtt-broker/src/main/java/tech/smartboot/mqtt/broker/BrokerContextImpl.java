@@ -24,6 +24,7 @@ import tech.smartboot.mqtt.common.util.MqttUtil;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.BrokerTopic;
+import tech.smartboot.mqtt.plugin.spec.FlexiblePlugin;
 import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.Options;
@@ -233,6 +234,7 @@ public class BrokerContextImpl implements BrokerContext {
 
     private BufferPagePool bufferPagePool;
 
+    private final ProcessorPluginGroup pluginGroup = new ProcessorPluginGroup();
 
     /**
      * 初始化MQTT Broker，完成所有必要的启动步骤。
@@ -272,7 +274,7 @@ public class BrokerContextImpl implements BrokerContext {
         pluginRegistry.init();
 
         try {
-            options.getPlugins().forEach(processor::addPlugin);
+            processor.addPlugin(pluginGroup);
             server = new AioQuickServer(options.getHost(), options.getPort(), new MqttProtocol(options.getMaxPacketSize()), processor);
             server.setBannerEnabled(false).setReadBufferSize(options.getBufferSize()).setWriteBuffer(options.getBufferSize(), Math.min(options.getMaxInflight(), 16)).setBufferPagePool(bufferPagePool).setThreadNum(Math.max(2, options.getThreadNum()));
             if (!options.isLowMemory()) {
@@ -712,6 +714,11 @@ public class BrokerContextImpl implements BrokerContext {
     @Override
     public BufferPagePool bufferPagePool() {
         return bufferPagePool;
+    }
+
+    @Override
+    public void addFlexiblePlugin(FlexiblePlugin plugin) {
+        pluginGroup.addPlugin(plugin);
     }
 
     public void destroy() {

@@ -101,7 +101,7 @@ public class LicenseController {
         } catch (Exception e) {
             LOGGER.error("load license exception", e);
         }
-        brokerContext.Options().addPlugin(new AbstractPlugin<MqttMessage>() {
+        plugin.addPlugin(new AbstractPlugin<MqttMessage>() {
             @Override
             public void stateEvent(StateMachineEnum stateMachineEnum, AioSession session, Throwable throwable) {
                 if (stateMachineEnum == StateMachineEnum.NEW_SESSION) {

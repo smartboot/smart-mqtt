@@ -39,7 +39,6 @@ public class TlsPlugin extends Plugin {
                 options.getProcessor().stateEvent0(aioSession, stateMachineEnum, throwable);
             }
         };
-        options.getPlugins().forEach(proxy::addPlugin);
         proxy.addPlugin(new SslPlugin<>(new PemServerSSLContextFactory(new ByteArrayInputStream(pluginConfig.getPem().getBytes()))));
 
         addUsagePort(pluginConfig.getPort(), "mqtts port");
