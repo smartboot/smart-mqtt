@@ -201,6 +201,7 @@ public class MqttClient extends AbstractSession {
                         // 它应该关闭到服务端的网络连接。
                         if (pingTimeout >= 3) {
                             pingTimeout = 0;
+                            System.err.println("Ping timeout exceeded for client: " + clientId + ", timeout count: 3, closing session");
                             session.close();
                             return;
                         }
