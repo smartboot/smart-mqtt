@@ -168,8 +168,10 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
         setInflightQueue(null);
         mqttWriter = null;
         try {
-            session.close();
-            session = null;
+            if (session != null) {
+                session.close();
+                session = null;
+            }
         } finally {
             mqttContext.getEventBus().publish(EventType.DISCONNECT, this);
         }
