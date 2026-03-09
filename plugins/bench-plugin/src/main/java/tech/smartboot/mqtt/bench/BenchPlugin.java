@@ -96,7 +96,6 @@ public class BenchPlugin extends Plugin {
                     int c = countAdder.intValue();
                     countAdder.add(-c);
                     String logMsg = "total: " + c + "\tTPS: " + (c / 5);
-                    log(logMsg);
                     logger(logMsg);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
