@@ -223,7 +223,7 @@ public class BenchPlugin extends Plugin {
         List<MqttClient> publishers = new ArrayList<>(publisherCount);
         for (int i = 0; i < publisherCount; i++) {
             final int pubId = i;
-            MqttClient publisher = new MqttClient(host, port, opt -> opt.setGroup(group).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-publisher-" + pubId));
+            MqttClient publisher = new MqttClient(host, port, opt -> opt.setGroup(group).setBufferSize(16 * 1024).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-publisher-" + pubId));
             publisher.connect();
             publishers.add(publisher);
         }
