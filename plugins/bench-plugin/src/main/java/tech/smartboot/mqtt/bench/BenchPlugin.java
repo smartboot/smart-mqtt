@@ -24,6 +24,9 @@ import java.nio.channels.AsynchronousChannelGroup;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -43,6 +46,7 @@ public class BenchPlugin extends Plugin {
 
     private final AtomicBoolean running = new AtomicBoolean(true);
     public final LongAdder countAdder = new LongAdder();
+    private CountDownLatch countDownLatch = new CountDownLatch(1);
 
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
@@ -105,6 +109,7 @@ public class BenchPlugin extends Plugin {
     protected void destroyPlugin() {
         logger("[bench-plugin] 开始优雅关闭...");
         running.set(false);
+        countDownLatch.countDown();
     }
 
     /**
@@ -146,20 +151,29 @@ public class BenchPlugin extends Plugin {
             clients.add(client);
             client.connect();
         }
-        while (running.get()) {
-            try {
-                Thread.sleep(period);
-                for (MqttClient client : clients) {
+        ScheduledExecutorService executorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
+            int i;
+
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "bench-plugin-" + (++i));
+            }
+        });
+        for (MqttClient client : clients) {
+            executorService.scheduleAtFixedRate(() -> {
+                try {
                     for (int j = 0; j < publishCount; j++) {
                         String topic = "/topic" + (topicIndex.incrementAndGet() % topicCount);
                         client.publish(topic, MqttQoS.valueOf(qos), payload, false, integer -> countAdder.increment(), false);
                     }
                     client.flush();
+                } catch (Throwable e) {
+                    logger("[bench-plugin] 发布异常: " + e.getMessage());
                 }
-            } catch (Throwable e) {
-                System.err.println("[bench-plugin] 发布异常: " + e.getMessage());
-            }
+            }, period, period, java.util.concurrent.TimeUnit.MILLISECONDS);
         }
+        countDownLatch.await();
+        executorService.shutdown();
         clients.forEach(MqttClient::disconnect);
     }
 
