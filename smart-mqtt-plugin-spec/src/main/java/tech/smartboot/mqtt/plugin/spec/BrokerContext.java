@@ -62,5 +62,4 @@ public interface BrokerContext {
      */
     BufferPagePool bufferPagePool();
 
-    void addFlexiblePlugin(FlexiblePlugin plugin);
 }

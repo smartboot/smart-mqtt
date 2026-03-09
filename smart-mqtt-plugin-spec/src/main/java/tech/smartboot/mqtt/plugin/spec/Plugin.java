@@ -206,7 +206,7 @@ public abstract class Plugin implements PluginSubscriber {
     }
 
     public void addPlugin(org.smartboot.socket.extension.plugins.Plugin<MqttMessage> plugin) {
-        brokerContext.addFlexiblePlugin(new FlexiblePlugin(plugin) {
+        brokerContext.Options().addPlugin(new FlexiblePlugin(plugin) {
             @Override
             public boolean enable() {
                 return !destroyed;

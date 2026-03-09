@@ -10,11 +10,11 @@
 
 package tech.smartboot.mqtt.plugin.spec;
 
+import org.smartboot.socket.extension.plugins.Plugin;
 import tech.smartboot.mqtt.common.MqttMessageProcessor;
+import tech.smartboot.mqtt.common.message.MqttMessage;
 
 import java.nio.channels.AsynchronousChannelGroup;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * MQTT Broker服务配置类，用于管理和配置MQTT服务器的各项参数。
@@ -283,6 +283,8 @@ public class Options {
 
     private MqttMessageProcessor processor;
 
+    private final ProcessorPluginGroup pluginGroup = new ProcessorPluginGroup();
+
     public int getPort() {
         return port;
     }
@@ -387,6 +389,14 @@ public class Options {
 
     public void setLowMemory(boolean lowMemory) {
         this.lowMemory = lowMemory;
+    }
+
+    public void addPlugin(FlexiblePlugin plugins) {
+        pluginGroup.addPlugin(plugins);
+    }
+
+    public Plugin<MqttMessage> getPluginGroup() {
+        return pluginGroup;
     }
 
     @Override

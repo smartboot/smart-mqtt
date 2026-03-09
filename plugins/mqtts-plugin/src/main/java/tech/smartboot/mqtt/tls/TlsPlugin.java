@@ -40,6 +40,7 @@ public class TlsPlugin extends Plugin {
             }
         };
         proxy.addPlugin(new SslPlugin<>(new PemServerSSLContextFactory(new ByteArrayInputStream(pluginConfig.getPem().getBytes()))));
+        proxy.addPlugin(options.getPluginGroup());
 
         addUsagePort(pluginConfig.getPort(), "mqtts port");
 

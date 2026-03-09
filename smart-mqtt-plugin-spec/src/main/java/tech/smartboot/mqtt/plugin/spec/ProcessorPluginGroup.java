@@ -1,10 +1,9 @@
-package tech.smartboot.mqtt.broker;
+package tech.smartboot.mqtt.plugin.spec;
 
 import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.extension.plugins.Plugin;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.mqtt.common.message.MqttMessage;
-import tech.smartboot.mqtt.plugin.spec.FlexiblePlugin;
 
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.List;
