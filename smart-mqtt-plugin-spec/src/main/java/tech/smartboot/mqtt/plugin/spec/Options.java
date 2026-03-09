@@ -283,7 +283,7 @@ public class Options {
 
     private MqttMessageProcessor processor;
 
-    private final ProcessorPluginGroup pluginGroup = new ProcessorPluginGroup();
+    private final SocketPluginGroup pluginGroup = new SocketPluginGroup();
 
     public int getPort() {
         return port;
@@ -391,7 +391,7 @@ public class Options {
         this.lowMemory = lowMemory;
     }
 
-    public void addPlugin(FlexiblePlugin plugins) {
+    public void addPlugin(SocketPluginAdapter plugins) {
         pluginGroup.addPlugin(plugins);
     }
 

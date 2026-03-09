@@ -11,15 +11,15 @@ import java.nio.channels.AsynchronousSocketChannel;
  * @author 三刀
  * @version v1.0 3/9/26
  */
-public abstract class FlexiblePlugin implements Plugin<MqttMessage> {
+public abstract class SocketPluginAdapter implements Plugin<MqttMessage> {
     private final Plugin<MqttMessage> plugin;
 
-    public FlexiblePlugin(Plugin<MqttMessage> plugin) {
+    public SocketPluginAdapter(Plugin<MqttMessage> plugin) {
         this.plugin = plugin;
     }
 
-    public static FlexiblePlugin of(Plugin<MqttMessage> plugin) {
-        return new FlexiblePlugin(plugin) {
+    public static SocketPluginAdapter of(Plugin<MqttMessage> plugin) {
+        return new SocketPluginAdapter(plugin) {
             @Override
             public boolean enable() {
                 return true;

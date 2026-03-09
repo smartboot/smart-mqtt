@@ -13,21 +13,17 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @author 三刀
  * @version v1.0 3/9/26
  */
-class ProcessorPluginGroup implements Plugin<MqttMessage> {
-    private final List<FlexiblePlugin> pluginList = new CopyOnWriteArrayList<>();
+class SocketPluginGroup implements Plugin<MqttMessage> {
+    private final List<SocketPluginAdapter> pluginList = new CopyOnWriteArrayList<>();
 
-    public void addPlugin(List<FlexiblePlugin> plugins) {
-        pluginList.addAll(plugins);
-    }
-
-    public void addPlugin(FlexiblePlugin plugin) {
+    public void addPlugin(SocketPluginAdapter plugin) {
         pluginList.add(plugin);
     }
 
     @Override
     public boolean preProcess(AioSession session, MqttMessage mqttMessage) {
         boolean flag = true;
-        for (FlexiblePlugin flexiblePlugin : pluginList) {
+        for (SocketPluginAdapter flexiblePlugin : pluginList) {
             if (!flexiblePlugin.enable()) {
                 continue;
             }
@@ -40,7 +36,7 @@ class ProcessorPluginGroup implements Plugin<MqttMessage> {
 
     @Override
     public void stateEvent(StateMachineEnum stateMachineEnum, AioSession session, Throwable throwable) {
-        for (FlexiblePlugin flexiblePlugin : pluginList) {
+        for (SocketPluginAdapter flexiblePlugin : pluginList) {
             if (flexiblePlugin.enable()) {
                 flexiblePlugin.stateEvent(stateMachineEnum, session, throwable);
             }
@@ -50,7 +46,7 @@ class ProcessorPluginGroup implements Plugin<MqttMessage> {
     @Override
     public AsynchronousSocketChannel shouldAccept(AsynchronousSocketChannel channel) {
         boolean remove = false;
-        for (FlexiblePlugin flexiblePlugin : pluginList) {
+        for (SocketPluginAdapter flexiblePlugin : pluginList) {
             if (flexiblePlugin.enable()) {
                 channel = flexiblePlugin.shouldAccept(channel);
                 if (channel == null) {
@@ -70,7 +66,7 @@ class ProcessorPluginGroup implements Plugin<MqttMessage> {
 
     @Override
     public void afterRead(AioSession session, int readSize) {
-        for (FlexiblePlugin flexiblePlugin : pluginList) {
+        for (SocketPluginAdapter flexiblePlugin : pluginList) {
             if (flexiblePlugin.enable()) {
                 flexiblePlugin.afterRead(session, readSize);
             }
@@ -79,7 +75,7 @@ class ProcessorPluginGroup implements Plugin<MqttMessage> {
 
     @Override
     public void beforeRead(AioSession session) {
-        for (FlexiblePlugin flexiblePlugin : pluginList) {
+        for (SocketPluginAdapter flexiblePlugin : pluginList) {
             if (flexiblePlugin.enable()) {
                 flexiblePlugin.beforeRead(session);
             }
@@ -88,7 +84,7 @@ class ProcessorPluginGroup implements Plugin<MqttMessage> {
 
     @Override
     public void afterWrite(AioSession session, int writeSize) {
-        for (FlexiblePlugin flexiblePlugin : pluginList) {
+        for (SocketPluginAdapter flexiblePlugin : pluginList) {
             if (flexiblePlugin.enable()) {
                 flexiblePlugin.afterWrite(session, writeSize);
             }
@@ -97,7 +93,7 @@ class ProcessorPluginGroup implements Plugin<MqttMessage> {
 
     @Override
     public void beforeWrite(AioSession session) {
-        for (FlexiblePlugin flexiblePlugin : pluginList) {
+        for (SocketPluginAdapter flexiblePlugin : pluginList) {
             if (flexiblePlugin.enable()) {
                 flexiblePlugin.beforeWrite(session);
             }

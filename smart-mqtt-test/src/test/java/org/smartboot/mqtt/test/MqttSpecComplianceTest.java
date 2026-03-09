@@ -11,7 +11,7 @@ import tech.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
 import tech.smartboot.mqtt.common.enums.MqttVersion;
 import tech.smartboot.mqtt.common.message.MqttConnAckMessage;
-import tech.smartboot.mqtt.plugin.spec.FlexiblePlugin;
+import tech.smartboot.mqtt.plugin.spec.SocketPluginAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +31,7 @@ public class MqttSpecComplianceTest {
     public void init() throws Throwable {
 //        LOGGER.info("Initializing BrokerContext...");
         brokerContext = new BrokerContextImpl();
-        brokerContext.addFlexiblePlugin(FlexiblePlugin.of(new StreamMonitorPlugin<>()));
+        brokerContext.Options().addPlugin(SocketPluginAdapter.of(new StreamMonitorPlugin<>()));
         brokerContext.init();
 //        LOGGER.info("BrokerContext initialized.");
     }
