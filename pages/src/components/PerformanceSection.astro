@@ -58,7 +58,7 @@ const publishData: ChartRowData[] = [
 
 // 指标卡片数据 - 按重要性和逻辑顺序排列
 const metricCards = [
-  // 第一行：核心吞吐指标
+  // 第一行：核心吞吐指标（挪上来两个）
   {
     number: '1000',
     unit: 'W/s',
@@ -94,7 +94,6 @@ const metricCards = [
     compareType: 'neutral' as const,
     iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
   },
-  // 第二行：QoS 质量指标
   {
     number: '540',
     unit: 'W/s',
@@ -119,6 +118,7 @@ const metricCards = [
     compareType: 'advantage' as const,
     iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>'
   },
+  // 第二行：剩余指标
   {
     number: '100',
     unit: '%',
@@ -144,7 +144,7 @@ const metricCards = [
     </div>
     
     <div class="performance-content">
-      <!-- 订阅吞吐对比图表 -->
+      <!-- 左侧：订阅吞吐对比图表 -->
       <PerformanceChart
         title="消息订阅吞吐能力对比"
         subtitle="2000订阅者 · 10发布者 · 128主题 · 128字节payload"
@@ -152,20 +152,27 @@ const metricCards = [
         data={subscribeData}
       />
       
-      <!-- 发布吞吐能力图表 -->
-      <PerformanceChart
-        title="消息发布吞吐能力"
-        subtitle="2000发布者 · 128主题 · 128字节payload"
-        type="single"
-        data={publishData}
-      />
+      <!-- 右侧：发布吞吐图表 + 2个卡片 -->
+      <div class="publish-section">
+        <PerformanceChart
+          title="消息发布吞吐能力"
+          subtitle="2000发布者 · 128主题 · 128字节payload"
+          type="single"
+          data={publishData}
+        />
+        <div class="publish-cards">
+          <MetricCard {...metricCards[2]} />
+          <MetricCard {...metricCards[5]} />
+        </div>
+      </div>
     </div>
     
     <!-- 核心指标亮点 -->
     <div class="metrics-highlight">
-      {metricCards.map((card) => (
-        <MetricCard {...card} />
-      ))}
+      <MetricCard {...metricCards[0]} />
+      <MetricCard {...metricCards[3]} />
+      <MetricCard {...metricCards[4]} />
+      <MetricCard {...metricCards[1]} />
     </div>
     
     <!-- 压测说明 -->
@@ -263,11 +270,24 @@ const metricCards = [
     gap: 32px;
     margin-bottom: 48px;
   }
+  
+  /* 发布吞吐区域：图表 + 卡片 */
+  .publish-section {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .publish-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
 
   /* 核心指标亮点 */
   .metrics-highlight {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 24px;
     margin-bottom: 48px;
   }
@@ -334,6 +354,10 @@ const metricCards = [
     
     .metrics-highlight {
       grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .publish-cards {
+      grid-template-columns: 1fr 1fr;
     }
   }
 
