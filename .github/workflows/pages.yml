@@ -27,7 +27,7 @@ jobs:
         with:
            path: pages # The root location of your Astro project inside the repository. (optional)
            node-version: 22 # The specific version of Node that should be used to build your site. Defaults to 18. (optional)
-           # package-manager: npm@ # 移除此行，让 action 自动检测基于 package-lock.json
+           package-manager: npm@ # 移除此行，让 action 自动检测基于 package-lock.json
 
   deploy:
     needs: build
