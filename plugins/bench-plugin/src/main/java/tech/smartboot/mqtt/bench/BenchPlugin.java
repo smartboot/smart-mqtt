@@ -239,10 +239,18 @@ public class BenchPlugin extends Plugin {
         Arrays.fill(payload, (byte) 1);
 
         // 创建发布者线程
+        AsynchronousChannelGroup publishGroup = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
+            int i;
+
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "bench-publish-" + (++i));
+            }
+        });
         List<MqttClient> publishers = new ArrayList<>(publisherCount);
         for (int i = 0; i < publisherCount; i++) {
             final int pubId = i;
-            MqttClient publisher = new MqttClient(host, port, opt -> opt.setGroup(group).setBufferSize(16 * 1024).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-publisher-" + pubId));
+            MqttClient publisher = new MqttClient(host, port, opt -> opt.setGroup(publishGroup).setBufferSize(16 * 1024).setKeepAliveInterval(30).setAutomaticReconnect(true).setClientId("bench-publisher-" + pubId));
             publisher.connect();
             publishers.add(publisher);
         }
@@ -260,7 +268,6 @@ public class BenchPlugin extends Plugin {
                     logger(errorMsg);
                     Thread.sleep(1000);
                 }
-
             }
         }
         publishers.forEach(MqttClient::disconnect);
