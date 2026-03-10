@@ -258,7 +258,6 @@ public class BenchPlugin extends Plugin {
                 } catch (Throwable e) {
                     String errorMsg = "[bench-plugin] 发布异常: " + e.getMessage();
                     logger(errorMsg);
-                    log(errorMsg);
                     Thread.sleep(1000);
                 }
 
