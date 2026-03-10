@@ -1,0 +1,266 @@
+---
+export interface Props {
+  title: string;
+  subtitle: string;
+  type: 'comparison' | 'single';
+  data: ChartRowData[];
+}
+
+export interface ChartRowData {
+  qosLevel: string;
+  smartMqttValue: number;
+  competitorValue?: number;
+  maxValue: number;
+  advantage?: string;
+  advantageType?: 'advantage' | 'neutral';
+}
+
+const { title, subtitle, type, data } = Astro.props;
+---
+
+<div class="chart-container">
+  <div class="chart-header">
+    <h3 class="chart-title">{title}</h3>
+    <span class="chart-subtitle">{subtitle}</span>
+  </div>
+  <div class="performance-chart">
+    {data.map((row, index) => (
+      <div class="chart-row" data-index={index}>
+        <span class="qos-label">{row.qosLevel}</span>
+        <div class="chart-bars">
+          <div class="bar-wrapper">
+            <div class="bar-track">
+              <div 
+                class="bar-fill smart-mqtt" 
+                data-value={row.smartMqttValue} 
+                data-max={row.maxValue}
+              >
+                <span class="bar-value">{row.smartMqttValue} W/s</span>
+              </div>
+            </div>
+            <span class="bar-brand">smart-mqtt</span>
+          </div>
+          {type === 'comparison' && row.competitorValue !== undefined && (
+            <div class="bar-wrapper">
+              <div class="bar-track">
+                <div 
+                  class="bar-fill competitor" 
+                  data-value={row.competitorValue} 
+                  data-max={row.maxValue}
+                >
+                  <span class="bar-value">{row.competitorValue} W/s</span>
+                </div>
+              </div>
+              <span class="bar-brand">其他Broker</span>
+            </div>
+          )}
+        </div>
+        <div class={`advantage-badge ${row.advantageType || ''}`}>
+          <span class="advantage-value">{row.advantage}</span>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>
+  .chart-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 32px;
+    transition: all 0.3s ease;
+  }
+  
+  .chart-container:hover {
+    border-color: var(--accent-border);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .chart-header {
+    margin-bottom: 28px;
+    text-align: center;
+  }
+
+  .chart-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+  
+  .chart-subtitle {
+    font-size: 13px;
+    color: var(--text-subtle);
+  }
+
+  .performance-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .chart-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 70px;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .qos-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-subtle);
+    text-align: right;
+    padding-right: 8px;
+    border-right: 2px solid var(--border-color);
+  }
+  
+  .chart-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .bar-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .bar-track {
+    height: 28px;
+    background: var(--bg-tertiary);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .bar-fill {
+    height: 100%;
+    width: 0;
+    border-radius: 6px;
+    position: relative;
+    transition: width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 10px;
+  }
+  
+  .bar-fill.smart-mqtt {
+    background: linear-gradient(90deg, #635bff 0%, #8b5cf6 100%);
+    box-shadow: 0 2px 8px rgba(99, 91, 255, 0.3);
+  }
+  
+  .bar-fill.competitor {
+    background: linear-gradient(90deg, #9ca3af 0%, #d1d5db 100%);
+  }
+  
+  .bar-fill .bar-value {
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s ease 0.8s;
+  }
+  
+  .bar-fill.animated .bar-value {
+    opacity: 1;
+  }
+  
+  .bar-brand {
+    font-size: 11px;
+    color: var(--text-subtle);
+    margin-left: 4px;
+  }
+  
+  .advantage-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .advantage-value {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent-primary);
+  }
+  
+  .advantage-badge.advantage .advantage-value {
+    background: linear-gradient(135deg, #635bff 0%, #8b5cf6 100%);
+    color: white;
+    border: none;
+  }
+  
+  .advantage-badge.neutral .advantage-value {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-subtle);
+    font-weight: 500;
+  }
+
+  @media (max-width: 640px) {
+    .chart-container {
+      padding: 24px;
+    }
+    
+    .chart-row {
+      grid-template-columns: 45px 1fr 55px;
+      gap: 10px;
+    }
+    
+    .qos-label {
+      font-size: 11px;
+    }
+    
+    .bar-fill .bar-value {
+      font-size: 10px;
+      padding-right: 6px;
+    }
+    
+    .advantage-value {
+      font-size: 10px;
+      padding: 3px 6px;
+    }
+  }
+</style>
+
+<script>
+  // 动画逻辑
+  const observerOptions = {
+    threshold: 0.2,
+    rootMargin: '0px'
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const bars = entry.target.querySelectorAll('.bar-fill');
+        bars.forEach((bar, index) => {
+          const value = parseInt(bar.dataset.value);
+          const max = parseInt(bar.dataset.max);
+          const percentage = (value / max) * 100;
+          
+          setTimeout(() => {
+            bar.style.width = percentage + '%';
+            bar.classList.add('animated');
+          }, index * 100);
+        });
+        
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  document.querySelectorAll('.chart-container').forEach(container => {
+    observer.observe(container);
+  });
+</script>

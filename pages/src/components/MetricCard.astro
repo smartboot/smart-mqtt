@@ -1,0 +1,241 @@
+---
+export interface Props {
+  number: string;
+  unit: string;
+  label: string;
+  description: string;
+  tag?: string;
+  tagType?: 'default' | 'secondary' | 'tertiary' | 'quaternary' | 'quinary' | 'senary';
+  compareValue?: string;
+  compareLabel?: string;
+  compareType?: 'advantage' | 'neutral';
+  featured?: boolean;
+  iconSvg: string;
+}
+
+const { 
+  number, 
+  unit, 
+  label, 
+  description, 
+  tag,
+  tagType = 'default',
+  compareValue,
+  compareLabel,
+  compareType = 'neutral',
+  featured = false,
+  iconSvg 
+} = Astro.props;
+
+const tagClass = `metric-tag ${tagType}`;
+const compareClass = `metric-compare ${compareType}`;
+const cardClass = `metric-card ${featured ? 'featured' : ''}`;
+---
+
+<div class={cardClass}>
+  <div class="metric-card-header">
+    <div class={`metric-icon ${tagType}`}>
+      <Fragment set:html={iconSvg} />
+    </div>
+    {tag && <span class={tagClass}>{tag}</span>}
+  </div>
+  <div class="metric-value-wrapper">
+    <span class="metric-number">{number}</span>
+    <span class="metric-unit">{unit}</span>
+  </div>
+  <span class="metric-label">{label}</span>
+  <span class="metric-desc">{description}</span>
+  <div class="metric-divider"></div>
+  <div class={compareClass}>
+    <span class="compare-value">{compareValue}</span>
+    {compareLabel && <span class="compare-label">{compareLabel}</span>}
+  </div>
+</div>
+
+<style>
+  .metric-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+  }
+  
+  .metric-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent-border);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .metric-card.featured {
+    background: linear-gradient(135deg, var(--accent-bg) 0%, var(--bg-card) 100%);
+    border-color: var(--accent-border);
+    position: relative;
+  }
+  
+  .metric-card.featured::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #635bff 0%, #8b5cf6 100%);
+    border-radius: 16px 16px 0 0;
+  }
+  
+  .metric-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  
+  .metric-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+  }
+  
+  .metric-icon.default {
+    background: linear-gradient(135deg, #635bff 0%, #8b5cf6 100%);
+  }
+  
+  .metric-icon.secondary {
+    background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+  }
+  
+  .metric-icon.tertiary {
+    background: linear-gradient(135deg, #10b981 0%, #22c55e 100%);
+  }
+  
+  .metric-icon.quaternary {
+    background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+  }
+  
+  .metric-icon.quinary {
+    background: linear-gradient(135deg, #ec4899 0%, #d946ef 100%);
+  }
+  
+  .metric-icon.senary {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  }
+  
+  .metric-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .metric-tag {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--accent-bg);
+    color: var(--accent-primary);
+    border: 1px solid var(--accent-border);
+  }
+  
+  .metric-tag.secondary {
+    background: rgba(6, 182, 212, 0.1);
+    color: #06b6d4;
+    border-color: rgba(6, 182, 212, 0.2);
+  }
+  
+  .metric-tag.tertiary {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.2);
+  }
+  
+  .metric-tag.quaternary {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+    border-color: rgba(245, 158, 11, 0.2);
+  }
+  
+  .metric-tag.quinary {
+    background: rgba(236, 72, 153, 0.1);
+    color: #ec4899;
+    border-color: rgba(236, 72, 153, 0.2);
+  }
+  
+  .metric-tag.senary {
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+    border-color: rgba(99, 102, 241, 0.2);
+  }
+  
+  .metric-value-wrapper {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  
+  .metric-number {
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1;
+    background: linear-gradient(135deg, #635bff 0%, #8b5cf6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .metric-unit {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--accent-primary);
+  }
+  
+  .metric-label {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+  
+  .metric-desc {
+    font-size: 13px;
+    color: var(--text-subtle);
+    margin-bottom: 16px;
+  }
+  
+  .metric-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: auto 0 12px 0;
+  }
+  
+  .metric-compare {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .metric-compare.advantage {
+    color: var(--accent-primary);
+  }
+  
+  .metric-compare.neutral {
+    color: var(--text-subtle);
+  }
+  
+  .compare-value {
+    font-size: 13px;
+    font-weight: 700;
+  }
+  
+  .compare-label {
+    font-size: 12px;
+    opacity: 0.8;
+  }
+</style>

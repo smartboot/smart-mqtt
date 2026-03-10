@@ -1,4 +1,136 @@
 ---
+import MetricCard from './MetricCard.astro';
+import PerformanceChart from './PerformanceChart.astro';
+import type { ChartRowData } from './PerformanceChart.astro';
+
+// 订阅吞吐对比数据
+const subscribeData: ChartRowData[] = [
+  {
+    qosLevel: 'QoS 0',
+    smartMqttValue: 1000,
+    competitorValue: 800,
+    maxValue: 1200,
+    advantage: '+25%',
+    advantageType: 'advantage'
+  },
+  {
+    qosLevel: 'QoS 1',
+    smartMqttValue: 540,
+    competitorValue: 400,
+    maxValue: 1200,
+    advantage: '+35%',
+    advantageType: 'advantage'
+  },
+  {
+    qosLevel: 'QoS 2',
+    smartMqttValue: 320,
+    competitorValue: 200,
+    maxValue: 1200,
+    advantage: '+60%',
+    advantageType: 'advantage'
+  }
+];
+
+// 发布吞吐数据（单栏）
+const publishData: ChartRowData[] = [
+  {
+    qosLevel: 'QoS 0',
+    smartMqttValue: 230,
+    maxValue: 300,
+    advantage: '行业领先',
+    advantageType: 'neutral'
+  },
+  {
+    qosLevel: 'QoS 1',
+    smartMqttValue: 100,
+    maxValue: 300,
+    advantage: '行业领先',
+    advantageType: 'neutral'
+  },
+  {
+    qosLevel: 'QoS 2',
+    smartMqttValue: 63,
+    maxValue: 300,
+    advantage: '行业领先',
+    advantageType: 'neutral'
+  }
+];
+
+// 指标卡片数据 - 按重要性和逻辑顺序排列
+const metricCards = [
+  // 第一行：核心吞吐指标
+  {
+    number: '1000',
+    unit: 'W/s',
+    label: '峰值订阅吞吐',
+    description: 'QoS 0 · 2000订阅者 · 10发布者',
+    tag: '订阅场景',
+    tagType: 'default' as const,
+    compareValue: '+25%',
+    compareLabel: 'vs 其他Broker',
+    compareType: 'advantage' as const,
+    featured: true,
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>'
+  },
+  {
+    number: '230',
+    unit: 'W/s',
+    label: '峰值发布吞吐',
+    description: 'QoS 0 · 2000发布者',
+    tag: '发布场景',
+    tagType: 'secondary' as const,
+    compareValue: '行业领先',
+    compareType: 'neutral' as const,
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>'
+  },
+  {
+    number: '<1',
+    unit: 'ms',
+    label: '平均消息延迟',
+    description: 'P99 延迟 · 消息投递速度',
+    tag: '延迟表现',
+    tagType: 'senary' as const,
+    compareValue: '毫秒级响应',
+    compareType: 'neutral' as const,
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
+  },
+  // 第二行：QoS 质量指标
+  {
+    number: '540',
+    unit: 'W/s',
+    label: '可靠订阅吞吐',
+    description: 'AtLeastOnce 消息质量保证',
+    tag: 'QoS 1',
+    tagType: 'quaternary' as const,
+    compareValue: '+35%',
+    compareLabel: 'vs 其他Broker',
+    compareType: 'advantage' as const,
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><path d="M21 12c.552 0 1-.448 1-1V8c0-2.761-2.239-5-5-5h-3"/><path d="M3 12c-.552 0-1 .448-1 1v3c0 2.761 2.239 5 5 5h3"/><circle cx="12" cy="12" r="3"/></svg>'
+  },
+  {
+    number: '320',
+    unit: 'W/s',
+    label: '最高可靠吞吐',
+    description: 'ExactlyOnce 消息质量保证',
+    tag: 'QoS 2',
+    tagType: 'quinary' as const,
+    compareValue: '+60%',
+    compareLabel: 'vs 其他Broker',
+    compareType: 'advantage' as const,
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>'
+  },
+  {
+    number: '100',
+    unit: '%',
+    label: '消息投递成功率',
+    description: 'QoS 1 & 2 消息保证',
+    tag: '可靠性',
+    tagType: 'tertiary' as const,
+    compareValue: '企业级',
+    compareType: 'neutral' as const,
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>'
+  }
+];
 ---
 
 <section class="performance-section" id="performance">
@@ -12,121 +144,43 @@
     </div>
     
     <div class="performance-content">
-      <!-- 性能对比图表 -->
-      <div class="chart-container">
-        <h3 class="chart-title">并发连接能力对比</h3>
-        <div class="performance-chart">
-          <div class="chart-bar-wrapper">
-            <div class="chart-bar" data-value="100000" data-label="smart-mqtt">
-              <div class="bar-fill">
-                <div class="bar-glow"></div>
-              </div>
-            </div>
-            <div class="bar-info">
-              <span class="bar-value">100,000+</span>
-              <span class="bar-label">smart-mqtt</span>
-            </div>
-          </div>
-          
-          <div class="chart-bar-wrapper">
-            <div class="chart-bar" data-value="50000" data-label="竞品 A">
-              <div class="bar-fill competitor">
-                <div class="bar-glow"></div>
-              </div>
-            </div>
-            <div class="bar-info">
-              <span class="bar-value">50,000</span>
-              <span class="bar-label">竞品 A</span>
-            </div>
-          </div>
-          
-          <div class="chart-bar-wrapper">
-            <div class="chart-bar" data-value="30000" data-label="竞品 B">
-              <div class="bar-fill competitor">
-                <div class="bar-glow"></div>
-              </div>
-            </div>
-            <div class="bar-info">
-              <span class="bar-value">30,000</span>
-              <span class="bar-label">竞品 B</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- 订阅吞吐对比图表 -->
+      <PerformanceChart
+        title="消息订阅吞吐能力对比"
+        subtitle="2000订阅者 · 10发布者 · 128主题 · 128字节payload"
+        type="comparison"
+        data={subscribeData}
+      />
       
-      <!-- 核心指标卡片 -->
-      <div class="metrics-grid">
-        <div class="metric-card">
-          <div class="metric-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
-            </svg>
-          </div>
-          <div class="metric-value">
-            <span class="number" data-target="2.3">0</span>
-            <span class="unit">ms</span>
-          </div>
-          <div class="metric-label">平均消息延迟</div>
-          <div class="metric-desc">端到端消息传输时间</div>
-        </div>
-        
-        <div class="metric-card highlight">
-          <div class="metric-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            </svg>
-          </div>
-          <div class="metric-value">
-            <span class="number" data-target="1.2">0</span>
-            <span class="unit">M/s</span>
-          </div>
-          <div class="metric-label">消息吞吐 TPS</div>
-          <div class="metric-desc">每秒处理消息数</div>
-        </div>
-        
-        <div class="metric-card">
-          <div class="metric-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-              <path d="M2 17l10 5 10-5"/>
-              <path d="M2 12l10 5 10-5"/>
-            </svg>
-          </div>
-          <div class="metric-value">
-            <span class="number" data-target="99.99">0</span>
-            <span class="unit">%</span>
-          </div>
-          <div class="metric-label">服务可用性</div>
-          <div class="metric-desc">SLA 保障承诺</div>
-        </div>
-        
-        <div class="metric-card">
-          <div class="metric-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-              <line x1="8" y1="21" x2="16" y2="21"/>
-              <line x1="12" y1="17" x2="12" y2="21"/>
-            </svg>
-          </div>
-          <div class="metric-value">
-            <span class="number" data-target="512">0</span>
-            <span class="unit">MB</span>
-          </div>
-          <div class="metric-label">内存占用</div>
-          <div class="metric-desc">1万连接基准</div>
-        </div>
-      </div>
+      <!-- 发布吞吐能力图表 -->
+      <PerformanceChart
+        title="消息发布吞吐能力"
+        subtitle="2000发布者 · 128主题 · 128字节payload"
+        type="single"
+        data={publishData}
+      />
+    </div>
+    
+    <!-- 核心指标亮点 -->
+    <div class="metrics-highlight">
+      {metricCards.map((card) => (
+        <MetricCard {...card} />
+      ))}
     </div>
     
     <!-- 压测说明 -->
-    <div class="benchmark-note">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="16" x2="12" y2="12"/>
-        <line x1="12" y1="8" x2="12.01" y2="8"/>
-      </svg>
-      <span>数据来源于官方 benchmark 测试，测试环境：8核16G 云服务器</span>
+    <div class="benchmark-footer">
+      <div class="benchmark-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="16" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        <div class="benchmark-info">
+          <p><strong>测试环境：</strong>8核16G 云服务器 · 2000 并发连接 · 128 字节 payload</p>
+          <p class="benchmark-source">数据来源于 <a href="/docs/plugins/bench-plugin" class="benchmark-link">bench-plugin 官方压测插件</a> · 支持横向对比测试 EMQX、Mosquitto 等主流 Broker</p>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -137,6 +191,7 @@
     background: var(--bg-secondary);
     position: relative;
     transition: background-color 0.3s ease;
+    overflow: hidden;
   }
   
   .performance-section::before {
@@ -148,10 +203,25 @@
     height: 1px;
     background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
   }
+  
+  /* 背景装饰 */
+  .performance-section::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, var(--accent-primary) 0%, transparent 70%);
+    opacity: 0.03;
+    pointer-events: none;
+  }
 
   .container {
     max-width: 1200px;
     margin: 0 auto;
+    position: relative;
+    z-index: 1;
   }
 
   .section-header {
@@ -190,187 +260,70 @@
   .performance-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 48px;
-    align-items: start;
+    gap: 32px;
+    margin-bottom: 48px;
   }
 
-  /* 图表区域 */
-  .chart-container {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
-    padding: 40px;
-  }
-
-  .chart-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 32px;
-    text-align: center;
-  }
-
-  .performance-chart {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-  }
-
-  .chart-bar-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .chart-bar {
-    height: 48px;
-    background: var(--bg-tertiary);
-    border-radius: 8px;
-    overflow: hidden;
-    position: relative;
-  }
-
-  .bar-fill {
-    height: 100%;
-    width: 0;
-    background: linear-gradient(90deg, #635bff 0%, #8b5cf6 100%);
-    border-radius: 8px;
-    position: relative;
-    transition: width 1.5s ease-out;
-  }
-
-  .bar-fill.competitor {
-    background: linear-gradient(90deg, var(--text-subtle) 0%, var(--text-muted) 100%);
-  }
-
-  .bar-glow {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 100px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2));
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-
-  .chart-bar-wrapper:hover .bar-glow {
-    opacity: 1;
-  }
-
-  .bar-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .bar-value {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-
-  .bar-label {
-    font-size: 14px;
-    color: var(--text-subtle);
-  }
-
-  /* 指标卡片 */
-  .metrics-grid {
+  /* 核心指标亮点 */
+  .metrics-highlight {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-  }
-
-  .metric-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 28px;
-    transition: all 0.3s ease;
-  }
-
-  .metric-card:hover {
-    transform: translateY(-4px);
-    border-color: var(--accent-border);
-    box-shadow: var(--shadow-lg);
-  }
-
-  .metric-card.highlight {
-    background: var(--accent-bg);
-    border-color: var(--accent-border);
-  }
-
-  .metric-icon {
-    width: 44px;
-    height: 44px;
-    background: var(--accent-bg);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--accent-primary);
-    margin-bottom: 16px;
-  }
-
-  .metric-icon svg {
-    width: 22px;
-    height: 22px;
-  }
-
-  .metric-value {
-    display: flex;
-    align-items: baseline;
-    gap: 4px;
-    margin-bottom: 8px;
-  }
-
-  .metric-value .number {
-    font-size: 36px;
-    font-weight: 700;
-    background: var(--gradient-text);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: 1;
-  }
-
-  .metric-value .unit {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--accent-primary);
-  }
-
-  .metric-label {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 4px;
-  }
-
-  .metric-desc {
-    font-size: 13px;
-    color: var(--text-subtle);
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 48px;
   }
 
   /* 压测说明 */
+  .benchmark-footer {
+    display: flex;
+    justify-content: center;
+  }
+  
   .benchmark-note {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 48px;
-    padding: 16px 24px;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 20px 28px;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    color: var(--text-subtle);
-    font-size: 14px;
+    max-width: 800px;
   }
-
+  
   .benchmark-note svg {
     color: var(--accent-primary);
     flex-shrink: 0;
+    margin-top: 2px;
+  }
+  
+  .benchmark-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .benchmark-info p {
+    color: var(--text-subtle);
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+  }
+  
+  .benchmark-info strong {
+    color: var(--text-primary);
+  }
+  
+  .benchmark-source {
+    font-size: 13px !important;
+  }
+  
+  .benchmark-link {
+    color: var(--accent-primary);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  
+  .benchmark-link:hover {
+    text-decoration: underline;
   }
 
   /* 响应式 */
@@ -378,9 +331,9 @@
     .performance-content {
       grid-template-columns: 1fr;
     }
-
-    .chart-container {
-      order: -1;
+    
+    .metrics-highlight {
+      grid-template-columns: repeat(2, 1fr);
     }
   }
 
@@ -388,55 +341,32 @@
     .performance-section {
       padding: 60px 16px;
     }
-
-    .chart-container {
-      padding: 24px;
-    }
-
-    .metrics-grid {
+    
+    .metrics-highlight {
       grid-template-columns: 1fr;
     }
-
-    .metric-value .number {
-      font-size: 28px;
-    }
-
-    .section-title {
-      font-size: 24px;
+    
+    .benchmark-note {
+      flex-direction: column;
+      text-align: center;
+      padding: 20px;
     }
   }
 </style>
 
 <script>
-  // 滚动触发动画
+  // 指标卡片动画
   const observerOptions = {
-    threshold: 0.3,
+    threshold: 0.2,
     rootMargin: '0px'
   };
 
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        // 图表动画
-        if (entry.target.classList.contains('chart-bar-wrapper')) {
-          const bar = entry.target.querySelector('.bar-fill');
-          const value = parseInt(entry.target.querySelector('.chart-bar').dataset.value);
-          const maxValue = 100000;
-          const percentage = (value / maxValue) * 100;
-          
-          setTimeout(() => {
-            bar.style.width = percentage + '%';
-          }, 100);
-        }
-        
-        // 数字滚动动画
         if (entry.target.classList.contains('metric-card')) {
-          const numberEl = entry.target.querySelector('.number');
-          if (numberEl) {
-            const target = parseFloat(numberEl.dataset.target);
-            const isDecimal = numberEl.dataset.target.includes('.');
-            animateNumber(numberEl, 0, target, 1500, isDecimal);
-          }
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
         }
         
         observer.unobserve(entry.target);
@@ -444,44 +374,11 @@
     });
   }, observerOptions);
 
-  // 观察图表
-  document.querySelectorAll('.chart-bar-wrapper').forEach(bar => {
-    observer.observe(bar);
-  });
-
-  // 观察指标卡片
-  document.querySelectorAll('.metric-card').forEach(card => {
+  // 观察指标卡片并设置初始状态
+  document.querySelectorAll('.metric-card').forEach((card, index) => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(20px)';
+    card.style.transition = `all 0.5s ease ${index * 0.1}s`;
     observer.observe(card);
   });
-
-  function animateNumber(element, start, end, duration, isDecimal = false) {
-    const range = end - start;
-    const minTimer = 50;
-    let stepTime = Math.abs(Math.floor(duration / range));
-    stepTime = Math.max(stepTime, minTimer);
-    
-    let startTime = new Date().getTime();
-    let endTime = startTime + duration;
-    let timer;
-    
-    function run() {
-      let now = new Date().getTime();
-      let remaining = Math.max((endTime - now) / duration, 0);
-      let value = end - (remaining * range);
-      
-      if (isDecimal) {
-        element.textContent = value.toFixed(target % 1 === 0 ? 0 : 1);
-      } else {
-        element.textContent = Math.round(value).toLocaleString();
-      }
-      
-      if (value >= end) {
-        clearInterval(timer);
-        element.textContent = isDecimal ? end.toFixed(target % 1 === 0 ? 0 : 1) : end.toLocaleString();
-      }
-    }
-    
-    timer = setInterval(run, stepTime);
-    run();
-  }
 </script>
