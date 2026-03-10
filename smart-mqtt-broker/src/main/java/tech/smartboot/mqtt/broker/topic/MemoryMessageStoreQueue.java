@@ -62,6 +62,14 @@ public class MemoryMessageStoreQueue implements MessageQueue {
         }
     }
 
+    public Message getAndCommit(long offset) {
+        Message message = get(offset);
+        if (message != null && message.getOffset() == offset && message.decrementAndGet() == 0) {
+            store[(int) (message.getOffset() & mask)] = null;
+        }
+        return message;
+    }
+
     public void commit(long offset) {
         Message message = get(offset);
         if (message != null && message.getOffset() == offset && message.decrementAndGet() == 0) {

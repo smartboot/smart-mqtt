@@ -99,7 +99,7 @@ class SimpleMessageDeliver extends BaseMessageDeliver {
 //            System.out.println("push0...");
             return false;
         }
-        Message message = topic.getMessageQueue().get(nextConsumerOffset);
+        Message message = topic.getMessageQueue().getAndCommit(nextConsumerOffset);
         if (message == null) {
             topic.registerMessageDeliver(this);
             return false;
@@ -111,7 +111,6 @@ class SimpleMessageDeliver extends BaseMessageDeliver {
         }
 
         nextConsumerOffset = message.getOffset() + 1;
-        topic.getMessageQueue().commit(message.getOffset());
         getMqttSession().write(publishBuilder.build(), false);
         return true;
     }
