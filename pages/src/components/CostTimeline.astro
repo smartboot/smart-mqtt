@@ -1,0 +1,245 @@
+---
+const timelineSteps = [
+  {
+    step: 1,
+    title: '技术降本',
+    desc: '基于 smart-socket 的高性能通信框架',
+    metric: '10万+并发',
+    detail: '消息延迟 <1ms，同等性能硬件规格更节省'
+  },
+  {
+    step: 2,
+    title: '效率革命',
+    desc: 'AI 辅助开发模式',
+    metric: '1人团队',
+    detail: '研发效率提升10倍，成本不足传统模式百分之一'
+  },
+  {
+    step: 3,
+    title: '综合收益',
+    desc: '技术成本与研发成本双重优化',
+    metric: '成本1/10',
+    detail: '综合成本降至原先的十分之一'
+  }
+];
+---
+
+<div class="implementation-path">
+  <div class="path-header">
+    <h3>降本实现路径</h3>
+    <p>三步实现成本优化，从架构到效率全面提升</p>
+  </div>
+  
+  <div class="timeline">
+    {timelineSteps.map((step, index) => (
+      <div class="timeline-node" style={`--delay: ${index * 0.15}s`}>
+        <div class="node-marker">
+          <span class="marker-number">{step.step}</span>
+          <div class="marker-ring"></div>
+        </div>
+        <div class="node-content">
+          <div class="content-badge">{step.metric}</div>
+          <h4>{step.title}</h4>
+          <p>{step.desc}</p>
+          <span class="content-detail">{step.detail}</span>
+        </div>
+        {index < timelineSteps.length - 1 && (
+          <div class="node-connector">
+            <div class="connector-line"></div>
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>
+  .implementation-path {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 28px;
+  }
+
+  .path-header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .path-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .path-header p {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .timeline {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 16px;
+    position: relative;
+  }
+
+  .timeline-node {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+    position: relative;
+    animation: fade-in-up 0.6s ease forwards;
+    animation-delay: var(--delay);
+    opacity: 0;
+  }
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .node-marker {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+  }
+
+  .marker-number {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #6366f1;
+    z-index: 2;
+  }
+
+  .marker-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(99, 102, 241, 0.1);
+    border: 2px solid rgba(99, 102, 241, 0.3);
+    transition: all 0.3s ease;
+  }
+
+  .timeline-node:hover .marker-ring {
+    transform: scale(1.1);
+    border-color: #6366f1;
+    box-shadow: 0 0 16px rgba(99, 102, 241, 0.3);
+  }
+
+  .node-connector {
+    position: absolute;
+    top: 22px;
+    left: calc(50% + 22px);
+    width: calc(100% - 44px);
+    height: 2px;
+    z-index: 0;
+  }
+
+  .connector-line {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1, #10b981);
+    opacity: 0.3;
+  }
+
+  .node-content {
+    flex: 1;
+    padding-top: 0;
+  }
+
+  .content-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6366f1;
+    margin-bottom: 6px;
+  }
+
+  .node-content h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+
+  .node-content p {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    line-height: 1.4;
+  }
+
+  .content-detail {
+    font-size: 11px;
+    color: var(--text-subtle);
+    line-height: 1.3;
+  }
+
+  @media (max-width: 1024px) {
+    .timeline {
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .timeline-node {
+      flex-direction: row;
+      align-items: flex-start;
+      text-align: left;
+      gap: 16px;
+    }
+
+    .node-connector {
+      display: none;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .implementation-path {
+      padding: 20px;
+    }
+
+    .timeline {
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .timeline-node {
+      flex-direction: row;
+      align-items: flex-start;
+      text-align: left;
+      gap: 12px;
+    }
+
+    .node-connector {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .timeline-node {
+      animation: none;
+      opacity: 1;
+    }
+  }
+</style>

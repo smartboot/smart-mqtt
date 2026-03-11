@@ -1,0 +1,241 @@
+---
+import TeamComparison from './TeamComparison.astro';
+import CostTimeline from './CostTimeline.astro';
+---
+
+<section class="cost-section" id="cost">
+  <!-- 背景装饰 -->
+  <div class="bg-decoration">
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+  </div>
+
+  <div class="cost-container">
+    <!-- 头部 -->
+    <header class="cost-header">
+      <div class="cost-badge">
+        <span class="badge-dot"></span>
+        成本优势
+      </div>
+      <h2 class="cost-title">
+        <span class="title-line">实现成本降至原先的</span>
+        <span class="title-highlight">
+          <span class="fraction">
+            <span class="numerator" data-count="1">0</span>
+            <span class="divider">/</span>
+            <span class="denominator">10</span>
+          </span>
+        </span>
+      </h2>
+      <p class="cost-subtitle">
+        高性能底层架构与 AI 研发效率的完美结合
+      </p>
+    </header>
+    <!-- 降本实现路径 -->
+    <CostTimeline />
+    <!-- 团队对比 -->
+    <TeamComparison />
+
+
+  </div>
+</section>
+
+<style>
+  .cost-section {
+    padding: 80px 24px;
+    background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bg-decoration {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .bg-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at center, black 40%, transparent 70%);
+  }
+
+  .bg-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .cost-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .cost-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .cost-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 100px;
+    color: #818cf8;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 16px;
+  }
+
+  .badge-dot {
+    width: 6px;
+    height: 6px;
+    background: #10b981;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .cost-title {
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+
+  .title-line {
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .title-highlight {
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(135deg, #6366f1, #10b981);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .fraction {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .numerator {
+    font-weight: 900;
+    -webkit-text-fill-color: initial;
+    color: inherit;
+  }
+
+  .divider {
+    font-weight: 300;
+    opacity: 0.6;
+    -webkit-text-fill-color: initial;
+    color: inherit;
+  }
+
+  .denominator {
+    font-weight: 900;
+    opacity: 0.8;
+    -webkit-text-fill-color: initial;
+    color: inherit;
+  }
+
+  .cost-subtitle {
+    font-size: 16px;
+    color: var(--text-muted);
+    max-width: 500px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 640px) {
+    .cost-section {
+      padding: 60px 16px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .badge-dot {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  function animateCounter(element, target, duration = 1500) {
+    const start = 0;
+    const startTime = performance.now();
+
+    function update(currentTime) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      const current = Math.floor(start + (target - start) * easeProgress);
+      element.textContent = current;
+
+      if (progress < 1) {
+        requestAnimationFrame(update);
+      }
+    }
+
+    requestAnimationFrame(update);
+  }
+
+  function initInteractions() {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          // 分数1直接显示，不需要动画
+          const fractionCounter = entry.target.querySelector('.fraction .numerator');
+          if (fractionCounter && !fractionCounter.classList.contains('animated')) {
+            fractionCounter.classList.add('animated');
+            fractionCounter.textContent = '1';
+          }
+
+          // 动画团队人数
+          const countNumbers = entry.target.querySelectorAll('.count-number[data-count]');
+          countNumbers.forEach(counter => {
+            if (!counter.classList.contains('animated')) {
+              counter.classList.add('animated');
+              const target = parseInt(counter.getAttribute('data-count'));
+              animateCounter(counter, target);
+            }
+          });
+        }
+      });
+    }, { threshold: 0.3 });
+
+    const section = document.querySelector('.cost-section');
+    if (section) {
+      observer.observe(section);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initInteractions);
+  } else {
+    initInteractions();
+  }
+</script>

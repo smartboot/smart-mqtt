@@ -1,0 +1,422 @@
+---
+const legacyRoles = ['产品经理', '后端开发', '前端开发', '测试工程师', '运维工程师', '技术支持'];
+const smartCaps = ['全栈开发', '架构设计', '运维部署'];
+---
+
+<div class="team-visual-comparison">
+  <!-- 传统团队 -->
+  <div class="team-side legacy-side">
+    <div class="team-label">
+      <span class="label-tag">传统Broker产品</span>
+
+    </div>
+    
+    <div class="people-grid legacy-grid">
+      {legacyRoles.map((role, i) => (
+        <div class="person-avatar legacy-avatar" style={`--delay: ${i * 0.05}s`}>
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="24" cy="16" r="10" fill="currentColor" opacity="0.8"/>
+            <path d="M8 44c0-8.837 7.163-16 16-16s16 7.163 16 16" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+          </svg>
+          <span class="person-role">{role}</span>
+        </div>
+      ))}
+    </div>
+
+    <div class="team-meta">
+      <div class="meta-item">
+        <div class="meta-text">
+          <span class="meta-subtitle">多角色专业团队</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 中间对比 -->
+  <div class="vs-center">
+    <div class="vs-arrow">
+      <div class="arrow-body"></div>
+      <div class="arrow-tip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </div>
+    </div>
+    <div class="savings-stat">
+      <span class="savings-number">-90%</span>
+      <span class="savings-label">人力成本</span>
+    </div>
+  </div>
+
+  <!-- Smart团队 -->
+  <div class="team-side smart-side">
+    <div class="team-label">
+      <span class="label-tag highlight">smart-mqtt</span>
+    
+    </div>
+    
+    <div class="people-grid smart-grid">
+      <div class="person-avatar smart-avatar main-avatar">
+        <div class="avatar-glow"></div>
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="avatarGrad" x1="0" y1="0" x2="48" y2="48">
+              <stop offset="0%" stop-color="#6366f1"/>
+              <stop offset="100%" stop-color="#10b981"/>
+            </linearGradient>
+          </defs>
+          <circle cx="24" cy="16" r="10" fill="url(#avatarGrad)"/>
+          <path d="M8 44c0-8.837 7.163-16 16-16s16 7.163 16 16" stroke="url(#avatarGrad)" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+        <div class="ai-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+          <span>AI</span>
+        </div>
+      </div>
+      
+      <div class="capabilities">
+        {smartCaps.map((cap, i) => (
+          <span class="cap-tag" style={`--delay: ${i * 0.1}s`}>{cap}</span>
+        ))}
+      </div>
+    </div>
+
+    <div class="team-meta">
+      <div class="meta-item highlight">
+        <span class="meta-icon">⚡</span>
+        <div class="meta-text">
+          <span class="meta-subtitle highlight">AI 加持单人模式</span>
+        </div>
+      </div>
+    
+    </div>
+  </div>
+</div>
+
+<style>
+  .team-visual-comparison {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 32px;
+    align-items: center;
+    margin-bottom: 48px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    padding: 32px;
+  }
+
+  .team-side {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .team-label {
+    text-align: center;
+  }
+
+  .label-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(156, 163, 175, 0.1);
+    border-radius: 100px;
+    font-size: 12px;
+    color: #9ca3af;
+    margin-bottom: 8px;
+  }
+
+  .label-tag.highlight {
+    background: rgba(99, 102, 241, 0.15);
+    color: #6366f1;
+    font-weight: 600;
+  }
+
+  .team-desc {
+    font-size: 22px;
+    font-weight: 700;
+    color: #9ca3af;
+    line-height: 1.2;
+  }
+
+  .team-desc.highlight {
+    font-size: 26px;
+    background: linear-gradient(135deg, #6366f1, #10b981);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .people-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    min-height: 100px;
+  }
+
+  .legacy-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .person-avatar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    animation: pop-in 0.4s ease forwards;
+    animation-delay: var(--delay);
+    opacity: 0;
+    transform: scale(0.8);
+  }
+
+  @keyframes pop-in {
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .person-avatar svg {
+    width: 36px;
+    height: 36px;
+    color: #9ca3af;
+    opacity: 0.6;
+  }
+
+  .person-role {
+    font-size: 10px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .smart-grid {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .smart-avatar {
+    position: relative;
+  }
+
+  .smart-avatar svg {
+    width: 72px;
+    height: 72px;
+    opacity: 1;
+  }
+
+  .avatar-glow {
+    position: absolute;
+    inset: -8px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(16, 185, 129, 0.2));
+    border-radius: 50%;
+    filter: blur(16px);
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.05); }
+  }
+
+  .ai-badge {
+    position: absolute;
+    bottom: -4px;
+    right: -8px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 8px;
+    background: linear-gradient(135deg, #6366f1, #10b981);
+    border-radius: 100px;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+  }
+
+  .ai-badge svg {
+    width: 10px;
+    height: 10px;
+    color: white;
+    opacity: 1;
+  }
+
+  .capabilities {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 6px;
+  }
+
+  .cap-tag {
+    padding: 4px 10px;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: 100px;
+    font-size: 11px;
+    color: #10b981;
+    animation: fade-in 0.5s ease forwards;
+    animation-delay: var(--delay);
+    opacity: 0;
+  }
+
+  @keyframes fade-in {
+    to { opacity: 1; }
+  }
+
+  .team-meta {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .meta-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .meta-item.highlight {
+    color: #10b981;
+    font-weight: 600;
+  }
+
+  .meta-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .meta-subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    opacity: 0.8;
+  }
+
+  .meta-subtitle.highlight {
+    color: #10b981;
+    opacity: 1;
+  }
+
+  .cost-high {
+    color: #ef4444;
+  }
+
+  .cost-low {
+    color: #10b981;
+    font-weight: 600;
+  }
+
+  .vs-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .vs-arrow {
+    display: flex;
+    align-items: center;
+  }
+
+  .arrow-body {
+    width: 48px;
+    height: 3px;
+    background: linear-gradient(90deg, #9ca3af, #10b981);
+    border-radius: 2px;
+  }
+
+  .arrow-tip {
+    color: #10b981;
+    margin-left: -4px;
+  }
+
+  .arrow-tip svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .savings-stat {
+    text-align: center;
+  }
+
+  .savings-number {
+    display: block;
+    font-size: 28px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #10b981, #06b6d4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+
+  .savings-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  @media (max-width: 1024px) {
+    .team-visual-comparison {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    .vs-center {
+      flex-direction: row;
+      justify-content: center;
+      order: -1;
+    }
+
+    .vs-arrow {
+      transform: rotate(90deg);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .team-visual-comparison {
+      padding: 24px 20px;
+    }
+
+    .count-number {
+      font-size: 36px;
+    }
+
+    .count-number.highlight {
+      font-size: 48px;
+    }
+
+    .legacy-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .team-meta {
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .person-avatar {
+      animation: none;
+      opacity: 1;
+    }
+
+    .avatar-glow {
+      animation: none;
+    }
+  }
+</style>

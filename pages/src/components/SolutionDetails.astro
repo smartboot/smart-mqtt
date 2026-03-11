@@ -1,0 +1,219 @@
+---
+const advantages = [
+  { 
+    icon: 'zap', 
+    title: '高性能架构', 
+    desc: 'smart-socket 驱动，单机10万+并发', 
+    color: 'primary' 
+  },
+  { 
+    icon: 'brain', 
+    title: 'AI 研发效率', 
+    desc: '1人完成企业级应用全栈开发', 
+    color: 'success' 
+  },
+  { 
+    icon: 'server', 
+    title: '极简运维', 
+    desc: '单机部署，零外部依赖', 
+    color: 'accent' 
+  }
+];
+---
+
+<div class="solution-details">
+  <div class="detail-card">
+    <div class="card-glow"></div>
+    <div class="detail-header">
+      <div class="detail-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+      </div>
+      <h4>为什么选择 smart-mqtt</h4>
+    </div>
+    
+    <div class="advantages-list">
+      {advantages.map((adv, index) => (
+        <div class="advantage-item" style={`--delay: ${index * 0.1}s`}>
+          <div class={`adv-icon ${adv.color}`}>
+            {adv.icon === 'zap' && (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+            )}
+            {adv.icon === 'brain' && (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+              </svg>
+            )}
+            {adv.icon === 'server' && (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+                <line x1="6" y1="6" x2="6.01" y2="6"/>
+                <line x1="6" y1="18" x2="6.01" y2="18"/>
+              </svg>
+            )}
+          </div>
+          <div class="adv-content">
+            <span class="adv-title">{adv.title}</span>
+            <span class="adv-desc">{adv.desc}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
+
+<style>
+  .solution-details {
+    margin: 0;
+  }
+
+  .detail-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(16, 185, 129, 0.03) 100%);
+    border-color: rgba(99, 102, 241, 0.2);
+  }
+
+  .card-glow {
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .detail-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .detail-icon {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, #6366f1, #10b981);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 6px 18px rgba(99, 102, 241, 0.3);
+  }
+
+  .detail-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .detail-header h4 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .advantages-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .advantage-item {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    animation: fade-in-up 0.6s ease forwards;
+    animation-delay: var(--delay);
+    opacity: 0;
+  }
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .advantage-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+    transform: translateY(-2px);
+  }
+
+  .adv-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .adv-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .adv-icon.primary {
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+  }
+
+  .adv-icon.success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+  }
+
+  .adv-icon.accent {
+    background: rgba(6, 182, 212, 0.1);
+    color: #06b6d4;
+  }
+
+  .adv-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .adv-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .adv-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  @media (max-width: 640px) {
+    .detail-card {
+      padding: 20px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .advantage-item {
+      animation: none;
+      opacity: 1;
+    }
+  }
+</style>
