@@ -1,0 +1,429 @@
+---
+export interface Props {
+  metrics: MetricItem[];
+}
+
+export interface MetricItem {
+  number: string;
+  unit: string;
+  label: string;
+  description: string;
+  tag: string;
+  tagType: 'default' | 'secondary' | 'tertiary' | 'quaternary' | 'quinary' | 'senary';
+  compareValue?: string;
+  compareLabel?: string;
+  compareType: 'advantage' | 'neutral';
+  featured?: boolean;
+  iconSvg: string;
+}
+
+const { metrics } = Astro.props;
+
+// 找到核心指标（featured=true），其余为环绕指标
+const centerMetric = metrics.find(m => m.featured) || metrics[0];
+const surroundingMetrics = metrics.filter(m => m !== centerMetric);
+
+// 标签颜色映射
+const tagColors: Record<string, { bg: string; border: string; text: string }> = {
+  default: { bg: 'var(--accent-bg)', border: 'var(--accent-border)', text: 'var(--accent-primary)' },
+  secondary: { bg: 'rgba(99, 91, 255, 0.1)', border: 'rgba(99, 91, 255, 0.3)', text: '#635bff' },
+  tertiary: { bg: 'rgba(16, 185, 129, 0.1)', border: 'rgba(16, 185, 129, 0.3)', text: '#10b981' },
+  quaternary: { bg: 'rgba(245, 158, 11, 0.1)', border: 'rgba(245, 158, 11, 0.3)', text: '#f59e0b' },
+  quinary: { bg: 'rgba(139, 92, 246, 0.1)', border: 'rgba(139, 92, 246, 0.3)', text: '#8b5cf6' },
+  senary: { bg: 'rgba(236, 72, 153, 0.1)', border: 'rgba(236, 72, 153, 0.3)', text: '#ec4899' }
+};
+---
+
+<div class="metrics-dashboard">
+  <div class="dashboard-container">
+    {/* 中央核心指标 */}
+    <div class="center-metric">
+      <div class="center-glow"></div>
+      <div class="center-content">
+        <div class="center-icon" set:html={centerMetric.iconSvg} />
+        <div class="center-value">
+          <span class="number">{centerMetric.number}</span>
+          <span class="unit">{centerMetric.unit}</span>
+        </div>
+        <div class="center-label">{centerMetric.label}</div>
+        <div class="center-description">{centerMetric.description}</div>
+        {centerMetric.compareValue && (
+          <div class={`center-compare ${centerMetric.compareType}`}>
+            <span class="compare-value">{centerMetric.compareValue}</span>
+            {centerMetric.compareLabel && <span class="compare-label">{centerMetric.compareLabel}</span>}
+          </div>
+        )}
+      </div>
+    </div>
+
+    {/* 环绕指标 */}
+    {surroundingMetrics.map((metric, index) => {
+      const angle = (index * 72 - 90) * (Math.PI / 180); // 从顶部开始，每隔72度一个
+      const radius = 180; // 环绕半径
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      const colors = tagColors[metric.tagType] || tagColors.default;
+      
+      return (
+        <div 
+          class="surrounding-metric"
+          style={`
+            --x: ${x}px;
+            --y: ${y}px;
+            --delay: ${index * 0.1}s;
+            --tag-bg: ${colors.bg};
+            --tag-border: ${colors.border};
+            --tag-text: ${colors.text};
+          `}
+        >
+          <div class="metric-card-mini">
+            <div class="mini-header">
+              <span class="mini-tag">{metric.tag}</span>
+            </div>
+            <div class="mini-value">
+              <span class="mini-number">{metric.number}</span>
+              <span class="mini-unit">{metric.unit}</span>
+            </div>
+            <div class="mini-label">{metric.label}</div>
+            {metric.compareValue && (
+              <div class={`mini-compare ${metric.compareType}`}>
+                {metric.compareValue}
+              </div>
+            )}
+          </div>
+          {/* 连接线 */}
+          <div class="connector-line" style={`--angle: ${index * 72 - 90}deg`} />
+        </div>
+      );
+    })}
+  </div>
+
+  {/* 底部图例说明 */}
+  <div class="dashboard-legend">
+    <div class="legend-item">
+      <span class="legend-dot default"></span>
+      <span>订阅场景</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-dot secondary"></span>
+      <span>发布场景</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-dot quaternary"></span>
+      <span>QoS 1</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-dot quinary"></span>
+      <span>QoS 2</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-dot tertiary"></span>
+      <span>可靠性</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .metrics-dashboard {
+    padding: 40px 0;
+    overflow: hidden;
+  }
+
+  .dashboard-container {
+    position: relative;
+    width: 100%;
+    height: 480px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* 中央核心指标 */
+  .center-metric {
+    position: relative;
+    z-index: 10;
+    width: 240px;
+    height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .center-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, var(--accent-primary) 0%, transparent 70%);
+    opacity: 0.15;
+    filter: blur(40px);
+    animation: pulse 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.15; }
+    50% { transform: scale(1.1); opacity: 0.25; }
+  }
+
+  .center-content {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    background: var(--bg-card);
+    border: 2px solid var(--accent-border);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 0 40px rgba(99, 91, 255, 0.2);
+    animation: float 4s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .center-icon {
+    width: 40px;
+    height: 40px;
+    color: var(--accent-primary);
+  }
+
+  .center-icon :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+
+  .center-value {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+
+  .center-value .number {
+    font-size: 36px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent-primary) 0%, #8b5cf6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .center-value .unit {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  .center-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: center;
+  }
+
+  .center-description {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+    max-width: 160px;
+  }
+
+  .center-compare {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .center-compare.advantage {
+    background: linear-gradient(135deg, #635bff 0%, #8b5cf6 100%);
+    color: white;
+  }
+
+  .center-compare.neutral {
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+  }
+
+  /* 环绕指标 */
+  .surrounding-metric {
+    position: absolute;
+    transform: translate(var(--x), var(--y));
+    animation: fadeInUp 0.6s ease-out var(--delay) both;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translate(var(--x), calc(var(--y) + 20px));
+    }
+    to {
+      opacity: 1;
+      transform: translate(var(--x), var(--y));
+    }
+  }
+
+  .metric-card-mini {
+    width: 140px;
+    padding: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .metric-card-mini:hover {
+    transform: translateY(-4px) scale(1.05);
+    border-color: var(--tag-border);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+
+  .mini-header {
+    margin-bottom: 8px;
+  }
+
+  .mini-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    background: var(--tag-bg);
+    border: 1px solid var(--tag-border);
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--tag-text);
+  }
+
+  .mini-value {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+    margin-bottom: 4px;
+  }
+
+  .mini-number {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .mini-unit {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .mini-label {
+    font-size: 12px;
+    color: var(--text-subtle);
+    margin-bottom: 6px;
+  }
+
+  .mini-compare {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 8px;
+    display: inline-block;
+  }
+
+  .mini-compare.advantage {
+    background: linear-gradient(135deg, #635bff 0%, #8b5cf6 100%);
+    color: white;
+  }
+
+  .mini-compare.neutral {
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+  }
+
+  /* 连接线 */
+  .connector-line {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, var(--accent-primary), transparent);
+    transform-origin: left center;
+    transform: rotate(var(--angle)) translateX(70px);
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  /* 底部图例 */
+  .dashboard-legend {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 40px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .legend-dot.default { background: var(--accent-primary); }
+  .legend-dot.secondary { background: #635bff; }
+  .legend-dot.tertiary { background: #10b981; }
+  .legend-dot.quaternary { background: #f59e0b; }
+  .legend-dot.quinary { background: #8b5cf6; }
+
+  /* 响应式 */
+  @media (max-width: 768px) {
+    .dashboard-container {
+      height: auto;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .center-metric {
+      width: 200px;
+      height: 200px;
+    }
+
+    .center-content {
+      width: 160px;
+      height: 160px;
+    }
+
+    .center-value .number {
+      font-size: 28px;
+    }
+
+    .surrounding-metric {
+      position: relative;
+      transform: none !important;
+      animation: fadeIn 0.6s ease-out var(--delay) both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .connector-line {
+      display: none;
+    }
+
+    .dashboard-legend {
+      margin-top: 24px;
+    }
+  }
+</style>

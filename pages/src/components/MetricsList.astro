@@ -1,0 +1,294 @@
+---
+export interface Props {
+  metrics: MetricItem[];
+}
+
+export interface MetricItem {
+  number: string;
+  unit: string;
+  label: string;
+  description: string;
+  tag: string;
+  tagType: 'default' | 'secondary' | 'tertiary' | 'quaternary' | 'quinary' | 'senary';
+  compareValue?: string;
+  compareLabel?: string;
+  compareType: 'advantage' | 'neutral';
+  featured?: boolean;
+  iconSvg: string;
+}
+
+const { metrics } = Astro.props;
+
+// 找到核心指标（featured=true），其余为其他指标
+const featuredMetric = metrics.find(m => m.featured);
+const otherMetrics = metrics.filter(m => !m.featured);
+
+// 标签颜色映射
+const tagColors: Record<string, string> = {
+  default: '#635bff',
+  secondary: '#8b5cf6',
+  tertiary: '#10b981',
+  quaternary: '#f59e0b',
+  quinary: '#ec4899',
+  senary: '#06b6d4'
+};
+---
+
+<div class="metrics-list">
+  {/* 核心指标 - 突出显示 */}
+  {featuredMetric && (
+    <div class="featured-metric">
+      <div class="featured-icon" set:html={featuredMetric.iconSvg} />
+      <div class="featured-content">
+        <div class="featured-main">
+          <span class="featured-number">{featuredMetric.number}</span>
+          <span class="featured-unit">{featuredMetric.unit}</span>
+          <span class="featured-label">{featuredMetric.label}</span>
+        </div>
+        <div class="featured-meta">
+          <span class="featured-desc">{featuredMetric.description}</span>
+          {featuredMetric.compareValue && (
+            <span class={`featured-compare ${featuredMetric.compareType}`}>
+              {featuredMetric.compareValue} {featuredMetric.compareLabel}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  )}
+
+  {/* 分隔线 */}
+  <div class="metrics-divider" />
+
+  {/* 其他指标 - 列表形式 */}
+  <div class="metrics-items">
+    {otherMetrics.map((metric, index) => (
+      <div class="metric-item" style={`--tag-color: ${tagColors[metric.tagType] || tagColors.default}`}>
+        <div class="metric-left">
+          <span class="metric-tag">{metric.tag}</span>
+          <span class="metric-label">{metric.label}</span>
+        </div>
+        <div class="metric-right">
+          <div class="metric-value">
+            <span class="metric-number">{metric.number}</span>
+            <span class="metric-unit">{metric.unit}</span>
+          </div>
+          {metric.compareValue && (
+            <span class={`metric-compare ${metric.compareType}`}>
+              {metric.compareValue}
+            </span>
+          )}
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>
+  .metrics-list {
+    padding: 24px 0;
+  }
+
+  /* 核心指标 */  
+  .featured-metric {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 24px 0;
+  }
+
+  .featured-icon {
+    width: 56px;
+    height: 56px;
+    color: var(--accent-primary);
+    flex-shrink: 0;
+  }
+
+  .featured-icon :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+
+  .featured-content {
+    flex: 1;
+  }
+
+  .featured-main {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .featured-number {
+    font-size: 42px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent-primary) 0%, #8b5cf6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .featured-unit {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  .featured-label {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-left: 4px;
+  }
+
+  .featured-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .featured-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  .featured-compare {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 12px;
+  }
+
+  .featured-compare.advantage {
+    background: linear-gradient(135deg, #635bff 0%, #8b5cf6 100%);
+    color: white;
+  }
+
+  .featured-compare.neutral {
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+  }
+
+  /* 分隔线 */
+  .metrics-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+    margin: 8px 0;
+  }
+
+  /* 指标列表 */
+  .metrics-items {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .metric-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+  }
+
+  .metric-item:last-child {
+    border-bottom: none;
+  }
+
+  .metric-item:hover {
+    padding-left: 8px;
+  }
+
+  .metric-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .metric-tag {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--tag-color);
+    padding: 3px 8px;
+    border: 1px solid var(--tag-color);
+    border-radius: 10px;
+    opacity: 0.8;
+  }
+
+  .metric-label {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .metric-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .metric-value {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+
+  .metric-number {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .metric-unit {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .metric-compare {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 8px;
+    min-width: 50px;
+    text-align: center;
+  }
+
+  .metric-compare.advantage {
+    background: linear-gradient(135deg, #635bff 0%, #8b5cf6 100%);
+    color: white;
+  }
+
+  .metric-compare.neutral {
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+  }
+
+  /* 响应式 */
+  @media (max-width: 640px) {
+    .featured-metric {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .featured-number {
+      font-size: 36px;
+    }
+
+    .featured-main {
+      flex-wrap: wrap;
+    }
+
+    .metric-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .metric-right {
+      width: 100%;
+      justify-content: space-between;
+    }
+  }
+</style>
