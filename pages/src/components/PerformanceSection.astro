@@ -270,7 +270,7 @@ const metricCards = [
     grid-template-columns: 1fr 1fr;
     gap: 64px;
     margin-bottom: 48px;
-    align-items: center;
+    align-items: start;
   }
 
   /* Tab 切换容器 */
@@ -278,6 +278,9 @@ const metricCards = [
     background: transparent;
     border: none;
     padding: 0;
+    height: 520px;
+    display: flex;
+    flex-direction: column;
   }
 
   /* Tab 按钮 */
@@ -316,6 +319,7 @@ const metricCards = [
   /* Tab 内容面板 */
   .charts-content {
     position: relative;
+    flex: 1;
   }
 
   .tab-panel {
