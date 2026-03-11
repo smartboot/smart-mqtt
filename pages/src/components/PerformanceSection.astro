@@ -1,5 +1,5 @@
 ---
-import MetricCard from './MetricCard.astro';
+import MetricsDashboard from './MetricsDashboard.astro';
 import PerformanceChart from './PerformanceChart.astro';
 import type { ChartRowData } from './PerformanceChart.astro';
 
@@ -70,7 +70,7 @@ const metricCards = [
     compareLabel: 'vs 其他Broker',
     compareType: 'advantage' as const,
     featured: true,
-    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>'
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M19 9l-5 5-4-4-3 3"/></svg>'
   },
   {
     number: '230',
@@ -144,28 +144,36 @@ const metricCards = [
     </div>
     
     <div class="performance-content">
-      <!-- 订阅吞吐对比图表 -->
-      <PerformanceChart
-        title="消息订阅吞吐能力对比"
-        subtitle="2000订阅者 · 10发布者 · 128主题 · 128字节payload"
-        type="comparison"
-        data={subscribeData}
-      />
+      <!-- 左侧：Tab切换的吞吐图表 -->
+      <div class="charts-container">
+        <div class="charts-tabs">
+          <button class="tab-button active" data-tab="subscribe">消息订阅吞吐</button>
+          <button class="tab-button" data-tab="publish">消息发布吞吐</button>
+        </div>
+        <div class="charts-content">
+          <div class="tab-panel active" data-panel="subscribe">
+            <PerformanceChart
+              title="消息订阅吞吐能力对比"
+              subtitle="2000订阅者 · 10发布者 · 128主题 · 128字节payload"
+              type="comparison"
+              data={subscribeData}
+            />
+          </div>
+          <div class="tab-panel" data-panel="publish">
+            <PerformanceChart
+              title="消息发布吞吐能力"
+              subtitle="2000发布者 · 128主题 · 128字节payload"
+              type="single"
+              data={publishData}
+            />
+          </div>
+        </div>
+      </div>
       
-      <!-- 发布吞吐能力图表 -->
-      <PerformanceChart
-        title="消息发布吞吐能力"
-        subtitle="2000发布者 · 128主题 · 128字节payload"
-        type="single"
-        data={publishData}
-      />
-    </div>
-    
-    <!-- 核心指标亮点 -->
-    <div class="metrics-highlight">
-      {metricCards.map((card) => (
-        <MetricCard {...card} />
-      ))}
+      <!-- 右侧：仪表盘式指标 -->
+      <div class="dashboard-container">
+        <MetricsDashboard metrics={metricCards} />
+      </div>
     </div>
     
     <!-- 压测说明 -->
@@ -260,16 +268,90 @@ const metricCards = [
   .performance-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 32px;
+    gap: 64px;
     margin-bottom: 48px;
+    align-items: center;
   }
 
-  /* 核心指标亮点 */
+  /* Tab 切换容器 */
+  .charts-container {
+    background: transparent;
+    border: none;
+    padding: 0;
+  }
+
+  /* Tab 按钮 */
+  .charts-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 16px;
+  }
+
+  .tab-button {
+    padding: 12px 24px;
+    background: transparent;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .tab-button:hover {
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+  }
+
+  .tab-button.active {
+    background: linear-gradient(135deg, var(--accent-primary) 0%, #8b5cf6 100%);
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 4px 12px rgba(99, 91, 255, 0.3);
+  }
+
+  /* Tab 内容面板 */
+  .charts-content {
+    position: relative;
+  }
+
+  .tab-panel {
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .tab-panel.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* 右侧仪表盘容器 */
+  .dashboard-container {
+    min-height: 500px;
+  }
+
+  /* 核心指标亮点 - 移除旧的网格布局 */
   .metrics-highlight {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    margin-bottom: 48px;
+    display: none;
+  }
+
+  /* 响应式 */
+  @media (max-width: 1024px) {
+    .performance-content {
+      grid-template-columns: 1fr;
+      gap: 48px;
+    }
+    
+    .dashboard-container {
+      min-height: auto;
+    }
   }
 
   /* 压测说明 */
@@ -355,6 +437,24 @@ const metricCards = [
 </style>
 
 <script>
+  // Tab 切换功能
+  const tabButtons = document.querySelectorAll('.tab-button');
+  const tabPanels = document.querySelectorAll('.tab-panel');
+
+  tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const tab = button.dataset.tab;
+      
+      // 移除所有 active 状态
+      tabButtons.forEach(btn => btn.classList.remove('active'));
+      tabPanels.forEach(panel => panel.classList.remove('active'));
+      
+      // 添加当前 active 状态
+      button.classList.add('active');
+      document.querySelector(`.tab-panel[data-panel="${tab}"]`)?.classList.add('active');
+    });
+  });
+
   // 指标卡片动画
   const observerOptions = {
     threshold: 0.2,
