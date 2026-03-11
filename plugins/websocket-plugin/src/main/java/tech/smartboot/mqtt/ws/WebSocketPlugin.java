@@ -40,6 +40,7 @@ public class WebSocketPlugin extends Plugin {
 
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
+        log("正在初始化 WebSocket 插件...");
         PluginConfig config = loadPluginConfig(PluginConfig.class);
         addUsagePort(config.getPort(), "websocket port");
         MqttProtocol protocol = new MqttProtocol(brokerContext.Options().getMaxPacketSize());
@@ -84,13 +85,16 @@ public class WebSocketPlugin extends Plugin {
             }
         });
         httpBootstrap.listen(config.getPort());
+        log("WebSocket 插件初始化完成，监听端口: " + config.getPort());
     }
 
     @Override
     protected void destroyPlugin() {
+        log("正在关闭 WebSocket 插件...");
         if (httpBootstrap != null) {
             httpBootstrap.shutdown();
         }
+        log("WebSocket 插件已关闭");
     }
 
     @Override

@@ -39,10 +39,12 @@ public class EnterprisePlugin extends Plugin {
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Exception {
         if ("false".equals(System.getenv("ENTERPRISE_ENABLE"))) {
+            log("企业版插件已被禁用");
             LOGGER.info("enterprise plugin disabled");
             return;
         }
 
+        log("正在初始化企业版插件...");
         PluginConfig config = loadPluginConfig(PluginConfig.class);
         addUsagePort(config.getHttp().getPort(), (FeatUtils.isBlank(config.getHttp().getHost()) ? "0.0.0.0" : config.getHttp().getHost()) + ":" + config.getHttp().getPort());
 
@@ -63,15 +65,17 @@ public class EnterprisePlugin extends Plugin {
                 .registerBean("plugin", this)//当前的插件ID
                 .registerBean("storage", storage()).group(asynchronousChannelGroup));
         httpServer.listen(config.getHttp().getHost(), config.getHttp().getPort());
-        System.out.println("openapi server start success!");
+        log("企业版插件初始化完成，OpenAPI 服务监听地址: " + config.getHttp().getHost() + ":" + config.getHttp().getPort());
     }
 
     @Override
     protected void destroyPlugin() {
+        log("正在关闭企业版插件...");
         if (httpServer != null) {
             httpServer.shutdown();
         }
         asynchronousChannelGroup.shutdown();
+        log("企业版插件已关闭");
     }
 
 

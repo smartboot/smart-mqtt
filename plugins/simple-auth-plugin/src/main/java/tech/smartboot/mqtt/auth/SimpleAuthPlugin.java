@@ -22,6 +22,7 @@ public class SimpleAuthPlugin extends Plugin {
 
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
+        log("正在初始化简单认证插件...");
         PluginConfig pluginConfig = loadPluginConfig(PluginConfig.class);
         Map<String, byte[]> accounts = pluginConfig.getAccounts().stream().collect(java.util.stream.Collectors.toMap(PluginConfig.Account::getUsername, account -> account.getPassword().getBytes()));
         enabled = true;
@@ -37,14 +38,16 @@ public class SimpleAuthPlugin extends Plugin {
                 String messageUsername = message.getPayload().userName();
                 byte[] messagePassword = message.getPayload().passwordInBytes();
 
-                System.out.println("<UNK>" + messageUsername + " " + messagePassword);
                 if (messageUsername == null || messagePassword == null) {
+                    log("认证失败: 用户名或密码为空");
                     MqttSession.connFailAck(MqttConnectReturnCode.CONNECTION_REFUSED_NOT_AUTHORIZED, session);
                     return;
                 }
                 if (Arrays.equals(accounts.get(messageUsername), messagePassword)) {
                     session.setAuthorized(true);
+                    log("认证成功: " + messageUsername);
                 } else {
+                    log("认证失败: 用户名或密码错误 - " + messageUsername);
                     MqttSession.connFailAck(MqttConnectReturnCode.CONNECTION_REFUSED_NOT_AUTHORIZED, session);
                 }
             }
@@ -54,11 +57,14 @@ public class SimpleAuthPlugin extends Plugin {
                 return enabled;
             }
         }));
+        log("简单认证插件初始化完成，已加载 " + accounts.size() + " 个用户账户");
     }
 
     @Override
     protected void destroyPlugin() {
+        log("正在关闭简单认证插件...");
         enabled = false;
+        log("简单认证插件已关闭");
     }
 
     @Override

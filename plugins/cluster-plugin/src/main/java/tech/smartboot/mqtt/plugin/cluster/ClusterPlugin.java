@@ -21,6 +21,7 @@ public class ClusterPlugin extends Plugin {
 
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
+        log("正在初始化集群插件...");
         PluginConfig pluginConfig = loadPluginConfig(PluginConfig.class);
 
         //启动协调者
@@ -33,22 +34,29 @@ public class ClusterPlugin extends Plugin {
         if (pluginConfig.isCore()) {
             addUsagePort(pluginConfig.getPort(), "cluster coreNode port");
             httpServer = FeatCloud.cloudServer(cloudOptions -> cloudOptions.registerBean("mqttSession", coordinator.mqttSession).registerBean("brokerContext", brokerContext).host(pluginConfig.getHost()).port(pluginConfig.getPort()).debug(true)).listen();
+            log("集群核心节点服务已启动，监听端口: " + pluginConfig.getPort());
+        } else {
+            log("集群边缘节点模式启动");
         }
+        log("集群插件初始化完成");
     }
 
 
     @Override
     protected void destroyPlugin() {
+        log("正在关闭集群插件...");
         //停止核心节点服务
         if (httpServer != null) {
             httpServer.shutdown();
             httpServer = null;
+            log("集群核心节点服务已停止");
         }
 
         if (coordinator != null) {
             coordinator.destroy();
             coordinator = null;
         }
+        log("集群插件已关闭");
     }
 
 

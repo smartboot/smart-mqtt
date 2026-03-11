@@ -21,26 +21,34 @@ public class RedisBridgePlugin extends Plugin {
 
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
+        log("正在初始化 Redis 桥接插件...");
         BridgeConfig config = loadPluginConfig(BridgeConfig.class);
 
+        int successCount = 0;
         for (BridgeConfig.RedisConfig redis : config.getRedis()) {
             if (MqttUtil.isBlank(redis.getAddress())) {
-                System.err.println("redis address is blank");
+                log("Redis 地址为空，跳过该配置");
                 continue;
             }
             if (bridges.containsKey(redis.getAddress())) {
-                System.err.println("duplicate redis" + redis.getAddress());
+                log("Redis 地址重复: " + redis.getAddress());
                 continue;
             }
+            log("正在连接 Redis: " + redis.getAddress());
             BridgeService service = new BridgeService(redis, brokerContext);
             service.start();
             bridges.put(redis.getAddress(), service);
+            successCount++;
+            log("Redis 连接成功: " + redis.getAddress());
         }
+        log("Redis 桥接插件初始化完成，成功连接 " + successCount + " 个 Redis 实例");
     }
 
     @Override
     protected void destroyPlugin() {
+        log("正在关闭 Redis 桥接插件...");
         bridges.values().forEach(BridgeService::destroy);
+        log("Redis 桥接插件已关闭，已断开 " + bridges.size() + " 个 Redis 连接");
     }
 
     @Override

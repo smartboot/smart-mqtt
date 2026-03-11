@@ -26,6 +26,7 @@ public class TlsPlugin extends Plugin {
 
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
+        log("正在初始化 MQTTS 插件...");
         PluginConfig pluginConfig = loadPluginConfig(PluginConfig.class);
         Options options = brokerContext.Options();
         MqttMessageProcessor proxy = new MqttMessageProcessor() {
@@ -51,18 +52,19 @@ public class TlsPlugin extends Plugin {
         }
         server.start(options.getChannelGroup());
 
-        System.out.println(Options.BANNER + "\r\n ::smart-mqtt broker" + "::\t(" + Options.VERSION + ")");
+        log("MQTTS 插件启动成功");
         if (MqttUtil.isBlank(options.getHost())) {
-            System.out.println("\uD83C\uDF89start smart-mqtt tls/ssl success! [port:" + pluginConfig.getPort() + "]");
+            log("MQTTS 服务监听端口: " + pluginConfig.getPort());
         } else {
-            System.out.println("\uD83C\uDF89start smart-mqtt tls/ssl success! [host:" + options.getHost() + " port:" + pluginConfig.getPort() + "]");
+            log("MQTTS 服务监听地址: " + options.getHost() + ":" + pluginConfig.getPort());
         }
     }
 
     @Override
     protected void destroyPlugin() {
+        log("正在关闭 MQTTS 插件...");
         server.shutdown();
-        System.out.println("mqtts-plugin is shutdown.");
+        log("MQTTS 插件已关闭");
     }
 
     @Override
