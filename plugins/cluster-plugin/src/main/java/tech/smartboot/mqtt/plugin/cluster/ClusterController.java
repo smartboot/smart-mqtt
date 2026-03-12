@@ -19,6 +19,7 @@ import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
+import tech.smartboot.mqtt.plugin.spec.Plugin;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -43,12 +44,15 @@ public class ClusterController {
     @Autowired
     private BrokerContext brokerContext;
 
+    @Autowired
+    private Plugin plugin;
+
     private final Map<String, SseEmitter> coreNodes = new ConcurrentHashMap<>();
     private final Map<String, SseEmitter> workerNodes = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void init() {
-        brokerContext.getEventBus().subscribe(ClusterPlugin.CLIENT_DIRECT_TO_CORE_BROKER, (eventType, message) -> {
+        plugin.subscribe(ClusterPlugin.CLIENT_DIRECT_TO_CORE_BROKER, (eventType, message) -> {
             byte[] bytes = toBytes(message);
             LOGGER.info("receive cluster message, workerNodes:{}", ClusterController.this.workerNodes.size());
             ClusterController.this.workerNodes.forEach((nodeId, emitter) -> emitter.send(bytes));
@@ -235,5 +239,9 @@ public class ClusterController {
         public void setAccessToken(String accessToken) {
             this.accessToken = accessToken;
         }
+    }
+
+    public void setPlugin(Plugin plugin) {
+        this.plugin = plugin;
     }
 }

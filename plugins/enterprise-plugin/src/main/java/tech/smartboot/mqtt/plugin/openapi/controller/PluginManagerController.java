@@ -122,7 +122,7 @@ public class PluginManagerController {
                 Plugin p = plugins.get(0);
                 localPlugins.put(p.id(), new PluginUnit(p, jarPath.toFile()));
             }
-            brokerContext.getEventBus().subscribe(EventType.BROKER_STARTED, new DisposableEventBusSubscriber<BrokerContext>() {
+            plugin.subscribe(EventType.BROKER_STARTED, new DisposableEventBusSubscriber<BrokerContext>() {
                 @Override
                 public void consumer(EventType<BrokerContext> eventType, BrokerContext object) {
                     plugins.forEach(plugin -> {

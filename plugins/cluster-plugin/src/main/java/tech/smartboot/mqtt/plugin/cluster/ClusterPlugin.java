@@ -33,7 +33,7 @@ public class ClusterPlugin extends Plugin {
         //启动核心节点服务监听
         if (pluginConfig.isCore()) {
             addUsagePort(pluginConfig.getPort(), "cluster coreNode port");
-            httpServer = FeatCloud.cloudServer(cloudOptions -> cloudOptions.registerBean("mqttSession", coordinator.mqttSession).registerBean("brokerContext", brokerContext).host(pluginConfig.getHost()).port(pluginConfig.getPort()).debug(true)).listen();
+            httpServer = FeatCloud.cloudServer(cloudOptions -> cloudOptions.registerBean("plugin", this).registerBean("mqttSession", coordinator.mqttSession).registerBean("brokerContext", brokerContext).host(pluginConfig.getHost()).port(pluginConfig.getPort()).debug(true)).listen();
             log("集群核心节点服务已启动，监听端口: " + pluginConfig.getPort());
         } else {
             log("集群边缘节点模式启动");
