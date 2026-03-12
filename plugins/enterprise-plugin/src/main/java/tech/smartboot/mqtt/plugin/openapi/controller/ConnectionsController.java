@@ -89,7 +89,7 @@ public class ConnectionsController {
                 connectionMapper.updateStatus(clientId, ConnectionStatusEnum.DIS_CONNECT.getStatus());
             });
         });
-        plugin.subscribe(EventType.CONNECT, AsyncEventObject.syncConsumer((eventType, object) -> {
+        plugin.subscribe(EventType.CONNECT, AsyncEventObject.syncSubscriber((eventType, object) -> {
             ConnectionDO connectionDO = new ConnectionDO();
             connectionDO.setClientId(object.getSession().getClientId());
             connectionDO.setUsername(object.getObject().getPayload().userName());

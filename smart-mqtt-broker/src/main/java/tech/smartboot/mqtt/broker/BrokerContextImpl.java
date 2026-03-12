@@ -415,9 +415,9 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private void subscribeEventBus() {
         //保持连接状态监听,长时间没有消息通信将断开连接
-        eventBus.subscribe(EventType.CONNECT, AsyncEventObject.syncConsumer(new KeepAliveMonitorSubscriber(this)));
+        eventBus.subscribe(EventType.CONNECT, AsyncEventObject.syncSubscriber(new KeepAliveMonitorSubscriber(this)));
         //完成连接认证，移除监听器
-        eventBus.subscribe(EventType.CONNECT, AsyncEventObject.syncConsumer((eventType, object) -> {
+        eventBus.subscribe(EventType.CONNECT, AsyncEventObject.syncSubscriber((eventType, object) -> {
             MqttSessionImpl session = (MqttSessionImpl) object.getSession();
             session.idleConnectTimer.cancel();
             session.idleConnectTimer = null;

@@ -112,7 +112,7 @@ public class LicenseController {
             }
         });
 
-        plugin.subscribe(EventType.CONNECT, AsyncEventObject.syncConsumer((eventType, object) -> {
+        plugin.subscribe(EventType.CONNECT, AsyncEventObject.syncSubscriber((eventType, object) -> {
             MqttSession session = object.getSession();
             if (session.isDisconnect()) {
                 return;

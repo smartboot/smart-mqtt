@@ -19,13 +19,28 @@ public class AsyncEventObject<T> extends EventObject<T> {
         return future;
     }
 
-    public static <T> EventBusConsumer<AsyncEventObject<T>> syncConsumer(EventBusConsumer<AsyncEventObject<T>> eventBusConsumer) {
-        return (eventType, object) -> {
-            try {
-                eventBusConsumer.consumer(eventType, object);
-                object.getFuture().complete(null);
-            } catch (Throwable throwable) {
-                object.getFuture().completeExceptionally(throwable);
+    /**
+     * 同步消费
+     *
+     * @param eventBusConsumer
+     * @param <T>
+     * @return
+     */
+    public static <T> EventBusConsumer<AsyncEventObject<T>> syncSubscriber(EventBusConsumer<AsyncEventObject<T>> eventBusConsumer) {
+        return new EventBusConsumer<AsyncEventObject<T>>() {
+            @Override
+            public void consumer(EventType<AsyncEventObject<T>> eventType, AsyncEventObject<T> object) {
+                try {
+                    eventBusConsumer.consumer(eventType, object);
+                    object.getFuture().complete(null);
+                } catch (Throwable throwable) {
+                    object.getFuture().completeExceptionally(throwable);
+                }
+            }
+
+            @Override
+            public boolean enable() {
+                return eventBusConsumer.enable();
             }
         };
     }
