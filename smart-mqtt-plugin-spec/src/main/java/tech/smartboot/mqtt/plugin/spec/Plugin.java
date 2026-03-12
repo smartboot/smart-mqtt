@@ -143,7 +143,11 @@ public abstract class Plugin implements PluginSubscriber {
 
             @Override
             public boolean enable() {
-                return !destroyed && subscriber.enable();
+                if (destroyed || !subscriber.enable()) {
+                    System.out.println("[" + pluginName() + "] " + "subscriber:" + subscriber.getClass().getSimpleName() + " is disabled!");
+                    return false;
+                }
+                return true;
             }
         });
     }
