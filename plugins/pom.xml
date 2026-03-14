@@ -108,6 +108,22 @@
     </dependencyManagement>
     <build>
         <plugins>
+            <!-- 自动执行 clean：每次编译前清理 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.3.2</version>
+                <!-- 绑定到 validate 阶段（编译前最早执行） -->
+                <executions>
+                    <execution>
+                        <id>auto-clean</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
