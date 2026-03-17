@@ -34,16 +34,12 @@ services:
       mqtt-network: null
     environment:
       ENTERPRISE_ENABLE: false
-      #      BROKER_LOWMEMORY: true
       BROKER_MAXINFLIGHT: 256
     restart: always
     privileged: true
     security_opt:
       - no-new-privileges:true
     user: root:root
-    ports:
-      - 18084:18083
-      - 1884:1883
     logging:
       driver: "json-file"
       options:
@@ -51,18 +47,18 @@ services:
         max-file: "1"
 
 
-  #  mqtt-broker:
-  #    container_name: emqx
-  #    hostname: mqtt-broker
-  #    image: emqx/emqx:5.0.24
-  #    networks:
-  #      mqtt-network: null
-  #    restart: always
-  #    security_opt:
-  #      - no-new-privileges:true
-  #    user: root:root
-  #    logging:
-  #      driver: "json-file"
-  #      options:
-  #        max-size: "100m"
-  #        max-file: "1"
+#  mqtt-broker:
+#    container_name: emqx
+#    hostname: mqtt-broker
+#    image: emqx/emqx:6.1.1
+#    networks:
+#      mqtt-network: null
+#    restart: always
+#    security_opt:
+#      - no-new-privileges:true
+#    user: root:root
+#    logging:
+#      driver: "json-file"
+#      options:
+#        max-size: "100m"
+#        max-file: "1"
