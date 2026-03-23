@@ -15,6 +15,10 @@ import tech.smartboot.mqtt.broker.MqttSessionImpl;
 import tech.smartboot.mqtt.broker.SessionSubscribeRelation;
 import tech.smartboot.mqtt.common.TopicToken;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
+import tech.smartboot.mqtt.common.enums.MqttVersion;
+import tech.smartboot.mqtt.common.message.variable.MqttPublishVariableHeader;
+import tech.smartboot.mqtt.common.message.variable.properties.PublishProperties;
+import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MessageDeliver;
 
 /**
@@ -137,7 +141,20 @@ public class BaseMessageDeliver implements MessageDeliver, Runnable {
 
     public static BaseMessageDeliver newMessageDeliver(BrokerTopicImpl topic, SessionSubscribeRelation sessionSubscribeRelation, long nextConsumerOffset) {
         if (sessionSubscribeRelation.getMqttQoS() == MqttQoS.AT_MOST_ONCE) {
-            return new SimpleMessageDeliver(topic, sessionSubscribeRelation, nextConsumerOffset);
+            return sessionSubscribeRelation.getMqttSession().getMqttVersion() == MqttVersion.MQTT_5 ? new SimpleMessageDeliver(topic, sessionSubscribeRelation, nextConsumerOffset) {
+                @Override
+                public MqttPublishVariableHeader createVariableHeader(Message message) {
+                    PublishProperties properties = new PublishProperties();
+                    return new MqttPublishVariableHeader(-1, topic.encodedTopicBytes(), properties);
+                }
+            } : new SimpleMessageDeliver(topic, sessionSubscribeRelation, nextConsumerOffset) {
+                final MqttPublishVariableHeader variableHeader = new MqttPublishVariableHeader(-1, topic.encodedTopicBytes(), null);
+
+                @Override
+                public MqttPublishVariableHeader createVariableHeader(Message message) {
+                    return variableHeader;
+                }
+            };
         } else {
             return new AdvancedMessageDeliver(topic, sessionSubscribeRelation, nextConsumerOffset);
         }

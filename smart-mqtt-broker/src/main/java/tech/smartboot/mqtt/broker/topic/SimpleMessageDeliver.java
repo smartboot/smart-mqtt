@@ -11,10 +11,10 @@
 package tech.smartboot.mqtt.broker.topic;
 
 import tech.smartboot.mqtt.broker.SessionSubscribeRelation;
-import tech.smartboot.mqtt.common.enums.MqttVersion;
-import tech.smartboot.mqtt.common.message.variable.properties.PublishProperties;
+import tech.smartboot.mqtt.common.message.MqttFixedHeader;
+import tech.smartboot.mqtt.common.message.MqttPublishMessage;
+import tech.smartboot.mqtt.common.message.variable.MqttPublishVariableHeader;
 import tech.smartboot.mqtt.plugin.spec.Message;
-import tech.smartboot.mqtt.plugin.spec.PublishBuilder;
 
 /**
  * MQTT主题消费者记录类，负责管理单个订阅者的消息消费状态和推送逻辑。
@@ -46,8 +46,7 @@ import tech.smartboot.mqtt.plugin.spec.PublishBuilder;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/3/25
  */
-class SimpleMessageDeliver extends BaseMessageDeliver {
-
+abstract class SimpleMessageDeliver extends BaseMessageDeliver {
 
     public SimpleMessageDeliver(BrokerTopicImpl topic, SessionSubscribeRelation sessionSubscribeRelation, long nextConsumerOffset) {
         super(topic, sessionSubscribeRelation, nextConsumerOffset);
@@ -104,14 +103,13 @@ class SimpleMessageDeliver extends BaseMessageDeliver {
             topic.registerMessageDeliver(this);
             return false;
         }
-
-        PublishBuilder publishBuilder = PublishBuilder.builder().payload(message.getPayload()).qos(getMqttQoS()).topic(message.getTopic());
-        if (getMqttSession().getMqttVersion() == MqttVersion.MQTT_5) {
-            publishBuilder.publishProperties(new PublishProperties());
-        }
+  
+        MqttPublishMessage publishMessage = new MqttPublishMessage(MqttFixedHeader.PUB_QOS0_HEADER, createVariableHeader(message), message.getPayload());
 
         nextConsumerOffset = message.getOffset() + 1;
-        getMqttSession().write(publishBuilder.build(), false);
+        getMqttSession().write(publishMessage, false);
         return true;
     }
+
+    public abstract MqttPublishVariableHeader createVariableHeader(Message message);
 }
