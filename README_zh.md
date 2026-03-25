@@ -55,7 +55,7 @@ curl -LO https://gitee.com/smartboot/smart-mqtt/releases/download/v1.5.3/smart-m
 unzip smart-mqtt-full-v1.5.3.zip -d smart-mqtt && cd smart-mqtt
 
 # 启动服务
-./bin/start.sh
+./start.sh
 ```
 
 ---

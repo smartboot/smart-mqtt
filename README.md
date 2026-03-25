@@ -56,7 +56,7 @@ curl -LO https://github.com/smartboot/smart-mqtt/releases/download/v1.5.3/smart-
 unzip smart-mqtt-full-v1.5.3.zip -d smart-mqtt && cd smart-mqtt
 
 # Start service
-./bin/start.sh
+./start.sh
 ```
 
 ---
