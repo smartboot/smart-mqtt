@@ -61,16 +61,6 @@ unzip smart-mqtt-full-v1.5.3.zip && cd smart-mqtt-full-v1.5.3
 
 ---
 
-## Performance Metrics
-
-| Test Scenario | QoS 0 | QoS 1 | QoS 2 |
-|---------------|:-----:|:-----:|:-----:|
-| Message Subscribe | 10M/sec | 5.4M/sec | 3.2M/sec |
-| Message Publish | 970K/sec | 630K/sec | 520K/sec |
-
-**Test Environment**: Intel Xeon E5-2680 v4, 64GB DDR4, CentOS 7.9
-
----
 
 ## Plugin Ecosystem
 
