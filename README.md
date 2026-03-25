@@ -1,4 +1,3 @@
-# Smart-MQTT
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue.svg" alt="License"></a>
@@ -16,7 +15,7 @@
 
 ## Introduction
 
-Smart-MQTT is a high-performance MQTT Broker designed for enterprise IoT scenarios. Developed in Java with underlying communication based on the self-developed asynchronous non-blocking communication framework [smart-socket](https://github.com/smartboot/smart-socket), fully implementing the MQTT v3.1.1 and v5.0 protocol specifications.
+smart-mqtt is a high-performance MQTT Broker designed for enterprise IoT scenarios. Developed in Java with underlying communication based on the self-developed asynchronous non-blocking communication framework [smart-socket](https://github.com/smartboot/smart-socket), fully implementing the MQTT v3.1.1 and v5.0 protocol specifications.
 
 ![Project Architecture](https://smartboot.tech/smart-mqtt/_astro/framework.Bj8Uk056_1FS6vN.svg)
 
@@ -27,7 +26,7 @@ Smart-MQTT is a high-performance MQTT Broker designed for enterprise IoT scenari
 - **Java Ecosystem** - Zero-barrier integration with existing Java tech stacks
 - **Standards Compliant** - Full compliance with MQTT 3.1.1/5.0 protocol standards
 
-> ⚠️ **License Notice**: Smart-MQTT is for personal learning use only. **Commercial use is prohibited without authorization**. Please contact us for commercial licensing at [smartboot official website](https://smartboot.tech/).
+> ⚠️ **License Notice**: smart-mqtt is for personal learning use only. **Commercial use is prohibited without authorization**. Please contact us for commercial licensing at [smartboot official website](https://smartboot.tech/).
 
 ---
 
@@ -85,7 +84,7 @@ unzip smart-mqtt-full-v1.5.3.zip && cd smart-mqtt-full-v1.5.3
 
 ## Plugin Ecosystem
 
-Smart-MQTT adopts a plugin-based architecture. The `enterprise-plugin` provides an enterprise-grade Web management console.
+smart-mqtt adopts a plugin-based architecture. The `enterprise-plugin` provides an enterprise-grade Web management console.
 
 | Plugin | Function | Recommended For |
 |--------|----------|-----------------|
@@ -102,16 +101,18 @@ Smart-MQTT adopts a plugin-based architecture. The `enterprise-plugin` provides 
 
 ```mermaid
 timeline
-    title Smart-MQTT Development Timeline
+    title smart-mqtt Development Timeline
     2018 : Project Founded
          : Completed MQTT protocol codec framework
     2019-2021 : Focused on smart-socket performance optimization
-    2022 : Restarted Smart-MQTT
+    2022 : Restarted smart-mqtt
          : Completed core Broker and Client functionality
     2023 : Enterprise edition initiated
          : Web console and plugin system development
     2025 : Enterprise features fully open-sourced
          : v1.5.x officially released
+    2026 : AI-Powered Management System Rebuild
+         : Integrated Feat Agent for intelligent automation
 ```
 
 ---

@@ -1,5 +1,3 @@
-# Smart-MQTT
-
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue.svg" alt="License"></a>
   <a href="https://gitee.com/smartboot/smart-mqtt/releases"><img src="https://img.shields.io/badge/version-v1.5.3-green.svg" alt="Version"></a>
@@ -16,7 +14,7 @@
 
 ## 简介
 
-Smart-MQTT 是一款面向企业级物联网场景的高性能 MQTT Broker，采用 Java 语言开发，基于自研的异步非阻塞通信框架 [smart-socket](https://gitee.com/smartboot/smart-socket)，完整实现了 MQTT v3.1.1 和 v5.0 协议规范。
+smart-mqtt 是一款面向企业级物联网场景的高性能 MQTT Broker，采用 Java 语言开发，基于自研的异步非阻塞通信框架 [smart-socket](https://gitee.com/smartboot/smart-socket)，完整实现了 MQTT v3.1.1 和 v5.0 协议规范。
 
 ![项目架构](https://smartboot.tech/smart-mqtt/_astro/framework.Bj8Uk056_1FS6vN.svg)
 
@@ -27,7 +25,7 @@ Smart-MQTT 是一款面向企业级物联网场景的高性能 MQTT Broker，采
 - **Java 生态** - 与现有 Java 技术栈零门槛集成
 - **标准兼容** - 完整遵循 MQTT 3.1.1/5.0 协议标准
 
-> ⚠️ **授权声明**：Smart-MQTT 仅供个人学习使用，**未经授权禁止用于商业目的**。商业授权请联系 [smartboot 官网](https://smartboot.tech/)。
+> ⚠️ **授权声明**：smart-mqtt 仅供个人学习使用，**未经授权禁止用于商业目的**。商业授权请联系 [smartboot 官网](https://smartboot.tech/)。
 
 ---
 
@@ -85,7 +83,7 @@ unzip smart-mqtt-full-v1.5.3.zip && cd smart-mqtt-full-v1.5.3
 
 ## 插件生态
 
-Smart-MQTT 采用插件化架构，通过 `enterprise-plugin` 提供企业级 Web 管理控制台。
+smart-mqtt 采用插件化架构，通过 `enterprise-plugin` 提供企业级 Web 管理控制台。
 
 | 插件 | 功能 | 推荐场景 |
 |------|------|----------|
@@ -102,16 +100,18 @@ Smart-MQTT 采用插件化架构，通过 `enterprise-plugin` 提供企业级 We
 
 ```mermaid
 timeline
-    title Smart-MQTT 发展历程
+    title smart-mqtt 发展历程
     2018 : 项目创立
          : 完成 MQTT 协议编解码基础框架
     2019-2021 : 聚焦 smart-socket 性能优化
-    2022 : 重启 Smart-MQTT
+    2022 : 重启 smart-mqtt
          : 完成 Broker 和 Client 核心功能
     2023 : 企业版立项
          : 启动 Web 控制台和插件系统开发
     2025 : 企业版功能全面开源
          : v1.5.x 正式发布
+    2026 : AI 全面重构后台管理系统
+         : 集成 Feat Agent 
 ```
 
 ---
