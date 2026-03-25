@@ -1,7 +1,7 @@
 # Smart-MQTT
 
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.5.2-green.svg)](https://github.com/smartboot/smart-mqtt/releases)
+[![Version](https://img.shields.io/badge/version-latest-green.svg)](https://github.com/smartboot/smart-mqtt/releases)
 [![Docker Pulls](https://img.shields.io/docker/pulls/smartboot/smart-mqtt.svg)](https://hub.docker.com/r/smartboot/smart-mqtt)
 
 ## Introduction
@@ -26,8 +26,16 @@ smart-mqtt is an MQTT Broker service designed for enterprise-level IoT scenarios
 
 ### 📥 Download
 
-- **GitHub Releases**: https://github.com/smartboot/smart-mqtt/releases
-- **Gitee Releases**: https://gitee.com/smartboot/smart-mqtt/releases
+
+| Download Channel | Link |
+|:-----------------|:-----|
+| **GitHub Releases** | https://github.com/smartboot/smart-mqtt/releases |
+| **Gitee Mirror** | https://gitee.com/smartboot/smart-mqtt/releases |
+
+> 💡 **Quick Download** (Linux/Mac)
+> ```bash
+> curl -LO https://github.com/smartboot/smart-mqtt/releases/download/v1.5.3/smart-mqtt-full-v1.5.3.zip
+> ```
 
 ### Option 1: Docker Quick Start (Recommended)
 

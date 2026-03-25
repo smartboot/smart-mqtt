@@ -1,7 +1,7 @@
 # Smart-MQTT
 
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.5.2-green.svg)](https://gitee.com/smartboot/smart-mqtt/releases)
+[![Version](https://img.shields.io/badge/version-latest-green.svg)](https://gitee.com/smartboot/smart-mqtt/releases)
 [![Docker Pulls](https://img.shields.io/docker/pulls/smartboot/smart-mqtt.svg)](https://hub.docker.com/r/smartboot/smart-mqtt)
 
 ## 项目介绍
@@ -26,8 +26,16 @@ smart-mqtt 是专为拥有上万级设备连接量的企业级物联网场景设
 
 ### 📥 下载安装
 
-- **Gitee Releases**: https://gitee.com/smartboot/smart-mqtt/releases
-- **GitHub Releases**: https://github.com/smartboot/smart-mqtt/releases
+
+| 下载渠道 | 链接 |
+|:---------|:-----|
+| **Gitee 国内镜像** | https://gitee.com/smartboot/smart-mqtt/releases |
+| **GitHub 国际源** | https://github.com/smartboot/smart-mqtt/releases |
+
+> 💡 **快速下载命令**（Linux/Mac）
+> ```bash
+> curl -LO https://gitee.com/smartboot/smart-mqtt/releases/download/v1.5.3/smart-mqtt-full-v1.5.3.zip
+> ```
 
 ### 方式一：Docker 快速启动（推荐）
 
