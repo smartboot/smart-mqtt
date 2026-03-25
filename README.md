@@ -24,6 +24,11 @@ smart-mqtt is an MQTT Broker service designed for enterprise-level IoT scenarios
 
 ## 🚀 Quick Start
 
+### 📥 Download
+
+- **GitHub Releases**: https://github.com/smartboot/smart-mqtt/releases
+- **Gitee Releases**: https://gitee.com/smartboot/smart-mqtt/releases
+
 ### Option 1: Docker Quick Start (Recommended)
 
 ```bash

@@ -24,6 +24,11 @@ smart-mqtt 是专为拥有上万级设备连接量的企业级物联网场景设
 
 ## 🚀 快速开始
 
+### 📥 下载安装
+
+- **Gitee Releases**: https://gitee.com/smartboot/smart-mqtt/releases
+- **GitHub Releases**: https://github.com/smartboot/smart-mqtt/releases
+
 ### 方式一：Docker 快速启动（推荐）
 
 ```bash
