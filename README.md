@@ -18,6 +18,8 @@
 
 Smart-MQTT is a high-performance MQTT Broker designed for enterprise IoT scenarios. Developed in Java with underlying communication based on the self-developed asynchronous non-blocking communication framework [smart-socket](https://github.com/smartboot/smart-socket), fully implementing the MQTT v3.1.1 and v5.0 protocol specifications.
 
+![Project Architecture](https://smartboot.tech/smart-mqtt/_astro/framework.Bj8Uk056_1FS6vN.svg)
+
 ### Key Advantages
 
 - **Ultra-High Performance** - Millions of concurrent connections on a single node
