@@ -25,7 +25,7 @@ smart-mqtt 是一款面向企业级物联网场景的高性能 MQTT Broker，采
 - **Java 生态** - 与现有 Java 技术栈零门槛集成
 - **标准兼容** - 完整遵循 MQTT 3.1.1/5.0 协议标准
 
-> ⚠️ **授权声明**：smart-mqtt 仅供个人学习使用，**未经授权禁止用于商业目的**。商业授权请联系 [smartboot 官网](https://smartboot.tech/)。
+> ⚠️ **授权声明**：smart-mqtt 仅供个人学习使用，**未经授权禁止用于商业目的**。商业授权请联系 [smart-mqtt 官网](https://smartboot.tech/smart-mqtt/#enterprise)。
 
 ---
 

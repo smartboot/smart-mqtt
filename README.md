@@ -26,7 +26,7 @@ smart-mqtt is a high-performance MQTT Broker designed for enterprise IoT scenari
 - **Java Ecosystem** - Zero-barrier integration with existing Java tech stacks
 - **Standards Compliant** - Full compliance with MQTT 3.1.1/5.0 protocol standards
 
-> ⚠️ **License Notice**: smart-mqtt is for personal learning use only. **Commercial use is prohibited without authorization**. Please contact us for commercial licensing at [smartboot official website](https://smartboot.tech/).
+> ⚠️ **License Notice**: smart-mqtt is for personal learning use only. **Commercial use is prohibited without authorization**. Please contact us for commercial licensing at [smart-mqtt official website](https://smartboot.tech/smart-mqtt/#enterprise).
 
 ---
 
