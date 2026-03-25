@@ -40,7 +40,6 @@ smart-mqtt 是一款面向企业级物联网场景的高性能 MQTT Broker，采
 docker run --name smart-mqtt \
   -p 1883:1883 \
   -p 18083:18083 \
-  -e ENTERPRISE_ENABLE=true \
   -d smartboot/smart-mqtt:latest
 ```
 
@@ -61,18 +60,18 @@ unzip smart-mqtt-full-v1.5.3.zip -d smart-mqtt && cd smart-mqtt
 ---
 
 
-## 插件生态
+## [插件生态](./plugins)
 
 smart-mqtt 采用插件化架构，通过 `enterprise-plugin` 提供企业级 Web 管理控制台。
 
 | 插件 | 功能 | 推荐场景 |
 |------|------|----------|
-| **enterprise-plugin** | Web 控制台、RESTful API、用户管理 | 生产环境必装 |
-| **cluster-plugin** | 多节点集群、负载均衡、节点发现 | 高可用部署 |
-| **websocket-plugin** | WebSocket 协议支持 | Web 应用 |
-| **mqtts-plugin** | SSL/TLS 加密通信 | 安全敏感场景 |
-| **redis-bridge-plugin** | 消息桥接至 Redis | 缓存集成 |
-| **simple-auth-plugin** | 用户名/密码认证、ACL 权限控制 | 基础认证 |
+| **[enterprise-plugin](./plugins/enterprise-plugin)** | Web 控制台、RESTful API、用户管理 | 生产环境必装 |
+| **[cluster-plugin](./plugins/cluster-plugin)** | 多节点集群、负载均衡、节点发现 | 高可用部署 |
+| **[websocket-plugin](./plugins/websocket-plugin)** | WebSocket 协议支持 | Web 应用 |
+| **[mqtts-plugin](./plugins/mqtts-plugin)** | SSL/TLS 加密通信 | 安全敏感场景 |
+| **[redis-bridge-plugin](./plugins/redis-bridge-plugin)** | 消息桥接至 Redis | 缓存集成 |
+| **[simple-auth-plugin](./plugins/simple-auth-plugin)** | 用户名/密码认证、ACL 权限控制 | 基础认证 |
 
 ---
 

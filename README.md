@@ -41,7 +41,6 @@ smart-mqtt is a high-performance MQTT Broker designed for enterprise IoT scenari
 docker run --name smart-mqtt \
   -p 1883:1883 \
   -p 18083:18083 \
-  -e ENTERPRISE_ENABLE=true \
   -d smartboot/smart-mqtt:latest
 ```
 
@@ -62,18 +61,18 @@ unzip smart-mqtt-full-v1.5.3.zip -d smart-mqtt && cd smart-mqtt
 ---
 
 
-## Plugin Ecosystem
+## [Plugin Ecosystem](./plugins)
 
 smart-mqtt adopts a plugin-based architecture. The `enterprise-plugin` provides an enterprise-grade Web management console.
 
 | Plugin | Function | Recommended For |
 |--------|----------|-----------------|
-| **enterprise-plugin** | Web console, RESTful API, user management | Production environments |
-| **cluster-plugin** | Multi-node clustering, load balancing, node discovery | High availability deployments |
-| **websocket-plugin** | WebSocket protocol support | Web applications |
-| **mqtts-plugin** | SSL/TLS encrypted communication | Security-sensitive scenarios |
-| **redis-bridge-plugin** | Message bridging to Redis | Cache integration |
-| **simple-auth-plugin** | Username/password authentication, ACL | Basic authentication |
+| **[enterprise-plugin](./plugins/enterprise-plugin)** | Web console, RESTful API, user management | Production environments |
+| **[cluster-plugin](./plugins/cluster-plugin)** | Multi-node clustering, load balancing, node discovery | High availability deployments |
+| **[websocket-plugin](./plugins/websocket-plugin)** | WebSocket protocol support | Web applications |
+| **[mqtts-plugin](./plugins/mqtts-plugin)** | SSL/TLS encrypted communication | Security-sensitive scenarios |
+| **[redis-bridge-plugin](./plugins/redis-bridge-plugin)** | Message bridging to Redis | Cache integration |
+| **[simple-auth-plugin](./plugins/simple-auth-plugin)** | Username/password authentication, ACL | Basic authentication |
 
 ---
 
