@@ -26,11 +26,11 @@ smart-mqtt is an MQTT Broker service designed for enterprise-level IoT scenarios
 
 ### 📥 Download
 
-
 | Download Channel | Link |
 |:-----------------|:-----|
 | **GitHub Releases** | https://github.com/smartboot/smart-mqtt/releases |
 | **Gitee Mirror** | https://gitee.com/smartboot/smart-mqtt/releases |
+| **Docker Hub** | https://hub.docker.com/r/smartboot/smart-mqtt |
 
 > 💡 **Quick Download** (Linux/Mac)
 > ```bash
@@ -81,13 +81,7 @@ docker-compose up -d
 
 ### Option 2: Local Installation Package
 
-Download the pre-compiled installation package from the Release page:
-
 ```bash
-# Download the latest version of the installation package
-# Please visit the GitHub Release page to download:
-# https://github.com/smartboot/smart-mqtt/releases
-
 # Extract the installation package
 tar -xzf smart-mqtt-*.tar.gz
 cd smart-mqtt-*
@@ -122,13 +116,6 @@ cd smart-mqtt-*
 |:---------|:----:|:----:|:----:|
 | Message Subscription (2000 subscribers, 128 Topics) | 10M/s | 5.4M/s | 3.2M/s |
 | Message Publishing (2000 publishers, 128 Topics) | 970K/s | 630K/s | 520K/s |
-
-## 📦 Download
-
-You can get the latest release from the following channels:
-
-- **GitHub Releases**: https://github.com/smartboot/smart-mqtt/releases
-- **Docker Hub**: https://hub.docker.com/r/smartboot/smart-mqtt
 
 ## 🏗️ Project Structure
 

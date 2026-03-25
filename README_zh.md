@@ -26,11 +26,11 @@ smart-mqtt 是专为拥有上万级设备连接量的企业级物联网场景设
 
 ### 📥 下载安装
 
-
 | 下载渠道 | 链接 |
 |:---------|:-----|
 | **Gitee 国内镜像** | https://gitee.com/smartboot/smart-mqtt/releases |
 | **GitHub 国际源** | https://github.com/smartboot/smart-mqtt/releases |
+| **Docker Hub** | https://hub.docker.com/r/smartboot/smart-mqtt |
 
 > 💡 **快速下载命令**（Linux/Mac）
 > ```bash
@@ -81,13 +81,7 @@ docker-compose up -d
 
 ### 方式二：本地安装包启动
 
-从 Release 页面下载预编译的安装包：
-
 ```bash
-# 下载最新版本的安装包
-# 请前往 Gitee Release 页面下载：
-# https://gitee.com/smartboot/smart-mqtt/releases
-
 # 解压安装包
 tar -xzf smart-mqtt-*.tar.gz
 cd smart-mqtt-*
@@ -122,14 +116,6 @@ cd smart-mqtt-*
 |:-----|:----:|:----:|:----:|
 | 消息订阅（2000订阅者，128 Topic） | 1000W/s | 540W/s | 320W/s |
 | 消息发布（2000发布者，128 Topic） | 97W/s | 63W/s | 52W/s |
-
-## 📦 下载地址
-
-您可以从以下渠道获取最新的发布版本：
-
-- **GitHub Releases**: https://github.com/smartboot/smart-mqtt/releases
-- **Gitee Releases**: https://gitee.com/smartboot/smart-mqtt/releases
-- **Docker Hub**: https://hub.docker.com/r/smartboot/smart-mqtt
 
 ## 🏗️ 项目结构
 
