@@ -21,10 +21,13 @@ smart-mqtt is a high-performance MQTT Broker designed for enterprise IoT scenari
 
 ### Key Advantages
 
-- **Ultra-High Performance** - Millions of concurrent connections on a single node
-- **Plugin Architecture** - Modular design for on-demand feature extension
-- **Java Ecosystem** - Zero-barrier integration with existing Java tech stacks
-- **Standards Compliant** - Full compliance with MQTT 3.1.1/5.0 protocol standards
+- **Ultra-High Performance** - Asynchronous non-blocking I/O architecture, millions of concurrent connections on a single node, tens of millions of messages per second with ultra-low latency
+- **Ultra Lightweight** - Distribution package size < 800KB, minimal dependencies, extremely low resource footprint
+- **Zero Configuration** - Out of the box, deploy and run quickly without complex configuration
+- **Plugin Architecture** - Modular design with hot-pluggable extensions, load features on demand without service restart
+- **Enterprise High Availability** - Native support for multi-node clustering, automatic load balancing and failover
+- **Java Ecosystem** - Zero-barrier integration with existing Java tech stacks, seamless development and operations
+- **Standards Compliant** - Full compliance with MQTT 3.1.1/5.0 protocol standards, supporting QoS 0/1/2 all quality levels
 
 > ⚠️ **License Notice**: smart-mqtt is for personal learning use only. **Commercial use is prohibited without authorization**. Please contact us for commercial licensing at [smart-mqtt official website](https://smartboot.tech/smart-mqtt/#enterprise).
 
@@ -55,19 +58,6 @@ unzip smart-mqtt-full-v1.5.3.zip && cd smart-mqtt-full-v1.5.3
 # Start service
 ./bin/start.sh
 ```
-
----
-
-## Core Features
-
-| Feature | Description |
-|---------|-------------|
-| Ultra Lightweight | Distribution package size < 800KB, minimal dependencies |
-| High Performance | Asynchronous non-blocking I/O, millions of connections per node |
-| Zero-Configuration | Out of the box, no complex configuration required |
-| Full Protocol Support | MQTT v3.1.1 and v5.0, supporting QoS 0/1/2 |
-| Cluster High Availability | Multi-node clustering, load balancing and failover |
-| Hot-Pluggable Plugins | Dynamic loading without restarting the service |
 
 ---
 
