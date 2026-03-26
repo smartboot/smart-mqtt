@@ -55,9 +55,16 @@ pem: |
 
 **部署架构：**
 
-```
-MQTT Client (TLS) → HAProxy/Nginx (TLS 终结) → Smart-MQTT Broker (明文)
-                          8883                      1883
+```mermaid
+graph LR
+    A[MQTT Client<br/>TLS 加密] -->|端口 8883| B[HAProxy/Nginx<br/>TLS 终结<br/>负载均衡]
+    B -->|端口 1883<br/>明文传输 | C1[Smart-MQTT Broker 1<br/>192.168.1.10]
+    B -->|端口 1883<br/>明文传输 | C2[Smart-MQTT Broker 2<br/>192.168.1.11]
+    
+    style A fill:#e1f5ff
+    style B fill:#fff4e1
+    style C1 fill:#f0f0f0
+    style C2 fill:#f0f0f0
 ```
 
 **HAProxy 配置示例：**
