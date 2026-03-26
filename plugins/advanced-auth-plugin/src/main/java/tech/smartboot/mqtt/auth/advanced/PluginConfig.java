@@ -10,196 +10,416 @@
 
 package tech.smartboot.mqtt.auth.advanced;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 插件配置类
- * 
+ *
  * @author 三刀
  * @version v1.0 2026/3/25
  */
 public class PluginConfig {
-    
+
     /**
      * 认证器出错时是否停止（默认true）
      */
     private boolean stopOnError = true;
-    
+
     /**
      * 是否启用匿名访问（默认false）
      */
     private boolean allowAnonymous = false;
-    
+
     /**
-     * 认证器配置列表
+     * Redis 认证器配置
      */
-    private List<AuthenticatorConfig> authenticators;
-    
+    private RedisConfig redis;
+
     /**
-     * 认证器配置映射（用于快速查找）
+     * MySQL 认证器配置
      */
-    private Map<String, AuthenticatorConfig> authenticatorMap;
-    
+    private MysqlConfig mysql;
+
+    /**
+     * HTTP 认证器配置
+     */
+    private HttpConfig http;
+
+    /**
+     * 认证链顺序（按此顺序执行认证器，默认按 redis -> mysql -> http）
+     */
+    private List<String> chain;
+
     public boolean isStopOnError() {
         return stopOnError;
     }
-    
+
     public void setStopOnError(boolean stopOnError) {
         this.stopOnError = stopOnError;
     }
-    
+
     public boolean isAllowAnonymous() {
         return allowAnonymous;
     }
-    
+
     public void setAllowAnonymous(boolean allowAnonymous) {
         this.allowAnonymous = allowAnonymous;
     }
-    
-    public List<AuthenticatorConfig> getAuthenticators() {
-        return authenticators;
+
+    public RedisConfig getRedis() {
+        return redis;
     }
-    
-    public void setAuthenticators(List<AuthenticatorConfig> authenticators) {
-        this.authenticators = authenticators;
-        // 构建映射
-        this.authenticatorMap = new HashMap<>();
-        if (authenticators != null) {
-            for (AuthenticatorConfig config : authenticators) {
-                authenticatorMap.put(config.getName(), config);
-            }
-        }
+
+    public void setRedis(RedisConfig redis) {
+        this.redis = redis;
     }
-    
-    public AuthenticatorConfig getAuthenticatorConfig(String name) {
-        return authenticatorMap != null ? authenticatorMap.get(name) : null;
+
+    public MysqlConfig getMysql() {
+        return mysql;
     }
-    
+
+    public void setMysql(MysqlConfig mysql) {
+        this.mysql = mysql;
+    }
+
+    public HttpConfig getHttp() {
+        return http;
+    }
+
+    public void setHttp(HttpConfig http) {
+        this.http = http;
+    }
+
     /**
-     * 认证器配置
+     * 获取认证链顺序
+     * 如果未配置，则默认返回 redis -> mysql -> html
      */
-    public static class AuthenticatorConfig {
-        /**
-         * 认证器名称（唯一标识）
-         */
-        private String name;
-        
-        /**
-         * 认证器类型：memory, file, http, jwt, redis
-         */
-        private String type;
-        
-        /**
-         * 是否启用（默认true）
-         */
-        private boolean enabled = true;
-        
-        /**
-         * 优先级（数值越小越优先，默认100）
-         */
-        private int order = 100;
-        
+    public List<String> getChain() {
+        return chain;
+    }
+
+    public void setChain(List<String> chain) {
+        this.chain = chain;
+    }
+
+    /**
+     * 认证器基础配置
+     */
+    public static abstract class AuthenticatorConfig {
         /**
          * 密码编码方式：plain, sha256, base64
          */
         private String passwordEncoder = "plain";
-        
-        /**
-         * 额外配置参数
-         */
-        private Map<String, Object> options = new HashMap<>();
-        
-        public String getName() {
-            return name;
-        }
-        
-        public void setName(String name) {
-            this.name = name;
-        }
-        
-        public String getType() {
-            return type;
-        }
-        
-        public void setType(String type) {
-            this.type = type;
-        }
-        
-        public boolean isEnabled() {
-            return enabled;
-        }
-        
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
-        }
-        
-        public int getOrder() {
-            return order;
-        }
-        
-        public void setOrder(int order) {
-            this.order = order;
-        }
-        
+
         public String getPasswordEncoder() {
             return passwordEncoder;
         }
-        
+
         public void setPasswordEncoder(String passwordEncoder) {
             this.passwordEncoder = passwordEncoder;
         }
-        
-        public Map<String, Object> getOptions() {
-            return options;
-        }
-        
-        public void setOptions(Map<String, Object> options) {
-            this.options = options;
-        }
-        
+    }
+
+    /**
+     * Redis 认证器配置
+     */
+    public static class RedisConfig extends AuthenticatorConfig {
         /**
-         * 获取字符串选项
+         * Redis 主机地址
          */
-        public String getStringOption(String key, String defaultValue) {
-            if (options == null || !options.containsKey(key)) {
-                return defaultValue;
-            }
-            Object value = options.get(key);
-            return value != null ? value.toString() : defaultValue;
-        }
-        
+        private String address = "redis://localhost:6379";
+
+
         /**
-         * 获取整数选项
+         * Redis 密码
          */
-        public int getIntOption(String key, int defaultValue) {
-            if (options == null || !options.containsKey(key)) {
-                return defaultValue;
-            }
-            Object value = options.get(key);
-            if (value instanceof Number) {
-                return ((Number) value).intValue();
-            }
-            try {
-                return Integer.parseInt(value.toString());
-            } catch (NumberFormatException e) {
-                return defaultValue;
-            }
-        }
-        
+        private String password;
+
         /**
-         * 获取布尔选项
+         * Redis 数据库索引
          */
-        public boolean getBooleanOption(String key, boolean defaultValue) {
-            if (options == null || !options.containsKey(key)) {
-                return defaultValue;
-            }
-            Object value = options.get(key);
-            if (value instanceof Boolean) {
-                return (Boolean) value;
-            }
-            return Boolean.parseBoolean(value.toString());
+        private int database = 0;
+
+        /**
+         * Key 前缀
+         */
+        private String keyPrefix = "mqtt:auth:";
+
+        /**
+         * 连接超时时间（毫秒）
+         */
+        private int connectionTimeout = 2000;
+
+        public String getAddress() {
+            return address;
+        }
+
+        public void setAddress(String address) {
+            this.address = address;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+
+        public int getDatabase() {
+            return database;
+        }
+
+        public void setDatabase(int database) {
+            this.database = database;
+        }
+
+        public String getKeyPrefix() {
+            return keyPrefix;
+        }
+
+        public void setKeyPrefix(String keyPrefix) {
+            this.keyPrefix = keyPrefix;
+        }
+
+        public int getConnectionTimeout() {
+            return connectionTimeout;
+        }
+
+        public void setConnectionTimeout(int connectionTimeout) {
+            this.connectionTimeout = connectionTimeout;
+        }
+    }
+
+    /**
+     * MySQL 认证器配置
+     */
+    public static class MysqlConfig extends AuthenticatorConfig {
+        /**
+         * 数据库连接 URL
+         */
+        private String url;
+
+        /**
+         * 数据库用户名
+         */
+        private String username;
+
+        /**
+         * 数据库密码
+         */
+        private String password;
+
+        /**
+         * JDBC 驱动类名
+         */
+        private String driverClass = "com.mysql.cj.jdbc.Driver";
+
+        /**
+         * 表名
+         */
+        private String tableName = "mqtt_users";
+
+        /**
+         * 用户名列
+         */
+        private String usernameColumn = "username";
+
+        /**
+         * 密码列
+         */
+        private String passwordColumn = "password";
+
+        /**
+         * WHERE 子句
+         */
+        private String whereClause;
+
+        /**
+         * 连接超时时间（毫秒）
+         */
+        private int connectionTimeout = 3000;
+
+        /**
+         * 最大连接数
+         */
+        private int maxConnections = 5;
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+
+        public String getDriverClass() {
+            return driverClass;
+        }
+
+        public void setDriverClass(String driverClass) {
+            this.driverClass = driverClass;
+        }
+
+        public String getTableName() {
+            return tableName;
+        }
+
+        public void setTableName(String tableName) {
+            this.tableName = tableName;
+        }
+
+        public String getUsernameColumn() {
+            return usernameColumn;
+        }
+
+        public void setUsernameColumn(String usernameColumn) {
+            this.usernameColumn = usernameColumn;
+        }
+
+        public String getPasswordColumn() {
+            return passwordColumn;
+        }
+
+        public void setPasswordColumn(String passwordColumn) {
+            this.passwordColumn = passwordColumn;
+        }
+
+        public String getWhereClause() {
+            return whereClause;
+        }
+
+        public void setWhereClause(String whereClause) {
+            this.whereClause = whereClause;
+        }
+
+        public int getConnectionTimeout() {
+            return connectionTimeout;
+        }
+
+        public void setConnectionTimeout(int connectionTimeout) {
+            this.connectionTimeout = connectionTimeout;
+        }
+
+        public int getMaxConnections() {
+            return maxConnections;
+        }
+
+        public void setMaxConnections(int maxConnections) {
+            this.maxConnections = maxConnections;
+        }
+    }
+
+    /**
+     * HTTP 认证器配置
+     */
+    public static class HttpConfig extends AuthenticatorConfig {
+        /**
+         * 认证接口 URL
+         */
+        private String url;
+
+        /**
+         * HTTP 方法：GET, POST
+         */
+        private String method = "POST";
+
+        /**
+         * Content-Type
+         */
+        private String contentType = "application/json";
+
+        /**
+         * 请求超时时间（毫秒）
+         */
+        private int timeout = 5000;
+
+        /**
+         * 用户名字段名
+         */
+        private String usernameField = "username";
+
+        /**
+         * 密码字段名
+         */
+        private String passwordField = "password";
+
+        /**
+         * 成功响应码
+         */
+        private int successCode = 200;
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
+
+        public String getMethod() {
+            return method;
+        }
+
+        public void setMethod(String method) {
+            this.method = method;
+        }
+
+        public String getContentType() {
+            return contentType;
+        }
+
+        public void setContentType(String contentType) {
+            this.contentType = contentType;
+        }
+
+        public int getTimeout() {
+            return timeout;
+        }
+
+        public void setTimeout(int timeout) {
+            this.timeout = timeout;
+        }
+
+        public String getUsernameField() {
+            return usernameField;
+        }
+
+        public void setUsernameField(String usernameField) {
+            this.usernameField = usernameField;
+        }
+
+        public String getPasswordField() {
+            return passwordField;
+        }
+
+        public void setPasswordField(String passwordField) {
+            this.passwordField = passwordField;
+        }
+
+        public int getSuccessCode() {
+            return successCode;
+        }
+
+        public void setSuccessCode(int successCode) {
+            this.successCode = successCode;
         }
     }
 }

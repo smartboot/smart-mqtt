@@ -15,54 +15,38 @@ import tech.smartboot.mqtt.plugin.spec.MqttSession;
 
 /**
  * 认证器接口
- * 
+ *
  * @author 三刀
  * @version v1.0 2026/3/25
  */
 public interface Authenticator {
-    
+    String AUTH_TYPE_HTTP = "http";
+    String AUTH_TYPE_MYSQL = "mysql";
+    String AUTH_TYPE_REDIS = "redis";
+
     /**
      * 执行认证
-     * 
+     *
      * @param session 会话对象
      * @param message 连接消息
      * @return 认证结果
      */
     AuthResult authenticate(MqttSession session, MqttConnectMessage message);
-    
+
     /**
      * 获取认证器名称
-     * 
+     *
      * @return 认证器标识名称
      */
     String getName();
-    
-    /**
-     * 获取认证器优先级，数值越小优先级越高
-     * 
-     * @return 优先级
-     */
-    default int getOrder() {
-        return 100;
-    }
-    
-    /**
-     * 是否启用该认证器
-     * 
-     * @return true表示启用
-     */
-    default boolean isEnabled() {
-        return true;
-    }
-    
+
     /**
      * 初始化认证器
-     * 
-     * @param config 配置对象
+     *
      */
-    default void initialize(PluginConfig.AuthenticatorConfig config) {
+    default void initialize() {
     }
-    
+
     /**
      * 销毁认证器
      */

@@ -10,12 +10,8 @@
 
 package tech.smartboot.mqtt.auth.advanced;
 
-import org.yaml.snakeyaml.Yaml;
-import tech.smartboot.mqtt.auth.advanced.provider.AbstractAuthenticator;
-import tech.smartboot.mqtt.auth.advanced.provider.FileAuthenticator;
 import tech.smartboot.mqtt.auth.advanced.provider.HttpAuthenticator;
-import tech.smartboot.mqtt.auth.advanced.provider.JwtAuthenticator;
-import tech.smartboot.mqtt.auth.advanced.provider.MemoryAuthenticator;
+import tech.smartboot.mqtt.auth.advanced.provider.MysqlAuthenticator;
 import tech.smartboot.mqtt.auth.advanced.provider.RedisAuthenticator;
 import tech.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
@@ -25,61 +21,67 @@ import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
 import tech.smartboot.mqtt.plugin.spec.bus.AsyncEventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
+import tech.smartboot.mqtt.plugin.spec.schema.Item;
+import tech.smartboot.mqtt.plugin.spec.schema.Schema;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 高级认证插件
- * 
+ * <p>
  * 特性：
  * 1. 支持认证链：多个认证器按优先级顺序执行
- * 2. 内置多种认证方式：内存、文件、HTTP、JWT、Redis
+ * 2. 内置多种认证方式：HTTP、Redis、MySQL
  * 3. 支持密码编码：明文、SHA256、Base64
  * 4. 支持匿名访问
- * 
+ *
  * @author 三刀
  * @version v1.0 2026/3/25
  */
 public class AdvancedAuthPlugin extends Plugin {
-    
-    private AuthenticationChain authChain;
+
     private PluginConfig config;
     private BrokerContext brokerContext;
-    
+    private List<Authenticator> chains;
+
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
         this.brokerContext = brokerContext;
-        
+
         log("==============================================");
         log("正在初始化高级认证插件...");
         log("==============================================");
-        
+
         // 加载配置
-        loadConfiguration();
-        
-        // 初始化认证链
-        authChain = new AuthenticationChain(this, config);
-        
-        // 注册认证器
-        registerAuthenticators();
-        
-        // 初始化所有认证器
-        authChain.initializeAll();
-        
+        config = loadPluginConfig(PluginConfig.class);
+
+        chains = new ArrayList<>(config.getChain().size());
+        for (String authName : config.getChain()) {
+            if (Authenticator.AUTH_TYPE_HTTP.equals(authName)) {
+                chains.add(new HttpAuthenticator(config.getHttp()));
+            } else if (Authenticator.AUTH_TYPE_MYSQL.equals(authName)) {
+                chains.add(new MysqlAuthenticator(config.getMysql()));
+            } else if (Authenticator.AUTH_TYPE_REDIS.equals(authName)) {
+                chains.add(new RedisAuthenticator(config.getRedis()));
+            } else {
+                log("未知的认证器：" + authName);
+            }
+        }
+
+        chains.forEach(Authenticator::initialize);
+
         // 订阅CONNECT事件
         subscribe(EventType.CONNECT, AsyncEventObject.syncSubscriber((eventType, object) -> {
             MqttSession session = object.getSession();
-            
+
             // 如果已经认证失败或断开，直接返回
             if (session.isDisconnect()) {
                 return;
             }
-            
+
             MqttConnectMessage message = object.getObject();
-            
+
             // 检查是否匿名访问
             if (isAnonymous(message)) {
                 if (config.isAllowAnonymous()) {
@@ -92,10 +94,10 @@ public class AdvancedAuthPlugin extends Plugin {
                     return;
                 }
             }
-            
+
             // 执行认证链
-            boolean success = authChain.doAuthenticate(session, message);
-            
+            boolean success = doAuthenticate(session, message);
+
             if (success) {
                 session.setAuthorized(true);
             } else {
@@ -103,200 +105,124 @@ public class AdvancedAuthPlugin extends Plugin {
                 MqttSession.connFailAck(MqttConnectReturnCode.CONNECTION_REFUSED_NOT_AUTHORIZED, session);
             }
         }));
-        
+
         log("==============================================");
         log("高级认证插件初始化完成");
-        log("认证器数量: " + authChain.getAuthenticators().size());
+        log("认证器数量: " + chains.size());
         log("允许匿名访问: " + config.isAllowAnonymous());
         log("==============================================");
     }
-    
+
     /**
-     * 加载配置文件
+     * 执行认证链
+     *
+     * @param session 会话对象
+     * @param message 连接消息
+     * @return true 表示认证成功
      */
-    private void loadConfiguration() {
-        try {
-            File configFile = new File("plugins/advanced-auth-plugin.yaml");
-            
-            if (!configFile.exists()) {
-                // 使用默认配置
-                config = createDefaultConfig();
-                log("配置文件不存在，使用默认配置");
-                return;
-            }
-            
-            try (InputStream is = new FileInputStream(configFile)) {
-                Yaml yaml = new Yaml();
-                Map<String, Object> map = yaml.load(is);
-                
-                config = new PluginConfig();
-                
-                if (map != null) {
-                    if (map.containsKey("stopOnError")) {
-                        config.setStopOnError((Boolean) map.get("stopOnError"));
-                    }
-                    if (map.containsKey("allowAnonymous")) {
-                        config.setAllowAnonymous((Boolean) map.get("allowAnonymous"));
-                    }
-                    if (map.containsKey("authenticators")) {
-                        @SuppressWarnings("unchecked")
-                        java.util.List<Map<String, Object>> authList = (java.util.List<Map<String, Object>>) map.get("authenticators");
-                        if (authList != null) {
-                            java.util.List<PluginConfig.AuthenticatorConfig> configs = new java.util.ArrayList<>();
-                            for (Map<String, Object> authMap : authList) {
-                                PluginConfig.AuthenticatorConfig ac = new PluginConfig.AuthenticatorConfig();
-                                ac.setName(getString(authMap, "name"));
-                                ac.setType(getString(authMap, "type"));
-                                ac.setEnabled(getBoolean(authMap, "enabled", true));
-                                ac.setOrder(getInt(authMap, "order", 100));
-                                ac.setPasswordEncoder(getString(authMap, "passwordEncoder"));
-                                if (ac.getPasswordEncoder() == null) {
-                                    ac.setPasswordEncoder("plain");
-                                }
-                                if (authMap.containsKey("options")) {
-                                    @SuppressWarnings("unchecked")
-                                    Map<String, Object> opts = (Map<String, Object>) authMap.get("options");
-                                    ac.setOptions(opts);
-                                }
-                                configs.add(ac);
-                            }
-                            config.setAuthenticators(configs);
-                        }
-                    }
+    public boolean doAuthenticate(MqttSession session, MqttConnectMessage message) {
+        String clientId = session.getClientId();
+        String username = message.getPayload().userName();
+
+        if (chains.isEmpty()) {
+            log("警告：没有启用的认证器，默认拒绝连接");
+            return false;
+        }
+
+        for (Authenticator authenticator : chains) {
+            try {
+                log("尝试认证: " + authenticator.getName() + " - clientId=" + clientId + ", username=" + username);
+                AuthResult result = authenticator.authenticate(session, message);
+
+                switch (result) {
+                    case SUCCESS:
+                        log("认证成功: " + authenticator.getName() + " - clientId=" + clientId);
+                        return true;
+                    case FAILURE:
+                        log("认证失败: " + authenticator.getName() + " - clientId=" + clientId);
+                        return false;
+                    case CONTINUE:
+                        // 继续下一个认证器
+                        continue;
+                    case CONTINUE_AUTH:
+                        // MQTT 5.0 增强认证 - 暂不支持
+                        log("增强认证暂未支持: " + authenticator.getName());
+                        continue;
                 }
-                
-                log("配置文件加载成功");
-            }
-        } catch (Exception e) {
-            log("加载配置文件失败: " + e.getMessage());
-            config = createDefaultConfig();
-        }
-    }
-    
-    private String getString(Map<String, Object> map, String key) {
-        Object val = map.get(key);
-        return val != null ? val.toString() : null;
-    }
-    
-    private boolean getBoolean(Map<String, Object> map, String key, boolean defaultVal) {
-        Object val = map.get(key);
-        return val != null ? (Boolean) val : defaultVal;
-    }
-    
-    private int getInt(Map<String, Object> map, String key, int defaultVal) {
-        Object val = map.get(key);
-        if (val == null) return defaultVal;
-        if (val instanceof Number) return ((Number) val).intValue();
-        try {
-            return Integer.parseInt(val.toString());
-        } catch (NumberFormatException e) {
-            return defaultVal;
-        }
-    }
-    
-    /**
-     * 创建默认配置
-     */
-    private PluginConfig createDefaultConfig() {
-        PluginConfig config = new PluginConfig();
-        config.setStopOnError(true);
-        config.setAllowAnonymous(false);
-        
-        java.util.List<PluginConfig.AuthenticatorConfig> authenticators = new java.util.ArrayList<>();
-        
-        // 默认文件认证器
-        PluginConfig.AuthenticatorConfig fileAuth = new PluginConfig.AuthenticatorConfig();
-        fileAuth.setName("file");
-        fileAuth.setType("file");
-        fileAuth.setOrder(100);
-        fileAuth.setPasswordEncoder("plain");
-        java.util.Map<String, Object> fileOpts = new java.util.HashMap<>();
-        fileOpts.put("path", "auth/users.conf");
-        fileOpts.put("autoReload", true);
-        fileAuth.setOptions(fileOpts);
-        authenticators.add(fileAuth);
-        
-        config.setAuthenticators(authenticators);
-        
-        return config;
-    }
-    
-    /**
-     * 注册所有认证器
-     */
-    private void registerAuthenticators() {
-        if (config.getAuthenticators() == null || config.getAuthenticators().isEmpty()) {
-            log("警告: 没有配置认证器");
-            return;
-        }
-        
-        for (PluginConfig.AuthenticatorConfig authConfig : config.getAuthenticators()) {
-            if (!authConfig.isEnabled()) {
-                log("跳过禁用的认证器: " + authConfig.getName());
-                continue;
-            }
-            
-            AbstractAuthenticator authenticator = createAuthenticator(authConfig.getType());
-            if (authenticator != null) {
-                authenticator.initialize(authConfig);
-                authChain.registerAuthenticator(authenticator);
-                log("注册认证器: " + authenticator.getName() + " (type=" + authConfig.getType() + ", order=" + authenticator.getOrder() + ")");
-            } else {
-                log("未知的认证器类型: " + authConfig.getType());
+            } catch (Exception e) {
+                log("认证器异常: " + authenticator.getName() + ", error=" + e.getMessage());
+                if (config.isStopOnError()) {
+                    return false;
+                }
             }
         }
+
+        // 所有认证器都返回CONTINUE，默认拒绝
+        log("认证失败: 没有认证器能处理该请求 - clientId=" + clientId);
+        return false;
     }
-    
-    /**
-     * 根据类型创建认证器
-     */
-    private AbstractAuthenticator createAuthenticator(String type) {
-        if (type == null) {
-            return null;
-        }
-        
-        switch (type.toLowerCase()) {
-            case "memory":
-                return new MemoryAuthenticator();
-            case "file":
-                return new FileAuthenticator();
-            case "http":
-                return new HttpAuthenticator();
-            case "jwt":
-                return new JwtAuthenticator();
-            case "redis":
-                return new RedisAuthenticator();
-            default:
-                return null;
-        }
-    }
-    
+
     @Override
     protected void destroyPlugin() {
         log("正在关闭高级认证插件...");
-        
-        if (authChain != null) {
-            authChain.destroyAll();
+
+        if (chains != null) {
+            chains.forEach(Authenticator::destroy);
         }
-        
+
         log("高级认证插件已关闭");
     }
-    
+
     @Override
     public String getVersion() {
         return Options.VERSION;
     }
-    
+
     @Override
     public String getVendor() {
         return Options.VENDOR;
     }
-    
+
     @Override
     public String pluginName() {
         return "advanced-auth-plugin";
     }
-    
+
+    @Override
+    public Schema schema() {
+        Schema schema = new Schema();
+
+        // ========== 全局配置区域 ==========
+        Item globalItem = Item.Object("globalConfig", "全局配置").col(12);
+        globalItem.addItems(Item.Switch("stopOnError", "认证失败时立即停止").tip("开启后，任一认证器失败则立即拒绝连接；关闭则会尝试所有认证器").col(6), Item.Switch("allowAnonymous", "允许匿名访问").tip("开启后，不提供用户名密码也能连接；生产环境建议关闭").col(6));
+        schema.addItem(globalItem);
+
+        // ========== 认证器配置区域 ==========
+        Item authArray = Item.ItemArray("authenticators", "认证器配置列表").col(12);
+
+        // 认证器基本配置
+        authArray.addItems(Item.String("name", "认证器名称").tip("自定义认证器的唯一标识").col(4), Item.String("type", "认证器类型").tip("http: HTTP 认证，redis: Redis 认证，mysql: MySQL 认证").addEnums(tech.smartboot.mqtt.plugin.spec.schema.Enum.of("http", "HTTP 认证"), tech.smartboot.mqtt.plugin.spec.schema.Enum.of("redis", "Redis 认证"), tech.smartboot.mqtt.plugin.spec.schema.Enum.of("mysql", "MySQL 认证")).col(4), Item.Int("order", "执行顺序").tip("数值越小越优先执行，默认 100").col(4), Item.Switch("enabled", "启用").tip("关闭后将跳过此认证器").col(3), Item.String("passwordEncoder", "密码编码").tip("plain: 明文，sha256: SHA-256 哈希，base64: Base64 编码").addEnums(tech.smartboot.mqtt.plugin.spec.schema.Enum.of("plain", "明文"), tech.smartboot.mqtt.plugin.spec.schema.Enum.of("sha256", "SHA-256"), tech.smartboot.mqtt.plugin.spec.schema.Enum.of("base64", "Base64")).col(4));
+
+        // HTTP 认证器配置
+        Item httpOpts = Item.Object("options", "HTTP 认证配置").col(12);
+        httpOpts.addItems(Item.String("url", "认证接口 URL").tip("外部认证服务地址，示例：http://localhost:8080/api/auth").col(6), Item.String("method", "请求方法").tip("HTTP 请求方法，默认 POST").addEnums(tech.smartboot.mqtt.plugin.spec.schema.Enum.of("POST", "POST"), tech.smartboot.mqtt.plugin.spec.schema.Enum.of("GET", "GET")).col(3), Item.Int("timeout", "超时时间 (ms)").tip("HTTP 请求超时时间，默认 5000ms").col(3), Item.String("usernameField", "用户名字段名").tip("传递用户名的字段名，默认 username").col(6), Item.String("passwordField", "密码字段名").tip("传递密码的字段名，默认 password").col(6));
+        authArray.addItems(httpOpts);
+
+        // Redis 认证器配置
+        Item redisOpts = Item.Object("options", "Redis 认证配置").col(12);
+        redisOpts.addItems(Item.String("host", "Redis 主机").tip("Redis 服务器地址，默认 localhost").col(3), Item.Int("port", "Redis 端口").tip("Redis 服务器端口，默认 6379").col(3), Item.Int("database", "数据库").tip("Redis 数据库编号，默认 0").col(3), Item.String("password", "Redis 密码").tip("Redis 认证密码").col(3), Item.String("keyPrefix", "Key 前缀").tip("存储用户信息的 Key 前缀，默认 mqtt:auth:").col(6), Item.Int("connectionTimeout", "超时时间 (ms)").tip("Redis 连接超时时间，默认 2000ms").col(3));
+        authArray.addItems(redisOpts);
+
+        // MySQL 认证器配置
+        Item mysqlOpts = Item.Object("options", "MySQL 认证配置").col(12);
+        mysqlOpts.addItems(Item.String("url", "JDBC URL").tip("JDBC 连接 URL，示例：jdbc:mysql://localhost:3306/mqtt").col(6), Item.String("username", "数据库用户名").tip("数据库登录用户名").col(3), Item.String("password", "数据库密码").tip("数据库登录密码").col(3), Item.String("tableName", "表名").tip("用户表名，默认 mqtt_users").col(4), Item.String("usernameColumn", "用户名字段").tip("用户名列，默认 username").col(4), Item.String("passwordColumn", "密码字段").tip("密码列，默认 password").col(4));
+        authArray.addItems(mysqlOpts);
+
+        schema.addItem(authArray);
+
+        return schema;
+    }
+
     /**
      * 检查是否为匿名连接
      */
@@ -305,11 +231,5 @@ public class AdvancedAuthPlugin extends Plugin {
         byte[] password = message.getPayload().passwordInBytes();
         return username == null || username.isEmpty() || password == null || password.length == 0;
     }
-    
-    /**
-     * 获取认证链（供外部查询）
-     */
-    public AuthenticationChain getAuthChain() {
-        return authChain;
-    }
+
 }

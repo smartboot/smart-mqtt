@@ -6,8 +6,8 @@
 
 ## 特性
 
-- **认证链**：多个认证器按优先级顺序执行
-- **多种认证方式**：内存、文件、HTTP、JWT、Redis
+- **认证链**：多个认证器按配置顺序执行，可自定义认证链
+- **多种认证方式**：HTTP、Redis、MySQL
 - **密码编码**：支持明文、SHA256、Base64
 - **匿名访问**：可配置是否允许匿名连接
 - **动态配置**：支持运行时更新用户配置
@@ -21,79 +21,109 @@
 
 ## 配置说明
 
-### 文件认证
+### 认证链配置
 
-文件格式（每行一个用户）：
-```
-# 这是注释
-admin:admin123
-user:password123
-```
+可以通过 `authenticationChain` 字段自定义认证器的执行顺序：
 
-### 内存认证
-
-在配置文件中直接定义用户：
 ```yaml
-authenticators:
-  - name: memory
-    type: memory
-    options:
-      users:
-        admin: admin123
-        user: user123
+# 认证链顺序（按此顺序执行认证器）
+authenticationChain:
+  - redis
+  - mysql
+  - http
 ```
 
-### JWT认证
+如果不配置 `authenticationChain`，则按照 `order` 字段从小到大排序执行。
 
-使用JWT Token进行认证：
-```yaml
-authenticators:
-  - name: jwt
-    type: jwt
-    options:
-      secret: your-secret-key
-      issuer: mqtt-server
-      usernameClaim: sub
-```
+### Redis 认证
 
-MQTT连接时，将JWT Token作为密码传入。
-
-### Redis认证
-
-从Redis查询用户密码：
+从 Redis 查询用户密码：
 ```yaml
 authenticators:
   - name: redis
     type: redis
+    order: 10
+    passwordEncoder: sha256
     options:
       host: localhost
       port: 6379
       password: 
       database: 0
       keyPrefix: mqtt:auth:
+      connectionTimeout: 2000
 ```
 
-### HTTP认证
+Redis 中存储格式：`mqtt:auth:{username}` = `{password}`
 
-调用外部HTTP接口进行认证：
+### MySQL 认证
+
+从 MySQL 数据库查询用户凭证：
+```yaml
+authenticators:
+  - name: mysql
+    type: mysql
+    order: 20
+    passwordEncoder: sha256
+    options:
+      url: jdbc:mysql://localhost:3306/mqtt?useSSL=false&serverTimezone=UTC
+      username: root
+      password: your-password
+      driverClass: com.mysql.cj.jdbc.Driver
+      tableName: mqtt_users
+      usernameColumn: username
+      passwordColumn: password
+      whereClause: " AND status=1"
+      connectionTimeout: 3000
+      maxConnections: 5
+```
+
+数据表结构示例：
+```sql
+CREATE TABLE mqtt_users (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  username VARCHAR(64) NOT NULL UNIQUE,
+  password VARCHAR(256) NOT NULL,
+  status TINYINT DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### HTTP 认证
+
+调用外部 HTTP 接口进行认证：
 ```yaml
 authenticators:
   - name: http
     type: http
+    order: 30
     options:
       url: http://localhost:8080/api/auth
       method: POST
+      contentType: application/json
       timeout: 5000
-      bodyTemplate: '{"username":"{{username}}","password":"{{password}}"}'
-      successCondition: response.status == 200
+      usernameField: username
+      passwordField: password
+      successCode: 200
 ```
+
+HTTP 请求示例（POST JSON）：
+```json
+{
+  "username": "test",
+  "password": "123456"
+}
+```
+
+响应码为 200 表示认证成功，其他状态码表示失败。
 
 ## 认证链执行流程
 
-1. 按 order 从小到大依次执行认证器
-2. 认证器返回 SUCCESS：认证通过，停止后续认证
-3. 认证器返回 FAILURE：认证失败，停止后续认证
-4. 认证器返回 CONTINUE：继续下一个认证器
+1. 如果配置了 `authenticationChain`，则按配置的顺序依次执行认证器
+2. 如果未配置 `authenticationChain`，则按 `order` 字段从小到大排序执行
+3. 认证器返回 SUCCESS：认证通过，停止后续认证
+4. 认证器返回 FAILURE：认证失败，停止后续认证
+5. 认证器返回 CONTINUE：继续下一个认证器
+6. 所有认证器都返回 CONTINUE，默认拒绝连接
 
 ## 密码编码
 

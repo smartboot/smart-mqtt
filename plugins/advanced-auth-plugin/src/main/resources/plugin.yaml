@@ -1,67 +1,43 @@
 stopOnError: true
 allowAnonymous: false
 
-# 认证器配置列表（按order从小到大执行）
-authenticators:
-  # 内存认证器 - 适合测试和固定账号
-  - name: memory
-    type: memory
-    order: 10
-    passwordEncoder: plain
-    options:
-      users:
-        admin: admin123
-        user: user123
+# 认证链顺序（按此顺序执行认证器，默认按 redis -> mysql -> http）
+chain:
+ - redis
+ - mysql
+ - http
 
-  # 文件认证器 - 适合配置文件管理用户
-  - name: file
-    type: file
-    order: 20
-    passwordEncoder: sha256
-    options:
-      path: auth/users.conf
-      autoReload: true
-      reloadInterval: 60
+# Redis 认证器配置 - 适合分布式、高并发场景
+redis:
+  passwordEncoder: sha256
+  host: localhost
+  port: 6379
+  password: 
+  database: 0
+  keyPrefix: "mqtt:auth:"
+  connectionTimeout: 2000
 
-  # JWT认证器 - 适合微服务架构
-  - name: jwt
-    type: jwt
-    order: 30
-    options:
-      secret: your-secret-key-here
-      issuer: mqtt-server
-      usernameClaim: sub
-      verifyUsername: true
-      # audiences:
-      #   - mqtt-client
-      #   - mobile-app
+# MySQL 认证器配置 - 适合传统企业应用和已有数据库系统
+mysql:
+  passwordEncoder: sha256
+  url: jdbc:mysql://localhost:3306/mqtt?useSSL=false&serverTimezone=UTC
+  username: root
+  password: your-password
+  driverClass: com.mysql.cj.jdbc.Driver
+  tableName: mqtt_users
+  usernameColumn: username
+  passwordColumn: password
+  whereClause: " AND status=1"
+  connectionTimeout: 3000
+  maxConnections: 5
 
-  # Redis认证器 - 适合分布式、高并发
-  - name: redis
-    type: redis
-    order: 40
-    passwordEncoder: sha256
-    options:
-      host: localhost
-      port: 6379
-      password: 
-      database: 0
-      keyPrefix: mqtt:auth:
-      connectionTimeout: 2000
-      maxTotal: 8
-
-  # HTTP认证器 - 适合集成现有认证服务
-  - name: http
-    type: http
-    order: 50
-    options:
-      url: http://localhost:8080/api/auth
-      method: POST
-      timeout: 5000
-      headers:
-        Content-Type: application/json
-        X-Auth-Source: mqtt
-      bodyTemplate: '{"username":"{{username}}","password":"{{password}}","clientId":"{{clientId}}"}'
-      successCondition: response.status == 200
-      usernameField: username
-      passwordField: password
+# HTTP 认证器配置 - 适合集成现有认证服务、微服务架构
+http:
+  passwordEncoder: plain
+  url: http://localhost:8080/api/auth
+  method: POST
+  contentType: application/json
+  timeout: 5000
+  usernameField: username
+  passwordField: password
+  successCode: 200
