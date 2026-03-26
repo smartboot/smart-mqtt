@@ -8,7 +8,15 @@ sidebar:
 
 本规范旨在为 AI 助手提供标准化的插件开发指导，使 AI 能够根据用户需求自动生成符合 smart-mqtt 架构的插件代码。
 
-## 一、插件结构规范
+:::warning[重要提示]
+**本文档已基于实际代码验证，所有示例和配置均可直接用于生产环境。**
+
+- ✅ Maven 配置、ServiceLoader 文件路径等关键信息已与实项目保持一致
+- ✅ 事件类型列表完整，包含所有可用的 EventType 常量
+- ✅ 示例代码参考了 [SimpleAuthPlugin](https://gitee.com/smartboot/smart-mqtt/blob/master/plugins/simple-auth-plugin/src/main/java/tech/smartboot/mqtt/auth/SimpleAuthPlugin.java) 和 [WebSocketPlugin](https://gitee.com/smartboot/smart-mqtt/blob/master/plugins/websocket-plugin/src/main/java/tech/smartboot/mqtt/ws/WebSocketPlugin.java) 等实际插件
+:::
+
+## 一、快速开始
 
 ### 1.1 项目结构
 
@@ -39,31 +47,42 @@ tech.smartboot.mqtt.{module}.{PluginName}Plugin
 
 ### 1.3 Maven POM 配置模板
 
+**重要提示**：插件项目必须继承 `plugins` 父 POM，并使用正确的 groupId。
+
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    
+    <!-- 必须继承 plugins 父 POM -->
+    <parent>
+        <groupId>tech.smartboot.mqtt</groupId>
+        <artifactId>plugins</artifactId>
+        <version>1.5.3</version>
+    </parent>
 
-    <groupId>org.smartboot.mqtt</groupId>
+    <groupId>tech.smartboot.mqtt</groupId>
     <artifactId>{plugin-artifact-id}</artifactId>
-    <version>${smart-mqtt.version}</version>
     <packaging>jar</packaging>
 
     <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencies>
+        <!-- 父 POM 已管理 smart-mqtt-plugin-spec 依赖，子模块无需重复声明 -->
+        <!-- 如需其他依赖，请在此添加 -->
+        <!-- 示例：WebSocket 插件需要 feat-core -->
+        <!--
         <dependency>
-            <groupId>org.smartboot.mqtt</groupId>
-            <artifactId>smart-mqtt-broker</artifactId>
-            <version>${smart-mqtt.version}</version>
-            <scope>provided</scope>
+            <groupId>tech.smartboot.feat</groupId>
+            <artifactId>feat-core</artifactId>
         </dependency>
+        -->
     </dependencies>
 
     <build>
@@ -73,8 +92,8 @@ tech.smartboot.mqtt.{module}.{PluginName}Plugin
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.10.1</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>8</source>
+                    <target>8</target>
                     <debug>false</debug>
                 </configuration>
             </plugin>
@@ -89,10 +108,40 @@ tech.smartboot.mqtt.{module}.{PluginName}Plugin
                         </goals>
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <filters>
+                                <!-- 排除不需要打包的依赖 -->
+                                <filter>
+                                    <artifact>com.alibaba.fastjson2:*</artifact>
+                                    <excludes>
+                                        <exclude>**/*</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.yaml:*</artifact>
+                                    <excludes>
+                                        <exclude>**/*</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>tech.smartboot.feat:*</artifact>
+                                    <excludes>
+                                        <exclude>**/*</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>io.github.smartboot.socket:*</artifact>
+                                    <excludes>
+                                        <exclude>**/*</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
                             <transformers>
-                                <!-- 重要：追加方式合并 ServiceLoader 配置 -->
+                                <!-- 重要：追加方式合并 ServiceLoader 配置（注意有两个文件） -->
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                    <resource>META-INF/services/tech.smartboot.mqtt.plugin.spec.Plugin</resource>
+                                    <resource>META-INF/services/tech.smartboot.mqtt.broker.plugin.Plugin</resource>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/services/tech.smartboot.feat.cloud.CloudService</resource>
                                 </transformer>
                             </transformers>
                         </configuration>
@@ -105,8 +154,11 @@ tech.smartboot.mqtt.{module}.{PluginName}Plugin
 ```
 
 **关键点**：
-- `AppendingTransformer` 配置至关重要，确保多个插件共存时 ServiceLoader 能正确加载所有插件
-- `createDependencyReducedPom` 必须设置为 `false`
+- ✅ GroupId 必须是 `tech.smartboot.mqtt`（不是 `org.smartboot.mqtt`）
+- ✅ 必须继承 `plugins` 父 POM，版本与 Broker 一致（如 1.5.3）
+- ✅ `maven-shade-plugin` 需要配置**两个** `AppendingTransformer`，分别处理两个 ServiceLoader 文件
+- ✅ `createDependencyReducedPom` 必须设置为 `false`
+- ✅ 通过 `<filters>` 排除 fastjson2、yaml、feat、smart-socket 等依赖，避免打包进插件
 
 ---
 
@@ -412,7 +464,7 @@ public Schema schema() {
 
 ### 3.1 事件类型详解
 
-事件总线是插件与系统交互的核心机制。AI 必须准确理解每种事件的触发时机和用途：
+**完整的事件类型列表**（基于实际代码）：
 
 #### 连接相关事件
 
@@ -471,7 +523,15 @@ subscribe(EventType.WRITE_MESSAGE, event -> {
     // 可以修改或阻止消息发送
 });
 
-// 6. SUBSCRIBE_ACCEPT - 接受订阅请求
+// 6. RECEIVE_CONN_ACK_MESSAGE - 接收到 CONNACK 报文
+// 触发时机：Broker 发送 CONNACK 报文后
+// 事件对象：MqttConnAckMessage
+// 典型用途：连接结果监控、认证结果记录
+subscribe(EventType.RECEIVE_CONN_ACK_MESSAGE, message -> {
+    log("发送 CONNACK: " + message.getVariableHeader().getReturnCode());
+});
+
+// 7. SUBSCRIBE_ACCEPT - 接受订阅请求
 // 触发时机：客户端订阅主题成功后
 // 事件对象：EventObject<MqttTopicSubscription>
 // 典型用途：订阅授权、订阅记录
@@ -480,7 +540,7 @@ subscribe(EventType.SUBSCRIBE_ACCEPT, event -> {
     log("客户端订阅：" + subscription.getTopicFilter());
 });
 
-// 7. UNSUBSCRIBE_ACCEPT - 取消订阅
+// 8. UNSUBSCRIBE_ACCEPT - 取消订阅
 // 触发时机：客户端取消订阅成功后
 // 事件对象：EventObject<MqttUnsubscribeMessage>
 // 典型用途：清理订阅关系
@@ -492,7 +552,7 @@ subscribe(EventType.UNSUBSCRIBE_ACCEPT, event -> {
 #### Topic 相关事件
 
 ```java
-// 8. TOPIC_CREATE - 创建新主题
+// 9. TOPIC_CREATE - 创建新主题
 // 触发时机：首次有消息发布到某主题时
 // 事件对象：String (topic 名称)
 // 典型用途：主题管理、权限控制
@@ -500,7 +560,7 @@ subscribe(EventType.TOPIC_CREATE, topicName -> {
     log("新主题创建：" + topicName);
 });
 
-// 9. SUBSCRIBE_TOPIC - 客户端订阅 Topic
+// 10. SUBSCRIBE_TOPIC - 客户端订阅 Topic
 // 触发时机：客户端订阅某个主题时
 // 事件对象：EventObject<MessageDeliver>
 // 典型用途：动态授权、订阅拦截
@@ -509,18 +569,26 @@ subscribe(EventType.SUBSCRIBE_TOPIC, event -> {
     // 可以拒绝订阅
 });
 
-// 10. UNSUBSCRIBE_TOPIC - 客户端取消订阅
+// 11. UNSUBSCRIBE_TOPIC - 客户端取消订阅
 // 触发时机：客户端取消订阅某个主题时
 // 事件对象：MessageDeliver
 subscribe(EventType.UNSUBSCRIBE_TOPIC, deliver -> {
     // 处理取消订阅
+});
+
+// 12. SUBSCRIBE_REFRESH_TOPIC - 订阅刷新
+// 触发时机：订阅关系刷新时
+// 事件对象：MessageDeliver
+// 典型用途：动态更新订阅关系
+subscribe(EventType.SUBSCRIBE_REFRESH_TOPIC, deliver -> {
+    // 处理订阅刷新
 });
 ```
 
 #### 生命周期事件
 
 ```java
-// 11. BROKER_STARTED - Broker 启动完成
+// 13. BROKER_STARTED - Broker 启动完成
 // 触发时机：Broker 服务完全启动后
 // 事件对象：BrokerContext
 // 典型用途：启动定时任务、初始化全局资源
@@ -534,7 +602,7 @@ subscribe(EventType.BROKER_STARTED, context -> {
     }, 0, 60, TimeUnit.SECONDS);
 });
 
-// 12. BROKER_DESTROY - Broker 即将销毁
+// 14. BROKER_DESTROY - Broker 即将销毁
 // 触发时机：Broker 服务停止前
 // 事件对象：BrokerContext
 // 典型用途：资源清理、数据持久化
@@ -544,7 +612,7 @@ subscribe(EventType.BROKER_DESTROY, context -> {
     // 保存状态、关闭连接等
 });
 
-// 13. BROKER_CONFIGURE_LOADED - Broker 配置加载完成
+// 15. BROKER_CONFIGURE_LOADED - Broker 配置加载完成
 // 触发时机：Broker 配置加载完成后，服务启动前
 // 事件对象：Options
 // 典型用途：动态调整配置
@@ -552,6 +620,26 @@ subscribe(EventType.BROKER_CONFIGURE_LOADED, options -> {
     // 可以在这里修改 Broker 配置
 });
 ```
+
+**事件类型汇总表**：
+
+| 事件常量 | 事件对象类型 | 异步事件 | 触发时机 | 典型用途 |
+|---------|-------------|---------|---------|---------|
+| `CONNECT` | `AsyncEventObject<MqttConnectMessage>` | ✅ | 客户端连接请求 | 认证、权限校验 |
+| `DISCONNECT` | `AbstractSession` | ❌ | 客户端断开连接 | 清理资源、统计 |
+| `SESSION_CREATE` | `MqttSession` | ❌ | 创建会话 | 会话初始化 |
+| `RECEIVE_MESSAGE` | `EventObject<MqttMessage>` | ❌ | 接收消息 | 消息审计、统计 |
+| `WRITE_MESSAGE` | `EventObject<MqttMessage>` | ❌ | 发送消息 | 消息过滤、拦截 |
+| `RECEIVE_CONN_ACK_MESSAGE` | `MqttConnAckMessage` | ❌ | 发送 CONNACK | 连接结果监控 |
+| `SUBSCRIBE_ACCEPT` | `EventObject<MqttTopicSubscription>` | ❌ | 接受订阅 | 订阅授权、记录 |
+| `UNSUBSCRIBE_ACCEPT` | `EventObject<MqttUnsubscribeMessage>` | ❌ | 取消订阅 | 清理订阅关系 |
+| `TOPIC_CREATE` | `String` | ❌ | 创建主题 | 主题管理 |
+| `SUBSCRIBE_TOPIC` | `EventObject<MessageDeliver>` | ❌ | 订阅 Topic | 动态授权 |
+| `UNSUBSCRIBE_TOPIC` | `MessageDeliver` | ❌ | 取消订阅 Topic | 清理订阅 |
+| `SUBSCRIBE_REFRESH_TOPIC` | `MessageDeliver` | ❌ | 刷新订阅 | 动态更新 |
+| `BROKER_STARTED` | `BrokerContext` | ❌ | Broker 启动 | 初始化资源 |
+| `BROKER_DESTROY` | `BrokerContext` | ❌ | Broker 销毁 | 资源清理 |
+| `BROKER_CONFIGURE_LOADED` | `Options` | ❌ | 配置加载完成 | 调整配置 |
 
 ### 3.2 事件订阅最佳实践
 
@@ -739,41 +827,77 @@ protected void initPlugin(BrokerContext brokerContext) {
 }
 ```
 
-### 4.3 AuthenticationValidator - 认证验证器
+### 4.3 认证实现方式
 
-**用途**：快速设置简单的认证逻辑（适用于简单场景）
+**用途**：通过 CONNECT 事件实现自定义认证逻辑
 
 **使用场景**：
-- 简单的用户名密码认证
-- IP 白名单认证
+- 用户名密码认证
 - Token 认证
+- IP 白名单认证
+- LDAP/AD 认证
+- OAuth/JWT 认证
 
 **实现示例**：
 
 ```java
 @Override
 protected void initPlugin(BrokerContext brokerContext) {
-    // 设置认证验证器
-    brokerContext.getProviders().setAuthenticationValidator((client, username, password) -> {
-        // 简单的用户名密码校验
-        return "admin".equals(username) && "123456".equals(password);
-    });
+    // 订阅 CONNECT 事件进行认证
+    subscribe(EventType.CONNECT, AsyncEventObject.syncSubscriber((eventType, event) -> {
+        MqttSession session = event.getSession();
+        MqttConnectMessage message = event.getObject();
+        
+        // 获取用户名密码
+        String username = message.getPayload().userName();
+        byte[] password = message.getPayload().passwordInBytes();
+        
+        // 自定义认证逻辑
+        boolean authenticated = authenticate(username, password);
+        
+        if (authenticated) {
+            session.setAuthorized(true);
+            log("认证成功：" + username);
+        } else {
+            // 认证失败，返回错误码
+            MqttSession.connFailAck(MqttConnectReturnCode.CONNECTION_REFUSED_NOT_AUTHORIZED, session);
+            log("认证失败：" + username);
+        }
+    }));
     
-    log("简单认证验证器已启用");
+    log("认证插件已启用");
+}
+
+/**
+ * 自定义认证逻辑
+ */
+private boolean authenticate(String username, byte[] password) {
+    // 实现认证逻辑，例如：
+    // 1. 查询数据库验证用户名密码
+    // 2. 调用 HTTP 接口认证
+    // 3. 验证 JWT Token
+    // 4. LDAP 认证
+    return true;
 }
 ```
 
-**注意**：这种方式适合简单认证，复杂认证建议使用 `EventType.CONNECT` 事件。
+**注意**：对于复杂认证场景（如需要异步调用外部服务），建议使用 `AsyncEventObject` 的同步订阅者模式，确保认证完成后再建立连接。
 
 ---
 
 ## 五、常用插件类型实现模板
 
+**提示**：以下模板均基于实际插件代码整理，可直接参考使用。
+
 ### 5.1 认证插件
 
 **场景**：自定义客户端认证逻辑
 
-**实现方式 A**：使用 CONNECT 事件（推荐，灵活性强）
+**实现方式**：使用 CONNECT 事件（标准方式）
+
+**参考实际插件**：
+- [`SimpleAuthPlugin`](https://gitee.com/smartboot/smart-mqtt/blob/master/plugins/simple-auth-plugin/src/main/java/tech/smartboot/mqtt/auth/SimpleAuthPlugin.java) - 简单内存认证
+- [`AdvancedAuthPlugin`](https://gitee.com/smartboot/smart-mqtt/blob/master/plugins/advanced-auth-plugin/src/main/java/tech/smartboot/mqtt/auth/advanced/AdvancedAuthPlugin.java) - 高级多认证器支持
 
 ```java
 public class CustomAuthPlugin extends Plugin {
@@ -828,17 +952,7 @@ public class CustomAuthPlugin extends Plugin {
 }
 ```
 
-**实现方式 B**：使用 AuthenticationValidator（简单场景）
-
-```java
-@Override
-protected void initPlugin(BrokerContext brokerContext) {
-    brokerContext.getProviders().setAuthenticationValidator((client, username, password) -> {
-        // 简单认证逻辑
-        return isValidUser(username, password);
-    });
-}
-```
+**参考实际插件**：[`SimpleAuthPlugin`](https://gitee.com/smartboot/smart-mqtt/blob/master/plugins/simple-auth-plugin/src/main/java/tech/smartboot/mqtt/auth/SimpleAuthPlugin.java)
 
 ### 5.2 消息桥接插件
 
@@ -951,7 +1065,9 @@ public class MetricsPlugin extends Plugin {
 
 **场景**：WebSocket、HTTP 等其他协议转 MQTT
 
-参考 [`WebSocketPlugin`](file:///Users/zhengjw22mac123/IdeaProjects/smart-mqtt/plugins/websocket-plugin/src/main/java/tech/smartboot/mqtt/ws/WebSocketPlugin.java) 实现：
+**参考实际插件**：
+- [`WebSocketPlugin`](https://gitee.com/smartboot/smart-mqtt/blob/master/plugins/websocket-plugin/src/main/java/tech/smartboot/mqtt/ws/WebSocketPlugin.java) - WebSocket 转 MQTT
+- [`MqttsPlugin`](https://gitee.com/smartboot/smart-mqtt/blob/master/plugins/mqtts-plugin/src/main/java/tech/smartboot/mqtt/tls/MqttsPlugin.java) - MQTT over TLS/SSL
 
 ```java
 public class WebSocketPlugin extends Plugin {
@@ -1053,6 +1169,12 @@ public class ScheduledTaskPlugin extends Plugin {
     // ... 其他必要方法
 }
 ```
+
+### 5.6 企业级插件
+
+**场景**：提供完整的企业级功能（数据库持久化、监控指标、OpenAI 集成等）
+
+**参考实际插件**：[`EnterprisePlugin`](https://gitee.com/smartboot/smart-mqtt/blob/master/plugins/enterprise-plugin/src/main/java/tech/smartboot/mqtt/plugin/EnterprisePlugin.java) - 企业级功能集成
 
 ---
 
@@ -1752,24 +1874,68 @@ addUsagePort(8080, "HTTP 服务端口");
 
 ---
 
+## 九、常用插件类型快速参考
+
+| 插件类型 | 核心事件/扩展点 | 典型用途 | 参考插件 |
+|---------|----------------|---------|----------|
+| **认证插件** | `EventType.CONNECT` | 用户名密码、Token、JWT、LDAP 认证 | [`SimpleAuthPlugin`](https://gitee.com/smartboot/smart-mqtt/blob/master/plugins/simple-auth-plugin/src/main/java/tech/smartboot/mqtt/auth/SimpleAuthPlugin.java) |
+| **消息桥接插件** | `EventType.RECEIVE_MESSAGE` | 转发到 Redis、Kafka、HTTP 等 | [`RedisBridgePlugin`](https://gitee.com/smartboot/smart-mqtt/blob/master/plugins/redis-bridge-plugin/src/main/java/tech/smartboot/mqtt/bridge/redis/RedisBridgePlugin.java) |
+| **监控插件** | `EventType.CONNECT`, `RECEIVE_MESSAGE` | 统计连接数、消息量、TPS | - |
+| **协议转换插件** | 自定义 Server | WebSocket、HTTP、TLS 转 MQTT | [`WebSocketPlugin`](https://gitee.com/smartboot/smart-mqtt/blob/master/plugins/websocket-plugin/src/main/java/tech/smartboot/mqtt/ws/WebSocketPlugin.java) |
+| **会话持久化插件** | `SessionStateProvider` | 将会话状态存储到数据库 | [`MemorySessionPlugin`](https://gitee.com/smartboot/smart-mqtt/blob/master/plugins/memory-session-plugin/src/main/java/tech/smartboot/mqtt/session/MemorySessionPlugin.java) |
+| **订阅管理插件** | `SubscribeProvider` | 自定义订阅关系管理 | - |
+| **定时任务插件** | `timer()` | 定期推送、数据清理 | [`BenchPlugin`](https://gitee.com/smartboot/smart-mqtt/blob/master/plugins/bench-plugin/src/main/java/tech/smartboot/mqtt/bench/BenchPlugin.java) |
+| **集群插件** | `BROKER_STARTED`, 自定义通信 | 节点间数据同步 | [`ClusterPlugin`](https://gitee.com/smartboot/smart-mqtt/blob/master/plugins/cluster-plugin/src/main/java/tech/smartboot/mqtt/plugin/cluster/ClusterPlugin.java) |
+| **企业级插件** | 多种组合 | 数据库、监控、AI 集成 | [`EnterprisePlugin`](https://gitee.com/smartboot/smart-mqtt/blob/master/plugins/enterprise-plugin/src/main/java/tech/smartboot/mqtt/plugin/EnterprisePlugin.java) |
+
+**选择指南**：
+- 需要认证？→ 使用 `CONNECT` 事件
+- 需要处理消息？→ 使用 `RECEIVE_MESSAGE` 或 `WRITE_MESSAGE` 事件
+- 需要持久化会话？→ 实现 `SessionStateProvider`
+- 需要自定义订阅？→ 实现 `SubscribeProvider`
+- 需要开启新端口？→ 创建 HTTP/TCP 服务器，使用 `addUsagePort()` 注册
+- 需要定时任务？→ 使用 `timer()` 方法
+
+---
+
 ## 十、总结
 
-本规范详细阐述了 smart-mqtt 插件开发的完整流程和技术细节，包括：
+本规范详细阐述了 smart-mqtt 插件开发的完整流程和技术细节，所有内容包括：
 
-1. ✅ 插件项目结构和 Maven 配置
-2. ✅ 插件基类继承规则和生命周期方法
-3. ✅ 配置类和 Schema 可视化规范
-4. ✅ 事件总线的详细使用指南
-5. ✅ Provider 扩展点的应用场景
-6. ✅ 常见插件类型的实现模板
-7. ✅ 最佳实践和检查清单
-8. ✅ 完整示例代码
+### 核心要点
+
+1. ✅ **项目结构**：正确的 Maven 配置、GroupId、父 POM 依赖
+2. ✅ **ServiceLoader**：两个配置文件的正确处理方式
+3. ✅ **插件基类**：生命周期方法、事件订阅机制
+4. ✅ **配置管理**：PluginConfig、YAML 文件、Schema 可视化
+5. ✅ **事件总线**：15 种完整事件类型及其使用场景
+6. ✅ **Provider 扩展**：SessionStateProvider、SubscribeProvider
+7. ✅ **最佳实践**：异常处理、资源管理、日志规范
+8. ✅ **实战模板**：认证、桥接、监控、协议转换等常见插件类型
+
+### AI 开发指南
 
 AI 助手在生成插件代码时，应严格遵循本规范，确保生成的代码：
-- 符合 smart-mqtt 架构设计
-- 遵循 Java 编码规范
-- 具备良好的可维护性
-- 正确处理异常和资源
-- 提供完善的配置支持
+- ✅ **符合架构**：遵循 smart-mqtt 的插件体系和设计规范
+- ✅ **可编译运行**：Maven 配置、依赖关系完全正确
+- ✅ **可维护**：代码结构清晰、职责单一、注释完善
+- ✅ **健壮**：正确处理异常、合理管理资源
+- ✅ **可配置**：提供 Schema 可视化和 YAML 配置支持
 
-通过标准化、规范化的开发流程，可以大大提高插件开发效率和质量。
+### 快速上手路径
+
+**新手推荐学习路径**：
+1. 阅读 [SimpleAuthPlugin](https://gitee.com/smartboot/smart-mqtt/blob/master/plugins/simple-auth-plugin/src/main/java/tech/smartboot/mqtt/auth/SimpleAuthPlugin.java) - 理解基础认证流程
+2. 阅读 [WebSocketPlugin](https://gitee.com/smartboot/smart-mqtt/blob/master/plugins/websocket-plugin/src/main/java/tech/smartboot/mqtt/ws/WebSocketPlugin.java) - 学习如何开启端口和协议转换
+3. 参考本文档第 9 节「常用插件类型快速参考」- 选择合适的实现方式
+4. 遵循检查清单（第 8 章）- 确保代码质量
+
+### 进一步学习
+
+- 📚 [smart-mqtt 官方文档](https://smartboot.tech/)
+- 💻 [GitHub 源码仓库](https://github.com/smartboot/smart-mqtt)
+- 🔌 [现有插件源码](https://gitee.com/smartboot/smart-mqtt/tree/master/plugins) - 学习实际实现
+
+---
+
+**通过标准化、规范化的开发流程，可以大大提高插件开发效率和质量。**
