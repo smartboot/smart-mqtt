@@ -32,6 +32,7 @@
         <module>websocket-plugin</module>
         <module>cluster-plugin</module>
         <module>bench-plugin</module>
+        <module>advanced-auth-plugin</module>
     </modules>
 
     <dependencies>
@@ -82,6 +83,11 @@
             <dependency>
                 <groupId>tech.smartboot.mqtt</groupId>
                 <artifactId>simple-auth-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>tech.smartboot.mqtt</groupId>
+                <artifactId>advanced-auth-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

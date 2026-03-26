@@ -1,0 +1,67 @@
+stopOnError: true
+allowAnonymous: false
+
+# 认证器配置列表（按order从小到大执行）
+authenticators:
+  # 内存认证器 - 适合测试和固定账号
+  - name: memory
+    type: memory
+    order: 10
+    passwordEncoder: plain
+    options:
+      users:
+        admin: admin123
+        user: user123
+
+  # 文件认证器 - 适合配置文件管理用户
+  - name: file
+    type: file
+    order: 20
+    passwordEncoder: sha256
+    options:
+      path: auth/users.conf
+      autoReload: true
+      reloadInterval: 60
+
+  # JWT认证器 - 适合微服务架构
+  - name: jwt
+    type: jwt
+    order: 30
+    options:
+      secret: your-secret-key-here
+      issuer: mqtt-server
+      usernameClaim: sub
+      verifyUsername: true
+      # audiences:
+      #   - mqtt-client
+      #   - mobile-app
+
+  # Redis认证器 - 适合分布式、高并发
+  - name: redis
+    type: redis
+    order: 40
+    passwordEncoder: sha256
+    options:
+      host: localhost
+      port: 6379
+      password: 
+      database: 0
+      keyPrefix: mqtt:auth:
+      connectionTimeout: 2000
+      maxTotal: 8
+
+  # HTTP认证器 - 适合集成现有认证服务
+  - name: http
+    type: http
+    order: 50
+    options:
+      url: http://localhost:8080/api/auth
+      method: POST
+      timeout: 5000
+      headers:
+        Content-Type: application/json
+        X-Auth-Source: mqtt
+      bodyTemplate: '{"username":"{{username}}","password":"{{password}}","clientId":"{{clientId}}"}'
+      successCondition: response.status == 200
+      usernameField: username
+      passwordField: password
