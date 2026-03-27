@@ -17,11 +17,14 @@ import tech.smartboot.mqtt.plugin.spec.MqttSession;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 /**
  * MySQL 认证器
@@ -31,42 +34,44 @@ import java.util.concurrent.ConcurrentHashMap;
  * - url: JDBC 连接 URL（必填，如 jdbc:mysql://localhost:3306/mqtt）
  * - username: 数据库用户名（必填）
  * - password: 数据库密码（必填）
- * - driverClass: JDBC 驱动类名（默认 com.mysql.cj.jdbc.Driver）
- * - tableName: 用户表名（默认 mqtt_users）
- * - usernameColumn: 用户名字段名（默认 username）
- * - passwordColumn: 密码字段名（默认 password）
- * - whereClause: 额外的 WHERE 条件（可选，如 " AND status=1"）
- * - connectionTimeout: 连接超时时间（默认 3000ms）
- * - maxConnections: 最大连接数（默认 5）
+ * <p>
+ * 其他参数使用默认值：
+ * - tableName: mqtt_users
+ * - usernameColumn: username
+ * - passwordColumn: password
+ * - maxConnections: 5
+ * - minIdle: 2
+ * - connectionTimeout: 3000ms
  * <p>
  * 数据表结构示例：
  * CREATE TABLE mqtt_users (
- * id INT PRIMARY KEY AUTO_INCREMENT,
- * username VARCHAR(64) NOT NULL UNIQUE,
- * password VARCHAR(256) NOT NULL,
- * created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+ *   id INT PRIMARY KEY AUTO_INCREMENT,
+ *   username VARCHAR(64) NOT NULL UNIQUE,
+ *   password VARCHAR(256) NOT NULL,
+ *   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
  * );
  *
  * @author 三刀
  * @version v1.0 2026/3/25
  */
 public class MysqlAuthenticator extends AbstractAuthenticator {
+    private static final Logger logger = Logger.getLogger(MysqlAuthenticator.class.getName());
 
-    private String url;
-    private String dbUsername;
-    private String dbPassword;
-    private String driverClass = "com.mysql.cj.jdbc.Driver";
-    private String tableName = "mqtt_users";
-    private String usernameColumn = "username";
-    private String passwordColumn = "password";
-    private String whereClause = "";
-    private int connectionTimeout = 3000;
-    private int maxConnections = 5;
-
-    // 简单的连接池
-    private final ConcurrentHashMap<String, Connection> connectionPool = new ConcurrentHashMap<>();
+    // HikariCP 数据源
+    private HikariDataSource dataSource;
     private volatile boolean initialized = false;
-    private MysqlConfig config;
+    private final MysqlConfig config;
+
+    // 默认配置常量
+    private static final String DEFAULT_DRIVER_CLASS = "com.mysql.cj.jdbc.Driver";
+    private static final String DEFAULT_TABLE_NAME = "mqtt_users";
+    private static final String DEFAULT_USERNAME_COLUMN = "username";
+    private static final String DEFAULT_PASSWORD_COLUMN = "password";
+    private static final int DEFAULT_MAX_CONNECTIONS = 5;
+    private static final int DEFAULT_MIN_IDLE = 2;
+    private static final int DEFAULT_CONNECTION_TIMEOUT = 3000;
+    private static final long DEFAULT_IDLE_TIMEOUT = 600000;
+    private static final long DEFAULT_VALIDATION_TIMEOUT = 1000;
 
     public MysqlAuthenticator(MysqlConfig mysql) {
         this.config = mysql;
@@ -74,83 +79,75 @@ public class MysqlAuthenticator extends AbstractAuthenticator {
 
     @Override
     public void initialize() {
-        // 加载 JDBC 驱动
-        loadDriver();
-
-        // 初始化连接池
-        initializeConnectionPool();
-    }
-
-
-    /**
-     * 加载 JDBC 驱动
-     */
-    private void loadDriver() {
-        try {
-            Class.forName(driverClass);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException("Failed to load JDBC driver: " + driverClass, e);
+        // 验证配置参数
+        if (config.getUrl() == null || config.getUrl().isEmpty()) {
+            throw new IllegalArgumentException("MySQL URL is required");
         }
-    }
-
-    /**
-     * 初始化连接池
-     */
-    private void initializeConnectionPool() {
-        // 预创建连接
-        for (int i = 0; i < Math.min(maxConnections, 3); i++) {
-            createConnection();
+        if (config.getUsername() == null || config.getUsername().isEmpty()) {
+            throw new IllegalArgumentException("MySQL username is required");
         }
+        if (config.getPassword() == null || config.getPassword().isEmpty()) {
+            throw new IllegalArgumentException("MySQL password is required");
+        }
+        
+        // 初始化并配置 HikariCP 连接池
+        initHikariDataSource();
+        
+        initialized = true;
     }
 
     /**
-     * 创建数据库连接
+     * 初始化 HikariCP 数据源
      */
-    private Connection createConnection() {
-        try {
-            Connection conn = DriverManager.getConnection(url, dbUsername, dbPassword);
-            conn.setNetworkTimeout(null, connectionTimeout);
-            connectionPool.put(conn.toString(), conn);
-            return conn;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create database connection", e);
-        }
-    }
-
-    /**
-     * 获取数据库连接
-     */
-    private synchronized Connection getConnection() {
-        // 尝试从池中获取连接
-        for (Connection conn : connectionPool.values()) {
-            try {
-                if (conn != null && !conn.isClosed()) {
-                    return conn;
-                }
-            } catch (Exception e) {
-                // 连接已失效，移除
-                connectionPool.remove(conn.toString());
-            }
-        }
-
-        // 创建新连接
-        return createConnection();
+    private void initHikariDataSource() {
+        HikariConfig config = new HikariConfig();
+        
+        // 基本配置
+        config.setJdbcUrl(this.config.getUrl());
+        config.setUsername(this.config.getUsername());
+        config.setPassword(this.config.getPassword());
+        
+        // 驱动配置
+        config.setDriverClassName(DEFAULT_DRIVER_CLASS);
+        
+        // 连接池配置
+        config.setMaximumPoolSize(DEFAULT_MAX_CONNECTIONS);
+        config.setMinimumIdle(DEFAULT_MIN_IDLE);
+        config.setIdleTimeout(DEFAULT_IDLE_TIMEOUT);
+        config.setConnectionTimeout(DEFAULT_CONNECTION_TIMEOUT);
+        config.setValidationTimeout(DEFAULT_VALIDATION_TIMEOUT);
+        
+        // 连接测试查询
+        config.setConnectionTestQuery("SELECT 1");
+        
+        // 添加 MySQL 特定优化配置
+        config.addDataSourceProperty("cachePrepStmts", "true");
+        config.addDataSourceProperty("prepStmtCacheSize", "250");
+        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+        config.addDataSourceProperty("useServerPrepStmts", "true");
+        
+        // 设置连接池名称
+        config.setPoolName("MysqlAuth-Pool");
+        
+        // 启用 JMX 监控（可选）
+        config.setRegisterMbeans(true);
+        
+        // 创建数据源
+        dataSource = new HikariDataSource(config);
+        
+        logger.info("HikariCP connection pool initialized with max " + DEFAULT_MAX_CONNECTIONS + 
+                   " connections, min idle " + DEFAULT_MIN_IDLE);
     }
 
     @Override
     public void destroy() {
         initialized = false;
-        // 关闭所有连接
-        for (Connection conn : connectionPool.values()) {
-            try {
-                if (conn != null && !conn.isClosed()) {
-                    conn.close();
-                }
-            } catch (Exception e) {
-                // 忽略
-            }
+        
+        // 关闭 HikariCP 数据源
+        if (dataSource != null && !dataSource.isClosed()) {
+            dataSource.close();
+            logger.info("HikariCP connection pool destroyed");
         }
-        connectionPool.clear();
     }
 
     @Override
@@ -162,54 +159,51 @@ public class MysqlAuthenticator extends AbstractAuthenticator {
             return CompletableFuture.completedFuture(AuthResult.CONTINUE);
         }
 
-        String password = new String(passwordBytes, StandardCharsets.UTF_8);
-
         if (!initialized) {
+            logger.log(Level.WARNING, "MySQL authenticator not initialized yet");
             return CompletableFuture.completedFuture(AuthResult.CONTINUE);
         }
 
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-
-        try {
-            conn = getConnection();
-
-            // 构建查询 SQL
-            String sql = "SELECT " + passwordColumn + " FROM " + tableName +
-                    " WHERE " + usernameColumn + " = ?" + whereClause;
-
-            pstmt = conn.prepareStatement(sql);
+        // 使用 try-with-resources 自动管理连接
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(buildSQL())) {
+            
             pstmt.setString(1, username);
 
-            rs = pstmt.executeQuery();
-
-            if (rs.next()) {
-                String expectedPassword = rs.getString(passwordColumn);
-
-                if (verifyPassword(username, passwordBytes, expectedPassword)) {
-                    return CompletableFuture.completedFuture(AuthResult.SUCCESS);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    String expectedPassword = rs.getString(1);
+                    
+                    // 使用父类的统一密码验证逻辑
+                    return doAuthenticate(session, message, expectedPassword);
                 } else {
-                    return CompletableFuture.completedFuture(AuthResult.FAILURE);
+                    // 用户不存在，让下一个认证器处理
+                    return CompletableFuture.completedFuture(AuthResult.CONTINUE);
                 }
-            } else {
-                // 用户不存在，让下一个认证器处理
-                return CompletableFuture.completedFuture(AuthResult.CONTINUE);
             }
 
         } catch (Exception e) {
+            logger.log(Level.SEVERE, "Database authentication failed", e);
             // 数据库异常，返回 CONTINUE 让下一个认证器处理
             return CompletableFuture.completedFuture(AuthResult.CONTINUE);
-        } finally {
-            // 关闭资源
-            try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
-                // 不关闭连接，回收到连接池
-            } catch (Exception e) {
-                // 忽略
-            }
         }
+    }
+
+    /**
+     * 构建 SQL 查询语句
+     */
+    private String buildSQL() {
+        return "SELECT " + quoteIdentifier(DEFAULT_PASSWORD_COLUMN) + " FROM " + 
+               quoteIdentifier(DEFAULT_TABLE_NAME) +
+               " WHERE " + quoteIdentifier(DEFAULT_USERNAME_COLUMN) + " = ?";
+    }
+
+    /**
+     * 引用标识符（防止 SQL 注入）
+     */
+    private String quoteIdentifier(String identifier) {
+        // MySQL 使用反引号引用标识符
+        return "`" + identifier.replace("`", "``") + "`";
     }
 
     @Override

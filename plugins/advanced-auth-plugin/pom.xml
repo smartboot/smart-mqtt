@@ -18,6 +18,12 @@
             <artifactId>mysql-connector-j</artifactId>
             <version>8.0.33</version>
         </dependency>
+        <!-- HikariCP 数据库连接池 -->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>5.0.1</version>
+        </dependency>
         <!-- Redis 支持 -->
         <dependency>
             <groupId>tech.smartboot</groupId>
