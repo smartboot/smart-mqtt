@@ -1,8 +1,7 @@
 /*
  * Copyright (C) [2022] smartboot [zhengjunweimail@163.com]
  *
- *  企业用户未经 smartboot 组织特别许可，需遵循 AGPL-3.0 开源协议合理合法使用本项目。
- *
+ *  企业用户未经 smartboot 组织特别许可，AGPL-3.0
  *  Enterprise users are required to use this project reasonably
  *  and legally in accordance with the AGPL-3.0 open source agreement
  *  without special permission from the smartboot organization.
@@ -10,9 +9,16 @@
 
 package tech.smartboot.mqtt.auth.advanced.provider;
 
+import com.alibaba.fastjson2.JSONObject;
 import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.HeaderValue;
+import tech.smartboot.feat.core.common.HttpStatus;
+import tech.smartboot.feat.core.common.logging.Logger;
+import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.auth.advanced.AuthResult;
 import tech.smartboot.mqtt.auth.advanced.config.HttpConfig;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
@@ -22,38 +28,13 @@ import java.io.IOException;
 import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ThreadFactory;
 
 /**
  * HTTP 认证器
  * 通过调用外部 HTTP 接口进行认证，适用于微服务架构和第三方认证系统集成
- * <p>
- * 配置选项：
- * - url: HTTP 认证接口地址（必填）
- * - method: HTTP 方法（默认 POST）
- * - contentType: 内容类型（默认 application/json）
- * - timeout: 连接超时时间（默认 3000ms）
- * - usernameField: 用户名字段名（默认 username）
- * - passwordField: 密码字段名（默认 password）
- * - tokenHeader: 自定义认证头名称
- * - successCode: 成功响应码（默认 200）
- * - bodyTemplate: 请求体模板（可选，支持{username}和{password}占位符）
- * <p>
- * HTTP 请求示例（POST JSON）：
- * {
- * "username": "test",
- * "password": "123456"
- * }
- * <p>
- * HTTP 响应示例：
- * 成功：返回 200 状态码
- * 失败：返回 401 或其他非 200 状态码
- *
- * @author 三刀
- * @version v1.0 2026/3/25
  */
 public class HttpAuthenticator extends AbstractAuthenticator {
-
+    private static final Logger log = LoggerFactory.getLogger(HttpAuthenticator.class.getName());
     private final HttpConfig config;
     private AsynchronousChannelGroup group;
     private HttpClient httpClient;
@@ -64,30 +45,38 @@ public class HttpAuthenticator extends AbstractAuthenticator {
 
     @Override
     public void initialize() throws IOException {
-        group = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().hashCode(), new ThreadFactory() {
-            @Override
-            public Thread newThread(Runnable r) {
-                return new Thread(r, "HttpAuthenticator-" + getName());
-            }
-        });
+        group = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().hashCode(), r -> new Thread(r, "HttpAuthenticator-" + getName()));
         httpClient = Feat.httpClient(config.getUrl(), options -> {
             options.group(group);
+            options.connectTimeout(config.getTimeout());
         });
     }
 
     @Override
     public CompletableFuture<AuthResult> authenticate(MqttSession session, MqttConnectMessage message) {
-        String username = getUsername(message);
-        byte[] passwordBytes = getPassword(message);
+        JSONObject body = new JSONObject();
+        body.put("username", message.getPayload().userName());
+        body.put("password", new String(getPassword(message), StandardCharsets.UTF_8));
+        body.put("clientId", session.getClientId());
 
-        // 如果没有用户名或密码，跳过此认证器
-        if (username == null || username.isEmpty() || passwordBytes == null || passwordBytes.length == 0) {
-            return configCompletableFuture.completedFuture(AuthResult.CONTINUE);
-        }
-
-        String password = new String(passwordBytes, StandardCharsets.UTF_8);
-        return httpClient.post().submit().thenApply(response -> {
-            return AuthResult.SUCCESS;
+        byte[] bytes = body.toJSONString().getBytes(StandardCharsets.UTF_8);
+        // POST 请求
+        return httpClient.post().header(header -> {
+            // 设置自定义请求头
+            if (FeatUtils.isNotEmpty(config.getHeaders())) {
+                config.getHeaders().forEach(header::add);
+            }
+            header.set(HeaderName.CONTENT_TYPE, HeaderValue.ContentType.APPLICATION_JSON);
+            header.set(HeaderName.CONTENT_LENGTH, bytes.length);
+        }).postBody(postBody -> postBody.write(bytes)).submit().thenApply(response -> {
+            if (response.statusCode() == HttpStatus.OK.value()) {
+                return AuthResult.SUCCESS;
+            } else {
+                return AuthResult.FAILURE;
+            }
+        }).exceptionally(throwable -> {
+            log.error("http request exception", throwable);
+            return AuthResult.CONTINUE;
         });
     }
 
@@ -96,11 +85,13 @@ public class HttpAuthenticator extends AbstractAuthenticator {
         return AUTH_TYPE_HTTP;
     }
 
-
     @Override
     public void destroy() {
-        // 无需特殊清理
-        httpClient.close();
-        group.shutdown();
+        if (httpClient != null) {
+            httpClient.close();
+        }
+        if (group != null) {
+            group.shutdown();
+        }
     }
 }

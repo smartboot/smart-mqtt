@@ -11,7 +11,6 @@
 package tech.smartboot.mqtt.auth.advanced.provider;
 
 import tech.smartboot.mqtt.auth.advanced.AuthResult;
-import tech.smartboot.mqtt.auth.advanced.config.PluginConfig;
 import tech.smartboot.mqtt.auth.advanced.config.RedisConfig;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
@@ -29,7 +28,7 @@ import java.util.concurrent.CompletableFuture;
  * - password: Redis密码
  * - database: 数据库索引（默认0）
  * - keyPrefix: 用户 key 前缀（默认 mqtt:auth:）
- * - connectionTimeout: 连接超时（默认 2000ms）
+ * - connectionTimeout: 连接超时（默认 20000ms）
  *
  * @author 三刀
  * @version v1.0 2026/3/25
@@ -48,9 +47,12 @@ public class RedisAuthenticator extends AbstractAuthenticator {
         // 创建 Redisun 实例
         redisun = Redisun.create(options -> {
             options.setAddress(config.getAddress())
-                    .setDatabase(config.getDatabase()).setPassword(config.getPassword());
-//            options.setConnectTimeout(connectionTimeout);
+                    .setDatabase(config.getDatabase())
+                    .setPassword(config.getPassword());
         });
+
+        // 初始化密码编码器
+        initPasswordEncoder(config.getPasswordEncoder());
     }
 
 
@@ -63,33 +65,28 @@ public class RedisAuthenticator extends AbstractAuthenticator {
 
     @Override
     public CompletableFuture<AuthResult> authenticate(MqttSession session, MqttConnectMessage message) {
+        // 匿名访问检查
+        if (isAnonymous(message)) {
+            return CompletableFuture.completedFuture(AuthResult.CONTINUE);
+        }
+
         String username = getUsername(message);
         byte[] password = getPassword(message);
+
 
         if (username == null || username.isEmpty() || password == null || password.length == 0) {
             return CompletableFuture.completedFuture(AuthResult.CONTINUE);
         }
 
-        String expectedPassword = null;
+        String key = config.getKeyPrefix() + username;
 
-        try {
-            // 从 Redis 获取密码
-            expectedPassword = redisun.get(config.getKeyPrefix() + username);
-        } catch (Exception e) {
+        // 异步从 Redis 获取密码
+        return redisun.asyncGet(key).thenApply(expectedPassword -> {
+            return doAuthenticate(session, message, expectedPassword).join();
+        }).exceptionally(throwable -> {
             // Redis 连接异常，返回 CONTINUE 让下一个认证器处理
-            return CompletableFuture.completedFuture(AuthResult.CONTINUE);
-        }
-
-        if (expectedPassword == null) {
-            // 用户不存在
-            return CompletableFuture.completedFuture(AuthResult.CONTINUE);
-        }
-
-        if (verifyPassword(username, password, expectedPassword)) {
-            return CompletableFuture.completedFuture(AuthResult.SUCCESS);
-        }
-
-        return CompletableFuture.completedFuture(AuthResult.FAILURE);
+            return AuthResult.CONTINUE;
+        });
     }
 
     @Override

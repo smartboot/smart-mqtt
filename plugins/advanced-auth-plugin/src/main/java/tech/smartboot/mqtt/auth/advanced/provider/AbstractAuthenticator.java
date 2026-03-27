@@ -10,14 +10,19 @@
 
 package tech.smartboot.mqtt.auth.advanced.provider;
 
+import tech.smartboot.mqtt.auth.advanced.AuthResult;
 import tech.smartboot.mqtt.auth.advanced.Authenticator;
 import tech.smartboot.mqtt.auth.advanced.PasswordEncoder;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
+import tech.smartboot.mqtt.plugin.spec.MqttSession;
 
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * 认证器抽象基类
+ * <p>
+ * 提供统一的密码认证逻辑，子类只需实现数据获取方法
  *
  * @author 三刀
  * @version v1.0 2026/3/25
@@ -25,16 +30,16 @@ import java.nio.charset.StandardCharsets;
 public abstract class AbstractAuthenticator implements Authenticator {
 
     protected PasswordEncoder passwordEncoder;
+    protected String passwordEncoderName = "plain";
 
     /**
-     * 验证用户名密码
+     * 验证密码
      *
-     * @param username         用户名
-     * @param password         密码（字节数组）
+     * @param password         客户端提交的密码（字节数组）
      * @param expectedPassword 期望的编码密码
      * @return 是否匹配
      */
-    protected boolean verifyPassword(String username, byte[] password, String expectedPassword) {
+    protected boolean verifyPassword(byte[] password, String expectedPassword) {
         if (password == null || expectedPassword == null) {
             return false;
         }
@@ -63,5 +68,45 @@ public abstract class AbstractAuthenticator implements Authenticator {
         String username = getUsername(message);
         byte[] password = getPassword(message);
         return username == null || username.isEmpty() || password == null || password.length == 0;
+    }
+
+    /**
+     * 执行统一密码认证逻辑
+     * <p>
+     * 子类实现此方法获取期望密码，然后调用 doAuthenticate 完成认证
+     *
+     * @param session           会话对象
+     * @param message           连接消息
+     * @param expectedPassword  从存储（Redis/MySQL/HTTP响应）获取的期望密码
+     * @return 认证结果
+     */
+    protected CompletableFuture<AuthResult> doAuthenticate(MqttSession session, MqttConnectMessage message, String expectedPassword) {
+        // 匿名访问检查
+        if (isAnonymous(message)) {
+            return CompletableFuture.completedFuture(AuthResult.CONTINUE);
+        }
+
+        // 用户不存在
+        if (expectedPassword == null) {
+            return CompletableFuture.completedFuture(AuthResult.CONTINUE);
+        }
+
+        // 密码验证
+        byte[] password = getPassword(message);
+        if (verifyPassword(password, expectedPassword)) {
+            return CompletableFuture.completedFuture(AuthResult.SUCCESS);
+        }
+
+        return CompletableFuture.completedFuture(AuthResult.FAILURE);
+    }
+
+    /**
+     * 初始化密码编码器
+     *
+     * @param encoderName 编码器名称
+     */
+    protected void initPasswordEncoder(String encoderName) {
+        this.passwordEncoderName = encoderName != null ? encoderName : "plain";
+        this.passwordEncoder = PasswordEncoder.getEncoder(this.passwordEncoderName);
     }
 }

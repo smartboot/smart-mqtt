@@ -1,5 +1,7 @@
 package tech.smartboot.mqtt.auth.advanced.config;
 
+import java.util.Map;
+
 /**
  * HTTP 认证器配置
  */
@@ -10,34 +12,13 @@ public class HttpConfig extends AuthenticatorConfig {
     private String url;
 
     /**
-     * HTTP 方法：GET, POST
-     */
-    private String method = "POST";
-
-    /**
-     * Content-Type
-     */
-    private String contentType = "application/json";
-
-    /**
      * 请求超时时间（毫秒）
      */
     private int timeout = 5000;
 
-    /**
-     * 用户名字段名
-     */
-    private String usernameField = "username";
 
-    /**
-     * 密码字段名
-     */
-    private String passwordField = "password";
+    private Map<String, String> headers;
 
-    /**
-     * 成功响应码
-     */
-    private int successCode = 200;
 
     public String getUrl() {
         return url;
@@ -47,21 +28,6 @@ public class HttpConfig extends AuthenticatorConfig {
         this.url = url;
     }
 
-    public String getMethod() {
-        return method;
-    }
-
-    public void setMethod(String method) {
-        this.method = method;
-    }
-
-    public String getContentType() {
-        return contentType;
-    }
-
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
-    }
 
     public int getTimeout() {
         return timeout;
@@ -71,27 +37,13 @@ public class HttpConfig extends AuthenticatorConfig {
         this.timeout = timeout;
     }
 
-    public String getUsernameField() {
-        return usernameField;
+
+    public Map<String, String> getHeaders() {
+        return headers;
     }
 
-    public void setUsernameField(String usernameField) {
-        this.usernameField = usernameField;
+    public void setHeaders(Map<String, String> headers) {
+        this.headers = headers;
     }
 
-    public String getPasswordField() {
-        return passwordField;
-    }
-
-    public void setPasswordField(String passwordField) {
-        this.passwordField = passwordField;
-    }
-
-    public int getSuccessCode() {
-        return successCode;
-    }
-
-    public void setSuccessCode(int successCode) {
-        this.successCode = successCode;
-    }
 }

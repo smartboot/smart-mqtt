@@ -1,11 +1,12 @@
 stopOnError: true
 allowAnonymous: false
 
-# 认证链顺序（按此顺序执行认证器，默认按 redis -> mysql -> http）
+# 认证链顺序（按此顺序执行认证器，默认按 redis -> http -> mysql）
 chain:
  - redis
- - mysql
  - http
+ - mysql
+
 
 # Redis 认证器配置 - 适合分布式、高并发场景
 redis:
