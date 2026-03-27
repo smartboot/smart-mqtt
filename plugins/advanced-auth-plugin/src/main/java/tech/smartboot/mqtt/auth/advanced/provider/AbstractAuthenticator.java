@@ -12,7 +12,6 @@ package tech.smartboot.mqtt.auth.advanced.provider;
 
 import tech.smartboot.mqtt.auth.advanced.Authenticator;
 import tech.smartboot.mqtt.auth.advanced.PasswordEncoder;
-import tech.smartboot.mqtt.auth.advanced.PluginConfig;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
 
 import java.nio.charset.StandardCharsets;

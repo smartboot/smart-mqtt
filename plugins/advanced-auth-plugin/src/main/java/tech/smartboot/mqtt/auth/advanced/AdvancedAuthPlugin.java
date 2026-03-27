@@ -10,6 +10,8 @@
 
 package tech.smartboot.mqtt.auth.advanced;
 
+import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.mqtt.auth.advanced.config.PluginConfig;
 import tech.smartboot.mqtt.auth.advanced.provider.HttpAuthenticator;
 import tech.smartboot.mqtt.auth.advanced.provider.MysqlAuthenticator;
 import tech.smartboot.mqtt.auth.advanced.provider.RedisAuthenticator;
@@ -19,13 +21,13 @@ import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
-import tech.smartboot.mqtt.plugin.spec.bus.AsyncEventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 import tech.smartboot.mqtt.plugin.spec.schema.Item;
 import tech.smartboot.mqtt.plugin.spec.schema.Schema;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * 高级认证插件
@@ -69,14 +71,22 @@ public class AdvancedAuthPlugin extends Plugin {
             }
         }
 
-        chains.forEach(Authenticator::initialize);
+        if (FeatUtils.isEmpty(chains)) {
+            log("没有启用的认证器，请检查配置");
+            throw new IllegalStateException("没有启用的认证器");
+        }
+
+        for (Authenticator chain : chains) {
+            chain.initialize();
+        }
 
         // 订阅CONNECT事件
-        subscribe(EventType.CONNECT, AsyncEventObject.syncSubscriber((eventType, object) -> {
+        subscribe(EventType.CONNECT, (eventType, object) -> {
             MqttSession session = object.getSession();
 
             // 如果已经认证失败或断开，直接返回
             if (session.isDisconnect()) {
+                object.getFuture().complete(null);
                 return;
             }
 
@@ -87,79 +97,53 @@ public class AdvancedAuthPlugin extends Plugin {
                 if (config.isAllowAnonymous()) {
                     session.setAuthorized(true);
                     log("匿名访问已授权: " + session.getClientId());
-                    return;
                 } else {
                     log("匿名访问被拒绝: " + session.getClientId());
                     MqttSession.connFailAck(MqttConnectReturnCode.CONNECTION_REFUSED_NOT_AUTHORIZED, session);
-                    return;
                 }
+                object.getFuture().complete(null);
+                return;
             }
 
-            // 执行认证链
-            boolean success = doAuthenticate(session, message);
 
-            if (success) {
-                session.setAuthorized(true);
-            } else {
-                // 认证失败
-                MqttSession.connFailAck(MqttConnectReturnCode.CONNECTION_REFUSED_NOT_AUTHORIZED, session);
+            // 使用 thenCompose 实现异步链式认证
+            CompletableFuture<AuthResult> chainFuture = CompletableFuture.completedFuture(AuthResult.CONTINUE);
+            for (Authenticator auth : chains) {
+                chainFuture = chainFuture.thenCompose(result -> {
+                    if (result != AuthResult.CONTINUE) {
+                        return CompletableFuture.completedFuture(result);
+                    }
+                    try {
+                        return auth.authenticate(session, message)
+                                .exceptionally(e -> {
+                                    log("认证器异常: " + auth.getName() + ", error=" + e.getMessage());
+                                    return config.isStopOnError() ? AuthResult.FAILURE : AuthResult.CONTINUE;
+                                });
+                    } catch (Exception e) {
+                        log("认证器异常: " + auth.getName() + ", error=" + e.getMessage());
+                        return CompletableFuture.completedFuture(
+                                config.isStopOnError() ? AuthResult.FAILURE : AuthResult.CONTINUE);
+                    }
+                });
             }
-        }));
+
+            // 处理最终结果（CONTINUE 视为失败）
+            chainFuture.thenAccept(result -> {
+                if (result == AuthResult.SUCCESS) {
+                    session.setAuthorized(true);
+                    log("认证成功: clientId=" + session.getClientId());
+                } else {
+                    log("认证失败: clientId=" + session.getClientId());
+                    MqttSession.connFailAck(MqttConnectReturnCode.CONNECTION_REFUSED_NOT_AUTHORIZED, session);
+                }
+                object.getFuture().complete(null);
+            });
+        });
 
         log("==============================================");
         log("高级认证插件初始化完成");
         log("认证器数量: " + chains.size());
-        log("允许匿名访问: " + config.isAllowAnonymous());
         log("==============================================");
-    }
-
-    /**
-     * 执行认证链
-     *
-     * @param session 会话对象
-     * @param message 连接消息
-     * @return true 表示认证成功
-     */
-    public boolean doAuthenticate(MqttSession session, MqttConnectMessage message) {
-        String clientId = session.getClientId();
-        String username = message.getPayload().userName();
-
-        if (chains.isEmpty()) {
-            log("警告：没有启用的认证器，默认拒绝连接");
-            return false;
-        }
-
-        for (Authenticator authenticator : chains) {
-            try {
-                log("尝试认证: " + authenticator.getName() + " - clientId=" + clientId + ", username=" + username);
-                AuthResult result = authenticator.authenticate(session, message);
-
-                switch (result) {
-                    case SUCCESS:
-                        log("认证成功: " + authenticator.getName() + " - clientId=" + clientId);
-                        return true;
-                    case FAILURE:
-                        log("认证失败: " + authenticator.getName() + " - clientId=" + clientId);
-                        return false;
-                    case CONTINUE:
-                        // 继续下一个认证器
-                        continue;
-                    case CONTINUE_AUTH:
-                        // MQTT 5.0 增强认证 - 暂不支持
-                        log("增强认证暂未支持: " + authenticator.getName());
-                        continue;
-                }
-            } catch (Exception e) {
-                log("认证器异常: " + authenticator.getName() + ", error=" + e.getMessage());
-                if (config.isStopOnError()) {
-                    return false;
-                }
-            }
-        }
-
-        // 所有认证器都返回CONTINUE，默认拒绝
-        log("认证失败: 没有认证器能处理该请求 - clientId=" + clientId);
-        return false;
     }
 
     @Override

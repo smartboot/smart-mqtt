@@ -11,7 +11,7 @@
 package tech.smartboot.mqtt.auth.advanced.provider;
 
 import tech.smartboot.mqtt.auth.advanced.AuthResult;
-import tech.smartboot.mqtt.auth.advanced.PluginConfig;
+import tech.smartboot.mqtt.auth.advanced.config.MysqlConfig;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 
@@ -20,6 +20,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -65,9 +66,9 @@ public class MysqlAuthenticator extends AbstractAuthenticator {
     // 简单的连接池
     private final ConcurrentHashMap<String, Connection> connectionPool = new ConcurrentHashMap<>();
     private volatile boolean initialized = false;
-    private PluginConfig.MysqlConfig config;
+    private MysqlConfig config;
 
-    public MysqlAuthenticator(PluginConfig.MysqlConfig mysql) {
+    public MysqlAuthenticator(MysqlConfig mysql) {
         this.config = mysql;
     }
 
@@ -153,18 +154,18 @@ public class MysqlAuthenticator extends AbstractAuthenticator {
     }
 
     @Override
-    public AuthResult authenticate(MqttSession session, MqttConnectMessage message) {
+    public CompletableFuture<AuthResult> authenticate(MqttSession session, MqttConnectMessage message) {
         String username = getUsername(message);
         byte[] passwordBytes = getPassword(message);
 
         if (username == null || username.isEmpty() || passwordBytes == null || passwordBytes.length == 0) {
-            return AuthResult.CONTINUE;
+            return CompletableFuture.completedFuture(AuthResult.CONTINUE);
         }
 
         String password = new String(passwordBytes, StandardCharsets.UTF_8);
 
         if (!initialized) {
-            return AuthResult.CONTINUE;
+            return CompletableFuture.completedFuture(AuthResult.CONTINUE);
         }
 
         Connection conn = null;
@@ -187,18 +188,18 @@ public class MysqlAuthenticator extends AbstractAuthenticator {
                 String expectedPassword = rs.getString(passwordColumn);
 
                 if (verifyPassword(username, passwordBytes, expectedPassword)) {
-                    return AuthResult.SUCCESS;
+                    return CompletableFuture.completedFuture(AuthResult.SUCCESS);
                 } else {
-                    return AuthResult.FAILURE;
+                    return CompletableFuture.completedFuture(AuthResult.FAILURE);
                 }
             } else {
                 // 用户不存在，让下一个认证器处理
-                return AuthResult.CONTINUE;
+                return CompletableFuture.completedFuture(AuthResult.CONTINUE);
             }
 
         } catch (Exception e) {
             // 数据库异常，返回 CONTINUE 让下一个认证器处理
-            return AuthResult.CONTINUE;
+            return CompletableFuture.completedFuture(AuthResult.CONTINUE);
         } finally {
             // 关闭资源
             try {

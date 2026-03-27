@@ -20,13 +20,6 @@
         <dependency>
             <groupId>tech.smartboot</groupId>
             <artifactId>redisun</artifactId>
-            <version>1.1.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>io.github.smartboot.socket</groupId>
-                    <artifactId>aio-pro</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
     </dependencies>
 </project>

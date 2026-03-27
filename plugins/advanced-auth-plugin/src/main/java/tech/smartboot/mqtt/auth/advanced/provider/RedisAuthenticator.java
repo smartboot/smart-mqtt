@@ -11,10 +11,13 @@
 package tech.smartboot.mqtt.auth.advanced.provider;
 
 import tech.smartboot.mqtt.auth.advanced.AuthResult;
-import tech.smartboot.mqtt.auth.advanced.PluginConfig;
+import tech.smartboot.mqtt.auth.advanced.config.PluginConfig;
+import tech.smartboot.mqtt.auth.advanced.config.RedisConfig;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.redisun.Redisun;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Redis认证器
@@ -34,9 +37,9 @@ import tech.smartboot.redisun.Redisun;
 public class RedisAuthenticator extends AbstractAuthenticator {
 
     private Redisun redisun;
-    private final PluginConfig.RedisConfig config;
+    private final RedisConfig config;
 
-    public RedisAuthenticator(PluginConfig.RedisConfig config) {
+    public RedisAuthenticator(RedisConfig config) {
         this.config = config;
     }
 
@@ -59,12 +62,12 @@ public class RedisAuthenticator extends AbstractAuthenticator {
     }
 
     @Override
-    public AuthResult authenticate(MqttSession session, MqttConnectMessage message) {
+    public CompletableFuture<AuthResult> authenticate(MqttSession session, MqttConnectMessage message) {
         String username = getUsername(message);
         byte[] password = getPassword(message);
 
         if (username == null || username.isEmpty() || password == null || password.length == 0) {
-            return AuthResult.CONTINUE;
+            return CompletableFuture.completedFuture(AuthResult.CONTINUE);
         }
 
         String expectedPassword = null;
@@ -74,19 +77,19 @@ public class RedisAuthenticator extends AbstractAuthenticator {
             expectedPassword = redisun.get(config.getKeyPrefix() + username);
         } catch (Exception e) {
             // Redis 连接异常，返回 CONTINUE 让下一个认证器处理
-            return AuthResult.CONTINUE;
+            return CompletableFuture.completedFuture(AuthResult.CONTINUE);
         }
 
         if (expectedPassword == null) {
             // 用户不存在
-            return AuthResult.CONTINUE;
+            return CompletableFuture.completedFuture(AuthResult.CONTINUE);
         }
 
         if (verifyPassword(username, password, expectedPassword)) {
-            return AuthResult.SUCCESS;
+            return CompletableFuture.completedFuture(AuthResult.SUCCESS);
         }
 
-        return AuthResult.FAILURE;
+        return CompletableFuture.completedFuture(AuthResult.FAILURE);
     }
 
     @Override

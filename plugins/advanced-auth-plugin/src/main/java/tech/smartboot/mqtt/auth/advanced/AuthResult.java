@@ -32,8 +32,8 @@ public enum AuthResult {
      */
     FAILURE,
     
-    /**
-     * 需要更多认证数据（MQTT 5.0 增强认证）
-     */
-    CONTINUE_AUTH
+//    /**
+//     * 需要更多认证数据（MQTT 5.0 增强认证）
+//     */
+//    CONTINUE_AUTH
 }

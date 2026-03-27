@@ -30,14 +30,3 @@ mysql:
   whereClause: " AND status=1"
   connectionTimeout: 3000
   maxConnections: 5
-
-# HTTP 认证器配置 - 适合集成现有认证服务、微服务架构
-http:
-  passwordEncoder: plain
-  url: http://localhost:8080/api/auth
-  method: POST
-  contentType: application/json
-  timeout: 5000
-  usernameField: username
-  passwordField: password
-  successCode: 200

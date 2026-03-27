@@ -10,15 +10,19 @@
 
 package tech.smartboot.mqtt.auth.advanced.provider;
 
+import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
+import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.mqtt.auth.advanced.AuthResult;
-import tech.smartboot.mqtt.auth.advanced.PluginConfig;
+import tech.smartboot.mqtt.auth.advanced.config.HttpConfig;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.io.IOException;
+import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadFactory;
 
 /**
  * HTTP 认证器
@@ -50,47 +54,41 @@ import java.nio.charset.StandardCharsets;
  */
 public class HttpAuthenticator extends AbstractAuthenticator {
 
-    private String url;
-    private String method = "POST";
-    private String contentType = "application/json";
-    private int timeout = 3000;
-    private String usernameField = "username";
-    private String passwordField = "password";
-    private String tokenHeader;
-    private int successCode = 200;
-    private String bodyTemplate;
-    private PluginConfig.HttpConfig config;
+    private final HttpConfig config;
+    private AsynchronousChannelGroup group;
+    private HttpClient httpClient;
 
-    public HttpAuthenticator(PluginConfig.HttpConfig http) {
+    public HttpAuthenticator(HttpConfig http) {
         this.config = http;
     }
 
+    @Override
+    public void initialize() throws IOException {
+        group = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().hashCode(), new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "HttpAuthenticator-" + getName());
+            }
+        });
+        httpClient = Feat.httpClient(config.getUrl(), options -> {
+            options.group(group);
+        });
+    }
 
     @Override
-    public AuthResult authenticate(MqttSession session, MqttConnectMessage message) {
+    public CompletableFuture<AuthResult> authenticate(MqttSession session, MqttConnectMessage message) {
         String username = getUsername(message);
         byte[] passwordBytes = getPassword(message);
 
         // 如果没有用户名或密码，跳过此认证器
         if (username == null || username.isEmpty() || passwordBytes == null || passwordBytes.length == 0) {
-            return AuthResult.CONTINUE;
+            return configCompletableFuture.completedFuture(AuthResult.CONTINUE);
         }
 
         String password = new String(passwordBytes, StandardCharsets.UTF_8);
-
-        try {
-            boolean authenticated = callHttpApi(username, password);
-
-            if (authenticated) {
-                return AuthResult.SUCCESS;
-            } else {
-                return AuthResult.FAILURE;
-            }
-
-        } catch (Exception e) {
-            // HTTP 调用异常，返回 CONTINUE 让下一个认证器处理
-            return AuthResult.CONTINUE;
-        }
+        return httpClient.post().submit().thenApply(response -> {
+            return AuthResult.SUCCESS;
+        });
     }
 
     @Override
@@ -98,94 +96,11 @@ public class HttpAuthenticator extends AbstractAuthenticator {
         return AUTH_TYPE_HTTP;
     }
 
-    /**
-     * 调用 HTTP 认证接口
-     */
-    private boolean callHttpApi(String username, String password) throws Exception {
-        URL urlObj = new URL(url);
-        HttpURLConnection conn = (HttpURLConnection) urlObj.openConnection();
-
-        try {
-            // 设置基本连接参数
-            conn.setRequestMethod(method);
-            conn.setConnectTimeout(timeout);
-            conn.setReadTimeout(timeout);
-            conn.setUseCaches(false);
-            conn.setInstanceFollowRedirects(true);
-
-            // 设置请求头
-            if (contentType != null && !contentType.isEmpty()) {
-                conn.setRequestProperty("Content-Type", contentType);
-            }
-            conn.setRequestProperty("Accept", "application/json");
-            conn.setRequestProperty("Connection", "close");
-
-            // 添加自定义认证头（如果有）
-            if (tokenHeader != null && !tokenHeader.isEmpty()) {
-                conn.setRequestProperty("Authorization", tokenHeader);
-            }
-
-            // 准备请求体
-            byte[] body = prepareBody(username, password);
-            if (body != null && body.length > 0) {
-                conn.setDoOutput(true);
-                conn.setRequestProperty("Content-Length", String.valueOf(body.length));
-
-                try (OutputStream os = conn.getOutputStream()) {
-                    os.write(body);
-                    os.flush();
-                }
-            }
-
-            // 获取响应码
-            int responseCode = conn.getResponseCode();
-
-            return responseCode == successCode;
-
-        } finally {
-            conn.disconnect();
-        }
-    }
-
-    /**
-     * 准备请求体
-     */
-    private byte[] prepareBody(String username, String password) {
-        if (bodyTemplate != null && !bodyTemplate.isEmpty()) {
-            // 使用自定义模板
-            String body = bodyTemplate
-                    .replace("{username}", escapeJson(username))
-                    .replace("{password}", escapeJson(password));
-            return body.getBytes(StandardCharsets.UTF_8);
-        } else {
-            // 默认 JSON 格式
-            String json = String.format(
-                    "{\"%s\":\"%s\",\"%s\":\"%s\"}",
-                    escapeJson(usernameField),
-                    escapeJson(username),
-                    escapeJson(passwordField),
-                    escapeJson(password)
-            );
-            return json.getBytes(StandardCharsets.UTF_8);
-        }
-    }
-
-    /**
-     * 转义 JSON 字符串中的特殊字符
-     */
-    private String escapeJson(String str) {
-        if (str == null) {
-            return "";
-        }
-        return str.replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
-    }
 
     @Override
     public void destroy() {
         // 无需特殊清理
+        httpClient.close();
+        group.shutdown();
     }
 }

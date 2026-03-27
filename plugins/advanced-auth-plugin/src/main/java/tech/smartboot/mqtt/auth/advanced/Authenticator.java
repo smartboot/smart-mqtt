@@ -13,6 +13,9 @@ package tech.smartboot.mqtt.auth.advanced;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 
+import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
+
 /**
  * 认证器接口
  *
@@ -31,7 +34,7 @@ public interface Authenticator {
      * @param message 连接消息
      * @return 认证结果
      */
-    AuthResult authenticate(MqttSession session, MqttConnectMessage message);
+    CompletableFuture<AuthResult> authenticate(MqttSession session, MqttConnectMessage message);
 
     /**
      * 获取认证器名称
@@ -44,7 +47,7 @@ public interface Authenticator {
      * 初始化认证器
      *
      */
-    default void initialize() {
+    default void initialize() throws IOException {
     }
 
     /**
