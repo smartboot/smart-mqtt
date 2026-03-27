@@ -26,6 +26,17 @@ public class RedisConfig extends AuthenticatorConfig {
     private String keyPrefix = "mqtt:auth:";
 
     /**
+     * 加盐方式：用于指定盐和密码的组合方式，
+     * 可选值：suffix（在密码尾部加盐）、prefix（在密码头部加盐）、disable（不启用）。
+     */
+    private String saltPosition;
+
+    /**
+     * 加密算法：plain、md5、sha256
+     */
+    private String algorithm;
+
+    /**
      * 连接超时时间（毫秒）
      */
     private int connectionTimeout = 2000;
@@ -68,5 +79,21 @@ public class RedisConfig extends AuthenticatorConfig {
 
     public void setConnectionTimeout(int connectionTimeout) {
         this.connectionTimeout = connectionTimeout;
+    }
+
+    public String getSaltPosition() {
+        return saltPosition;
+    }
+
+    public void setSaltPosition(String saltPosition) {
+        this.saltPosition = saltPosition;
+    }
+
+    public String getAlgorithm() {
+        return algorithm;
+    }
+
+    public void setAlgorithm(String algorithm) {
+        this.algorithm = algorithm;
     }
 }

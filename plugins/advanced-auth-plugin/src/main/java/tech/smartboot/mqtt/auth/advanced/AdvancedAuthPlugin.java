@@ -13,7 +13,6 @@ package tech.smartboot.mqtt.auth.advanced;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.mqtt.auth.advanced.config.PluginConfig;
 import tech.smartboot.mqtt.auth.advanced.provider.HttpAuthenticator;
-import tech.smartboot.mqtt.auth.advanced.provider.MysqlAuthenticator;
 import tech.smartboot.mqtt.auth.advanced.provider.RedisAuthenticator;
 import tech.smartboot.mqtt.common.enums.MqttConnectReturnCode;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
@@ -62,8 +61,6 @@ public class AdvancedAuthPlugin extends Plugin {
         for (String authName : config.getChain()) {
             if (Authenticator.AUTH_TYPE_HTTP.equals(authName)) {
                 chains.add(new HttpAuthenticator(config.getHttp()));
-            } else if (Authenticator.AUTH_TYPE_MYSQL.equals(authName)) {
-                chains.add(new MysqlAuthenticator(config.getMysql()));
             } else if (Authenticator.AUTH_TYPE_REDIS.equals(authName)) {
                 chains.add(new RedisAuthenticator(config.getRedis()));
             } else {

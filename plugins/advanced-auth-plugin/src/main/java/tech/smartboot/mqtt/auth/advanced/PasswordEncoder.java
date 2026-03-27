@@ -1,7 +1,7 @@
 /*
  * Copyright (C) [2022] smartboot [zhengjunweimail@163.com]
  *
- *  企业用户未经smartboot组织特别许可，需遵循AGPL-3.0开源协议合理合法使用本项目。
+ *  企业用户未经 smartboot 组织特别许可，需遵循 AGPL-3.0 开源协议合理合法使用本项目。
  *
  *  Enterprise users are required to use this project reasonably
  *  and legally in accordance with the AGPL-3.0 open source agreement
@@ -24,21 +24,23 @@ import java.util.Base64;
 public interface PasswordEncoder {
     
     /**
-     * 编码明文密码
-     * 
-     * @param rawPassword 明文密码
-     * @return 编码后的密码
-     */
-    String encode(String rawPassword);
-    
-    /**
      * 验证密码是否匹配
      * 
      * @param rawPassword 明文密码
      * @param encodedPassword 编码后的密码
-     * @return true表示匹配
+     * @return true 表示匹配
      */
     boolean matches(String rawPassword, String encodedPassword);
+    
+    /**
+     * 对密码进行加密编码
+     * 
+     * @param rawPassword 明文密码
+     * @return 编码后的密码
+     */
+    default String encode(String rawPassword) {
+        return rawPassword;
+    }
     
     /**
      * 获取编码器名称
@@ -67,17 +69,18 @@ public interface PasswordEncoder {
      * 明文密码编码器
      */
     class PlainPasswordEncoder implements PasswordEncoder {
-        @Override
-        public String encode(String rawPassword) {
-            return rawPassword;
-        }
-        
+
         @Override
         public boolean matches(String rawPassword, String encodedPassword) {
             if (rawPassword == null || encodedPassword == null) {
                 return false;
             }
             return rawPassword.equals(encodedPassword);
+        }
+        
+        @Override
+        public String encode(String rawPassword) {
+            return rawPassword;
         }
         
         @Override
@@ -90,7 +93,6 @@ public interface PasswordEncoder {
      * SHA-256 密码编码器
      */
     class Sha256PasswordEncoder implements PasswordEncoder {
-        @Override
         public String encode(String rawPassword) {
             if (rawPassword == null) {
                 return null;
@@ -103,7 +105,7 @@ public interface PasswordEncoder {
                 throw new RuntimeException("SHA-256 algorithm not available", e);
             }
         }
-        
+
         @Override
         public boolean matches(String rawPassword, String encodedPassword) {
             if (rawPassword == null || encodedPassword == null) {
@@ -130,14 +132,13 @@ public interface PasswordEncoder {
      * Base64 密码编码器
      */
     class Base64PasswordEncoder implements PasswordEncoder {
-        @Override
         public String encode(String rawPassword) {
             if (rawPassword == null) {
                 return null;
             }
             return Base64.getEncoder().encodeToString(rawPassword.getBytes(StandardCharsets.UTF_8));
         }
-        
+
         @Override
         public boolean matches(String rawPassword, String encodedPassword) {
             if (rawPassword == null || encodedPassword == null) {

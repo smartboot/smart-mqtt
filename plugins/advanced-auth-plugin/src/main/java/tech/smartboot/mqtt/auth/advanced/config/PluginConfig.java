@@ -35,10 +35,6 @@ public class PluginConfig {
      */
     private RedisConfig redis;
 
-    /**
-     * MySQL 认证器配置
-     */
-    private MysqlConfig mysql;
 
     /**
      * HTTP 认证器配置
@@ -74,13 +70,6 @@ public class PluginConfig {
         this.redis = redis;
     }
 
-    public MysqlConfig getMysql() {
-        return mysql;
-    }
-
-    public void setMysql(MysqlConfig mysql) {
-        this.mysql = mysql;
-    }
 
     public HttpConfig getHttp() {
         return http;
