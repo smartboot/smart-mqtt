@@ -10,6 +10,7 @@
 
 package tech.smartboot.mqtt.auth.advanced.provider;
 
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.mqtt.auth.advanced.AuthResult;
 import tech.smartboot.mqtt.auth.advanced.PasswordEncoder;
 import tech.smartboot.mqtt.auth.advanced.config.RedisConfig;
@@ -17,6 +18,7 @@ import tech.smartboot.mqtt.common.message.MqttConnectMessage;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.redisun.Redisun;
 
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -39,6 +41,7 @@ public class RedisAuthenticator extends AbstractAuthenticator {
     private Redisun redisun;
     private final RedisConfig config;
     private PasswordEncoder passwordEncoder;
+    private static final String KEY_PREFIX = "smart-mqtt:auth:";
 
     public RedisAuthenticator(RedisConfig config) {
         this.config = config;
@@ -68,11 +71,6 @@ public class RedisAuthenticator extends AbstractAuthenticator {
 
     @Override
     public CompletableFuture<AuthResult> authenticate(MqttSession session, MqttConnectMessage message) {
-        // 匿名访问检查
-        if (isAnonymous(message)) {
-            return CompletableFuture.completedFuture(AuthResult.CONTINUE);
-        }
-
         String username = getUsername(message);
         byte[] passwordBytes = getPassword(message);
 
@@ -80,28 +78,24 @@ public class RedisAuthenticator extends AbstractAuthenticator {
             return CompletableFuture.completedFuture(AuthResult.CONTINUE);
         }
 
-        String key = config.getKeyPrefix() + username;
-        String rawPassword = new String(passwordBytes, java.nio.charset.StandardCharsets.UTF_8);
+        // Redis key
+        String key = KEY_PREFIX + username;
+        String rawPassword = new String(passwordBytes, StandardCharsets.UTF_8);
 
         // 异步从 Redis 获取密码哈希和盐值
         return redisun.asyncHmget(key, "password_hash", "salt").thenApply(values -> {
             String passwordHash = values.get(0);
-            String salt = values.get(1);
-            
             // 如果 Redis 中没有存储密码哈希，返回 CONTINUE 让下一个认证器处理
             if (passwordHash == null || passwordHash.isEmpty()) {
                 return AuthResult.CONTINUE;
             }
-            
+
             // 如果有盐值，将盐值作为密码前缀进行加密
-            String passwordToHash = rawPassword;
-            if (salt != null && !salt.isEmpty()) {
-                passwordToHash = salt + rawPassword;
-            }
-            
+            String salt = values.get(1);
+            String saltPassword = FeatUtils.isBlank(salt) ? rawPassword : salt + rawPassword;
             // 使用配置的加密算法计算密码哈希
-            String computedHash = passwordEncoder.encode(passwordToHash);
-            
+            String computedHash = passwordEncoder.encode(saltPassword);
+
             // 比较计算出的哈希值与 Redis 中存储的哈希值
             if (computedHash != null && computedHash.equalsIgnoreCase(passwordHash)) {
                 return AuthResult.SUCCESS;

@@ -20,10 +20,6 @@ public class RedisConfig extends AuthenticatorConfig {
      */
     private int database = 0;
 
-    /**
-     * Key 前缀
-     */
-    private String keyPrefix = "mqtt:auth:";
 
     /**
      * 加盐方式：用于指定盐和密码的组合方式，
@@ -65,13 +61,6 @@ public class RedisConfig extends AuthenticatorConfig {
         this.database = database;
     }
 
-    public String getKeyPrefix() {
-        return keyPrefix;
-    }
-
-    public void setKeyPrefix(String keyPrefix) {
-        this.keyPrefix = keyPrefix;
-    }
 
     public int getConnectionTimeout() {
         return connectionTimeout;
