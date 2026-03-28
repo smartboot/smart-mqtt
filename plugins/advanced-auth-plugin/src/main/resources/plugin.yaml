@@ -5,28 +5,31 @@ allowAnonymous: false
 chain:
  - redis
  - http
- - mysql
 
 
-# Redis 认证器配置 - 适合分布式、高并发场景
+# Redis 认证器配置
+# 从 Redis 查询用户凭证进行认证，支持密码哈希、盐值和自定义编码器
+# Redis Key 格式: smart-mqtt:auth:{username}
+# Hash 字段: password_hash(必填), salt(可选), password_encoder(可选)
 redis:
-  passwordEncoder: sha256
-  host: localhost
-  port: 6379
-  password: 
+  # Redis 地址 (redis://host:port 格式)
+  address: redis://localhost:6379
+  # Redis 用户名 (可选)
+  username:
+  # Redis 密码 (可选)
+  password:
+  # 数据库索引 (默认 0)
   database: 0
-  connectionTimeout: 2000
+  # 连接超时时间，单位毫秒 (默认 20000)
+  connectionTimeout: 20000
 
-# MySQL 认证器配置 - 适合传统企业应用和已有数据库系统
-mysql:
-  passwordEncoder: sha256
-  url: jdbc:mysql://localhost:3306/mqtt?useSSL=false&serverTimezone=UTC
-  username: root
-  password: your-password
-  driverClass: com.mysql.cj.jdbc.Driver
-  tableName: mqtt_users
-  usernameColumn: username
-  passwordColumn: password
-  whereClause: " AND status=1"
-  connectionTimeout: 3000
-  maxConnections: 5
+# HTTP 认证器配置
+# 调用外部 HTTP 接口进行认证，POST JSON 格式，适用于微服务架构和第三方认证系统集成
+http:
+  # 认证接口 URL (必填)
+  url: http://localhost:8080/api/auth
+  # 请求超时时间，单位毫秒 (默认 5000)
+  timeout: 5000
+  # 自定义请求头 (可选)
+  headers:
+    # Authorization: Bearer token

@@ -7,143 +7,111 @@
 ## 特性
 
 - **认证链**：多个认证器按配置顺序执行，可自定义认证链
-- **多种认证方式**：HTTP、Redis、MySQL
+- **多种认证方式**：HTTP、Redis
 - **密码编码**：支持明文、SHA256、Base64
 - **匿名访问**：可配置是否允许匿名连接
-- **动态配置**：支持运行时更新用户配置
 
 ## 快速开始
 
-1. 将插件JAR文件放入 smart-mqtt 的 plugins 目录
-2. 复制 advanced-auth-plugin.yaml 到 smart-mqtt 根目录
+1. 将插件 JAR 文件放入 smart-mqtt 的 plugins 目录
+2. 复制 plugin.yaml 到 smart-mqtt 根目录
 3. 根据需求修改配置
 4. 启动 smart-mqtt
 
 ## 配置说明
 
-### 认证链配置
-
-可以通过 `authenticationChain` 字段自定义认证器的执行顺序：
+### 基础配置
 
 ```yaml
+# stopOnError: true - 认证失败时立即拒绝连接
+# allowAnonymous: false - 是否允许匿名连接
+stopOnError: true
+allowAnonymous: false
+
 # 认证链顺序（按此顺序执行认证器）
-authenticationChain:
+chain:
   - redis
-  - mysql
   - http
 ```
 
-如果不配置 `authenticationChain`，则按照 `order` 字段从小到大排序执行。
+### 认证链执行流程
+
+1. 按 `chain` 字段配置的顺序依次执行认证器
+2. 认证器返回 SUCCESS：认证通过，停止后续认证
+3. 认证器返回 FAILURE：认证失败，停止后续认证
+4. 认证器返回 CONTINUE：继续下一个认证器
+5. 所有认证器都返回 CONTINUE， 默认拒绝连接
 
 ### Redis 认证
 
-从 Redis 查询用户密码：
+从 Redis 查询用户凭证进行认证，适用于分布式、高并发场景：
+
 ```yaml
-authenticators:
-  - name: redis
-    type: redis
-    order: 10
-    passwordEncoder: sha256
-    options:
-      host: localhost
-      port: 6379
-      password: 
-      database: 0
-      keyPrefix: mqtt:auth:
-      connectionTimeout: 2000
+redis:
+  # Redis 地址 (redis://host:port 格式)
+  address: redis://localhost:6379
+  # Redis 用户名 (可选)
+  username: 
+  # Redis 密码 (可选)
+  password: 
+  # 数据库索引 (默认 0)
+  database: 0
+  # 连接超时时间，单位毫秒 (默认 20000)
+  connectionTimeout: 20000
 ```
 
-Redis 中存储格式：`mqtt:auth:{username}` = `{password}`
+Redis Hash 存储格式：
+- Key: `smart-mqtt:auth:{username}`
+- 字段:
+  - `password_hash`: 密码哈希值 (必填)
+  - `salt`: 盐值 (可选，有盐值时密码 = salt + 原始密码)
+  - `password_encoder`: 密码编码器名称 (可选，默认 sha256)
 
-### MySQL 认证
-
-从 MySQL 数据库查询用户凭证：
-```yaml
-authenticators:
-  - name: mysql
-    type: mysql
-    order: 20
-    passwordEncoder: sha256
-    options:
-      url: jdbc:mysql://localhost:3306/mqtt?useSSL=false&serverTimezone=UTC
-      username: root
-      password: your-password
-      driverClass: com.mysql.cj.jdbc.Driver
-      tableName: mqtt_users
-      usernameColumn: username
-      passwordColumn: password
-      whereClause: " AND status=1"
-      connectionTimeout: 3000
-      maxConnections: 5
-```
-
-数据表结构示例：
-```sql
-CREATE TABLE mqtt_users (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  username VARCHAR(64) NOT NULL UNIQUE,
-  password VARCHAR(256) NOT NULL,
-  status TINYINT DEFAULT 1,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+示例：
+```bash
+HSET smart-mqtt:auth:user1 password_hash "e3b0c44..." salt "salt123" password_encoder "sha256"
 ```
 
 ### HTTP 认证
 
-调用外部 HTTP 接口进行认证：
+调用外部 HTTP 接口进行认证，POST JSON 格式，适用于微服务架构和第三方认证系统集成：
+
 ```yaml
-authenticators:
-  - name: http
-    type: http
-    order: 30
-    options:
-      url: http://localhost:8080/api/auth
-      method: POST
-      contentType: application/json
-      timeout: 5000
-      usernameField: username
-      passwordField: password
-      successCode: 200
+http:
+  # 认证接口 URL (必填)
+  url: http://localhost:80/80/api/auth
+  # 请求超时时间，单位毫秒 (默认 5000)
+  timeout: 5000
+  # 自定义请求头 (可选)
+  headers: 
+    # Authorization: Bearer token
 ```
 
-HTTP 请求示例（POST JSON）：
+HTTP 请求说明：
+- 方法: POST
+- Content-Type: application/json
+- 请求体 JSON：
 ```json
 {
   "username": "test",
-  "password": "123456"
+  "password": "123456",
+  "clientId": "client-001"
 }
 ```
 
-响应码为 200 表示认证成功，其他状态码表示失败。
-
-## 认证链执行流程
-
-1. 如果配置了 `authenticationChain`，则按配置的顺序依次执行认证器
-2. 如果未配置 `authenticationChain`，则按 `order` 字段从小到大排序执行
-3. 认证器返回 SUCCESS：认证通过，停止后续认证
-4. 认证器返回 FAILURE：认证失败，停止后续认证
-5. 认证器返回 CONTINUE：继续下一个认证器
-6. 所有认证器都返回 CONTINUE，默认拒绝连接
+响应码为 200 表示认证成功，其他状态码表示认证失败。
 
 ## 密码编码
 
-支持以下编码方式：
-- `plain`：明文（默认）
-- `sha256`：SHA-256哈希
-- `base64`：Base64编码
-
-在配置文件中指定：
-```yaml
-authenticators:
-  - name: file
-    type: file
-    passwordEncoder: sha256
-```
+支持以下编码方式（通过 Redis 中的 `password_encoder` 字段指定）：
+- `plain`：明文
+- `sha256`：SHA-256 哈希
+- `base64`：Base64 编码
 
 ## 注意事项
 
 1. 生产环境建议使用 HTTPS 和加密存储
-2. 定期更新 JWT 密钥和密码
+2. 定期更新密码
 3. 合理配置认证超时时间
 4. 监控认证失败日志
 
