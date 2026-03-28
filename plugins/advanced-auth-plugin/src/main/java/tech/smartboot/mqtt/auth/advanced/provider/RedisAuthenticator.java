@@ -19,6 +19,9 @@ import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.redisun.Redisun;
 
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -53,6 +56,7 @@ public class RedisAuthenticator extends AbstractAuthenticator {
         redisun = Redisun.create(options -> {
             options.setAddress(config.getAddress())
                     .setDatabase(config.getDatabase())
+                    .debug( true)
                     .setUsername(config.getUsername())
                     .setPassword(config.getPassword());
         });
@@ -112,5 +116,68 @@ public class RedisAuthenticator extends AbstractAuthenticator {
     @Override
     public String getName() {
         return AUTH_TYPE_REDIS;
+    }
+
+    public static void main(String[] args) {
+        Redisun redisun = Redisun.create(options -> {
+            options.setAddress("redis://127.0.0.1:6379")
+                    .setDatabase(0);
+        });
+        
+        // 1. 创建 base64 加密的账号
+        PasswordEncoder base64Encoder = PasswordEncoder.getEncoder("base64");
+        SecureRandom secureRandom = new SecureRandom();
+        byte[] base64SaltBytes = new byte[16];
+        secureRandom.nextBytes(base64SaltBytes);
+        String base64Salt = bytesToHex(base64SaltBytes);
+        Map<String, String> base64Values = new HashMap<>();
+        String base64PasswordHash = base64Encoder.encode(base64Salt + "base64_pass");
+        base64Values.put("password_hash", base64PasswordHash);
+        base64Values.put("salt", base64Salt);
+        redisun.hmset("smart-mqtt:auth:base64_user", base64Values);
+
+        // 2. 创建 sha256 加密的账号
+        PasswordEncoder sha256Encoder = PasswordEncoder.getEncoder("sha256");
+        byte[] sha256SaltBytes = new byte[16];
+        secureRandom.nextBytes(sha256SaltBytes);
+        String sha256Salt = bytesToHex(sha256SaltBytes);
+        Map<String, String> sha256Values = new HashMap<>();
+        String sha256PasswordHash = sha256Encoder.encode(sha256Salt + "sha256_pass");
+        sha256Values.put("password_hash", sha256PasswordHash);
+        sha256Values.put("salt", sha256Salt);
+        redisun.hmset("smart-mqtt:auth:sha256_user", sha256Values);
+
+        // 3. 创建 plain 明文加密的账号（不推荐用于生产环境）
+        PasswordEncoder plainEncoder = PasswordEncoder.getEncoder("plain");
+        byte[] plainSaltBytes = new byte[16];
+        secureRandom.nextBytes(plainSaltBytes);
+        String plainSalt = bytesToHex(plainSaltBytes);
+        Map<String, String> plainValues = new HashMap<>();
+        String plainPasswordHash = plainEncoder.encode(plainSalt + "plain_pass");
+        plainValues.put("password_hash", plainPasswordHash);
+        plainValues.put("salt", plainSalt);
+        redisun.hmset("smart-mqtt:auth:plain_user", plainValues);
+
+        System.out.println("认证账号创建成功！");
+        System.out.println("===========================================");
+        System.out.println("Base64 加密账号：base64_user / base64_pass (盐值：" + base64Salt + ")");
+        System.out.println("SHA256 加密账号：sha256_user / sha256_pass (盐值：" + sha256Salt + ")");
+        System.out.println("Plain 明文账号：plain_user / plain_pass (盐值：" + plainSalt + ")");
+        System.out.println("===========================================");
+        System.out.println("\n注意：");
+        System.out.println("- base64 和 sha256 提供了基本的安全性");
+        System.out.println("- plain 为明文存储，仅用于测试，不建议在生产环境使用");
+        System.out.println("- 所有账号均使用独立随机盐值，增强安全性");
+    }
+    
+    /**
+     * 字节数组转十六进制字符串
+     */
+    private static String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
     }
 }
