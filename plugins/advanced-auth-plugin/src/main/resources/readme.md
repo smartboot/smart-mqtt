@@ -32,29 +32,30 @@ chain:
 认证链是本插件的核心特性，当客户端连接时，系统按以下流程处理：
 
 ```mermaid
-flowchart TB
-    A[客户端 CONNECT] --> B{检查是否允许匿名访问}
+flowchart LR
+    A[客户端 CONNECT] --> B{检查是否<br/>允许匿名访问}
     B -->|anonymous 允许 | C[允许连接成功<br/>匿名用户]
-    B -->|anonymous 禁止 | D[按 chain 顺序执行认证器链]
+    B -->|anonymous 禁止 | D[按 chain 顺序<br/>执行认证器链]
     
     D --> E[Redis 认证器]
     E --> F{认证结果}
     
     F -->|SUCCESS| G[认证成功<br/>停止认证]
-    F -->|CONTINUE| H[继续下一个认证器]
-    F -->|FAILURE| I[拒绝连接<br/>停止认证]
+    F -->|FAILURE| H[拒绝连接<br/>停止认证]
+    F -->|CONTINUE| I[HTTP 认证器]
     
-    H --> J[HTTP 认证器]
-    J --> K{认证结果}
+    I --> J{认证结果}
     
-    K -->|SUCCESS| G
-    K -->|CONTINUE| L[后续认证器]
-    K -->|FAILURE| I
+    J -->|SUCCESS| G
+    J -->|FAILURE| H
+    J -->|CONTINUE| K[后续认证器...]
     
-    L --> M{认证结果}
-    M -->|SUCCESS| G
-    M -->|CONTINUE| N[所有认证器都返回 CONTINUE<br/>默认拒绝连接]
-    M -->|FAILURE| I
+    K --> L{认证结果}
+    L -->|SUCCESS| G
+    L -->|FAILURE| H
+    L -->|CONTINUE| M[所有认证器都返回 CONTINUE<br/>默认拒绝连接]
+    
+    M --> H
 ```
 
 **认证结果说明**：
