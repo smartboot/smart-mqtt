@@ -9,6 +9,10 @@ public class RedisConfig extends AuthenticatorConfig {
      */
     private String address = "redis://localhost:6379";
 
+    /**
+     * Redis 用户名
+     */
+    private String username;
 
     /**
      * Redis 密码
@@ -22,13 +26,7 @@ public class RedisConfig extends AuthenticatorConfig {
 
 
     /**
-     * 加盐方式：用于指定盐和密码的组合方式，
-     * 可选值：suffix（在密码尾部加盐）、prefix（在密码头部加盐）、disable（不启用）。
-     */
-    private String saltPosition;
-
-    /**
-     * 加密算法：plain、md5、sha256
+     * 签名算法：plain、md5、sha256
      */
     private String algorithm;
 
@@ -70,13 +68,6 @@ public class RedisConfig extends AuthenticatorConfig {
         this.connectionTimeout = connectionTimeout;
     }
 
-    public String getSaltPosition() {
-        return saltPosition;
-    }
-
-    public void setSaltPosition(String saltPosition) {
-        this.saltPosition = saltPosition;
-    }
 
     public String getAlgorithm() {
         return algorithm;
@@ -84,5 +75,13 @@ public class RedisConfig extends AuthenticatorConfig {
 
     public void setAlgorithm(String algorithm) {
         this.algorithm = algorithm;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 }

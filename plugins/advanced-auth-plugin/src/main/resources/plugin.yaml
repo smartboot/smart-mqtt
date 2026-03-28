@@ -15,7 +15,6 @@ redis:
   port: 6379
   password: 
   database: 0
-  keyPrefix: "mqtt:auth:"
   connectionTimeout: 2000
 
 # MySQL 认证器配置 - 适合传统企业应用和已有数据库系统

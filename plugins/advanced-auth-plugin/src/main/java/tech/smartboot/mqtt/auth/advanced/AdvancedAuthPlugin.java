@@ -43,12 +43,10 @@ import java.util.concurrent.CompletableFuture;
 public class AdvancedAuthPlugin extends Plugin {
 
     private PluginConfig config;
-    private BrokerContext brokerContext;
     private List<Authenticator> chains;
 
     @Override
     protected void initPlugin(BrokerContext brokerContext) throws Throwable {
-        this.brokerContext = brokerContext;
 
         log("==============================================");
         log("正在初始化高级认证插件...");
