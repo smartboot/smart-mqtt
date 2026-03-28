@@ -19,16 +19,6 @@ public class Demo {
         });
 
         SecureRandom secureRandom = new SecureRandom();
-        byte[] base64SaltBytes = new byte[16];
-        secureRandom.nextBytes(base64SaltBytes);
-        String base64Salt = Base64.getEncoder().encodeToString(base64SaltBytes);
-        Map<String, String> base64Values = new HashMap<>();
-        String base64PasswordHash = PluginUtil.encodePassword(base64Salt + "base64_pass", "base64");
-        base64Values.put("password_hash", base64PasswordHash);
-        base64Values.put("salt", base64Salt);
-        base64Values.put("password_encoder", "base64"); // 指定该用户的签名算法
-        redisun.hmset("smart-mqtt:auth:base64_user", base64Values);
-
         // 2. 创建 sha256 加密的账号（使用用户专属的 sha256 算法）
         byte[] sha256SaltBytes = new byte[16];
         secureRandom.nextBytes(sha256SaltBytes);
@@ -61,7 +51,6 @@ public class Demo {
 
         System.out.println("认证账号创建成功！");
         System.out.println("===========================================");
-        System.out.println("Base64 加密账号：base64_user / base64_pass (盐值：" + base64Salt + ", 算法：base64)");
         System.out.println("SHA256 加密账号：sha256_user / sha256_pass (盐值：" + sha256Salt + ", 算法：sha256)");
         System.out.println("Plain 明文账号：plain_user / plain_pass (盐值：" + plainSalt + ", 算法：plain)");
         System.out.println("MD5 无盐账号：md5_user / md5_pass (无盐值，算法：md5)");

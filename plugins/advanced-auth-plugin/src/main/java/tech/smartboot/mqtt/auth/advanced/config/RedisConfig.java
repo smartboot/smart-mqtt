@@ -3,7 +3,7 @@ package tech.smartboot.mqtt.auth.advanced.config;
 /**
  * Redis 认证器配置
  */
-public class RedisConfig extends AuthenticatorConfig {
+public class RedisConfig {
     /**
      * Redis 主机地址
      */

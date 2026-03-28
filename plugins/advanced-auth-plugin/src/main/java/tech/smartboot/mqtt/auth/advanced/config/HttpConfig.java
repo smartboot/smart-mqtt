@@ -5,7 +5,7 @@ import java.util.Map;
 /**
  * HTTP 认证器配置
  */
-public class HttpConfig extends AuthenticatorConfig {
+public class HttpConfig  {
     /**
      * 认证接口 URL
      */
