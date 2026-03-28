@@ -24,12 +24,6 @@ public class RedisConfig extends AuthenticatorConfig {
      */
     private int database = 0;
 
-
-    /**
-     * 签名算法：plain、md5、sha256
-     */
-    private String algorithm;
-
     /**
      * 连接超时时间（毫秒）
      */
@@ -68,14 +62,6 @@ public class RedisConfig extends AuthenticatorConfig {
         this.connectionTimeout = connectionTimeout;
     }
 
-
-    public String getAlgorithm() {
-        return algorithm;
-    }
-
-    public void setAlgorithm(String algorithm) {
-        this.algorithm = algorithm;
-    }
 
     public String getUsername() {
         return username;
