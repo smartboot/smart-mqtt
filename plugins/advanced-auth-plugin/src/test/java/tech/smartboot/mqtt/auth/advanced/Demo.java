@@ -1,10 +1,9 @@
 package tech.smartboot.mqtt.auth.advanced;
 
-import tech.smartboot.mqtt.auth.advanced.provider.AbstractAuthenticator;
-import tech.smartboot.mqtt.auth.advanced.provider.RedisAuthenticator;
 import tech.smartboot.redisun.Redisun;
 
 import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,12 +18,10 @@ public class Demo {
                     .setDatabase(0);
         });
 
-        // 1. 创建 base64 加密的账号（使用用户专属的 base64 算法）
-        AbstractAuthenticator authenticator = new RedisAuthenticator(null);
         SecureRandom secureRandom = new SecureRandom();
         byte[] base64SaltBytes = new byte[16];
         secureRandom.nextBytes(base64SaltBytes);
-        String base64Salt = bytesToHex(base64SaltBytes);
+        String base64Salt = Base64.getEncoder().encodeToString(base64SaltBytes);
         Map<String, String> base64Values = new HashMap<>();
         String base64PasswordHash = PluginUtil.encodePassword(base64Salt + "base64_pass", "base64");
         base64Values.put("password_hash", base64PasswordHash);
@@ -35,7 +32,7 @@ public class Demo {
         // 2. 创建 sha256 加密的账号（使用用户专属的 sha256 算法）
         byte[] sha256SaltBytes = new byte[16];
         secureRandom.nextBytes(sha256SaltBytes);
-        String sha256Salt = bytesToHex(sha256SaltBytes);
+        String sha256Salt = Base64.getEncoder().encodeToString(sha256SaltBytes);
         Map<String, String> sha256Values = new HashMap<>();
         String sha256PasswordHash = PluginUtil.encodePassword(sha256Salt + "sha256_pass", "sha256");
         sha256Values.put("password_hash", sha256PasswordHash);
@@ -46,7 +43,7 @@ public class Demo {
         // 3. 创建 plain 明文加密的账号（使用用户专属的 plain 算法，不推荐用于生产环境）
         byte[] plainSaltBytes = new byte[16];
         secureRandom.nextBytes(plainSaltBytes);
-        String plainSalt = bytesToHex(plainSaltBytes);
+        String plainSalt = Base64.getEncoder().encodeToString(plainSaltBytes);
         Map<String, String> plainValues = new HashMap<>();
         String plainPasswordHash = PluginUtil.encodePassword(plainSalt + "plain_pass", "plain");
         plainValues.put("password_hash", plainPasswordHash);
@@ -77,14 +74,4 @@ public class Demo {
         System.out.println("- password_encoder 字段允许每个用户使用不同的加密算法");
     }
 
-    /**
-     * 字节数组转十六进制字符串
-     */
-    private static String bytesToHex(byte[] bytes) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : bytes) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
-    }
 }
