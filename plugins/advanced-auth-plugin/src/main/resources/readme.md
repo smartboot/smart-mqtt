@@ -120,8 +120,6 @@ HSET smart-mqtt:auth:user1 password_hash "e3b0c44298fc1c149afbf4c8996fb92427ae41
 # 创建带盐值的用户
 HSET smart-mqtt:auth:user2 password_hash "..." salt "salt123" password_encoder "sha256"
 
-# 创建超级用户
-HSET smart-mqtt:auth:admin password_hash "..." is_superuser "true"
 ```
 
 **认证流程**：
@@ -195,22 +193,6 @@ http:
 String encoded = PluginUtil.encodePassword("mypassword", "sha256");
 ```
 
-## 超级用户 (superuser)
-
-> 注意：当前版本超级用户功能尚未实现
-
-支持为用户标记超级用户身份，超级用户可以绕过 ACL 权限检查（需配合 ACL 插件使用）：
-
-```yaml
-# Redis 存储（功能尚未实现）
-HSET smart-mqtt:auth:admin password_hash "..." is_superuser "true"
-
-# HTTP 响应（功能尚未实现）
-{
-  "result": "allow",
-  "is_superuser": true
-}
-```
 
 ## 错误处理
 
@@ -223,14 +205,6 @@ HSET smart-mqtt:auth:admin password_hash "..." is_superuser "true"
 | 密码不匹配 | 哈希值比较失败 | 返回 FAILURE，拒绝连接 | Redis/Http |
 | 超时/网络错误 | 请求超时或连接异常 | 返回 CONTINUE，续下一个认证器 | Redis/Http |
 
-### 日志级别
-
-建议在生产环境开启 INFO 级别日志，以便监控认证状态：
-
-```xml
-<!-- logback.xml -->
-<logger name="tech.smartboot.mqtt.auth" level="INFO"/>
-```
 
 ## 最佳实践
 
@@ -244,49 +218,3 @@ chain:
 stopOnError: false  # 允许认证器链式尝试
 allowAnonymous: false  # 禁止匿名访问
 ```
-
-### 2. 安全建议
-
-1. **使用强密码策略**：强制要求密码长度 ≥ 8 位，包含大小写字母、数字和特殊字符
-2. **启用 HTTPS**：生产环境 HTTP 认证必须使用 HTTPS
-3. **定期轮换密钥**：定期更新 Redis 密码和 HTTP API 密钥
-4. **监控认证失败**：设置告警机制，及时发现暴力破解尝试
-5. **限制认证请求频率**：防止暴力破解（可配合限流插件）
-
-### 3. 性能优化
-
-1. **Redis 连接池**：确保 Redis 配置合理的连接池大小
-2. **本地缓存**：对于不经常变更的用户数据，可考虑本地缓存
-3. **HTTP 超时**：根据网络状况合理设置 HTTP 超时时间
-
-## 常见问题
-
-### Q1: 认证失败后如何排查？
-
-1. 检查客户端 CONNECT 报文中的用户名和密码是否正确
-2. 查看日志中的认证失败原因
-3. 手动测试 Redis key 是否存在
-4. 使用 curl 测试 HTTP 认证接口
-
-### Q2: 如何实现多租户隔离？
-
-可以通过 HTTP 认证实现，在请求中传递租户 ID：
-```json
-{
-  "username": "user1",
-  "password": "pass",
-  "clientId": "client-001",
-  "tenantId": "tenant-001"
-}
-```
-
-### Q3: 如何迁移现有用户？
-
-可以将现有用户数据批量导入 Redis：
-```bash
-# 批量导入示例
-redis-cli MSET \
-  "smart-mqtt:auth:user1" "$(echo -n 'password123' | sha256sum | cut -d' ' -f1)" \
-  "smart-mqtt:auth:user2" "$(echo -n 'password456' | sha256sum | cut -d' ' -f1)"
-```
-
