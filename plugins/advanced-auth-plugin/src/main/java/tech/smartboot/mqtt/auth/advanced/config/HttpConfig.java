@@ -1,11 +1,11 @@
 package tech.smartboot.mqtt.auth.advanced.config;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * HTTP 认证器配置
  */
-public class HttpConfig  {
+public class HttpConfig {
     /**
      * 认证接口 URL
      */
@@ -17,7 +17,7 @@ public class HttpConfig  {
     private int timeout = 5000;
 
 
-    private Map<String, String> headers;
+    private List<Header> headers;
 
 
     public String getUrl() {
@@ -38,12 +38,32 @@ public class HttpConfig  {
     }
 
 
-    public Map<String, String> getHeaders() {
+    public List<Header> getHeaders() {
         return headers;
     }
 
-    public void setHeaders(Map<String, String> headers) {
+    public void setHeaders(List<Header> headers) {
         this.headers = headers;
     }
 
+    public static class Header {
+        private String name;
+        private String value;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(String value) {
+            this.value = value;
+        }
+    }
 }

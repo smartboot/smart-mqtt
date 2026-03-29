@@ -64,7 +64,7 @@ public class HttpAuthenticator extends AbstractAuthenticator {
         return httpClient.post().header(header -> {
             // 设置自定义请求头
             if (FeatUtils.isNotEmpty(config.getHeaders())) {
-                config.getHeaders().forEach(header::add);
+                config.getHeaders().forEach(h -> header.add(h.getName(), h.getValue()));
             }
             header.set(HeaderName.CONTENT_TYPE, HeaderValue.ContentType.APPLICATION_JSON);
             header.set(HeaderName.CONTENT_LENGTH, bytes.length);
