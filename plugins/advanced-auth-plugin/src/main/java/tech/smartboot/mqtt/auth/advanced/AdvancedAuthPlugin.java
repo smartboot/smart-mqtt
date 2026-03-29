@@ -171,33 +171,60 @@ public class AdvancedAuthPlugin extends Plugin {
     public Schema schema() {
         Schema schema = new Schema();
 
-        // ========== 全局配置区域 ==========
-        Item globalItem = Item.Object("globalConfig", "全局配置").col(12);
-        globalItem.addItems(Item.Switch("stopOnError", "认证失败时立即停止").tip("开启后，任一认证器失败则立即拒绝连接；关闭则会尝试所有认证器").col(6), Item.Switch("allowAnonymous", "允许匿名访问").tip("开启后，不提供用户名密码也能连接；生产环境建议关闭").col(6));
-        schema.addItem(globalItem);
+        // ========== 全局配置 ==========
+        schema.addItem(
+                Item.Switch("stopOnError", "认证失败时立即停止")
+                        .tip("开启后，任一认证器失败则立即拒绝连接；关闭则会尝试所有认证器")
+                        .col(6)
+        );
+        schema.addItem(
+                Item.Switch("allowAnonymous", "允许匿名访问")
+                        .tip("开启后，不提供用户名密码也能连接；生产环境建议关闭")
+                        .col(6)
+        );
+        // ========== 认证链配置区域 ==========
+        Item chainArray = Item.MultiEnum("chain", "认证链顺序")
+                .addEnums(
+                        tech.smartboot.mqtt.plugin.spec.schema.Enum.of("redis", "Redis 认证"),
+                        tech.smartboot.mqtt.plugin.spec.schema.Enum.of("http", "HTTP 认证"),
+                        tech.smartboot.mqtt.plugin.spec.schema.Enum.of("mysql", "MySQL 认证")
+                )
+                .col(12)
+                .tip("按顺序执行认证器，支持 redis、http、mysql，未配置的认证器将被跳过");
+        schema.addItem(chainArray);
+        // ========== HTTP 认证器配置区域 ==========
+        Item httpItem = Item.Object("http", "HTTP 认证器配置").col(12);
+        httpItem.addItems(
+                Item.String("url", "认证接口 URL")
+                        .tip("外部认证服务地址，示例：http://localhost:8080/api/auth")
+                        .col(8),
+                Item.Int("timeout", "超时时间 (ms)")
+                        .tip("HTTP 请求超时时间，默认 5000ms")
+                        .col(4)
+        );
+        schema.addItem(httpItem);
 
-        // ========== 认证器配置区域 ==========
-        Item authArray = Item.ItemArray("authenticators", "认证器配置列表").col(12);
+        // ========== Redis 认证器配置区域 ==========
+        Item redisItem = Item.Object("redis", "Redis 认证器配置").col(12);
+        redisItem.addItems(
+                Item.String("address", "Redis 地址")
+                        .tip("Redis 服务器地址，格式：redis://host:port，示例：redis://localhost:6379")
+                        .col(6),
+                Item.String("username", "Redis 用户名")
+                        .tip("Redis 认证用户名（可选）")
+                        .col(3),
+                Item.String("password", "Redis 密码")
+                        .tip("Redis 认证密码")
+                        .col(3),
+                Item.Int("database", "数据库编号")
+                        .tip("Redis 数据库编号，默认 0")
+                        .col(3),
+                Item.Int("connectionTimeout", "连接超时 (ms)")
+                        .tip("Redis 连接超时时间，默认 2000ms")
+                        .col(3)
+        );
+        schema.addItem(redisItem);
 
-        // 认证器基本配置
-        authArray.addItems(Item.String("name", "认证器名称").tip("自定义认证器的唯一标识").col(4), Item.String("type", "认证器类型").tip("http: HTTP 认证，redis: Redis 认证，mysql: MySQL 认证").addEnums(tech.smartboot.mqtt.plugin.spec.schema.Enum.of("http", "HTTP 认证"), tech.smartboot.mqtt.plugin.spec.schema.Enum.of("redis", "Redis 认证"), tech.smartboot.mqtt.plugin.spec.schema.Enum.of("mysql", "MySQL 认证")).col(4), Item.Int("order", "执行顺序").tip("数值越小越优先执行，默认 100").col(4), Item.Switch("enabled", "启用").tip("关闭后将跳过此认证器").col(3), Item.String("passwordEncoder", "密码编码").tip("plain: 明文，sha256: SHA-256 哈希，base64: Base64 编码").addEnums(tech.smartboot.mqtt.plugin.spec.schema.Enum.of("plain", "明文"), tech.smartboot.mqtt.plugin.spec.schema.Enum.of("sha256", "SHA-256"), tech.smartboot.mqtt.plugin.spec.schema.Enum.of("base64", "Base64")).col(4));
-
-        // HTTP 认证器配置
-        Item httpOpts = Item.Object("options", "HTTP 认证配置").col(12);
-        httpOpts.addItems(Item.String("url", "认证接口 URL").tip("外部认证服务地址，示例：http://localhost:8080/api/auth").col(6), Item.String("method", "请求方法").tip("HTTP 请求方法，默认 POST").addEnums(tech.smartboot.mqtt.plugin.spec.schema.Enum.of("POST", "POST"), tech.smartboot.mqtt.plugin.spec.schema.Enum.of("GET", "GET")).col(3), Item.Int("timeout", "超时时间 (ms)").tip("HTTP 请求超时时间，默认 5000ms").col(3), Item.String("usernameField", "用户名字段名").tip("传递用户名的字段名，默认 username").col(6), Item.String("passwordField", "密码字段名").tip("传递密码的字段名，默认 password").col(6));
-        authArray.addItems(httpOpts);
-
-        // Redis 认证器配置
-        Item redisOpts = Item.Object("options", "Redis 认证配置").col(12);
-        redisOpts.addItems(Item.String("host", "Redis 主机").tip("Redis 服务器地址，默认 localhost").col(3), Item.Int("port", "Redis 端口").tip("Redis 服务器端口，默认 6379").col(3), Item.Int("database", "数据库").tip("Redis 数据库编号，默认 0").col(3), Item.String("password", "Redis 密码").tip("Redis 认证密码").col(3), Item.String("keyPrefix", "Key 前缀").tip("存储用户信息的 Key 前缀，默认 mqtt:auth:").col(6), Item.Int("connectionTimeout", "超时时间 (ms)").tip("Redis 连接超时时间，默认 2000ms").col(3));
-        authArray.addItems(redisOpts);
-
-        // MySQL 认证器配置
-        Item mysqlOpts = Item.Object("options", "MySQL 认证配置").col(12);
-        mysqlOpts.addItems(Item.String("url", "JDBC URL").tip("JDBC 连接 URL，示例：jdbc:mysql://localhost:3306/mqtt").col(6), Item.String("username", "数据库用户名").tip("数据库登录用户名").col(3), Item.String("password", "数据库密码").tip("数据库登录密码").col(3), Item.String("tableName", "表名").tip("用户表名，默认 mqtt_users").col(4), Item.String("usernameColumn", "用户名字段").tip("用户名列，默认 username").col(4), Item.String("passwordColumn", "密码字段").tip("密码列，默认 password").col(4));
-        authArray.addItems(mysqlOpts);
-
-        schema.addItem(authArray);
 
         return schema;
     }
