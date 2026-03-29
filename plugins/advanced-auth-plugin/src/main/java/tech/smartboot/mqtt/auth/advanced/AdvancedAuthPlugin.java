@@ -202,6 +202,18 @@ public class AdvancedAuthPlugin extends Plugin {
                         .tip("HTTP 请求超时时间，默认 5000ms")
                         .col(4)
         );
+        // HTTP Header 配置
+        Item headersArray = Item.ItemArray("headers", "自定义请求头列表").col(12)
+                .tip("添加自定义 HTTP 请求头，例如 Authorization、Content-Type 等");
+        headersArray.addItems(
+                Item.String("name", "请求头名称")
+                        .tip("请求头的字段名，例如 Authorization、X-API-Key")
+                        .col(6),
+                Item.String("value", "请求头值")
+                        .tip("请求头的字段值")
+                        .col(6)
+        );
+        httpItem.addItems(headersArray);
         schema.addItem(httpItem);
 
         // ========== Redis 认证器配置区域 ==========
