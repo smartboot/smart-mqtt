@@ -102,6 +102,14 @@ HSET smart-mqtt:auth:user1 pwd_hash "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649
 HSET smart-mqtt:auth:user2 pwd_hash "..." salt "salt123" encoder "sha256"
 ```
 
+**密码编码说明**：
+- `encoder` 字段指定密码编码器名称，可选值：
+  - `plain`: 明文存储
+  - `md5`: MD5 哈希（Base64 编码）
+  - `sha256`: SHA-256 哈希（Base64 编码）
+- 不指定 `encoder` 时，默认使用 `plain`
+- 注意：MD5 和 SHA-256 哈希后会进行 Base64 编码存储
+
 ### HTTP 认证
 
 调用外部 HTTP 接口进行认证，适用于微服务架构和第三方认证系统集成。
@@ -129,16 +137,3 @@ http:
 **响应处理**：
 - 响应码 200: 认证成功
 - 其他响应码：认证失败
-
-## 密码编码
-
-支持多种密码编码方式，通过 Redis 中的 `encoder` 字段指定：
-
-| 编码器名称 | 说明 | 示例 |
-|------------|------|------|
-| `plain` | 明文存储 | `password` |
-| `md5` | MD5 哈希（Base64 编码） | `5f4dcc3b5aa765d61d8327deb882cf99` |
-| `sha256` | SHA-256 哈希（Base64 编码） | `e3b0c44...` |
-
-> 注意：MD5 和 SHA-256 哈希后会进行 Base64 编码存储
-
