@@ -31,7 +31,6 @@ import java.util.concurrent.CompletableFuture;
  * - password: Redis密码
  * - database: 数据库索引（默认0）
  * - keyPrefix: 用户 key 前缀（默认 mqtt:auth:）
- * - connectionTimeout: 连接超时（默认 20000ms）
  *
  * @author 三刀
  * @version v1.0 2026/3/25

@@ -96,7 +96,6 @@ sequenceDiagram
 | `username` | string | 否 | `""` | Redis 用户名（Redis 6.0+ ACL 认证） |
 | `password` | string | 否 | `""` | Redis 密码 |
 | `database` | number | 否 | `0` | 数据库索引 |
-| `connectionTimeout` | number | 否 | `2000` | 连接超时时间，单位毫秒 |
 
 #### Redis 数据存储格式
 
@@ -162,7 +161,6 @@ chain:
 redis:
   address: redis://localhost:6379
   database: 0
-  connectionTimeout: 20000
 ```
 
 ### 场景 2：Redis + HTTP 降级认证
@@ -180,7 +178,6 @@ chain:
 redis:
   address: redis://localhost:6379
   database: 0
-  connectionTimeout: 20000
 
 http:
   url: http://localhost:8080/api/auth
@@ -376,6 +373,5 @@ Redis 凭借以下特性成为大规模物联网认证的理想选择：
 | 问题 | 可能原因 | 解决方案 |
 |------|----------|----------|
 | 认证总是失败 | 密码编码不匹配 | 检查 encoder 配置和哈希计算 |
-| Redis 连接超时 | 网络问题或配置错误 | 检查 address 和 connectionTimeout |
 | HTTP 认证无响应 | 服务不可达 | 检查 URL 和 timeout 配置 |
 | 匿名用户被拒 | allowAnonymous 为 false | 设置为 true 或提供有效凭证 |

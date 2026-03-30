@@ -24,10 +24,6 @@ public class RedisConfig {
      */
     private int database = 0;
 
-    /**
-     * 连接超时时间（毫秒）
-     */
-    private int connectionTimeout = 2000;
 
     public String getAddress() {
         return address;
@@ -52,16 +48,6 @@ public class RedisConfig {
     public void setDatabase(int database) {
         this.database = database;
     }
-
-
-    public int getConnectionTimeout() {
-        return connectionTimeout;
-    }
-
-    public void setConnectionTimeout(int connectionTimeout) {
-        this.connectionTimeout = connectionTimeout;
-    }
-
 
     public String getUsername() {
         return username;

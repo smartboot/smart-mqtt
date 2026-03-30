@@ -20,8 +20,7 @@ redis:
   password:
   # 数据库索引 (默认 0)
   database: 0
-  # 连接超时时间，单位毫秒 (默认 20000)
-  connectionTimeout: 20000
+
 
 # HTTP 认证器配置
 # 调用外部 HTTP 接口进行认证，POST JSON 格式，适用于微服务架构和第三方认证系统集成

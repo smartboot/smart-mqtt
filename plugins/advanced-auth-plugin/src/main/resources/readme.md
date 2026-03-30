@@ -99,7 +99,6 @@ redis:
   username:                          # Redis 用户名 (可选)
   password:                          # Redis 密码 (可选)
   database: 0                        # 数据库索引 (默认 0)
-  connectionTimeout: 2000            # 连接超时时间，单位毫秒 (默认 2000)
 ```
 
 **Redis Hash 存储格式**：
