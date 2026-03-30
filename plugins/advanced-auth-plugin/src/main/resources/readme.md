@@ -35,40 +35,57 @@ sequenceDiagram
         A-->>C: 允许连接成功 (匿名用户)
     else anonymous 禁止
         A->>R: 执行 Redis 认证
-        R-->>A: SUCCESS
-        A-->>C: 认证成功，停止认证
         
-        R-->>A: FAILURE
-        A-->>C: 拒绝连接，停止认证
+        alt Redis 返回 SUCCESS
+            R-->>A: SUCCESS
+            A-->>C: 认证成功，停止认证
+        else Redis 返回 FAILURE
+            R-->>A: FAILURE
+            A->>H: 继续执行 HTTP 认证
+        else Redis 返回 CONTINUE
+            R-->>A: CONTINUE
+            A->>H: 继续执行 HTTP 认证
+        end
         
-        R-->>A: CONTINUE
-        A->>H: 执行 HTTP 认证
-        H-->>A: SUCCESS
-        A-->>C: 认证成功，停止认证
+        alt HTTP 返回 SUCCESS
+            H-->>A: SUCCESS
+            A-->>C: 认证成功，停止认证
+        else HTTP 返回 FAILURE
+            H-->>A: FAILURE
+            A->>S: 继续执行后续认证器
+        else HTTP 返回 CONTINUE
+            H-->>A: CONTINUE
+            A->>S: 继续执行后续认证器
+        end
         
-        H-->>A: FAILURE
-        A-->>C: 拒绝连接，停止认证
+        alt 后续认证器返回 SUCCESS
+            S-->>A: SUCCESS
+            A-->>C: 认证成功，停止认证
+        else 后续认证器返回 FAILURE
+            S-->>A: FAILURE
+            A->>A: 无更多认证器
+        else 后续认证器返回 CONTINUE
+            S-->>A: CONTINUE
+            A->>A: 无更多认证器
+        end
         
-        H-->>A: CONTINUE
-        A->>S: 执行后续认证器
-        S-->>A: SUCCESS
-        A-->>C: 认证成功，停止认证
-        
-        S-->>A: FAILURE
-        A-->>C: 拒绝连接，停止认证
-        
-        S-->>A: CONTINUE
-        A->>A: 所有认证器都返回 CONTINUE
-        A-->>C: 默认拒绝连接
+        A->>A: 所有认证器执行完毕<br/>未获得 SUCCESS
+        A-->>C: 认证失败，拒绝连接
     end
 ```
 
 **认证结果说明**：
-- `SUCCESS`: 认证成功，停止后续认证器，允许连接
-- `FAILURE`: 认证失败，停止后续认证器，拒绝连接
-- `CONTINUE`: 当前认证器无法处理，继续执行下一个认证器
+- `SUCCESS`: 认证成功，立即停止后续认证，允许连接
+- `FAILURE`: 认证失败（如密码错误），继续执行下一个认证器
+- `CONTINUE`: 当前认证器无法处理（如用户不存在），继续执行下一个认证器
 
-> 注意：如果所有认证器都返回 `CONTINUE`，默认拒绝连接
+**流程规则**：
+1. 认证器按 `chain` 配置顺序依次执行
+2. 任一认证器返回 `SUCCESS` → 认证通过，立即停止
+3. 认证器返回 `FAILURE` 或 `CONTINUE` → 继续下一个认证器
+4. 所有认证器执行完仍未获得 `SUCCESS` → 最终拒绝连接
+
+> **注意**：`stopOnError` 配置仅在认证器**抛出异常**时生效。当 `stopOnError=true` 时，认证器异常会立即返回失败；当 `stopOnError=false` 时，认证器异常会被捕获并当作 `CONTINUE` 处理，继续执行下一个认证器。
 
 ### Redis 认证
 
@@ -82,7 +99,7 @@ redis:
   username:                          # Redis 用户名 (可选)
   password:                          # Redis 密码 (可选)
   database: 0                        # 数据库索引 (默认 0)
-  connectionTimeout: 20000           # 连接超时时间，单位毫秒 (默认 20000)
+  connectionTimeout: 2000            # 连接超时时间，单位毫秒 (默认 2000)
 ```
 
 **Redis Hash 存储格式**：
