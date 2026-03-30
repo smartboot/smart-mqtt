@@ -51,7 +51,7 @@ public class RedisAuthenticator extends AbstractAuthenticator {
         redisun = Redisun.create(options -> {
             options.setAddress(config.getAddress())
                     .setDatabase(config.getDatabase())
-                    .debug(true)
+//                    .debug(true)
                     .connectTimeout(config.getTimeout())
                     .setUsername(config.getUsername())
                     .setPassword(config.getPassword());
