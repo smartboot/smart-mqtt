@@ -19,6 +19,8 @@ import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
+import tech.smartboot.feat.core.server.HttpHandler;
+import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.mqtt.auth.advanced.AuthResult;
 import tech.smartboot.mqtt.auth.advanced.config.HttpConfig;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
@@ -93,5 +95,15 @@ public class HttpAuthenticator extends AbstractAuthenticator {
         if (group != null) {
             group.shutdown();
         }
+    }
+
+    public static void main(String[] args) {
+        // 启动 HTTP 服务器,用于测试
+        Feat.httpServer(opt -> opt.debug(true)).httpHandler(new HttpHandler() {
+            @Override
+            public void handle(HttpRequest request) throws Throwable {
+
+            }
+        }).listen(9999);
     }
 }
