@@ -4,50 +4,50 @@ sidebar:
   order: 2
 ---
 
-`advanced-auth-plugin` 是一个企业级 MQTT 认证插件，提供认证链、多种认证方式和密码编码功能。
+`advanced-auth-plugin` 是一个企业级 MQTT 认证插件，提供认证链、多种认证方式和密码编码功能。**该插件的 Redis 和 HTTP 认证均采用完全异步模式设计，能够高效应对瞬间海量连接认证请求，充分保障服务整体稳定性。**
 
 ## 工作原理
 
 高级认证插件采用**认证链**机制，支持配置多个认证器按优先级顺序执行。当 MQTT 客户端发起连接请求时，插件会依次尝试各个认证器，直到认证成功或所有认证器都尝试完毕。
 
-### 认证结果类型
+**认证结果类型**
 
 - **`SUCCESS`**：认证成功，立即停止后续认证，允许连接
 - **`FAILURE`**：认证失败（如密码错误），根据 `stopOnError` 配置决定是否继续
 - **`CONTINUE`**：当前认证器无法处理（如用户不存在），继续执行下一个认证器
 
-### 认证流程
+**认证流程**
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant C as MQTT客户端
+    participant C as MQTT 客户端
     participant A as 高级认证插件
-    participant R as Redis认证器
-    participant H as HTTP认证器
+    participant R as Redis 认证器
+    participant H as HTTP 认证器
     participant S as 后续认证器
     
-    C->>A: 1. CONNECT请求<br/>(username + password)
+    C->>A: 1. CONNECT 请求<br/>(username + password)
     A->>A: 2. 检查是否允许匿名访问
     
     alt 允许匿名且未提供凭证
         A-->>C: 3a. 匿名用户连接成功
     else 需要认证
-        A->>R: 3b. 执行Redis认证
+        A->>R: 3b. 执行 Redis 认证
         
-        alt Redis返回SUCCESS
+        alt Redis 返回 SUCCESS
             R-->>A: SUCCESS
             A-->>C: 4a. 认证成功
-        else Redis返回FAILURE/CONTINUE
-            A->>H: 4b. 继续执行HTTP认证
+        else Redis 返回 FAILURE/CONTINUE
+            A->>H: 4b. 继续执行 HTTP 认证
             
-            alt HTTP返回SUCCESS
+            alt HTTP 返回 SUCCESS
                 H-->>A: SUCCESS
                 A-->>C: 5a. 认证成功
-            else HTTP返回FAILURE/CONTINUE
+            else HTTP 返回 FAILURE/CONTINUE
                 A->>S: 5b. 继续执行后续认证器
                 
-                alt 后续认证器返回SUCCESS
+                alt 后续认证器返回 SUCCESS
                     S-->>A: SUCCESS
                     A-->>C: 6a. 认证成功
                 else 所有认证器执行完毕未成功
@@ -57,6 +57,24 @@ sequenceDiagram
         end
     end
 ```
+
+## 核心特性
+
+**Redis 和 HTTP 认证器均采用全异步非阻塞实现**，这是本插件应对海量并发场景的核心优势：
+
+- **零线程阻塞**：认证操作通过异步回调机制完成，不会占用 Broker 工作线程
+- **海量并发支撑**：单个节点可轻松应对数万甚至数十万级别的瞬时连接认证请求
+- **服务稳定性保障**：即使外部认证服务响应缓慢，也不会导致 Broker 线程池耗尽
+
+**典型应用场景：认证风暴**
+
+当 MQTT Broker 因维护或故障重启后，大量设备会在短时间内同时发起重连，形成"**认证风暴**"。此时：
+
+| 认证模式 | 传统同步模式 | 本插件异步模式 |
+|---------|-------------|---------------|
+| 线程占用 | 每个认证请求占用一个线程等待响应 | 无需等待，释放线程处理其他任务 |
+| 吞吐量 | 受限于线程池大小（通常几百至几千） | 仅受网络 IO 限制（可达十万级） |
+| 雪崩风险 | 高 - 线程池耗尽导致服务不可用 | 低 - 异步排队自动缓冲压力 |
 
 ## 配置方式
 
@@ -132,7 +150,7 @@ Redis Key 格式：`smart-mqtt:auth:{username}`
 
 ## 配置示例
 
-### 场景1：纯 Redis 认证
+### 场景 1：纯 Redis 认证
 
 ```yaml
 stopOnError: true
@@ -147,7 +165,7 @@ redis:
   connectionTimeout: 20000
 ```
 
-### 场景2：Redis + HTTP 降级认证
+### 场景 2：Redis + HTTP 降级认证
 
 Redis 优先认证，当 Redis 中不存在用户或认证失败时，降级到 HTTP 认证。
 
@@ -169,7 +187,7 @@ http:
   timeout: 5000
 ```
 
-### 场景3：纯 HTTP 认证
+### 场景 3：纯 HTTP 认证
 
 ```yaml
 stopOnError: true
@@ -261,36 +279,9 @@ DEL smart-mqtt:auth:admin
 EVAL "return redis.call('del', unpack(redis.call('keys', 'smart-mqtt:auth:*')))" 0
 ```
 
-### 批量导入示例
+### 批量导入用户
 
-```bash
-#!/bin/bash
-# 批量创建用户脚本
-
-users=(
-  "admin:admin123:plain"
-  "device1:password1:sha256:salt123"
-  "device2:password2:md5"
-)
-
-for user in "${users[@]}"; do
-  IFS=':' read -r username password encoder salt <<< "$user"
-  
-  if [ "$encoder" = "plain" ]; then
-    redis-cli HMSET "smart-mqtt:auth:$username" pwd_hash "$password" encoder "$encoder"
-  elif [ -n "$salt" ]; then
-    # 计算带盐值的哈希
-    hash=$(echo -n "$salt$password" | sha256sum | xxd -r -p | base64)
-    redis-cli HMSET "smart-mqtt:auth:$username" pwd_hash "$hash" salt "$salt" encoder "$encoder"
-  else
-    # 计算无盐值哈希
-    hash=$(echo -n "$password" | openssl dgst -sha256 -binary | base64)
-    redis-cli HMSET "smart-mqtt:auth:$username" pwd_hash "$hash" encoder "$encoder"
-  fi
-  
-  echo "Created user: $username"
-done
-```
+可使用 `redis-cli` 配合脚本批量导入用户数据。
 
 ## HTTP 认证服务示例（Feat Cloud）
 
@@ -322,8 +313,8 @@ public class MqttAuthController {
      *
      * @param username 用户名
      * @param password 密码
-     * @param clientId 客户端ID
-     * @param response HTTP响应
+     * @param clientId 客户端 ID
+     * @param response HTTP 响应
      */
     @RequestMapping("/api/auth")
     public void authenticate(
@@ -359,27 +350,25 @@ public class MqttAuthController {
 }
 ```
 
-
 ## 为什么选择 Redis 认证
 
-在物联网场景中，往往面临着海量设备的接入需求。当 MQTT Broker 因维护或故障重启后，短时间内会有大量设备同时发起连接重连请求，形成**认证风暴**。
+Redis 凭借以下特性成为大规模物联网认证的理想选择：
 
 | 特性 | Redis | 传统数据库 |
 |------|-------|-----------|
 | 读写性能 | 内存级操作，毫秒甚至微秒级响应 | 磁盘 IO，通常毫秒级 |
-| 并发能力 | 单节点可达 10万+ QPS | 通常数千 QPS |
+| 并发能力 | 单节点可达 10 万+ QPS | 通常数千 QPS |
 | 连接成本 | 轻量级连接，资源消耗低 | 连接池资源占用大 |
 | 水平扩展 | 原生支持集群分片 | 分库分表复杂度高 |
 
-因此，对于大规模物联网部署，建议将用户凭证缓存在 Redis 中。可以在用户注册/修改密码时同步写入 Redis，或者通过 HTTP 认证作为降级方案，在 Redis 未命中时回源到主数据库查询。
+结合本插件的**异步认证架构**，Redis 认证器能够在海量并发场景下充分发挥性能优势。建议将用户凭证缓存在 Redis 中，配合 HTTP 认证作为降级方案，在 Redis 未命中时回源到主数据库查询。
 
 ## 注意事项
 
 1. **密码编码**：MD5 和 SHA-256 哈希后会进行 Base64 编码存储
-2. **异步执行**：认证器按链式异步执行，不会阻塞 Broker
-3. **异常处理**：当 `stopOnError=false` 时，认证器异常会被捕获并当作 `CONTINUE` 处理
-4. **配置热加载**：修改配置后需要重启 MQTT 服务生效
-5. **Redis Key 前缀**：固定为 `smart-mqtt:auth:`，不可配置
+2. **异常处理**：当 `stopOnError=false` 时，认证器异常会被捕获并当作 `CONTINUE` 处理
+3. **配置热加载**：修改配置后需要重启 MQTT 服务生效
+4. **Redis Key 前缀**：固定为 `smart-mqtt:auth:`，不可配置
 
 ## 故障排查
 
