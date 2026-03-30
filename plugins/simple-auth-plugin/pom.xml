@@ -6,7 +6,7 @@
     <parent>
         <artifactId>plugins</artifactId>
         <groupId>tech.smartboot.mqtt</groupId>
-        <version>1.5.3</version>
+        <version>1.5.4</version>
     </parent>
 
     <artifactId>simple-auth-plugin</artifactId>
