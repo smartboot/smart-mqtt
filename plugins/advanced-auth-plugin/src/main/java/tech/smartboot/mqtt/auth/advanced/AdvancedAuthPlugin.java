@@ -128,9 +128,7 @@ public class AdvancedAuthPlugin extends Plugin {
             chainFuture.thenAccept(result -> {
                 if (result == AuthResult.SUCCESS) {
                     session.setAuthorized(true);
-                    log("认证成功: clientId=" + session.getClientId());
                 } else {
-                    log("认证失败: clientId=" + session.getClientId());
                     MqttSession.connFailAck(MqttConnectReturnCode.CONNECTION_REFUSED_NOT_AUTHORIZED, session);
                 }
                 object.getFuture().complete(null);
