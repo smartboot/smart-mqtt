@@ -32,30 +32,46 @@ chain:
 认证链是本插件的核心特性，当客户端连接时，系统按以下流程处理：
 
 ```mermaid
-flowchart LR
-    A[客户端 CONNECT] --> B{检查是否<br/>允许匿名访问}
-    B -->|anonymous 允许 | C[允许连接成功<br/>匿名用户]
-    B -->|anonymous 禁止 | D[按 chain 顺序<br/>执行认证器链]
+sequenceDiagram
+    participant C as 客户端
+    participant A as 高级认证器
+    participant R as Redis 认证器
+    participant H as HTTP 认证器
+    participant S as 后续认证器
     
-    D --> E[Redis 认证器]
-    E --> F{认证结果}
+    C->>A: CONNECT 请求
+    A->>A: 检查是否允许匿名访问
     
-    F -->|SUCCESS| G[认证成功<br/>停止认证]
-    F -->|FAILURE| H[拒绝连接<br/>停止认证]
-    F -->|CONTINUE| I[HTTP 认证器]
-    
-    I --> J{认证结果}
-    
-    J -->|SUCCESS| G
-    J -->|FAILURE| H
-    J -->|CONTINUE| K[后续认证器...]
-    
-    K --> L{认证结果}
-    L -->|SUCCESS| G
-    L -->|FAILURE| H
-    L -->|CONTINUE| M[所有认证器都返回 CONTINUE<br/>默认拒绝连接]
-    
-    M --> H
+    alt anonymous 允许
+        A-->>C: 允许连接成功 (匿名用户)
+    else anonymous 禁止
+        A->>R: 执行 Redis 认证
+        R-->>A: SUCCESS
+        A-->>C: 认证成功，停止认证
+        
+        R-->>A: FAILURE
+        A-->>C: 拒绝连接，停止认证
+        
+        R-->>A: CONTINUE
+        A->>H: 执行 HTTP 认证
+        H-->>A: SUCCESS
+        A-->>C: 认证成功，停止认证
+        
+        H-->>A: FAILURE
+        A-->>C: 拒绝连接，停止认证
+        
+        H-->>A: CONTINUE
+        A->>S: 执行后续认证器
+        S-->>A: SUCCESS
+        A-->>C: 认证成功，停止认证
+        
+        S-->>A: FAILURE
+        A-->>C: 拒绝连接，停止认证
+        
+        S-->>A: CONTINUE
+        A->>A: 所有认证器都返回 CONTINUE
+        A-->>C: 默认拒绝连接
+    end
 ```
 
 **认证结果说明**：
