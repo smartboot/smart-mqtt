@@ -110,7 +110,7 @@ public class AdvancedAuthPlugin extends Plugin {
                     }
                     try {
                         return auth.authenticate(session, message).thenApply(r -> {
-                            log("[认证器: " + auth.getName() + "] 认证结果：" + r + " clientId:" + session.getClientId());
+                            log("[认证器: " + auth.getName() + "] 认证结果：" + r + " clientId:" + session.getClientId() + " username:" + message.getPayload().userName());
                             return r;
                         }).exceptionally(e -> {
                             log("认证器异常: " + auth.getName() + ", error=" + e.getMessage());
