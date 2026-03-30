@@ -230,6 +230,9 @@ public class AdvancedAuthPlugin extends Plugin {
                         .col(3),
                 Item.Int("database", "数据库编号")
                         .tip("Redis 数据库编号，默认 0")
+                        .col(3),
+                Item.Int("timeout", "超时时间 (ms)")
+                        .tip("Redis 连接超时时间，默认 3000ms")
                         .col(3)
         );
         schema.addItem(redisItem);
