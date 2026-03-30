@@ -52,6 +52,7 @@ public class RedisAuthenticator extends AbstractAuthenticator {
             options.setAddress(config.getAddress())
                     .setDatabase(config.getDatabase())
                     .debug(true)
+                    .connectTimeout(config.getTimeout())
                     .setUsername(config.getUsername())
                     .setPassword(config.getPassword());
         });

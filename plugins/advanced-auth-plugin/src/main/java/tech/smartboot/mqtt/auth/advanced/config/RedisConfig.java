@@ -24,6 +24,11 @@ public class RedisConfig {
      */
     private int database = 0;
 
+    /**
+     * Redis 连接超时时间（毫秒）
+     */
+    private int timeout = 3000;
+
 
     public String getAddress() {
         return address;
@@ -55,5 +60,13 @@ public class RedisConfig {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public int getTimeout() {
+        return timeout;
+    }
+
+    public void setTimeout(int timeout) {
+        this.timeout = timeout;
     }
 }
