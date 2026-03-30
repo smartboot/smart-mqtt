@@ -186,8 +186,8 @@ public class AdvancedAuthPlugin extends Plugin {
         Item chainArray = Item.MultiEnum("chain", "认证链顺序")
                 .addEnums(
                         tech.smartboot.mqtt.plugin.spec.schema.Enum.of("redis", "Redis 认证"),
-                        tech.smartboot.mqtt.plugin.spec.schema.Enum.of("http", "HTTP 认证"),
-                        tech.smartboot.mqtt.plugin.spec.schema.Enum.of("mysql", "MySQL 认证")
+                        tech.smartboot.mqtt.plugin.spec.schema.Enum.of("http", "HTTP 认证")
+//                        tech.smartboot.mqtt.plugin.spec.schema.Enum.of("mysql", "MySQL 认证")
                 )
                 .col(12)
                 .tip("按顺序执行认证器，支持 redis、http、mysql，未配置的认证器将被跳过");

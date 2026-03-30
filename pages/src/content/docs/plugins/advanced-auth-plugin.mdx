@@ -84,7 +84,7 @@ sequenceDiagram
 |--------|------|------|--------|------|
 | `stopOnError` | boolean | 否 | `true` | 认证失败时是否立即停止。`true`：认证器异常立即拒绝连接；`false`：异常当作 CONTINUE 处理，继续下一个认证器 |
 | `allowAnonymous` | boolean | 否 | `false` | 是否允许匿名访问。`true`：未提供凭证时允许匿名连接；`false`：拒绝匿名连接 |
-| `chain` | array | 是 | - | 认证链顺序，按此顺序执行认证器。可选值：`redis`、`http` |
+| `chain` | array | 是 | - | 认证链顺序，按此顺序执行认证器。可选值：`redis`、`http`（MySQL 认证器暂未实现） |
 
 ### Redis 认证配置
 
@@ -96,7 +96,7 @@ sequenceDiagram
 | `username` | string | 否 | `""` | Redis 用户名（Redis 6.0+ ACL 认证） |
 | `password` | string | 否 | `""` | Redis 密码 |
 | `database` | number | 否 | `0` | 数据库索引 |
-| `connectionTimeout` | number | 否 | `20000` | 连接超时时间，单位毫秒 |
+| `connectionTimeout` | number | 否 | `2000` | 连接超时时间，单位毫秒 |
 
 #### Redis 数据存储格式
 
@@ -366,9 +366,10 @@ Redis 凭借以下特性成为大规模物联网认证的理想选择：
 ## 注意事项
 
 1. **密码编码**：MD5 和 SHA-256 哈希后会进行 Base64 编码存储
-2. **异常处理**：当 `stopOnError=false` 时，认证器异常会被捕获并当作 `CONTINUE` 处理
+2. **异常处理**：当 `stopOnError=false` 时，认证器异常会被捕获并当作 `CONTINUE` 处理。HTTP/Redis 认证器内部已对异常进行了处理，通常返回 CONTINUE
 3. **配置热加载**：修改配置后需要重启 MQTT 服务生效
 4. **Redis Key 前缀**：固定为 `smart-mqtt:auth:`，不可配置
+5. **MySQL 认证器**：暂未实现，敬请期待
 
 ## 故障排查
 
