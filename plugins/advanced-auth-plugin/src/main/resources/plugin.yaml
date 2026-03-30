@@ -10,7 +10,7 @@ chain:
 # Redis 认证器配置
 # 从 Redis 查询用户凭证进行认证，支持密码哈希、盐值和自定义编码器
 # Redis Key 格式: smart-mqtt:auth:{username}
-# Hash 字段: password_hash(必填), salt(可选), password_encoder(可选)
+# Hash 字段: pwd_hash(必填), salt(可选), encoder(可选)
 redis:
   # Redis 地址 (redis://host:port 格式)
   address: redis://localhost:6379

@@ -109,17 +109,17 @@ redis:
 
 | 字段 | 说明 | 必填 |
 |------|------|------|
-| `password_hash` | 密码哈希值 | 是 |
+| `pwd_hash` | 密码哈希值 | 是 |
 | `salt` | 盐值（有盐值时密码 = salt + 原始密码） | 否 |
-| `password_encoder` | 密码编码器名称（默认 sha256） | 否 |
+| `encoder` | 密码编码器名称（默认 sha256） | 否 |
 
 **示例**：
 ```bash
 # 创建用户
-HSET smart-mqtt:auth:user1 password_hash "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" salt "" password_encoder "sha256"
+HSET smart-mqtt:auth:user1 pwd_hash "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" salt "" encoder "sha256"
 
 # 创建带盐值的用户
-HSET smart-mqtt:auth:user2 password_hash "..." salt "salt123" password_encoder "sha256"
+HSET smart-mqtt:auth:user2 pwd_hash "..." salt "salt123" encoder "sha256"
 
 ```
 
@@ -127,11 +127,11 @@ HSET smart-mqtt:auth:user2 password_hash "..." salt "salt123" password_encoder "
 ```mermaid
 flowchart LR
     A[客户端 CONNECT<br/>提取 username 和 password] --> B[查询 Redis<br/>smart-mqtt:auth:{username}]
-    B --> C[获取 password_hash,<br/>salt, password_encoder]
+    B --> C[获取 pwd_hash,<br/>salt, encoder]
     C --> D{salt 存在？}
     D -->|是 | E[password = salt + rawPassword]
     D -->|否 | F[password = rawPassword]
-    E --> G[使用 password_encoder<br/>计算哈希]
+    E --> G[使用 encoder<br/>计算哈希]
     F --> G
     G --> H{比较哈希值}
     H -->|匹配 | I[认证成功]
@@ -178,7 +178,7 @@ http:
 
 ## 密码编码
 
-本插件支持多种密码编码方式，通过 Redis 中的 `password_encoder` 字段指定：
+本插件支持多种密码编码方式，通过 Redis 中的 `encoder` 字段指定：
 
 | 编码器名称 | 说明 | 示例 |
 |------------|------|------|

@@ -80,7 +80,7 @@ public class RedisAuthenticator extends AbstractAuthenticator {
         String rawPassword = new String(passwordBytes, StandardCharsets.UTF_8);
 
         // 异步从 Redis 获取密码哈希、盐值和签名算法
-        return redisun.asyncHmget(key, "password_hash", "salt", "password_encoder").thenApply(values -> {
+        return redisun.asyncHmget(key, "pwd_hash", "salt", "encoder").thenApply(values -> {
             String passwordHash = values.get(0);
             // 如果 Redis 中没有存储密码哈希，返回 CONTINUE 让下一个认证器处理
             if (passwordHash == null || passwordHash.isEmpty()) {

@@ -25,9 +25,9 @@ public class Demo {
         String sha256Salt = Base64.getEncoder().encodeToString(sha256SaltBytes);
         Map<String, String> sha256Values = new HashMap<>();
         String sha256PasswordHash = PluginUtil.encodePassword(sha256Salt + "sha256_pass", "sha256");
-        sha256Values.put("password_hash", sha256PasswordHash);
+        sha256Values.put("pwd_hash", sha256PasswordHash);
         sha256Values.put("salt", sha256Salt);
-        sha256Values.put("password_encoder", "sha256"); // 指定该用户的签名算法
+        sha256Values.put("encoder", "sha256"); // 指定该用户的签名算法
         redisun.hmset("smart-mqtt:auth:sha256_user", sha256Values);
 
         // 3. 创建 plain 明文加密的账号（使用用户专属的 plain 算法，不推荐用于生产环境）
@@ -36,17 +36,17 @@ public class Demo {
         String plainSalt = Base64.getEncoder().encodeToString(plainSaltBytes);
         Map<String, String> plainValues = new HashMap<>();
         String plainPasswordHash = PluginUtil.encodePassword(plainSalt + "plain_pass", "plain");
-        plainValues.put("password_hash", plainPasswordHash);
+        plainValues.put("pwd_hash", plainPasswordHash);
         plainValues.put("salt", plainSalt);
-        plainValues.put("password_encoder", "plain"); // 指定该用户的签名算法
+        plainValues.put("encoder", "plain"); // 指定该用户的签名算法
         redisun.hmset("smart-mqtt:auth:plain_user", plainValues);
 
         // 4. 创建不使用盐值的账号（仅使用密码加密）
         Map<String, String> md5Values = new HashMap<>();
         String md5PasswordHash = PluginUtil.encodePassword("md5_pass", "md5"); // 不加盐
-        md5Values.put("password_hash", md5PasswordHash);
+        md5Values.put("pwd_hash", md5PasswordHash);
         md5Values.put("salt", ""); // 空盐值
-        md5Values.put("password_encoder", "md5"); // 指定该用户的签名算法
+        md5Values.put("encoder", "md5"); // 指定该用户的签名算法
         redisun.hmset("smart-mqtt:auth:md5_user", md5Values);
 
         System.out.println("认证账号创建成功！");
@@ -60,7 +60,7 @@ public class Demo {
         System.out.println("- base64 和 sha256 提供了基本的安全性");
         System.out.println("- plain 为明文存储，仅用于测试，不建议在生产环境使用");
         System.out.println("- 所有账号均使用独立随机盐值（除 md5_user 外），增强安全性");
-        System.out.println("- password_encoder 字段允许每个用户使用不同的加密算法");
+        System.out.println("- encoder 字段允许每个用户使用不同的加密算法");
     }
 
 }
