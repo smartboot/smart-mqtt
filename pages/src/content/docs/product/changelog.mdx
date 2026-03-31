@@ -6,6 +6,24 @@ sidebar:
 
 # 发版记录
 
+## smart-mqtt broker v1.5.4（2026-03-31）
+
+- **高级认证插件**：新增 `advanced-auth-plugin`，支持 Redis 与 HTTP 认证链，更适合企业级设备接入场景
+- **认证链机制**：支持“Redis 优先、HTTP 兜底”的渐进式认证架构，便于平滑对接现有业务系统
+- **稳定性增强**：在设备短时间集中重连场景下，认证链路更稳，降低因认证压力带来的服务抖动风险
+- **Redis 生态延伸**：基于 smartboot 在 Redis 方向的持续积累，进一步强化认证场景下的集成能力
+
+发版详情：《[smart-mqtt v1.5.4发布：从能认证，到更适合企业落地的认证体系](https://mp.weixin.qq.com/s/cVzxKQ4KjO5yr2zG5KZWZA)》
+
+## smart-mqtt broker v1.5.3（2026-03-17）
+
+- **智能推送模型**：实时感知连接压力，在高负载场景下自动延迟消息推送，缓解拥塞风险
+- **柔性插件注销**：优化插件生命周期管理，插件卸载时更平滑地释放连接、会话与相关资源
+- **实时日志输出**：基于 SSE 实现插件日志实时推送，便于快速定位运行中的问题
+- **AI Agent 增强**：新增 `WebPageReaderTool` 工具，提升智能助手对官网文档的读取和回答能力
+
+发版详情：《[smart-mqtt v1.5.3发布，增强可观测性](https://mp.weixin.qq.com/s/DwAIiXidt9m5B04tgGs3kg)》
+
 ## smart-mqtt broker v1.5.2（2026-03-04）
 
 - **AI Agent 智能助手**：集成 Feat AI Agent 能力，为企业版注入智能化交互体验，支持 7×24 小时技术答疑
