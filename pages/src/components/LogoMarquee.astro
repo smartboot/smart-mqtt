@@ -12,16 +12,19 @@ import { userCompanies, getIconSvg } from '../data/users';
         <div class="marquee-content">
           {userCompanies.map((company) => (
             <div class="logo-item" title={company.fullName}>
-              <svg viewBox="0 0 200 40" fill="currentColor" class="company-logo" set:html={getIconSvg(company.iconType) + `<text x="45" y="26" font-size="12" font-weight="600">${company.name}</text>`} />
+              {company.customIcon&&<><img src={company.customIcon} alt={company.fullName} /><span class="company-name">{company.name}</span></>}
+              {!company.customIcon&&<svg viewBox="0 0 200 40" fill="currentColor" class="company-logo" set:html={getIconSvg(company.iconType) + `<text x="45" y="26" font-size="12" font-weight="600">${company.name}</text>`} />}
             </div>
           ))}
         </div>
-        
+
         <!-- 复制一组实现无缝滚动 -->
         <div class="marquee-content" aria-hidden="true">
           {userCompanies.map((company) => (
             <div class="logo-item" title={company.fullName}>
-              <svg viewBox="0 0 200 40" fill="currentColor" class="company-logo" set:html={getIconSvg(company.iconType) + `<text x="45" y="26" font-size="12" font-weight="600">${company.name}</text>`} />
+              {company.customIcon&&<><img src={company.customIcon} alt={company.fullName} /><span class="company-name">{company.name}</span></>}
+
+              {!company.customIcon&&<svg viewBox="0 0 200 40" fill="currentColor" class="company-logo" set:html={getIconSvg(company.iconType) + `<text x="45" y="26" font-size="12" font-weight="600">${company.name}</text>`} />}
             </div>
           ))}
         </div>
@@ -97,6 +100,9 @@ import { userCompanies, getIconSvg } from '../data/users';
     opacity: 0.6;
     transition: all 0.3s ease;
     cursor: default;
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
   
   .logo-item:hover {
@@ -120,6 +126,18 @@ import { userCompanies, getIconSvg } from '../data/users';
     width: auto;
     max-width: 120px;
     object-fit: contain;
+  }
+  
+  .logo-item .company-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    transition: color 0.3s ease;
+  }
+  
+  .logo-item:hover .company-name {
+    color: var(--text-primary);
   }
   
   @keyframes marquee {

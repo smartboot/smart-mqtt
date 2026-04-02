@@ -8,15 +8,15 @@
 export interface UserCompany {
   name: string;
   fullName: string;
-  iconType: 'sensor' | 'farm' | 'data' | 'tech' | 'logistics' | 'automotive' | 'custom';
+  iconType?: 'sensor' | 'farm' | 'data' | 'tech' | 'logistics' | 'automotive' | 'custom';
   customIcon?: string;
 }
 
 export const userCompanies: UserCompany[] = [
   {
-    name: '比亚迪',
-    fullName: '比亚迪股份有限公司',
-    iconType: 'automotive'
+    name: '深圳市比亚迪锂电池有限公司坑梓分公司',
+    fullName: '深圳市比亚迪锂电池有限公司坑梓分公司',
+    customIcon: '/smart-mqtt/user_byd.jpg'
   },
   {
     name: '上海极锐星瀚传感',
