@@ -4,9 +4,9 @@
 <section class="deployment-section" id="deployment">
   <div class="deployment-container">
     <div class="deployment-header">
-      <span class="deployment-tag">快速部署</span>
-      <h2 class="deployment-title">选择适合你的部署方式</h2>
-      <p class="deployment-description">
+      <span class="deployment-tag" data-i18n="deployment.tag">快速部署</span>
+      <h2 class="deployment-title" data-i18n="deployment.title">选择适合你的部署方式</h2>
+      <p class="deployment-description" data-i18n="deployment.description">
         提供 Docker 和手动部署两种方式，5 分钟内即可启动服务
       </p>
     </div>
@@ -17,7 +17,7 @@
           <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
             <path d="M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.185.185 0 00-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.186m0 2.716h2.118a.187.187 0 00.186-.186V6.29a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.887c0 .102.082.185.185.186m-2.93 0h2.12a.186.186 0 00.184-.186V6.29a.185.185 0 00-.185-.185H8.1a.185.185 0 00-.185.185v1.887c0 .102.083.185.185.186m-2.964 0h2.119a.186.186 0 00.185-.186V6.29a.185.185 0 00-.185-.185H5.136a.186.186 0 00-.186.185v1.887c0 .102.084.185.186.186m5.893 2.715h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.184-.186h-2.12a.186.186 0 00-.186.186v1.887c0 .102.084.185.186.185m-2.92 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.082.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338.001-.676.03-1.01.087-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.226.327c-.284.438-.49.922-.612 1.43-.23.97-.09 1.882.403 2.661-.595.332-1.55.413-1.744.42H.751a.751.751 0 00-.75.748 11.376 11.376 0 00.692 4.062c.545 1.428 1.355 2.48 2.41 3.124 1.18.723 3.1 1.137 5.275 1.137.983.003 1.963-.086 2.93-.266a12.248 12.248 0 00.824-1.389c.98-.567 1.86-1.288 2.61-2.136 1.252-1.418 1.998-2.997 2.553-4.4h.221c1.372 0 2.215-.549 2.68-1.009.309-.293.55-.65.707-1.046l.098-.288Z"/>
           </svg>
-          Docker 部署（推荐）
+          <span data-i18n="deployment.dockerTab">Docker 部署（推荐）</span>
         </button>
         <button class="tab-btn" data-tab="manual">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
@@ -25,7 +25,7 @@
             <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
             <line x1="12" y1="17" x2="12" y2="21"/>
           </svg>
-          手动部署
+          <span data-i18n="deployment.manualTab">手动部署</span>
         </button>
       </div>
 
@@ -36,9 +36,9 @@
             <div class="method-card">
               <div class="method-header">
                 <span class="method-number">01</span>
-                <h3>使用 Docker Compose</h3>
+                <h3 data-i18n="deployment.docker.compose.title">使用 Docker Compose</h3>
               </div>
-              <p class="method-desc">最简单的部署方式，一键启动完整服务</p>
+              <p class="method-desc" data-i18n="deployment.docker.compose.desc">最简单的部署方式，一键启动完整服务</p>
               <div class="code-block">
                 <div class="code-header">
                   <span>docker-compose.yaml</span>
@@ -74,9 +74,9 @@ services:
             <div class="method-card">
               <div class="method-header">
                 <span class="method-number">02</span>
-                <h3>直接运行 Docker</h3>
+                <h3 data-i18n="deployment.docker.direct.title">直接运行 Docker</h3>
               </div>
-              <p class="method-desc">快速启动单个容器</p>
+              <p class="method-desc" data-i18n="deployment.docker.direct.desc">快速启动单个容器</p>
               <div class="code-block">
                 <div class="code-header">
                   <span>终端命令</span>
@@ -97,11 +97,11 @@ services:
               <div class="port-info">
                 <div class="port-item">
                   <span class="port-label">1883</span>
-                  <span class="port-desc">MQTT 协议端口</span>
+                  <span class="port-desc" data-i18n="deployment.docker.direct.mqttPort">MQTT 协议端口</span>
                 </div>
                 <div class="port-item">
                   <span class="port-label">18083</span>
-                  <span class="port-desc">Dashboard 端口</span>
+                  <span class="port-desc" data-i18n="deployment.docker.direct.dashboardPort">Dashboard 端口</span>
                 </div>
               </div>
             </div>
@@ -114,9 +114,9 @@ services:
             <div class="method-card">
               <div class="method-header">
                 <span class="method-number">01</span>
-                <h3>下载发行包</h3>
+                <h3 data-i18n="deployment.manual.download.title">下载发行包</h3>
               </div>
-              <p class="method-desc">从 Gitee 或 GitHub Releases 下载最新版本</p>
+              <p class="method-desc" data-i18n="deployment.manual.download.desc">从 Gitee 或 GitHub Releases 下载最新版本</p>
               <div class="code-block">
                 <div class="code-header">
                   <span>下载并解压</span>
@@ -151,9 +151,9 @@ cd smart-mqtt</code></pre>
             <div class="method-card">
               <div class="method-header">
                 <span class="method-number">02</span>
-                <h3>启动服务</h3>
+                <h3 data-i18n="deployment.manual.start.title">启动服务</h3>
               </div>
-              <p class="method-desc">执行启动脚本运行 smart-mqtt</p>
+              <p class="method-desc" data-i18n="deployment.manual.start.desc">执行启动脚本运行 smart-mqtt</p>
               <div class="code-block">
                 <div class="code-header">
                   <span>启动命令</span>
@@ -173,7 +173,7 @@ cd smart-mqtt</code></pre>
                   <line x1="12" y1="16" x2="12" y2="12"/>
                   <line x1="12" y1="8" x2="12.01" y2="8"/>
                 </svg>
-                <span>确保已安装 JDK 8 或更高版本</span>
+                <span data-i18n="deployment.manual.start.note">确保已安装 JDK 8 或更高版本</span>
               </div>
             </div>
           </div>

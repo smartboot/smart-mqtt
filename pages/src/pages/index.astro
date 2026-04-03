@@ -154,7 +154,6 @@ import CTASection from '../components/CTASection.astro';
   </style>
   
   <script>
-    // 主题初始化（防止闪烁）
     (function() {
       const savedTheme = localStorage.getItem('theme');
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -167,6 +166,9 @@ import CTASection from '../components/CTASection.astro';
       } else {
         html.setAttribute('data-theme', 'light');
       }
+      
+      const savedLang = localStorage.getItem('language') || 'zh';
+      html.setAttribute('lang', savedLang);
     })();
   </script>
 </head>
@@ -215,7 +217,7 @@ import CTASection from '../components/CTASection.astro';
           </svg>
           <div class="footer-brand-info">
             <span class="footer-logo-text">smart-mqtt</span>
-            <p class="footer-desc">企业级物联网消息中间件</p>
+            <p class="footer-desc" data-i18n="footer.desc">企业级物联网消息中间件</p>
           </div>
         </div>
         
@@ -235,23 +237,23 @@ import CTASection from '../components/CTASection.astro';
       
       <div class="footer-links">
         <div class="link-column">
-          <h4>开源生态</h4>
+          <h4 data-i18n="footer.ecosystem">开源生态</h4>
           <a href="https://github.com/smartboot/smart-socket" target="_blank" rel="noopener">smart-socket</a>
           <a href="https://github.com/smartboot/feat" target="_blank" rel="noopener">feat</a>
           <a href="https://github.com/smartboot/redisun" target="_blank" rel="noopener">redisun</a>
         </div>
         <div class="link-column">
-          <h4>开发者</h4>
-          <a href="./product/introduction/">使用文档</a>
-          <a href="./plugins/about/">关于Plugin</a>
+          <h4 data-i18n="footer.developer">开发者</h4>
+          <a href="./product/introduction/" data-i18n="footer.docs">使用文档</a>
+          <a href="./plugins/about/" data-i18n="footer.plugin">关于Plugin</a>
         </div>
         <div class="link-column">
-          <h4>资源</h4>
-          <a href="./product/changelog/">更新日志</a>
-          <a href="./product/choosing-broker/">选型指南</a>
+          <h4 data-i18n="footer.resources">资源</h4>
+          <a href="./product/changelog/" data-i18n="footer.changelog">更新日志</a>
+          <a href="./product/choosing-broker/" data-i18n="footer.guide">选型指南</a>
         </div>
         <div class="link-column">
-          <h4>关于</h4>
+          <h4 data-i18n="footer.about">关于</h4>
           <a href="https://smartboot.tech" target="_blank" rel="noopener">smartboot</a>
           <a href="https://github.com/smartboot/smart-mqtt" target="_blank" rel="noopener">GitHub</a>
           <a href="https://gitee.com/smartboot/smart-mqtt" target="_blank" rel="noopener">Gitee</a>
@@ -261,13 +263,13 @@ import CTASection from '../components/CTASection.astro';
     
     <div class="footer-bottom">
       <div class="footer-bottom-content">
-        <p>&copy; 2024 smartboot. All rights reserved.</p>
+        <p data-i18n="footer.copyright">© 2024 smartboot. All rights reserved.</p>
         <div class="footer-stats">
           <span class="stat-item">
             <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
               <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
             </svg>
-            900+ Stars
+            900+ <span data-i18n="footer.stars">Stars</span>
           </span>
           <span class="stat-divider"></span>
           <span class="stat-item">v1.5.4</span>
@@ -455,5 +457,446 @@ import CTASection from '../components/CTASection.astro';
       }
     }
   </style>
+  
+  <script>
+    const translations = {
+      zh: {
+        nav: {
+          features: '产品特性',
+          cost: '成本优势',
+          performance: '性能表现',
+          deployment: '部署方式',
+          enterprise: '企业服务'
+        },
+        hero: {
+          badge: '开源 MQTT Broker',
+          title1: '让物联网基建成本',
+          title2: '降至原先的 1/10',
+          desc: '企业级 MQTT Broker，单机支持 10万+ 设备连接。代码全开源，让企业以更低成本构建高可用物联网基础设施。',
+          download: '下载发行包',
+          getStarted: '立即开始',
+          requirements: '环境要求'
+        },
+        features: {
+          tag: '为什么选择 smart-mqtt',
+          title: '企业级 MQTT Broker 的核心能力',
+          description: '专为大规模物联网场景打造，提供高性能、高可用、易扩展的消息服务',
+          cards: {
+            performance: {
+              metric: '10万+',
+              name: '超高性能',
+              text: '单机支持10万+并发连接，毫秒级消息延迟，满足高吞吐场景需求。',
+              tags: ['高并发', '毫秒级延迟']
+            },
+            security: {
+              metric: '99.99%',
+              name: '企业安全',
+              text: '支持 MQTT over TLS/SSL、用户名密码认证、ACL权限控制，确保数据传输安全。',
+              tags: ['TLS/SSL', 'ACL控制']
+            },
+            management: {
+              metric: '实时监控',
+              name: '可视化管理',
+              text: '内置 Web Dashboard，实时监控连接、订阅、消息流量，在线管理客户端会话。',
+              tags: ['Dashboard', '实时监控']
+            },
+            cluster: {
+              metric: '百万级',
+              name: '水平扩展',
+              text: '内置集群插件，支持多节点部署实现百万级并发连接，提供负载均衡和高可用能力，支撑大规模设备接入。',
+              tags: ['百万级连接', '高可用']
+            },
+            plugin: {
+              metric: '灵活扩展',
+              name: '插件化架构',
+              text: '灵活的插件机制，支持认证、桥接、存储、集群等扩展，满足定制化需求。',
+              tags: ['认证插件', '桥接插件']
+            },
+            developer: {
+              metric: '多语言 SDK',
+              name: '开发友好',
+              text: '提供 Java 客户端 SDK，支持 MQTT 3.1/3.1.1/5.0 协议，简单易用的 API 设计。',
+              tags: ['Java SDK', 'MQTT 5.0']
+            }
+          }
+        },
+        cost: {
+          badge: '成本优势',
+          title: '实现成本降至原先的'
+        },
+        team: {
+          legacyTag: '传统Broker产品',
+          smartTag: 'smart-mqtt',
+          legacyRoles: ['产品经理', '后端开发', '前端开发', '测试工程师', '运维工程师', '技术支持'],
+          smartCaps: ['全栈开发', '架构设计', '运维部署'],
+          legacyMeta: '多角色专业团队',
+          smartMeta: 'AI 加持单人模式',
+          savingsLabel: '人力成本'
+        },
+        performance: {
+          tag: '性能表现',
+          title: '超越同类产品的性能指标',
+          description: '经过严格压测验证的数据表现，为大规模物联网场景提供坚实保障',
+          subscribeTab: '消息订阅吞吐',
+          publishTab: '消息发布吞吐',
+          benchmarkEnv: '测试环境：8核16G 云服务器 · 2000 并发连接 · 128 字节 payload',
+          benchmarkSource: '数据来源于 bench-plugin 官方压测插件 · 支持横向对比测试 EMQX、Mosquitto 等主流 Broker'
+        },
+        deployment: {
+          tag: '快速部署',
+          title: '选择适合你的部署方式',
+          description: '提供 Docker 和手动部署两种方式，5 分钟内即可启动服务',
+          dockerTab: 'Docker 部署（推荐）',
+          manualTab: '手动部署',
+          docker: {
+            compose: {
+              title: '使用 Docker Compose',
+              desc: '最简单的部署方式，一键启动完整服务'
+            },
+            direct: {
+              title: '直接运行 Docker',
+              desc: '快速启动单个容器',
+              mqttPort: 'MQTT 协议端口',
+              dashboardPort: 'Dashboard 端口'
+            }
+          },
+          manual: {
+            download: {
+              title: '下载发行包',
+              desc: '从 Gitee 或 GitHub Releases 下载最新版本'
+            },
+            start: {
+              title: '启动服务',
+              desc: '执行启动脚本运行 smart-mqtt',
+              note: '确保已安装 JDK 8 或更高版本'
+            }
+          }
+        },
+        verification: {
+          tag: '验证部署',
+          title: '验证服务运行状态',
+          description: '通过多种方式验证 smart-mqtt 是否成功运行',
+          serviceCheck: {
+            title: '检查服务状态',
+            step1Title: '查看进程',
+            step2Title: '查看端口监听'
+          },
+          mqttTest: {
+            title: 'MQTT 客户端测试',
+            step1Title: '订阅主题（终端 1）',
+            step2Title: '发布消息（终端 2）',
+            clientLinks: '推荐客户端：'
+          },
+          dashboard: {
+            title: '访问 Dashboard（企业版）',
+            urlLabel: '访问地址',
+            usernameLabel: '默认账号',
+            passwordLabel: '默认密码',
+            securityNote: '出于安全考虑，生产环境请尽快修改成安全性更高的密码'
+          }
+        },
+        enterprise: {
+          tag: '企业服务',
+          title: '为大型企业提供专业服务',
+          description: '企业版在专业版基础上，提供更高级的功能和专属技术支持',
+          features: {
+            support: {
+              title: '专属技术支持',
+              desc: '7x24小时响应，专属技术顾问一对一服务'
+            },
+            custom: {
+              title: '定制化开发',
+              desc: '根据业务需求定制功能，满足特殊场景需求'
+            },
+            cluster: {
+              title: '集群部署方案',
+              desc: '专业的集群架构设计，支持高可用负载均衡'
+            },
+            sla: {
+              title: 'SLA 服务保障',
+              desc: '99.99% 服务可用性保障，完善的灾备方案'
+            }
+          },
+          contactBtn: '联系我们获取方案'
+        },
+        cta: {
+          title: '代码开源，即刻体验',
+          description: 'AGPL 协议开源，商业授权可选。Docker 一键部署，5分钟完成接入。',
+          github: '访问 GitHub',
+          gitee: '访问 Gitee',
+          trust1: '企业级服务保障',
+          trust2: '专业技术服务',
+          trust3: '社区支持',
+          qrTitle: '联系销售团队',
+          qrDesc: '扫描二维码，添加微信咨询',
+          qrWorkHours: '工作时间：周一至周五 9:00-18:00'
+        },
+        footer: {
+          brand: 'smart-mqtt',
+          desc: '企业级物联网消息中间件',
+          ecosystem: '开源生态',
+          developer: '开发者',
+          resources: '资源',
+          about: '关于',
+          docs: '使用文档',
+          plugin: '关于Plugin',
+          changelog: '更新日志',
+          guide: '选型指南',
+          copyright: '© 2024 smartboot. All rights reserved.',
+          stars: 'Stars'
+        }
+      },
+      en: {
+        nav: {
+          features: 'Features',
+          cost: 'Cost',
+          performance: 'Performance',
+          deployment: 'Deployment',
+          enterprise: 'Enterprise'
+        },
+        hero: {
+          badge: 'Open Source MQTT Broker',
+          title1: 'Reduce IoT Infrastructure Cost',
+          title2: 'to 1/10 of Original',
+          desc: 'Enterprise-grade MQTT Broker supporting 100K+ concurrent connections. Fully open-source, enabling enterprises to build high-availability IoT infrastructure at lower cost.',
+          download: 'Download',
+          getStarted: 'Get Started',
+          requirements: 'Requirements'
+        },
+        features: {
+          tag: 'Why Choose smart-mqtt',
+          title: 'Core Capabilities of Enterprise MQTT Broker',
+          description: 'Built for large-scale IoT scenarios, providing high-performance, high-availability, and scalable messaging services',
+          cards: {
+            performance: {
+              metric: '100K+',
+              name: 'Ultra Performance',
+              text: 'Supports 100K+ concurrent connections on a single node with millisecond latency, meeting high-throughput requirements.',
+              tags: ['High Concurrency', 'Millisecond Latency']
+            },
+            security: {
+              metric: '99.99%',
+              name: 'Enterprise Security',
+              text: 'Supports MQTT over TLS/SSL, username/password authentication, and ACL permission control to ensure secure data transmission.',
+              tags: ['TLS/SSL', 'ACL Control']
+            },
+            management: {
+              metric: 'Real-time',
+              name: 'Visual Management',
+              text: 'Built-in Web Dashboard for real-time monitoring of connections, subscriptions, and message traffic, with online client session management.',
+              tags: ['Dashboard', 'Real-time Monitoring']
+            },
+            cluster: {
+              metric: 'Million+',
+              name: 'Horizontal Scaling',
+              text: 'Built-in cluster plugin supports multi-node deployment for million-level concurrent connections, providing load balancing and high availability for large-scale device access.',
+              tags: ['Million Connections', 'High Availability']
+            },
+            plugin: {
+              metric: 'Flexible',
+              name: 'Plugin Architecture',
+              text: 'Flexible plugin mechanism supporting authentication, bridging, storage, and cluster extensions to meet customization needs.',
+              tags: ['Auth Plugin', 'Bridge Plugin']
+            },
+            developer: {
+              metric: 'Multi-language SDK',
+              name: 'Developer Friendly',
+              text: 'Provides Java client SDK with support for MQTT 3.1/3.1.1/5.0 protocols and simple, easy-to-use API design.',
+              tags: ['Java SDK', 'MQTT 5.0']
+            }
+          }
+        },
+        cost: {
+          badge: 'Cost Advantage',
+          title: 'Reduce Implementation Cost to'
+        },
+        team: {
+          legacyTag: 'Traditional Broker',
+          smartTag: 'smart-mqtt',
+          legacyRoles: ['Product Manager', 'Backend Dev', 'Frontend Dev', 'QA Engineer', 'DevOps', 'Tech Support'],
+          smartCaps: ['Full-stack Dev', 'Architecture', 'Deployment'],
+          legacyMeta: 'Multi-role Professional Team',
+          smartMeta: 'AI-Powered Single Person Mode',
+          savingsLabel: 'Labor Cost'
+        },
+        performance: {
+          tag: 'Performance',
+          title: 'Performance Metrics Beyond Competitors',
+          description: 'Rigorously tested data performance, providing solid guarantees for large-scale IoT scenarios',
+          subscribeTab: 'Subscribe Throughput',
+          publishTab: 'Publish Throughput',
+          benchmarkEnv: 'Test Environment: 8-core 16G Cloud Server · 2000 Concurrent Connections · 128 bytes payload',
+          benchmarkSource: 'Data from bench-plugin official benchmark plugin · Supports cross-comparison testing with mainstream brokers like EMQX, Mosquitto'
+        },
+        deployment: {
+          tag: 'Quick Deployment',
+          title: 'Choose Your Deployment Method',
+          description: 'Docker and manual deployment options, start service within 5 minutes',
+          dockerTab: 'Docker Deployment (Recommended)',
+          manualTab: 'Manual Deployment',
+          docker: {
+            compose: {
+              title: 'Use Docker Compose',
+              desc: 'Simplest deployment method, start complete service with one command'
+            },
+            direct: {
+              title: 'Run Docker Directly',
+              desc: 'Quickly start a single container',
+              mqttPort: 'MQTT Protocol Port',
+              dashboardPort: 'Dashboard Port'
+            }
+          },
+          manual: {
+            download: {
+              title: 'Download Release Package',
+              desc: 'Download latest version from Gitee or GitHub Releases'
+            },
+            start: {
+              title: 'Start Service',
+              desc: 'Run startup script to start smart-mqtt',
+              note: 'Ensure JDK 8 or higher is installed'
+            }
+          }
+        },
+        verification: {
+          tag: 'Verify Deployment',
+          title: 'Verify Service Status',
+          description: 'Verify smart-mqtt is running successfully through multiple methods',
+          serviceCheck: {
+            title: 'Check Service Status',
+            step1Title: 'View Process',
+            step2Title: 'View Port Listening'
+          },
+          mqttTest: {
+            title: 'MQTT Client Test',
+            step1Title: 'Subscribe to Topic (Terminal 1)',
+            step2Title: 'Publish Message (Terminal 2)',
+            clientLinks: 'Recommended Clients:'
+          },
+          dashboard: {
+            title: 'Access Dashboard (Enterprise Edition)',
+            urlLabel: 'Access URL',
+            usernameLabel: 'Default Username',
+            passwordLabel: 'Default Password',
+            securityNote: 'For security, please change to a more secure password in production environment'
+          }
+        },
+        enterprise: {
+          tag: 'Enterprise Services',
+          title: 'Professional Services for Large Enterprises',
+          description: 'Enterprise edition provides advanced features and dedicated technical support',
+          features: {
+            support: {
+              title: 'Dedicated Technical Support',
+              desc: '7x24 response, dedicated technical consultant one-on-one service'
+            },
+            custom: {
+              title: 'Custom Development',
+              desc: 'Custom features based on business needs, meeting special scenario requirements'
+            },
+            cluster: {
+              title: 'Cluster Deployment Solution',
+              desc: 'Professional cluster architecture design, supporting high availability load balancing'
+            },
+            sla: {
+              title: 'SLA Service Guarantee',
+              desc: '99.99% service availability guarantee, comprehensive disaster recovery solution'
+            }
+          },
+          contactBtn: 'Contact Us for Solution'
+        },
+        cta: {
+          title: 'Open Source Code, Experience Now',
+          description: 'AGPL open source license, optional commercial license. Docker one-click deployment, complete integration in 5 minutes.',
+          github: 'Visit GitHub',
+          gitee: 'Visit Gitee',
+          trust1: 'Enterprise-grade Service Guarantee',
+          trust2: 'Professional Technical Service',
+          trust3: 'Community Support',
+          qrTitle: 'Contact Sales Team',
+          qrDesc: 'Scan QR code to add WeChat for consultation',
+          qrWorkHours: 'Working Hours: Monday to Friday 9:00-18:00'
+        },
+        footer: {
+          brand: 'smart-mqtt',
+          desc: 'Enterprise IoT Message Middleware',
+          ecosystem: 'Open Source Ecosystem',
+          developer: 'Developer',
+          resources: 'Resources',
+          about: 'About',
+          docs: 'Documentation',
+          plugin: 'About Plugin',
+          changelog: 'Changelog',
+          guide: 'Selection Guide',
+          copyright: '© 2024 smartboot. All rights reserved.',
+          stars: 'Stars'
+        }
+      }
+    };
+    
+    function updateTranslations(lang) {
+      const trans = translations[lang];
+      
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        const keys = key.split('.');
+        let value = trans;
+        
+        for (const k of keys) {
+          value = value[k];
+          if (!value) break;
+        }
+        
+        if (value) {
+          el.textContent = value;
+        }
+      });
+      
+      document.querySelectorAll('[data-i18n-html]').forEach(el => {
+        const key = el.getAttribute('data-i18n-html');
+        const keys = key.split('.');
+        let value = trans;
+        
+        for (const k of keys) {
+          value = value[k];
+          if (!value) break;
+        }
+        
+        if (value) {
+          el.innerHTML = value;
+        }
+      });
+      
+      document.querySelectorAll('[data-i18n-arr]').forEach(el => {
+        const arrKey = el.getAttribute('data-i18n-arr');
+        const idx = parseInt(el.getAttribute('data-i18n-idx') || '0');
+        const keys = arrKey.split('.');
+        let value = trans;
+        
+        for (const k of keys) {
+          value = value[k];
+          if (!value) break;
+        }
+        
+        if (Array.isArray(value) && value[idx]) {
+          const roleEl = el.querySelector('.person-role');
+          if (roleEl) {
+            roleEl.textContent = value[idx];
+          } else {
+            el.textContent = value[idx];
+          }
+        }
+      });
+    }
+    
+    window.addEventListener('languageChange', (e) => {
+      updateTranslations(e.detail.language);
+    });
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      const lang = document.documentElement.getAttribute('lang') || 'zh';
+      updateTranslations(lang);
+    });
+  </script>
 </body>
 </html>

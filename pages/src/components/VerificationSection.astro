@@ -4,9 +4,9 @@
 <section class="verification-section" id="verification">
   <div class="verification-container">
     <div class="verification-header">
-      <span class="verification-tag">验证部署</span>
-      <h2 class="verification-title">验证服务运行状态</h2>
-      <p class="verification-description">
+      <span class="verification-tag" data-i18n="verification.tag">验证部署</span>
+      <h2 class="verification-title" data-i18n="verification.title">验证服务运行状态</h2>
+      <p class="verification-description" data-i18n="verification.description">
         通过多种方式验证 smart-mqtt 是否成功运行
       </p>
     </div>
@@ -22,14 +22,14 @@
               <line x1="12" y1="17" x2="12" y2="21"/>
             </svg>
           </div>
-          <h3>检查服务状态</h3>
+          <h3 data-i18n="verification.serviceCheck.title">检查服务状态</h3>
         </div>
         
         <div class="verify-steps">
           <div class="step">
             <div class="step-number">1</div>
             <div class="step-content">
-              <p class="step-title">查看进程</p>
+              <p class="step-title" data-i18n="verification.serviceCheck.step1Title">查看进程</p>
               <div class="code-block">
                 <code>ps aux | grep smart-mqtt</code>
                 <button class="copy-btn" data-code="ps aux | grep smart-mqtt">
@@ -45,7 +45,7 @@
           <div class="step">
             <div class="step-number">2</div>
             <div class="step-content">
-              <p class="step-title">查看端口监听</p>
+              <p class="step-title" data-i18n="verification.serviceCheck.step2Title">查看端口监听</p>
               <div class="code-block">
                 <code>netstat -tlnp | grep 1883</code>
                 <button class="copy-btn" data-code="netstat -tlnp | grep 1883">
@@ -70,14 +70,14 @@
               <path d="M2 12l10 5 10-5"/>
             </svg>
           </div>
-          <h3>MQTT 客户端测试</h3>
+          <h3 data-i18n="verification.mqttTest.title">MQTT 客户端测试</h3>
         </div>
         
         <div class="verify-steps">
           <div class="step">
             <div class="step-number">1</div>
             <div class="step-content">
-              <p class="step-title">订阅主题（终端 1）</p>
+              <p class="step-title" data-i18n="verification.mqttTest.step1Title">订阅主题（终端 1）</p>
               <div class="code-block">
                 <code>mosquitto_sub -h localhost -p 1883 -t test/topic</code>
                 <button class="copy-btn" data-code="mosquitto_sub -h localhost -p 1883 -t test/topic">
@@ -93,7 +93,7 @@
           <div class="step">
             <div class="step-number">2</div>
             <div class="step-content">
-              <p class="step-title">发布消息（终端 2）</p>
+              <p class="step-title" data-i18n="verification.mqttTest.step2Title">发布消息（终端 2）</p>
               <div class="code-block">
                 <code>mosquitto_pub -h localhost -p 1883 -t test/topic -m "Hello"</code>
                 <button class="copy-btn" data-code='mosquitto_pub -h localhost -p 1883 -t test/topic -m "Hello"'>
@@ -108,7 +108,7 @@
         </div>
 
         <div class="client-links">
-          <span>推荐客户端：</span>
+          <span data-i18n="verification.mqttTest.clientLinks">推荐客户端：</span>
           <a href="https://mqttx.app/" target="_blank" rel="noopener" class="client-link">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
@@ -132,12 +132,12 @@
               <line x1="9" y1="21" x2="9" y2="9"/>
             </svg>
           </div>
-          <h3>访问 Dashboard（企业版）</h3>
+          <h3 data-i18n="verification.dashboard.title">访问 Dashboard（企业版）</h3>
         </div>
         
         <div class="dashboard-content">
           <div class="dashboard-url">
-            <span class="url-label">访问地址</span>
+            <span class="url-label" data-i18n="verification.dashboard.urlLabel">访问地址</span>
             <a href="http://localhost:18083" target="_blank" rel="noopener" class="url-link">
               http://localhost:18083
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -150,11 +150,11 @@
           
           <div class="credentials">
             <div class="credential-item">
-              <span class="credential-label">默认账号</span>
+              <span class="credential-label" data-i18n="verification.dashboard.usernameLabel">默认账号</span>
               <code class="credential-value">smart-mqtt</code>
             </div>
             <div class="credential-item">
-              <span class="credential-label">默认密码</span>
+              <span class="credential-label" data-i18n="verification.dashboard.passwordLabel">默认密码</span>
               <code class="credential-value">smart-mqtt</code>
             </div>
           </div>
@@ -165,7 +165,7 @@
               <line x1="12" y1="9" x2="12" y2="13"/>
               <line x1="12" y1="17" x2="12.01" y2="17"/>
             </svg>
-            <span>出于安全考虑，生产环境请尽快修改成安全性更高的密码</span>
+            <span data-i18n="verification.dashboard.securityNote">出于安全考虑，生产环境请尽快修改成安全性更高的密码</span>
           </div>
         </div>
       </div>

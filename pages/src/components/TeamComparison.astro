@@ -7,13 +7,13 @@ const smartCaps = ['全栈开发', '架构设计', '运维部署'];
   <!-- 传统团队 -->
   <div class="team-side legacy-side">
     <div class="team-label">
-      <span class="label-tag">传统Broker产品</span>
+      <span class="label-tag" data-i18n="team.legacyTag">传统Broker产品</span>
 
     </div>
     
     <div class="people-grid legacy-grid">
       {legacyRoles.map((role, i) => (
-        <div class="person-avatar legacy-avatar" style={`--delay: ${i * 0.05}s`}>
+        <div class="person-avatar legacy-avatar" style={`--delay: ${i * 0.05}s`} data-i18n-arr="team.legacyRoles" data-i18n-idx={i}>
           <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
             <circle cx="24" cy="16" r="10" fill="currentColor" opacity="0.8"/>
             <path d="M8 44c0-8.837 7.163-16 16-16s16 7.163 16 16" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
@@ -26,7 +26,7 @@ const smartCaps = ['全栈开发', '架构设计', '运维部署'];
     <div class="team-meta">
       <div class="meta-item">
         <div class="meta-text">
-          <span class="meta-subtitle">多角色专业团队</span>
+          <span class="meta-subtitle" data-i18n="team.legacyMeta">多角色专业团队</span>
         </div>
       </div>
     </div>
@@ -44,14 +44,14 @@ const smartCaps = ['全栈开发', '架构设计', '运维部署'];
     </div>
     <div class="savings-stat">
       <span class="savings-number">-90%</span>
-      <span class="savings-label">人力成本</span>
+      <span class="savings-label" data-i18n="team.savingsLabel">人力成本</span>
     </div>
   </div>
 
   <!-- Smart团队 -->
   <div class="team-side smart-side">
     <div class="team-label">
-      <span class="label-tag highlight">smart-mqtt</span>
+      <span class="label-tag highlight" data-i18n="team.smartTag">smart-mqtt</span>
     
     </div>
     
@@ -78,7 +78,7 @@ const smartCaps = ['全栈开发', '架构设计', '运维部署'];
       
       <div class="capabilities">
         {smartCaps.map((cap, i) => (
-          <span class="cap-tag" style={`--delay: ${i * 0.1}s`}>{cap}</span>
+          <span class="cap-tag" style={`--delay: ${i * 0.1}s`} data-i18n-arr="team.smartCaps" data-i18n-idx={i}>{cap}</span>
         ))}
       </div>
     </div>
@@ -87,7 +87,7 @@ const smartCaps = ['全栈开发', '架构设计', '运维部署'];
       <div class="meta-item highlight">
         <span class="meta-icon">⚡</span>
         <div class="meta-text">
-          <span class="meta-subtitle highlight">AI 加持单人模式</span>
+          <span class="meta-subtitle highlight" data-i18n="team.smartMeta">AI 加持单人模式</span>
         </div>
       </div>
     

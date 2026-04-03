@@ -136,9 +136,9 @@ const metricCards = [
 <section class="performance-section" id="performance">
   <div class="container">
     <div class="section-header">
-      <span class="section-tag">性能表现</span>
-      <h2 class="section-title">超越同类产品的性能指标</h2>
-      <p class="section-description">
+      <span class="section-tag" data-i18n="performance.tag">性能表现</span>
+      <h2 class="section-title" data-i18n="performance.title">超越同类产品的性能指标</h2>
+      <p class="section-description" data-i18n="performance.description">
         经过严格压测验证的数据表现，为大规模物联网场景提供坚实保障
       </p>
     </div>
@@ -147,8 +147,8 @@ const metricCards = [
       <!-- 左侧：Tab切换的吞吐图表 -->
       <div class="charts-container">
         <div class="charts-tabs">
-          <button class="tab-button active" data-tab="subscribe">消息订阅吞吐</button>
-          <button class="tab-button" data-tab="publish">消息发布吞吐</button>
+          <button class="tab-button active" data-tab="subscribe" data-i18n="performance.subscribeTab">消息订阅吞吐</button>
+          <button class="tab-button" data-tab="publish" data-i18n="performance.publishTab">消息发布吞吐</button>
         </div>
         <div class="charts-content">
           <div class="tab-panel active" data-panel="subscribe">
@@ -185,8 +185,8 @@ const metricCards = [
           <line x1="12" y1="8" x2="12.01" y2="8"/>
         </svg>
         <div class="benchmark-info">
-          <p><strong>测试环境：</strong>8核16G 云服务器 · 2000 并发连接 · 128 字节 payload</p>
-          <p class="benchmark-source">数据来源于 <a href="/smart-mqtt/plugins/bench-plugin/" class="benchmark-link">bench-plugin 官方压测插件</a> · 支持横向对比测试 EMQX、Mosquitto 等主流 Broker</p>
+          <p data-i18n="performance.benchmarkEnv"><strong>测试环境：</strong>8核16G 云服务器 · 2000 并发连接 · 128 字节 payload</p>
+          <p class="benchmark-source" data-i18n="performance.benchmarkSource">数据来源于 <a href="/smart-mqtt/plugins/bench-plugin/" class="benchmark-link">bench-plugin 官方压测插件</a> · 支持横向对比测试 EMQX、Mosquitto 等主流 Broker</p>
         </div>
       </div>
     </div>
