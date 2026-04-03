@@ -31,6 +31,11 @@ public class PluginConfig {
      */
     private List<String> showMetrics;
 
+    /**
+     * 连接防抖配置
+     */
+    private FlappingConfig flapping;
+
 
     public HttpConfig getHttp() {
         return http;
@@ -70,6 +75,14 @@ public class PluginConfig {
 
     public void setOpenai(OpenAI openai) {
         this.openai = openai;
+    }
+
+    public FlappingConfig getFlapping() {
+        return flapping;
+    }
+
+    public void setFlapping(FlappingConfig flapping) {
+        this.flapping = flapping;
     }
 
     public static class HttpConfig {
@@ -226,6 +239,67 @@ public class PluginConfig {
 
         public void setUrl(String url) {
             this.url = url;
+        }
+    }
+
+    /**
+     * 连接防抖配置
+     * 用于检测和限制频繁连接/断开的客户端
+     */
+    public static class FlappingConfig {
+        /**
+         * 是否启用防抖检测
+         */
+        private boolean enable = false;
+
+        /**
+         * 检测时间窗口（单位：秒）
+         * 在此时间窗口内统计客户端的连接/断开次数
+         */
+        private int thresholdDuration = 60;
+
+        /**
+         * 在时间窗口内允许的最大连接次数
+         * 超过此次数将被判定为抖动客户端
+         */
+        private int thresholdCount = 5;
+
+        /**
+         * 封禁时间（单位：秒）
+         * 被判定为抖动客户端后将被封禁的时间
+         */
+        private int banTime = 300;
+
+        public boolean isEnable() {
+            return enable;
+        }
+
+        public void setEnable(boolean enable) {
+            this.enable = enable;
+        }
+
+        public int getThresholdDuration() {
+            return thresholdDuration;
+        }
+
+        public void setThresholdDuration(int thresholdDuration) {
+            this.thresholdDuration = thresholdDuration;
+        }
+
+        public int getThresholdCount() {
+            return thresholdCount;
+        }
+
+        public void setThresholdCount(int thresholdCount) {
+            this.thresholdCount = thresholdCount;
+        }
+
+        public int getBanTime() {
+            return banTime;
+        }
+
+        public void setBanTime(int banTime) {
+            this.banTime = banTime;
         }
     }
 }

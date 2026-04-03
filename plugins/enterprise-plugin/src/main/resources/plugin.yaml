@@ -16,3 +16,10 @@ showMetrics:
   - packets_publish_sent
   - bytes_received
   - bytes_sent
+
+# 连接防抖配置
+flapping:
+  enable: false
+  thresholdDuration: 60
+  thresholdCount: 5
+  banTime: 300

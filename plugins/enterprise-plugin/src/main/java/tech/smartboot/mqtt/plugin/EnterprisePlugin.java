@@ -17,15 +17,22 @@ import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.HttpServer;
+import tech.smartboot.mqtt.common.enums.MqttConnectReturnCode;
+import tech.smartboot.mqtt.common.message.MqttConnectMessage;
+import tech.smartboot.mqtt.plugin.flapping.FlappingDetector;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
+import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
+import tech.smartboot.mqtt.plugin.spec.bus.AsyncEventObject;
+import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 import tech.smartboot.mqtt.plugin.spec.schema.Enum;
 import tech.smartboot.mqtt.plugin.spec.schema.Item;
 import tech.smartboot.mqtt.plugin.spec.schema.Schema;
 
 import java.nio.channels.AsynchronousChannelGroup;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -65,6 +72,40 @@ public class EnterprisePlugin extends Plugin {
                 .registerBean("plugin", this)//当前的插件ID
                 .registerBean("storage", storage()).group(asynchronousChannelGroup));
         httpServer.listen(config.getHttp().getHost(), config.getHttp().getPort());
+
+        // 初始化连接防抖检测器
+        if (config.getFlapping() != null && config.getFlapping().isEnable()) {
+            FlappingDetector flappingDetector = new FlappingDetector(config.getFlapping());
+            log("连接防抖功能已启用，配置: 时间窗口=" + config.getFlapping().getThresholdDuration() +
+                    "秒, 阈值=" + config.getFlapping().getThresholdCount() + "次, 封禁时间=" + config.getFlapping().getBanTime() + "秒");
+
+            // 订阅连接事件
+            subscribe(EventType.CONNECT, AsyncEventObject.syncSubscriber((eventType, eventObject) -> {
+                MqttConnectMessage connectMessage = eventObject.getObject();
+                String clientId = connectMessage.getPayload().clientId();
+
+                // 检查是否被封禁
+                if (flappingDetector.isBanned(clientId)) {
+                    // 拒绝连接
+                    log("拒绝抖动客户端连接: " + clientId);
+                    MqttSession.connFailAck(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE, eventObject.getSession());
+                    return;
+                }
+
+                // 记录连接事件
+                flappingDetector.recordConnection(clientId);
+
+            }));
+
+            // 订阅断开连接事件
+            subscribe(EventType.DISCONNECT, (eventType, session) -> {
+                flappingDetector.recordConnection(session.getClientId());
+            });
+
+            // 定期清理过期记录
+            selfRescueTimer().schedule(flappingDetector::cleanup, 30, TimeUnit.SECONDS);
+        }
+
         log("企业版插件初始化完成，OpenAPI 服务监听地址: " + config.getHttp().getHost() + ":" + config.getHttp().getPort());
     }
 
@@ -162,6 +203,15 @@ public class EnterprisePlugin extends Plugin {
         mcp.addItems(Item.String("url", "MCP服务地址"));
         openapi.addItems(mcp);
         schema.addItem(openapi);
+
+        // 连接防抖配置
+        Item flapping = Item.Object("flapping", "连接防抖配置").tip("用于检测和限制频繁连接/断开的客户端（抖动客户端）");
+        flapping.addItems(Item.Switch("enable", "启用防抖检测").col(4));
+        flapping.addItems(Item.Int("thresholdDuration", "检测时间窗口（秒）").col(4).tip("在此时间窗口内统计客户端的连接/断开次数"));
+        flapping.addItems(Item.Int("thresholdCount", "连接次数阈值").col(4).tip("在时间窗口内允许的最大连接次数"));
+        flapping.addItems(Item.Int("banTime", "封禁时间（秒）").col(4).tip("被判定为抖动客户端后的封禁时间"));
+        schema.addItem(flapping);
+
         return schema;
     }
 }
