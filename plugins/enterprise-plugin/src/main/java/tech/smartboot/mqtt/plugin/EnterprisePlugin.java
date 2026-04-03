@@ -103,7 +103,7 @@ public class EnterprisePlugin extends Plugin {
             });
 
             // 定期清理过期记录
-            selfRescueTimer().schedule(flappingDetector::cleanup, 30, TimeUnit.SECONDS);
+            selfRescueTimer().scheduleWithFixedDelay(flappingDetector::cleanup, 30, TimeUnit.SECONDS);
         }
 
         log("企业版插件初始化完成，OpenAPI 服务监听地址: " + config.getHttp().getHost() + ":" + config.getHttp().getPort());
