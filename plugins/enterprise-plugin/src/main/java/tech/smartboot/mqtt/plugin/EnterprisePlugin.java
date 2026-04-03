@@ -88,7 +88,7 @@ public class EnterprisePlugin extends Plugin {
                 if (flappingDetector.isBanned(clientId)) {
                     // 拒绝连接
                     log("拒绝抖动客户端连接: " + clientId);
-                    MqttSession.connFailAck(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE, eventObject.getSession());
+                    MqttSession.connFailAck(MqttConnectReturnCode.BANNED, eventObject.getSession());
                     return;
                 }
 
