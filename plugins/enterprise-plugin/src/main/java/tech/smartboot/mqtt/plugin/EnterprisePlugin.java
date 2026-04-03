@@ -196,8 +196,8 @@ public class EnterprisePlugin extends Plugin {
 
         Item openapi = Item.Object("openai", "openai服务配置");
         openapi.addItems(Item.String("url", "OpenAI URL"));
-        openapi.addItems(Item.Password("apiKey", "API秘钥"));
-        openapi.addItems(Item.String("model", "模型"));
+        openapi.addItems(Item.Password("apiKey", "API秘钥").col(6));
+        openapi.addItems(Item.String("model", "模型").col(6));
 
         Item mcp = Item.ItemArray("mcp", "MCP服务配置");
         mcp.addItems(Item.String("url", "MCP服务地址"));
@@ -205,11 +205,11 @@ public class EnterprisePlugin extends Plugin {
         schema.addItem(openapi);
 
         // 连接防抖配置
-        Item flapping = Item.Object("flapping", "连接防抖配置").tip("用于检测和限制频繁连接/断开的客户端（抖动客户端）");
-        flapping.addItems(Item.Switch("enable", "启用防抖检测").col(4));
-        flapping.addItems(Item.Int("thresholdDuration", "检测时间窗口（秒）").col(4).tip("在此时间窗口内统计客户端的连接/断开次数"));
-        flapping.addItems(Item.Int("thresholdCount", "连接次数阈值").col(4).tip("在时间窗口内允许的最大连接次数"));
-        flapping.addItems(Item.Int("banTime", "封禁时间（秒）").col(4).tip("被判定为抖动客户端后的封禁时间"));
+        Item flapping = Item.Object("flapping", "连接防抖配置").tip("用于检测和限制频繁连接/断开的客户端（抖动客户端）").col(6);
+        flapping.addItems(Item.Switch("enable", "启用防抖检测"));
+        flapping.addItems(Item.Int("thresholdDuration", "检测时间窗口（秒）").tip("在此时间窗口内统计客户端的连接/断开次数"));
+        flapping.addItems(Item.Int("thresholdCount", "连接次数阈值").tip("在时间窗口内允许的最大连接次数"));
+        flapping.addItems(Item.Int("banTime", "封禁时间（秒）").tip("被判定为抖动客户端后的封禁时间"));
         schema.addItem(flapping);
 
         return schema;
