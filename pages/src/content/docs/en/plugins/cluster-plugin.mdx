@@ -1,0 +1,154 @@
+---
+title: Cluster Plugin
+sidebar:
+  order: 2
+---
+
+`cluster-plugin` provides HTTP-based cluster coordination capabilities for smart-mqtt broker, enabling multi-node cluster deployment, worker node access, and cluster status synchronization.
+
+![](./img/cluster.svg)
+
+
+## Feature Overview
+- Supports cluster deployment with core nodes and worker nodes
+- Inter-node communication via HTTP for status synchronization and message forwarding
+- Supports distributed message routing and queue strategies
+- Dynamic discovery and management of cluster nodes
+
+## Core Components
+- **ClusterPlugin**: Plugin entry point, responsible for initializing cluster core service or worker node connections.
+- **Coordinator**: Responsible for cluster node discovery, status maintenance, node join/leave event handling, and distributed message routing.
+- **Distributor**: Message distributor, supports multiple queue strategies.
+- **PluginConfig**: Plugin configuration management, supports core node, listen address, port, queue length, queue strategy, cluster node list, and other parameters.
+
+## Configuration Parameters
+Configure in `plugin.yaml`, example:
+
+```yaml
+core: true                # Whether it's a core node, true=core node, false=worker node
+host: 0.0.0.0             # Cluster service listen address, only valid when core is true
+port: 8884                # Cluster service listen port, only valid when core is true
+queueLength: 1024         # Message queue length
+queuePolicy: 0            # Queue strategy (0=discard newest, 1=discard oldest)
+clusters:                 # Cluster node address list
+  - http://core1:8884
+  - http://core2:8884
+```
+
+## Usage Instructions
+1. Place plugin and configuration file in smart-mqtt's plugins directory
+2. Configure `plugin.yaml`, set core/host/port/clusters parameters according to actual deployment role
+3. Start smart-mqtt service, plugin will automatically load and initialize cluster functionality
+
+
+## Notes
+- Network connectivity must be ensured between cluster nodes, port configuration must be consistent
+- Each node's `plugin.yaml` configuration must be set separately according to actual role (core/worker)
+- Recommended startup sequence: start core nodes first, then worker nodes
+
+## Workflow Diagram
+
+### Cluster Node Registration Swimlane Diagram
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant WorkerN as Worker Node N
+    participant Cluster as Cluster Plugin
+    participant Core as Core Node<br/>(Coordinator)
+
+    rect rgb(230, 245, 255)
+        Note over WorkerN,Core: Node Registration Phase
+        WorkerN->>Cluster: 1. Node startup
+        Cluster->>Cluster: 2. Load configuration<br/>(clusters address list)
+        
+        Cluster->>Core: 3. HTTP POST /register<br/>(node info + auth credentials)
+        
+        Core->>Core: 4. Verify node identity
+        alt Verification passed
+            Core->>Core: 5a. Register to node list<br/>Assign NodeID
+            Core-->>Cluster: 6a. HTTP 200 OK<br/>(cluster config + node list)
+            Cluster->>Cluster: 7a. Update local status table
+            Note over WorkerN,Core: Node joined cluster successfully
+        else Verification failed
+            Core-->>Cluster: 6b. HTTP 403 Forbidden
+            Cluster->>WorkerN: 7b. Registration failed, service exits
+        end
+    end
+
+    rect rgb(255, 245, 230)
+        Note over WorkerN,Core: Status Synchronization Phase
+        Core->>Cluster: 8. Status broadcast<br/>(node join event)
+        Cluster->>Cluster: 9. Update cluster topology
+        
+        WorkerN->>Core: 10. Heartbeat check
+        Core-->>WorkerN: 11. Heartbeat response
+    end
+```
+
+### Cross-node Message Forwarding Swimlane Diagram
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant PubClient as Publisher(Node 1)
+    participant Worker1 as Worker Node 1
+    participant Cluster1 as Cluster Plugin(Node 1)
+    participant Core as Core Node
+    participant Cluster2 as Cluster Plugin(Node 2)
+    participant Worker2 as Worker Node 2
+    participant SubClient as Subscriber(Node 2)
+
+    rect rgb(230, 245, 255)
+        Note over PubClient,SubClient: Message Publishing Phase
+        PubClient->>Worker1: 1. PUBLISH message<br/>(topic: sensors/temp)
+        Worker1->>Cluster1: 2. Message routing request
+        
+        Cluster1->>Cluster1: 3. Target node judgment<br/>(based on topic routing table)
+    end
+
+    rect rgb(255, 245, 230)
+        Note over Core,Worker2: Cross-node Forwarding
+        
+        alt Target is local
+            Cluster1->>Worker1: 4a. Local forwarding
+            Worker1->>PubClient: 4b. Acknowledge receipt
+        else Target is remote node
+            Cluster1->>Core: 4c. HTTP POST /forward<br/>(message + target node)
+            
+            Core->>Core: 5. Routing decision
+            Core->>Cluster2: 6. HTTP forward message
+            
+            Cluster2->>Worker2: 7. Local delivery
+            Worker2->>SubClient: 8. Push message
+            
+            SubClient-->>Worker2: 9. Acknowledge receipt
+            Worker2-->>Cluster2: 10. Forward acknowledgment
+            Cluster2-->>Core: 11. Return acknowledgment
+            Core-->>Cluster1: 12. Forwarding complete
+        end
+    end
+
+    rect rgb(255, 255, 230)
+        Note over PubClient,SubClient: Queue Strategy Processing
+        
+        alt Queue strategy=discard newest(queuePolicy=0)
+            Cluster1->>Cluster1: Discard new messages when queue full
+        else Queue strategy=discard oldest(queuePolicy=1)
+            Cluster1->>Cluster1: Discard old messages when queue full
+        end
+    end
+```
+
+### Flow Description
+1. **Core Node Startup**: Core node starts HTTP service, waits for worker node connections
+2. **Worker Node Registration**: Worker node connects to core node based on configured clusters address and completes registration
+3. **Message Routing**:
+   - Local clients forward directly
+   - Remote clients forward to corresponding node via HTTP
+4. **Status Synchronization**: Coordinator maintains cluster node status, handles node join/leave events
+5. **Distributed Distribution**: Distributor manages message distribution based on queue strategy
+
+## Technical Support
+- Author: Sandao (zhengjunweimail@163.com)
+- Vendor: smart-mqtt

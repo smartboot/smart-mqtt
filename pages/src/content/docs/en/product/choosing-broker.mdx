@@ -1,0 +1,106 @@
+---
+title: How to Choose a Broker Product
+sidebar:
+    order: 2
+---
+
+# How to Choose an MQTT Broker Product
+
+Nowadays, there are many MQTT Broker products available on the market, each emphasizing their own advantages in various aspects. Various promotional points can easily cause confusion for users when choosing products. This article will combine practical experience to discuss the selection approach for MQTT Brokers.
+
+## 1. Eliminate Interference Factors
+
+To highlight selling points, many products continuously stack features. Regardless of the practicality of these features, the number of features becomes an embodiment of product advantage.
+
+These impractical interference factors can easily affect users' judgment. Here are a few examples for readers to carefully consider and make rational judgments.
+
+### 1.1 Rule Engine
+
+The rule engine in MQTT Broker is mainly used for basic filtering, structured transformation, and routing distribution of data reported by clients. Although the rule engine is a necessary function for IoT platforms, it should not be a feature of the Broker.
+
+MQTT Broker should serve as the core component of the IoT platform, not replace the platform's functions. Configuring rule engines in the Broker means it is already carrying certain business logic. At this point, the MQTT Broker is no longer a pure message middleware, but exists with the same nature as backend business systems, requiring enterprises to continuously invest R&D resources equivalent to business systems, directly increasing costs.
+
+Friends engaged in software development should be aware that all online failures come from human factors. Maintaining rule engines in the Broker is a high-risk behavior, unlike business systems that can still achieve certain business isolation and traffic control. Once an incorrect rule takes effect, it may directly affect the distribution of network-wide messages. MQTT Broker is difficult to achieve fine-grained data governance, and this responsibility should be more appropriately borne by the backend IoT platform.
+
+Especially when facing service scaling and business migration, the rule logic in the Broker may directly affect the smooth implementation of the solution.
+
+Of course, this is not to say that rule engines have no value in MQTT Broker, but rather that the value is very limited. Personally, I suggest that logic belonging to the business domain should be centrally managed in business systems, and谨慎 use the Broker's built-in rule engine.
+
+### 1.2 Data Bridging Function
+
+Data bridging is the ability of MQTT Broker to directly write received messages to third-party middleware, commonly such as: Kafka, Redis, MySQL, etc. The fundamental purpose of such functions is for **data persistence** and providing **peak shaving and valley filling** for backend business.
+
+**However, bridging to third-party middleware through the Broker has significant stability issues and security risks**.
+
+First, third-party middleware usually does not exclusively serve the MQTT Broker, but also supports other businesses. If the middleware experiences jitter, it will directly affect the Broker's throughput, and may even cause IO timeout phenomena for all MQTT Clients on the network.
+
+Secondly, MQTT Broker is usually a service exposed on the public network. Once account passwords are leaked, traffic attacks initiated by hackers will directly bring down the middleware through the data bridging function and produce a series of unpredictable chain reactions.
+
+Therefore, if the purpose is for data persistence and peak shaving and valley filling, it is recommended to have a dedicated service for preprocessing data between the Broker and middleware. The rule engine capabilities mentioned earlier are also suitable for implementation on this service.
+
+### 1.3 Clustering
+
+Clustering is a very attractive feature, and this capability may directly affect user choice.
+
+The author believes that MQTT Broker's clustering function only has certain technical value, nothing more, and has almost no practicality.
+
+Clustering is almost unlimited in horizontal scaling. However, at the same time, since all node data needs to be distributed to other Broker nodes in the cluster, traffic is amplified internally. And as the cluster size increases, traffic amplifies proportionally, further exacerbating the service load.
+
+What kind of users care about clustering functionality? Must be enterprises with a certain device scale! A single server can support more than 100,000 connections. How many enterprises have device scales reaching this level? For most enterprises, there is no need to care about a function they cannot use.
+
+Even if an enterprise's device scale does reach hundreds of thousands or even millions. Combined with the industry attributes of IoT, there are few cases where terminal devices directly interconnect with each other, and more often it's interaction between terminals and platforms. Under this premise, a load balancing architecture can meet the requirements, while also having horizontal scaling capabilities.
+
+Moreover, considering service stability, partitioned domain business isolation is also a suitable solution, and there is no need to demonstrate the platform's access capabilities through clustering.
+
+:::tip[Rational Choice]
+There is no best product, only the most suitable product. Start with the end in mind, make rational judgments based on your own needs, and don't be misled by these interference factors.
+:::
+
+## 2. Free Open Source vs. Commercial Paid
+
+Free open source products and commercial paid products each have their advantages and disadvantages, and users need to make appropriate choices based on their own situations.
+
+### 2.1 Commercial Paid
+
+Commercial paid products usually provide stable services and technical support, suitable for enterprises with certain revenue. Although a certain capital cost needs to be paid, vendors have the motivation to provide high-quality services, which is a mutually beneficial relationship.
+
+### 2.2 Free Open Source
+
+Free open source products usually have lower maturity than commercial products, and after-sales service may not be guaranteed. However, for most small and medium-sized scenario users, open source products can also meet needs. Product developers have no obligation to provide free technical support, so when encountering problems, users need to solve them themselves or pay for consultation.
+
+Several open source MQTT Brokers currently on the market can already meet the needs of most users. If the budget is limited and the business volume is not large, you can choose free open source products.
+
+## 3. How to Choose a Broker
+
+When choosing an MQTT Broker, you should focus on the following points:
+
+- Device connection volume
+- Concurrent throughput
+- Security authentication
+
+### 3.1 Small Device Connection Volume
+
+For users with device connection volumes from thousands to tens of thousands, almost all Broker products on the market can meet the requirements.
+
+In the early stage, there is no need to worry too much about which product is best, and no need to care about whether clustering or million-level connections are supported. The business volume at this stage does not require advanced services.
+
+### 3.2 Large Device Connection Volume
+
+For users with connection volumes reaching hundreds of thousands or even millions, this is the truly difficult stage to choose. On one hand, there are very few free Brokers supporting this volume; on the other hand, without actual testing, it is impossible to determine the product's true capabilities.
+
+Many products claim to support million-level connections, but rarely specify whether it's single-machine millions or cluster millions. If single-machine millions can be achieved, attention needs to be paid to the requirements for machine configuration. If hardware costs are too high, choosing a cluster architecture may be more economical.
+
+:::tip[Actual Testing Prevails]
+No matter how good the product promotion is, everyone should base their judgment on actual test results. Whether it's a mule or a horse, you have to walk it yourself.
+:::
+
+## 4. smart-mqtt's Positioning
+
+smart-mqtt's positioning is very clear:
+
+- **Suitable for enterprise-level users**: With tens of thousands or even millions of device connections
+- **Pursuing ultimate performance**: High requirements for message throughput and latency
+- **Java technology stack**: Hoping to integrate and perform secondary development within the Java ecosystem
+- **Localization requirements**: Compliant with information innovation requirements, purely domestically developed technology stack
+
+If you meet the above characteristics, smart-mqtt will be a choice worth considering.

@@ -1,0 +1,91 @@
+---
+title: Memory Session Plugin
+sidebar:
+  order: 3
+---
+
+Memory Session Plugin provides memory-based session state management functionality for MQTT broker, using ConcurrentHashMap to implement thread-safe session storage.
+
+## Core Implementation
+- **MemorySessionStateProvider**:
+- Uses ConcurrentHashMap to store session states (key=clientId, value=SessionState)
+- Provides three core methods: store/get/remove to manage session lifecycle
+- Thread-safe design, suitable for high-concurrency scenarios
+
+- **SessionPlugin**:
+- Plugin entry point, registers MemorySessionStateProvider during initialization
+- Follows smartboot plugin specification, implements version and vendor information
+
+## Usage Scenarios
+Suitable for MQTT broker scenarios requiring lightweight, high-performance session management, features include:
+- Memory storage, fast access speed
+- No persistence requirements
+- Single-machine deployment environment
+
+## Configuration Instructions
+No additional configuration required, automatically effective after introducing plugin.
+
+## Workflow Diagram
+
+### Session Management Swimlane Diagram
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Client as MQTT Client
+    participant Broker as MQTT Broker
+    participant Plugin as Memory Session Plugin
+    participant Store as ConcurrentHashMap<br/>(Session Storage)
+
+    %% Connection phase
+    rect rgb(230, 245, 255)
+        Note over Client,Store: Connection Phase - Session Establishment
+        Client->>Broker: 1. CONNECT<br/>(cleanSession=0/1)
+        Broker->>Plugin: 2. Create/restore session request
+        
+        alt cleanSession=1 or new session
+            Plugin->>Store: 3a. Create new session<br/>(SessionState)
+        else cleanSession=0 and session exists
+            Plugin->>Store: 3b. Find existing session
+            Store-->>Plugin: Return session state
+            Plugin->>Plugin: Restore session state<br/>(unconfirmed messages/subscriptions)
+        end
+        
+        Plugin-->>Broker: 4. Session ready
+        Broker-->>Client: 5. CONNACK<br/>(sessionPresent)
+    end
+
+    %% Message processing phase
+    rect rgb(255, 245, 230)
+        Note over Client,Store: Message Processing Phase - Status Update
+        Client->>Broker: 6. PUBLISH QoS>0
+        Broker->>Plugin: 7. Update session state
+        Plugin->>Store: 8. Update inflight queue<br/>Store message ID
+        Store-->>Plugin: Confirm storage
+        Plugin-->>Broker: 9. Status update complete
+        
+        Broker-->>Client: 10. PUBACK/PUBREC
+    end
+
+    %% Disconnection phase
+    rect rgb(255, 230, 230)
+        Note over Client,Store: Disconnection Phase - Resource Management
+        Client->>Broker: 11. DISCONNECT or connection lost
+        Broker->>Plugin: 12. Handle disconnect event
+        
+        alt cleanSession=1
+            Plugin->>Store: 13a. Remove session from Map
+            Store->>Store: Release memory resources
+        else cleanSession=0
+            Plugin->>Store: 13b. Preserve session state<br/>(waiting for reconnection)
+        end
+        
+        Plugin-->>Broker: 14. Disconnect processing complete
+    end
+```
+
+### Flow Description
+1. **Session Storage**: Decide to create new session or restore existing session based on cleanSession flag
+2. **Memory Management**: Use ConcurrentHashMap to implement thread-safe session data storage
+3. **State Persistence**: For QoS>0 messages, update inflight queue and persist session state
+4. **Resource Release**: When cleanSession=1, completely clean up session; otherwise preserve for reconnection recovery

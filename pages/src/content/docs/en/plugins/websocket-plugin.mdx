@@ -1,0 +1,90 @@
+---
+title: WebSocket Plugin
+sidebar:
+  order: 7
+---
+
+This plugin provides WebSocket protocol support for MQTT Broker, allowing clients to communicate via MQTT through WebSocket connections.
+
+## Technical Implementation
+- Implemented WebSocket upgrade based on Feat framework's HTTP server
+- Supports MQTT over WebSocket protocol (Sec-WebSocket-Protocol: mqtt)
+- Uses ByteBuffer to handle binary message streams
+- Shares the same message processor and session management with core Broker
+
+## Configuration Parameters
+```yaml
+port: 8084  # WebSocket listening port
+```
+
+## Usage Example
+```javascript
+// Using MQTT.js client connection example
+const client = mqtt.connect('ws://localhost:8080/mqtt', {
+  protocol: 'ws',
+  path: '/mqtt'
+})
+```
+
+## Workflow Diagram
+
+### WebSocket Protocol Upgrade Swimlane Diagram
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Browser as Browser/Client
+    participant WsPlugin as WebSocket Plugin<br/>(Feat HTTP Server)
+    participant Broker as MQTT Broker
+    participant Subscribers as Subscribers
+
+    %% WebSocket handshake phase
+    rect rgb(230, 245, 255)
+        Note over Browser,Broker: WebSocket Handshake Phase
+        Browser->>WsPlugin: 1. HTTP GET /mqtt<br/>Upgrade: websocket<br/>Sec-WebSocket-Protocol: mqtt
+        
+        alt Protocol validation passed
+            WsPlugin->>WsPlugin: 2a. Validate Sec-WebSocket-Protocol<br/>Confirm mqtt sub-protocol support
+            WsPlugin-->>Browser: 3a. 101 Switching Protocols<br/>Sec-WebSocket-Accept: xxx
+            Note over Browser,WsPlugin: WebSocket tunnel established
+        else Protocol validation failed
+            WsPlugin-->>Browser: 3b. 400 Bad Request<br/>(Missing mqtt sub-protocol)
+        end
+    end
+
+    %% MQTT communication phase
+    rect rgb(255, 245, 230)
+        Note over Browser,Subscribers: MQTT over WebSocket Communication Phase
+        
+        Browser->>WsPlugin: 4. WebSocket Frame<br/>Binary MQTT CONNECT
+        WsPlugin->>Broker: 5. Decode MQTT CONNECT<br/>Forward to Broker
+        Broker->>Broker: 6. Process authentication
+        Broker-->>WsPlugin: 7. MQTT CONNACK
+        WsPlugin-->>Browser: 8. WebSocket Frame<br/>Binary CONNACK
+        
+        Note over Browser,Subscribers: Normal MQTT message send/receive
+        
+        Browser->>WsPlugin: 9. PUBLISH message
+        WsPlugin->>Broker: 10. Decode and forward
+        Broker->>Subscribers: 11. Find and forward<br/>to all subscribers
+        
+        Subscribers->>Broker: 12. Other client PUBLISH
+        Broker->>WsPlugin: 13. Forward to WebSocket client
+        WsPlugin-->>Browser: 14. WebSocket Frame<br/>Push message
+    end
+
+    %% Connection close phase
+    rect rgb(255, 230, 230)
+        Note over Browser,Broker: Connection Close Phase
+        Browser->>WsPlugin: 15. WebSocket Close Frame<br/>or connection disconnect
+        WsPlugin->>Broker: 16. Notify client disconnect
+        WsPlugin->>WsPlugin: 17. Clean up WebSocket resources
+    end
+```
+
+### Flow Description
+1. **Protocol Upgrade**: Client sends HTTP upgrade request, must include `Sec-WebSocket-Protocol: mqtt` header
+2. **Handshake Validation**: Server validates WebSocket protocol header, confirms MQTT sub-protocol support
+3. **Tunnel Establishment**: WebSocket bidirectional communication tunnel established after successful handshake
+4. **MQTT Encapsulation**: MQTT binary packets transmitted through WebSocket frames
+5. **Data Flow**: Browser/client sends/receives MQTT messages through WebSocket, Broker processing logic same as regular MQTT

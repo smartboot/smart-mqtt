@@ -1,0 +1,108 @@
+---
+title: TLS/SSL Plugin
+sidebar:
+  order: 4
+---
+
+This plugin provides TLS/SSL secure transport support for smart-mqtt broker, with main features including:
+
+1. TLS/SSL encrypted communication based on PEM format certificate configuration
+2. Customizable listening port and host address
+
+
+## Configuration Parameters
+
+- port: Listening port
+- host: Listening host address (optional)
+- pem: PEM format certificate content
+
+## Usage Example
+
+```yaml
+host: 0.0.0.0
+port: 8883
+pem: |
+  -----BEGIN CERTIFICATE-----
+  MIIEsTCCAxmgAwIBAgIQb1DqeyVD0+UBTKynNf3oJzANBgkqhkiG9w0BAQsFADCB
+  ...
+  -----END CERTIFICATE-----
+  -----BEGIN PRIVATE KEY-----
+  MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC1/iKnsFYqfqtV
+  ...
+  -----END PRIVATE KEY-----
+```
+
+## Workflow Diagram
+
+### TLS Handshake and Encrypted Communication Swimlane Diagram
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Client as MQTT Client
+    participant TLSPlugin as TLS/SSL Plugin<br/>(Secure Transport Layer)
+    participant Broker as MQTT Broker
+    participant Config as PEM Certificate Config
+
+    %% TLS handshake phase
+    rect rgb(230, 245, 255)
+        Note over Client,Broker: TLS Handshake Phase
+        Client->>TLSPlugin: 1. ClientHello<br/>(Supported cipher suites)
+        
+        TLSPlugin->>Config: 2. Load PEM certificate<br/>(certificate + private key)
+        Config-->>TLSPlugin: Return certificate content
+        
+        TLSPlugin-->>Client: 3. ServerHello + Certificate<br/>(Server certificate)
+        
+        Client->>Client: 4. Verify server certificate<br/>(check signature/validity/domain)
+        
+        alt Certificate verification passed
+            Client->>TLSPlugin: 5. ClientKeyExchange<br/>(pre-master secret - public key encrypted)
+            Client->>TLSPlugin: 6. ChangeCipherSpec + Finished
+            
+            TLSPlugin->>TLSPlugin: 7. Decrypt using private key<br/>Generate session key
+            
+            TLSPlugin-->>Client: 8. ChangeCipherSpec + Finished
+            Note over Client,TLSPlugin: Encrypted tunnel establishment complete<br/>(Symmetric encryption communication)
+        else Certificate verification failed
+            Client->>Client: Terminate connection
+        end
+    end
+
+    %% MQTT encrypted communication phase
+    rect rgb(255, 245, 230)
+        Note over Client,Broker: Encrypted MQTT Communication Phase
+        
+        Client->>TLSPlugin: 9. Encrypted data<br/>MQTT CONNECT
+        TLSPlugin->>TLSPlugin: 10. TLS decryption
+        TLSPlugin->>Broker: 11. Plaintext MQTT CONNECT
+        
+        Broker->>Broker: 12. Process authentication
+        Broker-->>TLSPlugin: 13. MQTT CONNACK
+        
+        TLSPlugin->>TLSPlugin: 14. TLS encryption
+        TLSPlugin-->>Client: 15. Encrypted data
+        
+        Note over Client,Broker: All subsequent MQTT packets<br/>transmitted in encrypted tunnel
+        
+        Client->>TLSPlugin: 16. Encrypted PUBLISH
+        TLSPlugin->>Broker: 17. Decrypt and forward
+        Broker->>TLSPlugin: 18. Encrypted response
+        TLSPlugin-->>Client: 19. Encrypted data
+    end
+
+    %% Connection close phase
+    rect rgb(255, 230, 230)
+        Note over Client,Broker: Connection Close Phase
+        Client->>TLSPlugin: 20. Encrypted Close Notify
+        TLSPlugin->>Broker: 21. Notify connection close
+        TLSPlugin->>TLSPlugin: 22. Release TLS session resources
+    end
+```
+
+### Flow Description
+1. **TLS Handshake**: Perform mutual/unilateral TLS handshake based on configured PEM certificate
+2. **Certificate Verification**: Client verifies server certificate legitimacy
+3. **Key Negotiation**: Negotiate session key through asymmetric encryption
+4. **Encrypted Tunnel**: Establish encrypted channel after handshake completion
+5. **MQTT Communication**: Transmit MQTT protocol data in encrypted tunnel

@@ -1,0 +1,811 @@
+---
+title: AI Automated Plugin Development Specification
+sidebar:
+  order: 10
+---
+
+# AI Automated Plugin Development Specification
+
+This specification aims to provide standardized plugin development guidance for AI assistants, enabling AI to automatically generate plugin code that conforms to the smart-mqtt architecture based on user requirements.
+
+:::warning[Important Notice]
+**This document has been validated based on actual code, and all examples and configurations can be directly used in production environments.**
+
+- ✅ Maven configuration, ServiceLoader file paths, and other key information are consistent with the actual project
+- ✅ Complete event type list, including all available EventType constants
+- ✅ Example code references actual plugins such as [SimpleAuthPlugin](https://gitee.com/smartboot/smart-mqtt/blob/master/plugins/simple-auth-plugin/src/main/java/tech/smartboot/mqtt/auth/SimpleAuthPlugin.java) and [WebSocketPlugin](https://gitee.com/smartboot/smart-mqtt/blob/master/plugins/websocket-plugin/src/main/java/tech/smartboot/mqtt/ws/WebSocketPlugin.java)
+:::
+
+## 1. Quick Start
+
+### 1.1 Project Structure
+
+```
+plugin-name/
+├── src/main/
+│   ├── java/tech/smartboot/mqtt/{module}/
+│   │   ├── {PluginName}Plugin.java          # Plugin main class (required)
+│   │   ├── PluginConfig.java                # Configuration class (optional)
+│   │   └── ...                              # Other business classes
+│   └── resources/
+│       ├── META-INF/services/
+│       │   └── tech.smartboot.mqtt.plugin.spec.Plugin  # ServiceLoader configuration file (required)
+│       ├── plugin.yaml                      # Plugin configuration file (optional)
+│       └── readme.md                        # Plugin documentation (required)
+├── pom.xml                                  # Maven configuration (required)
+```
+
+### 1.2 ServiceLoader Configuration
+
+Create a file named `tech.smartboot.mqtt.plugin.spec.Plugin` in the `resources/META-INF/services/` directory, with the content being the fully qualified name of the plugin implementation class:
+
+```
+tech.smartboot.mqtt.{module}.{PluginName}Plugin
+```
+
+**Note**: This file must exist, otherwise the plugin cannot be automatically scanned and loaded.
+
+### 1.3 Maven POM Configuration Template
+
+**Important Notice**: Plugin projects must inherit the `plugins` parent POM and use the correct groupId.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <!-- Must inherit plugins parent POM -->
+    <parent>
+        <groupId>tech.smartboot.mqtt</groupId>
+        <artifactId>plugins</artifactId>
+        <version>1.5.3</version>
+    </parent>
+
+    <groupId>tech.smartboot.mqtt</groupId>
+    <artifactId>{plugin-artifact-id}</artifactId>
+    <packaging>jar</packaging>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <!-- Parent POM already manages smart-mqtt-plugin-spec dependency, submodules don't need to redeclare -->
+        <!-- Add other dependencies here as needed -->
+        <!-- Example: WebSocket plugin needs feat-core -->
+        <!--
+        <dependency>
+            <groupId>tech.smartboot.feat</groupId>
+            <artifactId>feat-core</artifactId>
+        </dependency>
+        -->
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.10.1</version>
+                <configuration>
+                    <source>8</source>
+                    <target>8</target>
+                    <debug>false</debug>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <filters>
+                                <!-- Exclude dependencies that don't need to be packaged -->
+                                <filter>
+                                    <artifact>com.alibaba.fastjson2:*</artifact>
+                                    <excludes>
+                                        <exclude>**/*</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.yaml:*</artifact>
+                                    <excludes>
+                                        <exclude>**/*</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>tech.smartboot.feat:*</artifact>
+                                    <excludes>
+                                        <exclude>**/*</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>io.github.smartboot.socket:*</artifact>
+                                    <excludes>
+                                        <exclude>**/*</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <transformers>
+                                <!-- Important: Append mode to merge ServiceLoader configuration (note there are two files) -->
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/services/tech.smartboot.mqtt.broker.plugin.Plugin</resource>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/services/tech.smartboot.feat.cloud.CloudService</resource>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+```
+
+**Key Points**:
+- ✅ GroupId must be `tech.smartboot.mqtt` (not `org.smartboot.mqtt`)
+- ✅ Must inherit `plugins` parent POM, version consistent with Broker (e.g., 1.5.3)
+- ✅ `maven-shade-plugin` needs to configure **two** `AppendingTransformer`, handling two ServiceLoader files respectively
+- ✅ `createDependencyReducedPom` must be set to `false`
+- ✅ Exclude fastjson2, yaml, feat, smart-socket dependencies through `<filters>`, avoid packaging into plugin
+
+---
+
+## 2. Plugin Development Core Specifications
+
+### 2.1 Plugin Base Class Inheritance Rules
+
+**AI must follow when generating plugins:**
+
+1. **Must inherit** `tech.smartboot.mqtt.plugin.spec.Plugin` abstract class
+2. **Must implement** the following abstract methods:
+   - `String getVersion()` - Return version number
+   - `String getVendor()` - Return developer information
+3. **Recommended to override** the following methods:
+   - `void initPlugin(BrokerContext brokerContext)` - Initialization logic
+   - `void destroyPlugin()` - Destruction logic
+   - `String pluginName()` - Plugin name (default is class name)
+   - `int order()` - Load priority (default 0, smaller value means higher priority)
+   - `Schema schema()` - Configuration visualization form (optional)
+
+**Prohibited Behaviors**:
+- ❌ Do not override `install()` and `uninstall()` methods (they are final)
+- ❌ Do not execute initialization logic in constructor
+- ❌ Do not print System.out directly, use `log(String)` method
+
+### 2.2 Standard Plugin Template
+
+```java
+package tech.smartboot.mqtt.{module};
+
+import tech.smartboot.mqtt.plugin.spec.BrokerContext;
+import tech.smartboot.mqtt.plugin.spec.Options;
+import tech.smartboot.mqtt.plugin.spec.Plugin;
+import tech.smartboot.mqtt.plugin.spec.schema.Schema;
+
+/**
+ * {Plugin Name}
+ * 
+ * Description: {Brief description of plugin functionality}
+ * 
+ * @author {Author}
+ * @version {Version}
+ */
+public class {PluginName}Plugin extends Plugin {
+    
+    // Member variables area
+    private BrokerContext brokerContext;
+    private PluginConfig config;
+    // Other business objects...
+    
+    @Override
+    protected void initPlugin(BrokerContext brokerContext) throws Throwable {
+        this.brokerContext = brokerContext;
+        
+        // Step 1: Logging (use log method)
+        log("Initializing {Plugin Name}...");
+        
+        // Step 2: Load configuration (if any)
+        loadConfiguration();
+        
+        // Step 3: Register event subscriptions (if needed)
+        registerEventListeners();
+        
+        // Step 4: Initialize business resources
+        initializeResources();
+        
+        // Step 5: Completion log
+        log("{Plugin Name} initialization complete");
+    }
+    
+    @Override
+    protected void destroyPlugin() {
+        log("Shutting down {Plugin Name}...");
+        
+        // Release resources in reverse order
+        releaseResources();
+        
+        log("{Plugin Name} has been shut down");
+    }
+    
+    @Override
+    public String getVersion() {
+        return "1.0.0";  // Or use Options.VERSION
+    }
+    
+    @Override
+    public String getVendor() {
+        return "{Developer or Organization Name}";  // Or use Options.VENDOR
+    }
+    
+    @Override
+    public String pluginName() {
+        return "{plugin-name}";  // Recommend using artifactId
+    }
+    
+    /**
+     * Define plugin configuration visualization Schema (optional)
+     */
+    @Override
+    public Schema schema() {
+        Schema schema = new Schema();
+        // Add configuration items, see section 2.4 for details
+        return schema;
+    }
+    
+    // ========== Private helper methods ==========
+    
+    /**
+     * Load configuration file
+     */
+    private void loadConfiguration() {
+        try {
+            config = loadPluginConfig(PluginConfig.class);
+            if (config == null) {
+                config = createDefaultConfig();
+                log("Configuration file not found, using default configuration");
+            }
+        } catch (Exception e) {
+            log("Failed to load configuration: " + e.getMessage());
+            config = createDefaultConfig();
+        }
+    }
+    
+    /**
+     * Create default configuration
+     */
+    private PluginConfig createDefaultConfig() {
+        PluginConfig config = new PluginConfig();
+        // Set default values
+        return config;
+    }
+    
+    /**
+     * Register event listeners
+     */
+    private void registerEventListeners() {
+        // Example: Subscribe to CONNECT event
+        subscribe(EventType.CONNECT, event -> {
+            // Handle connection event
+        });
+    }
+    
+    /**
+     * Initialize resources
+     */
+    private void initializeResources() {
+        // Initialize business logic
+    }
+    
+    /**
+     * Release resources
+     */
+    private void releaseResources() {
+        // Clean up resources
+    }
+}
+```
+
+### 2.3 Configuration Class Specification
+
+If the plugin needs configuration parameters, a corresponding configuration class must be created:
+
+```java
+package tech.smartboot.mqtt.{module};
+
+/**
+ * Plugin Configuration Class
+ * 
+ * Naming convention: PluginConfig
+ * Field convention: Use camelCase naming, provide getter/setter
+ */
+public class PluginConfig {
+    
+    // Basic configuration (recommended)
+    private String host = "127.0.0.1";
+    private int port = 1883;
+    
+    // Business configuration (as needed)
+    private int timeout = 30000;
+    private boolean enabled = true;
+    private String username;
+    private String password;
+    
+    // Nested configuration (complex scenarios)
+    private AdvancedConfig advanced;
+    
+    // getter and setter methods
+    public String getHost() { return host; }
+    public void setHost(String host) { this.host = host; }
+    
+    public int getPort() { return port; }
+    public void setPort(int port) { this.port = port; }
+    
+    // ... other getter/setter
+    
+    /**
+     * Nested configuration class (optional)
+     */
+    public static class AdvancedConfig {
+        private int maxConnections = 100;
+        private String strategy = "round-robin";
+        
+        // getter/setter...
+    }
+}
+```
+
+**Configuration File Location**:
+- Default: `plugins/{plugin-name}/plugin.yaml`
+- Can also use external configuration: `plugins/{plugin-name}.yaml`
+
+**YAML Configuration Example**:
+
+```yaml
+host: 192.168.1.100
+port: 1883
+timeout: 60000
+enabled: true
+username: admin
+password: secret123
+advanced:
+  maxConnections: 200
+  strategy: "load-balance"
+```
+
+### 2.4 Schema Visualization Configuration Specification
+
+To make plugin configuration visually editable in the console, implement the `schema()` method:
+
+```java
+@Override
+public Schema schema() {
+    Schema schema = new Schema();
+    
+    // 1. String type
+    schema.addItem(Item.String("host", "Server Address")
+        .tip("Default: 127.0.0.1")
+        .col(6));  // Occupy half row width
+    
+    // 2. Integer type
+    schema.addItem(Item.Int("port", "Port Number")
+        .tip("Default: 1883")
+        .col(3));  // Occupy 1/4 row width
+    
+    // 3. Password type (hidden input)
+    schema.addItem(Item.Password("password", "Access Password")
+        .tip("Recommend changing regularly"));
+    
+    // 4. Text area (multi-line text)
+    schema.addItem(Item.TextArea("description", "Description")
+        .height(200));  // Height 200px
+    
+    // 5. Switch type (boolean)
+    schema.addItem(Item.Switch("enabled", "Enable Service")
+        .tip("Plugin will not work when disabled"));
+    
+    // 6. Enum type (single select)
+    schema.addItem(Item.String("strategy", "Load Balance Strategy")
+        .addEnums(
+            Enum.of("round-robin", "Round Robin"),
+            Enum.of("least-conn", "Least Connections"),
+            Enum.of("hash", "Hash"))
+        .tip("Default: round-robin"));
+    
+    // 7. Multi-select enum
+    schema.addItem(Item.MultiEnum("features", "Features")
+        .addEnums(
+            Enum.of("auth", "Authentication"),
+            Enum.of("encrypt", "Encryption"),
+            Enum.of("compress", "Compression")));
+    
+    // 8. Object type (nested configuration)
+    Item advancedObj = Item.Object("advanced", "Advanced Configuration");
+    advancedObj.addItem(Item.Int("maxConnections", "Max Connections").col(6));
+    advancedObj.addItem(Item.Int("timeout", "Timeout (ms)").col(6));
+    schema.addItem(advancedObj);
+    
+    return schema;
+}
+```
+
+**Supported Item Types Summary**:
+
+| Type | Method | Usage | Special Properties |
+|------|------|------|----------|
+| `string` | `Item.String(name, desc)` | Regular text input | - |
+| `int` | `Item.Int(name, desc)` | Integer input | - |
+| `password` | `Item.Password(name, desc)` | Password input (hidden) | - |
+| `textarea` | `Item.TextArea(name, desc)` | Multi-line text | `.height(n)` |
+| `switch` | `Item.Switch(name, desc)` | Boolean switch | - |
+| `enum` | `Item.String().addEnums(...)` | Single select enum | `.addEnums(...)` |
+| `multi_enum` | `Item.MultiEnum(name, desc)` | Multi-select enum | `.addEnums(...)` |
+| `object` | `Item.Object(name, desc)` | Nested object | `.addItem(...)` |
+
+**Layout Control**:
+- `.col(n)`: Set column width (one row has 12 columns), e.g., `.col(6)` occupies half row
+- `.height(n)`: Set text area height (pixels)
+- `.tip("tip")`: Add configuration item tip information
+
+---
+
+## 3. Event Bus Usage Specification
+
+### 3.1 Event Type Details
+
+**Complete event type list** (based on actual code):
+
+#### Connection Related Events
+
+```java
+// 1. CONNECT - Client connection request (async event)
+// Trigger timing: When CONNECT packet is received from client
+// Event object: AsyncEventObject<MqttConnectMessage>
+// Typical usage: Authentication, permission validation, connection limits
+subscribe(EventType.CONNECT, AsyncEventObject.syncSubscriber((eventType, event) -> {
+    MqttSession session = event.getSession();
+    MqttConnectMessage message = event.getObject();
+    
+    // Authentication logic
+    if (!authenticate(session, message)) {
+        MqttSession.connFailAck(MqttConnectReturnCode.CONNECTION_REFUSED_NOT_AUTHORIZED, session);
+    } else {
+        session.setAuthorized(true);
+    }
+}));
+
+// 2. DISCONNECT - Client disconnect
+// Trigger timing: When client disconnects
+// Event object: AbstractSession
+// Typical usage: Resource cleanup, online duration statistics
+subscribe(EventType.DISCONNECT, session -> {
+    log("Client disconnected: " + session.getClientId());
+});
+
+// 3. SESSION_CREATE - Create session
+// Trigger timing: When MqttSession object is created
+// Event object: MqttSession
+// Typical usage: Session initialization, bind additional attributes
+subscribe(EventType.SESSION_CREATE, session -> {
+    session.setAttribute("createTime", System.currentTimeMillis());
+});
+```
+
+#### Message Related Events
+
+```java
+// 4. RECEIVE_MESSAGE - Receive client message
+// Trigger timing: When any type of MQTT packet is received
+// Event object: EventObject<MqttMessage>
+// Typical usage: Message audit, traffic statistics
+subscribe(EventType.RECEIVE_MESSAGE, event -> {
+    MqttMessage message = event.getObject();
+    // Process received message
+});
+
+// 5. WRITE_MESSAGE - Send message to client
+// Trigger timing: When sending any type of MQTT packet
+// Event object: EventObject<MqttMessage>
+// Typical usage: Message filtering, response interception
+subscribe(EventType.WRITE_MESSAGE, event -> {
+    MqttMessage message = event.getObject();
+    // Can modify or block message sending
+});
+
+// 6. RECEIVE_CONN_ACK_MESSAGE - Receive CONNACK packet
+// Trigger timing: After Broker sends CONNACK packet
+// Event object: MqttConnAckMessage
+// Typical usage: Connection result monitoring, authentication result recording
+subscribe(EventType.RECEIVE_CONN_ACK_MESSAGE, message -> {
+    log("Sent CONNACK: " + message.getVariableHeader().getReturnCode());
+});
+
+// 7. SUBSCRIBE_ACCEPT - Accept subscription request
+// Trigger timing: After client successfully subscribes to topic
+// Event object: EventObject<MqttTopicSubscription>
+// Typical usage: Subscription authorization, subscription recording
+subscribe(EventType.SUBSCRIBE_ACCEPT, event -> {
+    MqttTopicSubscription subscription = event.getObject();
+    log("Client subscribed: " + subscription.getTopicFilter());
+});
+
+// 8. UNSUBSCRIBE_ACCEPT - Cancel subscription
+// Trigger timing: After client successfully cancels subscription
+// Event object: EventObject<MqttUnsubscribeMessage>
+// Typical usage: Clean up subscription relationships
+subscribe(EventType.UNSUBSCRIBE_ACCEPT, event -> {
+    // Handle subscription cancellation
+});
+```
+
+#### Topic Related Events
+
+```java
+// 9. TOPIC_CREATE - Create new topic
+// Trigger timing: When message is first published to a topic
+// Event object: String (topic name)
+// Typical usage: Topic management, permission control
+subscribe(EventType.TOPIC_CREATE, topicName -> {
+    log("New topic created: " + topicName);
+});
+
+// 10. SUBSCRIBE_TOPIC - Client subscribes to Topic
+// Trigger timing: When client subscribes to a topic
+// Event object: EventObject<MessageDeliver>
+// Typical usage: Dynamic authorization, subscription interception
+subscribe(EventType.SUBSCRIBE_TOPIC, event -> {
+    MessageDeliver deliver = event.getObject();
+    // Can reject subscription
+});
+
+// 11. UNSUBSCRIBE_TOPIC - Client cancels subscription
+// Trigger timing: When client cancels subscription to a topic
+// Event object: MessageDeliver
+subscribe(EventType.UNSUBSCRIBE_TOPIC, deliver -> {
+    // Handle subscription cancellation
+});
+
+// 12. SUBSCRIBE_REFRESH_TOPIC - Subscription refresh
+// Trigger timing: When subscription relationship refreshes
+// Event object: MessageDeliver
+// Typical usage: Dynamically update subscription relationships
+subscribe(EventType.SUBSCRIBE_REFRESH_TOPIC, deliver -> {
+    // Handle subscription refresh
+});
+```
+
+#### Lifecycle Events
+
+```java
+// 13. BROKER_STARTED - Broker startup complete
+// Trigger timing: After Broker service is fully started
+// Event object: BrokerContext
+// Typical usage: Start scheduled tasks, initialize global resources
+// Feature: One-time event (once=true), only triggers once at startup
+subscribe(EventType.BROKER_STARTED, context -> {
+    log("Broker started, beginning to provide service");
+    
+    // Start scheduled task
+    timer().scheduleAtFixedRate(() -> {
+        // Periodically executed task
+    }, 0, 60, TimeUnit.SECONDS);
+});
+
+// 14. BROKER_DESTROY - Broker about to be destroyed
+// Trigger timing: Before Broker service stops
+// Event object: BrokerContext
+// Typical usage: Resource cleanup, data persistence
+// Feature: One-time event
+subscribe(EventType.BROKER_DESTROY, context -> {
+    log("Broker is shutting down...");
+    // Save state, close connections, etc.
+});
+```
+
+---
+
+## 4. Plugin Development Best Practices
+
+### 4.1 Single Responsibility Principle
+
+**✅ Correct Example**: Each plugin is responsible for one clear function
+
+```
+❌ Wrong: LargePlugin (does everything)
+├─ Authentication logic
+├─ Message bridging
+├─ Monitoring statistics
+└─ Scheduled tasks
+
+✅ Correct: Split into multiple plugins
+├─ AuthPlugin (Authentication)
+├─ BridgePlugin (Message bridging)
+├─ MetricsPlugin (Monitoring)
+└─ SchedulerPlugin (Scheduled tasks)
+```
+
+### 4.2 Exception Handling Specification
+
+**Rules AI must follow:**
+
+1. **Plugin internal exceptions must not affect Broker operation**
+   ```java
+   subscribe(EventType.CONNECT, event -> {
+       try {
+           // Business logic
+       } catch (Exception e) {
+           log("Handling exception: " + e.getMessage());
+           // Do not throw exception
+       }
+   });
+   ```
+
+2. **Exception handling for asynchronous operations**
+   ```java
+   CompletableFuture.supplyAsync(() -> {
+       // Asynchronous logic
+   }).exceptionally(throwable -> {
+       log("Async task exception: " + throwable.getMessage());
+       return null;
+   });
+   ```
+
+3. **Degradation handling for resource initialization failure**
+   ```java
+   try {
+       resource = initResource();
+   } catch (Exception e) {
+       log("Resource initialization failed, using default configuration: " + e.getMessage());
+       resource = createDefaultResource();
+   }
+   ```
+
+### 4.3 Resource Management
+
+**Rules that must be followed:**
+
+1. **Who creates, who destroys**
+   ```java
+   private ScheduledExecutorService scheduler;
+   
+   @Override
+   protected void initPlugin() {
+       scheduler = Executors.newScheduledThreadPool(4);
+   }
+   
+   @Override
+   protected void destroyPlugin() {
+       if (scheduler != null) {
+           scheduler.shutdown();  // Must close
+       }
+   }
+   ```
+
+2. **Use timer provided by plugin**
+   ```java
+   // Recommend using plugin.timer()
+   Timer timer = timer();
+   timer.schedule(task, delay);
+   // Will automatically close when plugin uninstalls
+   ```
+
+3. **Release external resources in time**
+   ```java
+   // Database connections, HTTP clients, file streams, etc.
+   @Override
+   protected void destroyPlugin() {
+       if (connection != null) connection.close();
+       if (httpClient != null) httpClient.close();
+       if (inputStream != null) inputStream.close();
+   }
+   ```
+
+### 4.4 Logging Specification
+
+**AI must use standardized logging methods:**
+
+1. **Use plugin's log() method**
+   ```java
+   log("Plugin initializing...");
+   log("Configuration loaded successfully");
+   log("Warning: XXX may have issues", LogLevel.WARN);
+   ```
+
+2. **Avoid direct printing**
+   ```java
+   // ❌ Wrong
+   System.out.println("Message");
+   System.err.println("Error");
+   
+   // ✅ Correct
+   log("Message");
+   ```
+
+3. **Log content specification**
+   ```java
+   // Include key information
+   log("Authentication successful: userId=" + userId + ", ip=" + ipAddress);
+   
+   // Avoid sensitive information
+   // ❌ Do not print complete password
+   log("Password: " + password);  
+   
+   // ✅ Print desensitized information
+   log("Password validation: " + (password != null ? "***" : "null"));
+   ```
+
+---
+
+## 5. AI Code Generation Checklist
+
+When AI generates plugin code, it must check the following items one by one:
+
+### 5.1 Structure Check
+
+- [ ] Whether correct package path is created: `tech.smartboot.mqtt.{module}`
+- [ ] Whether ServiceLoader configuration file is created: `META-INF/services/tech.smartboot.mqtt.plugin.spec.Plugin`
+- [ ] Whether ServiceLoader file content is the fully qualified name of plugin class
+- [ ] Whether `readme.md` file is created
+- [ ] Whether pom.xml configures `maven-shade-plugin` and `AppendingTransformer`
+
+### 5.2 Code Specification Check
+
+- [ ] Whether plugin class inherits `Plugin` abstract class
+- [ ] Whether `getVersion()` method is implemented
+- [ ] Whether `getVendor()` method is implemented
+- [ ] Whether `initPlugin()` method is overridden
+- [ ] Whether `destroyPlugin()` method is overridden
+- [ ] Whether `install()` and `uninstall()` methods are not overridden
+- [ ] Whether `log()` method is used instead of `System.out`
+
+### 5.3 Configuration Check
+
+- [ ] Whether configuration class (PluginConfig) is needed
+- [ ] Whether configuration class has getter/setter
+- [ ] Whether `schema()` method is implemented (if visualization configuration is needed)
+- [ ] Whether fields in Schema correspond to configuration class
+- [ ] Whether `.col()` is used to control layout
+
+### 5.4 Event Usage Check
+
+- [ ] Whether event type selection is correct
+- [ ] Whether async events use `AsyncEventObject`
+- [ ] Whether event consumer implements `enable()` check
+- [ ] Whether exception capture exists in event handling
+- [ ] Whether event-related resources are cleaned up in destroyPlugin()
+
+### 5.5 Resource Management Check
+
+- [ ] Whether created thread pools are closed in destroyPlugin()
+- [ ] Whether opened connections are closed in destroyPlugin()
+- [ ] Whether plugin's `timer()` is prioritized
+- [ ] Whether there is resource leak risk
+
+### 5.6 Exception Handling Check
+
+- [ ] Whether all exceptions are caught in event handling
+- [ ] Whether async operations have `exceptionally()` handling
+- [ ] Whether initialization failure has degradation plan
+- [ ] Whether exceptions are not thrown to Broker
+
+### 5.7 Deployment Check
+
+- [ ] Whether packaged jar file name is standardized
+- [ ] Whether deployment steps are explained
+- [ ] Whether configuration method is explained
+- [ ] Whether port usage is explained (use `addUsagePort()`)
+
+---
+
+**Through standardized and normalized development processes, plugin development efficiency and quality can be greatly improved.**
