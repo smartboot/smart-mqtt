@@ -62,12 +62,14 @@
     </div>
     
     <div class="enterprise-cta">
-      <button class="btn-enterprise" id="contactEnterpriseBtn">
-        <span>Contact Us for Solution</span>
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <a href="mailto:zhengjunweimail@163.com" class="btn-enterprise">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+          <polyline points="22,6 12,13 2,6"/>
         </svg>
-      </button>
+        <span>Contact Us for Solution</span>
+      </a>
+      <p class="contact-email">Email: zhengjunweimail@163.com</p>
     </div>
   </div>
 </section>
@@ -231,11 +233,18 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
+    text-decoration: none;
   }
 
   .btn-enterprise:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(99, 91, 255, 0.3);
+  }
+
+  .contact-email {
+    margin-top: 16px;
+    font-size: 14px;
+    color: var(--text-muted);
   }
 
   .cta-section {
