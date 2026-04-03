@@ -16,12 +16,14 @@ export default defineConfig({
         autoTheme: true
     }),
         starlight({
-            title: 'smart-mqtt',
+            title: {
+                'zh-CN': 'smart-mqtt',
+                en: 'smart-mqtt',
+            },
             logo: {
                 src: './src/assets/logo.svg',
             },
             customCss: [
-                // 你的自定义 CSS 文件的相对路径
                 './src/styles/custom.css',
             ],
             head: [
@@ -87,14 +89,23 @@ export default defineConfig({
             sidebar: [
                 {
                     label: '产品手册',
+                    translations: {
+                        en: 'Product Manual',
+                    },
                     autogenerate: {directory: 'product'}
                 },
                 {
                     label: '插件',
+                    translations: {
+                        en: 'Plugins',
+                    },
                     autogenerate: {directory: 'plugins'}
                 },
                 {
                     label: '开发参考',
+                    translations: {
+                        en: 'Development Reference',
+                    },
                     autogenerate: {directory: 'development'}
                 },
             ],

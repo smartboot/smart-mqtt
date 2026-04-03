@@ -1,0 +1,103 @@
+---
+title: Quick Start
+---
+import { Aside } from '@astrojs/starlight/components';
+
+This guide will help you get smart-mqtt up and running in 5 minutes.
+
+## Requirements
+
+- **Java**: JDK 8 or higher
+- **OS**: Linux / Windows / macOS
+- **Docker**: (Optional) For containerized deployment
+
+## Option 1: Docker Deployment (Recommended)
+
+smart-mqtt provides Docker images, which is the simplest deployment method.
+
+### 1. Using docker-compose
+
+```yaml title="docker-compose.yaml"
+version: '3.8'
+services:
+  smart-mqtt:
+    image: smartboot/smart-mqtt:latest
+    container_name: smart-mqtt
+    ports:
+      - "1883:1883"
+      - "18083:18083"
+```
+
+Save as `docker-compose.yml`, then run:
+
+```bash
+docker-compose up -d
+```
+
+### 2. Run Docker Container Directly
+
+```bash
+docker run -d \
+  --name smart-mqtt \
+  -p 1883:1883 \
+  -p 18083:18083 \
+  smartboot/smart-mqtt:latest
+```
+
+## Option 2: Manual Deployment
+
+### 1. Download Release Package
+
+Download the latest version of smart-mqtt from [Gitee Releases](https://gitee.com/smartboot/smart-mqtt/releases) or [GitHub Releases](https://github.com/smartboot/smart-mqtt/releases).
+
+```bash
+wget https://gitee.com/smartboot/smart-mqtt/releases/download/v1.5.2/smart-mqtt-full-master.zip
+unzip smart-mqtt-full-master.zip
+cd smart-mqtt-full-master
+```
+
+### 2. Start Service
+
+```bash
+./bin/start.sh
+```
+
+## Verify Deployment
+
+### 1. Check Service Status
+
+```bash
+# View process
+ps aux | grep smart-mqtt
+
+# View port listening
+netstat -tlnp | grep 1883
+```
+
+### 2. Test with MQTT Client
+
+You can use any MQTT client for testing, such as [MQTT X](https://mqttx.app/) or the command-line tool `mosquitto`:
+
+```bash
+# Subscribe to topic
+mosquitto_sub -h localhost -p 1883 -t test/topic
+
+# Publish message (in another terminal)
+mosquitto_pub -h localhost -p 1883 -t test/topic -m "Hello smart-mqtt"
+```
+
+## Access Dashboard
+
+If using the enterprise edition, you can access the Dashboard via browser:
+
+```
+http://localhost:8083
+```
+
+Default credentials:
+- Username: `smart-mqtt`
+- Password: `smart-mqtt`
+
+<Aside type="note">
+For security reasons, please change to a more secure password in production environments.
+</Aside>

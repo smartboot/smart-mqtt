@@ -1,0 +1,125 @@
+---
+import { userCompanies, getIconSvg } from '../../data/users';
+---
+
+<section class="logo-marquee-section" id="users">
+  <div class="marquee-container">
+    <p class="marquee-label">Trusted by Excellent Enterprises</p>
+    
+    <div class="marquee-wrapper">
+      <div class="marquee-track">
+        <div class="marquee-content">
+          {userCompanies.map((company) => (
+            <div class="logo-item" title={company.fullName}>
+              {company.customIcon&&<><img src={company.customIcon} alt={company.fullName} /><span class="company-name">{company.name}</span></>}
+              {!company.customIcon&&<svg viewBox="0 0 200 40" fill="currentColor" class="company-logo" set:html={getIconSvg(company.iconType) + `<text x="45" y="26" font-size="12" font-weight="600">${company.name}</text>`} />}
+            </div>
+          ))}
+        </div>
+
+        <div class="marquee-content" aria-hidden="true">
+          {userCompanies.map((company) => (
+            <div class="logo-item" title={company.fullName}>
+              {company.customIcon&&<><img src={company.customIcon} alt={company.fullName} /><span class="company-name">{company.name}</span></>}
+              {!company.customIcon&&<svg viewBox="0 0 200 40" fill="currentColor" class="company-logo" set:html={getIconSvg(company.iconType) + `<text x="45" y="26" font-size="12" font-weight="600">${company.name}</text>`} />}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style is:global>
+  .logo-marquee-section {
+    padding: 60px 0;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: background-color 0.3s ease;
+  }
+  
+  .marquee-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  
+  .marquee-label {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 32px;
+    letter-spacing: 0.05em;
+  }
+  
+  .marquee-wrapper {
+    overflow: hidden;
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  }
+  
+  .marquee-track {
+    display: flex;
+    animation: marquee 30s linear infinite;
+  }
+  
+  .marquee-content {
+    display: flex;
+    gap: 48px;
+    flex-shrink: 0;
+  }
+  
+  .logo-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 160px;
+    height: 40px;
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+    color: var(--text-secondary);
+  }
+  
+  .logo-item:hover {
+    opacity: 1;
+  }
+  
+  .company-logo {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .company-name {
+    font-size: 14px;
+    font-weight: 600;
+    margin-left: 8px;
+  }
+  
+  @keyframes marquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+  
+  @media (prefers-reduced-motion: reduce) {
+    .marquee-track {
+      animation: none;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .logo-item {
+      min-width: 120px;
+    }
+    
+    .marquee-content {
+      gap: 32px;
+    }
+  }
+</style>

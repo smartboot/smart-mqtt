@@ -3,7 +3,7 @@
 
 <nav class="navbar" id="navbar">
   <div class="nav-container">
-    <a href="/smart-mqtt/" class="nav-brand">
+    <a href="/smart-mqtt/en/" class="nav-brand">
       <svg class="nav-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect width="32" height="32" rx="8" fill="url(#nav-logo-gradient)"/>
         <path d="M8 16h16M8 12h12M8 20h10" stroke="white" stroke-width="2" stroke-linecap="round"/>
@@ -18,19 +18,19 @@
     </a>
     
     <div class="nav-links">
-      <a href="#features" data-i18n="nav.features">产品特性</a>
-      <a href="#cost" data-i18n="nav.cost">成本优势</a>
-      <a href="#performance" data-i18n="nav.performance">性能表现</a>
-      <a href="#deployment" data-i18n="nav.deployment">部署方式</a>
-      <a href="#enterprise" data-i18n="nav.enterprise">企业服务</a>
+      <a href="#features">Features</a>
+      <a href="#cost">Cost Advantage</a>
+      <a href="#performance">Performance</a>
+      <a href="#deployment">Deployment</a>
+      <a href="#enterprise">Enterprise</a>
     </div>
     
     <div class="nav-actions">
-      <a href="/smart-mqtt/en/" class="lang-toggle" id="langToggle" aria-label="Switch Language">
-        <span class="lang-text" id="langText">EN</span>
+      <a href="/smart-mqtt/" class="lang-toggle" id="langToggle" aria-label="Switch Language">
+        <span class="lang-text" id="langText">中文</span>
       </a>
       
-      <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle Theme">
         <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
           <circle cx="12" cy="12" r="5"/>
           <line x1="12" y1="1" x2="12" y2="3"/>
@@ -54,7 +54,7 @@
       </a>
     </div>
     
-    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="菜单">
+    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">
       <span></span>
       <span></span>
       <span></span>
@@ -62,14 +62,14 @@
   </div>
   
   <div class="mobile-menu" id="mobileMenu">
-    <a href="#features" data-i18n="nav.features">产品特性</a>
-    <a href="#cost" data-i18n="nav.cost">成本优势</a>
-    <a href="#performance" data-i18n="nav.performance">性能表现</a>
-    <a href="#deployment" data-i18n="nav.deployment">部署方式</a>
-    <a href="#enterprise" data-i18n="nav.enterprise">企业服务</a>
+    <a href="#features">Features</a>
+    <a href="#cost">Cost Advantage</a>
+    <a href="#performance">Performance</a>
+    <a href="#deployment">Deployment</a>
+    <a href="#enterprise">Enterprise</a>
     <a href="https://github.com/smartboot/smart-mqtt" target="_blank" rel="noopener">GitHub</a>
-    <a href="/smart-mqtt/en/" class="mobile-lang-toggle" id="mobileLangToggle">
-      <span id="mobileLangText">English</span>
+    <a href="/smart-mqtt/" class="mobile-lang-toggle" id="mobileLangToggle">
+      <span id="mobileLangText">中文</span>
     </a>
   </div>
 </nav>
@@ -109,6 +109,8 @@
     gap: 10px;
     text-decoration: none;
     color: var(--text-primary);
+    font-weight: 700;
+    font-size: 18px;
   }
   
   .nav-logo {
@@ -117,8 +119,6 @@
   }
   
   .brand-text {
-    font-size: 18px;
-    font-weight: 700;
     background: var(--gradient-text);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -127,6 +127,7 @@
   
   .nav-links {
     display: flex;
+    align-items: center;
     gap: 32px;
   }
   
@@ -139,10 +140,6 @@
     position: relative;
   }
   
-  .nav-links a:hover {
-    color: var(--text-primary);
-  }
-  
   .nav-links a::after {
     content: '';
     position: absolute;
@@ -151,7 +148,11 @@
     width: 0;
     height: 2px;
     background: var(--accent-primary);
-    transition: width 0.3s;
+    transition: width 0.2s;
+  }
+  
+  .nav-links a:hover {
+    color: var(--text-primary);
   }
   
   .nav-links a:hover::after {
@@ -176,8 +177,7 @@
     cursor: pointer;
     transition: all 0.2s ease;
     color: var(--text-muted);
-    font-size: 13px;
-    font-weight: 600;
+    text-decoration: none;
   }
   
   .lang-toggle:hover {
@@ -187,7 +187,8 @@
   }
   
   .lang-text {
-    letter-spacing: 0.5px;
+    font-size: 12px;
+    font-weight: 600;
   }
   
   .theme-toggle {
@@ -215,7 +216,6 @@
     transition: transform 0.3s ease, opacity 0.3s ease;
   }
   
-  /* 深色模式显示太阳图标 */
   :root[data-theme="dark"] .icon-sun {
     display: block;
   }
@@ -224,7 +224,6 @@
     display: none;
   }
   
-  /* 浅色模式显示月亮图标 */
   :root[data-theme="light"] .icon-sun {
     display: none;
   }

@@ -1,42 +1,37 @@
 ---
-// 完全自定义的首页 - Stripe 风格设计，支持浅色/深色主题切换
-import Navbar from '../components/Navbar.astro';
-import Hero from '../components/Hero.astro';
-import LogoMarquee from '../components/LogoMarquee.astro';
-import FeatureCards from '../components/FeatureCards.astro';
-import PerformanceSection from '../components/PerformanceSection.astro';
-import CostAdvantageSection from '../components/CostAdvantageSection.astro';
-import DeploymentSection from '../components/DeploymentSection.astro';
-import VerificationSection from '../components/VerificationSection.astro';
-import CTASection from '../components/CTASection.astro';
+import Navbar from '../../components/en/Navbar.astro';
+import Hero from '../../components/en/Hero.astro';
+import LogoMarquee from '../../components/en/LogoMarquee.astro';
+import FeatureCards from '../../components/en/FeatureCards.astro';
+import PerformanceSection from '../../components/en/PerformanceSection.astro';
+import CostAdvantageSection from '../../components/en/CostAdvantageSection.astro';
+import DeploymentSection from '../../components/en/DeploymentSection.astro';
+import VerificationSection from '../../components/en/VerificationSection.astro';
+import CTASection from '../../components/en/CTASection.astro';
 ---
 
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="light">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="smart-mqtt 是 smartboot 开源组织推出的商业化 MQTT Broker 产品，专为拥有上万级设备连接量的企业级物联网场景设计。">
+  <meta name="description" content="smart-mqtt is a commercial MQTT Broker product launched by the smartboot open-source organization, designed for enterprise-level IoT scenarios with tens of thousands of device connections.">
   <meta name="keywords" content="smart-mqtt,mqtt,broker,mqtt broker">
-  <title>smart-mqtt - 企业级物联网消息中间件</title>
+  <title>smart-mqtt - Enterprise IoT Message Middleware</title>
   <link rel="icon" type="image/svg+xml" href="/smart-mqtt/favicon.svg">
   
-  <!-- Inter 字体 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <style is:global>
-    /* ===== 主题 CSS 变量定义 ===== */
     :root {
-      /* 主题色 */
       --accent-primary: #635bff;
       --accent-secondary: #8b5cf6;
       --accent-success: #00d4aa;
       --accent-warning: #ffc107;
       --accent-error: #ff5f56;
       
-      /* 浅色主题变量 */
       --bg-primary: #ffffff;
       --bg-secondary: #f8fafc;
       --bg-tertiary: #f1f5f9;
@@ -65,7 +60,6 @@ import CTASection from '../components/CTASection.astro';
       --overlay-bg: rgba(0, 0, 0, 0.5);
     }
     
-    /* 深色主题变量 */
     :root[data-theme="dark"] {
       --bg-primary: #0a0a0f;
       --bg-secondary: #0d0d14;
@@ -95,7 +89,6 @@ import CTASection from '../components/CTASection.astro';
       --overlay-bg: rgba(0, 0, 0, 0.8);
     }
     
-    /* ===== 基础样式 ===== */
     *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
@@ -127,7 +120,6 @@ import CTASection from '../components/CTASection.astro';
       height: auto;
     }
     
-    /* 滚动条样式 */
     ::-webkit-scrollbar {
       width: 8px;
       height: 8px;
@@ -146,7 +138,6 @@ import CTASection from '../components/CTASection.astro';
       background: var(--text-muted);
     }
     
-    /* 选中文字样式 */
     ::selection {
       background: rgba(99, 91, 255, 0.3);
       color: white;
@@ -167,40 +158,28 @@ import CTASection from '../components/CTASection.astro';
         html.setAttribute('data-theme', 'light');
       }
       
-      const savedLang = localStorage.getItem('language') || 'zh';
-      html.setAttribute('lang', savedLang);
+      localStorage.setItem('language', 'en');
+      html.setAttribute('lang', 'en');
     })();
   </script>
 </head>
 <body>
-  <!-- 导航栏 -->
   <Navbar />
   
-  <!-- Hero Section -->
   <Hero />
 
-  <!-- Logo Marquee -->
   <LogoMarquee />
   
-  <!-- Features Section -->
   <FeatureCards />
-  <!-- Cost Advantage Section -->
   <CostAdvantageSection />
-  <!-- Performance Section -->
   <PerformanceSection />
   
-
-  
-  <!-- Deployment Section -->
   <DeploymentSection />
   
-  <!-- Verification Section -->
   <VerificationSection />
   
-  <!-- CTA Section -->
   <CTASection />
   
-  <!-- Footer -->
   <footer class="custom-footer">
     <div class="footer-content">
       <div class="footer-main">
@@ -217,7 +196,7 @@ import CTASection from '../components/CTASection.astro';
           </svg>
           <div class="footer-brand-info">
             <span class="footer-logo-text">smart-mqtt</span>
-            <p class="footer-desc" data-i18n="footer.desc">企业级物联网消息中间件</p>
+            <p class="footer-desc" data-i18n="footer.desc">Enterprise IoT Message Middleware</p>
           </div>
         </div>
         
@@ -237,23 +216,23 @@ import CTASection from '../components/CTASection.astro';
       
       <div class="footer-links">
         <div class="link-column">
-          <h4 data-i18n="footer.ecosystem">开源生态</h4>
+          <h4 data-i18n="footer.ecosystem">Open Source Ecosystem</h4>
           <a href="https://github.com/smartboot/smart-socket" target="_blank" rel="noopener">smart-socket</a>
           <a href="https://github.com/smartboot/feat" target="_blank" rel="noopener">feat</a>
           <a href="https://github.com/smartboot/redisun" target="_blank" rel="noopener">redisun</a>
         </div>
         <div class="link-column">
-          <h4 data-i18n="footer.developer">开发者</h4>
-          <a href="./product/introduction/" data-i18n="footer.docs">使用文档</a>
-          <a href="./plugins/about/" data-i18n="footer.plugin">关于Plugin</a>
+          <h4 data-i18n="footer.developer">Developer</h4>
+          <a href="../product/introduction/" data-i18n="footer.docs">Documentation</a>
+          <a href="../plugins/about/" data-i18n="footer.plugin">About Plugin</a>
         </div>
         <div class="link-column">
-          <h4 data-i18n="footer.resources">资源</h4>
-          <a href="./product/changelog/" data-i18n="footer.changelog">更新日志</a>
-          <a href="./product/choosing-broker/" data-i18n="footer.guide">选型指南</a>
+          <h4 data-i18n="footer.resources">Resources</h4>
+          <a href="../product/changelog/" data-i18n="footer.changelog">Changelog</a>
+          <a href="../product/choosing-broker/" data-i18n="footer.guide">Selection Guide</a>
         </div>
         <div class="link-column">
-          <h4 data-i18n="footer.about">关于</h4>
+          <h4 data-i18n="footer.about">About</h4>
           <a href="https://smartboot.tech" target="_blank" rel="noopener">smartboot</a>
           <a href="https://github.com/smartboot/smart-mqtt" target="_blank" rel="noopener">GitHub</a>
           <a href="https://gitee.com/smartboot/smart-mqtt" target="_blank" rel="noopener">Gitee</a>

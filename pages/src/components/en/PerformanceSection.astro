@@ -1,0 +1,464 @@
+---
+import MetricsDashboard from '../MetricsDashboard.astro';
+import PerformanceChart from '../PerformanceChart.astro';
+import type { ChartRowData } from '../PerformanceChart.astro';
+
+const subscribeData: ChartRowData[] = [
+  {
+    qosLevel: 'QoS 0',
+    smartMqttValue: 1000,
+    competitorValue: 800,
+    maxValue: 1200,
+    advantage: '+25%',
+    advantageType: 'advantage'
+  },
+  {
+    qosLevel: 'QoS 1',
+    smartMqttValue: 540,
+    competitorValue: 400,
+    maxValue: 1200,
+    advantage: '+35%',
+    advantageType: 'advantage'
+  },
+  {
+    qosLevel: 'QoS 2',
+    smartMqttValue: 320,
+    competitorValue: 200,
+    maxValue: 1200,
+    advantage: '+60%',
+    advantageType: 'advantage'
+  }
+];
+
+const publishData: ChartRowData[] = [
+  {
+    qosLevel: 'QoS 0',
+    smartMqttValue: 230,
+    maxValue: 300,
+    advantage: 'Industry Leading',
+    advantageType: 'neutral'
+  },
+  {
+    qosLevel: 'QoS 1',
+    smartMqttValue: 100,
+    maxValue: 300,
+    advantage: 'Industry Leading',
+    advantageType: 'neutral'
+  },
+  {
+    qosLevel: 'QoS 2',
+    smartMqttValue: 63,
+    maxValue: 300,
+    advantage: 'Industry Leading',
+    advantageType: 'neutral'
+  }
+];
+
+const metricCards = [
+  {
+    number: '1000',
+    unit: 'W/s',
+    label: 'Peak Subscribe Throughput',
+    description: 'QoS 0 · 2000 subscribers · 10 publishers',
+    tag: 'Subscribe Scenario',
+    tagType: 'default' as const,
+    compareValue: '+25%',
+    compareLabel: 'vs Other Brokers',
+    compareType: 'advantage' as const,
+    featured: true,
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M19 9l-5 5-4-4-3 3"/></svg>'
+  },
+  {
+    number: '230',
+    unit: 'W/s',
+    label: 'Peak Publish Throughput',
+    description: 'QoS 0 · 2000 publishers',
+    tag: 'Publish Scenario',
+    tagType: 'secondary' as const,
+    compareValue: 'Industry Leading',
+    compareType: 'neutral' as const,
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>'
+  },
+  {
+    number: '<1',
+    unit: 'ms',
+    label: 'Average Message Latency',
+    description: 'P99 Latency · Message Delivery Speed',
+    tag: 'Latency',
+    tagType: 'senary' as const,
+    compareValue: 'Millisecond Response',
+    compareType: 'neutral' as const,
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
+  },
+  {
+    number: '540',
+    unit: 'W/s',
+    label: 'Reliable Subscribe Throughput',
+    description: 'AtLeastOnce Message Quality Guarantee',
+    tag: 'QoS 1',
+    tagType: 'quaternary' as const,
+    compareValue: '+35%',
+    compareLabel: 'vs Other Brokers',
+    compareType: 'advantage' as const,
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><path d="M21 12c.552 0 1-.448 1-1V8c0-2.761-2.239-5-5-5h-3"/><path d="M3 12c-.552 0-1 .448-1 1v3c0 2.761 2.239 5 5 5h3"/><circle cx="12" cy="12" r="3"/></svg>'
+  },
+  {
+    number: '320',
+    unit: 'W/s',
+    label: 'Highest Reliable Throughput',
+    description: 'ExactlyOnce Message Quality Guarantee',
+    tag: 'QoS 2',
+    tagType: 'quinary' as const,
+    compareValue: '+60%',
+    compareLabel: 'vs Other Brokers',
+    compareType: 'advantage' as const,
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>'
+  },
+  {
+    number: '100',
+    unit: '%',
+    label: 'Message Delivery Success Rate',
+    description: 'QoS 1 & 2 Message Guarantee',
+    tag: 'Reliability',
+    tagType: 'tertiary' as const,
+    compareValue: 'Enterprise-grade',
+    compareType: 'neutral' as const,
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>'
+  }
+];
+---
+
+<section class="performance-section" id="performance">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Performance</span>
+      <h2 class="section-title">Performance Metrics Beyond Competitors</h2>
+      <p class="section-description">
+        Rigorously tested data performance, providing solid guarantees for large-scale IoT scenarios
+      </p>
+    </div>
+    
+    <div class="performance-content">
+      <div class="charts-container">
+        <div class="charts-tabs">
+          <button class="tab-button active" data-tab="subscribe">Subscribe Throughput</button>
+          <button class="tab-button" data-tab="publish">Publish Throughput</button>
+        </div>
+        <div class="charts-content">
+          <div class="tab-panel active" data-panel="subscribe">
+            <PerformanceChart
+              title="Subscribe Throughput Comparison"
+              subtitle="2000 subscribers · 10 publishers · 128 topics · 128 bytes payload"
+              type="comparison"
+              data={subscribeData}
+            />
+          </div>
+          <div class="tab-panel" data-panel="publish">
+            <PerformanceChart
+              title="Publish Throughput Capacity"
+              subtitle="2000 publishers · 128 topics · 128 bytes payload"
+              type="single"
+              data={publishData}
+            />
+          </div>
+        </div>
+      </div>
+      
+      <div class="dashboard-container">
+        <MetricsDashboard metrics={metricCards} />
+      </div>
+    </div>
+    
+    <div class="benchmark-footer">
+      <div class="benchmark-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="16" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        <div class="benchmark-info">
+          <p><strong>Test Environment:</strong> 8-core 16G Cloud Server · 2000 Concurrent Connections · 128 bytes payload</p>
+          <p class="benchmark-source">Data from <a href="../plugins/bench-plugin/" class="benchmark-link">bench-plugin official benchmark plugin</a> · Supports cross-comparison testing with mainstream brokers like EMQX, Mosquitto</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style is:global>
+  .performance-section {
+    padding: 20px 24px;
+    background: var(--bg-secondary);
+    position: relative;
+    transition: background-color 0.3s ease;
+    overflow: hidden;
+  }
+  
+  .performance-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+  }
+  
+  .performance-section::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, var(--accent-primary) 0%, transparent 70%);
+    opacity: 0.03;
+    pointer-events: none;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 64px;
+  }
+
+  .section-tag {
+    display: inline-block;
+    padding: 8px 16px;
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    border-radius: 9999px;
+    color: var(--accent-primary);
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+  }
+
+  .section-description {
+    font-size: 18px;
+    color: var(--text-muted);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  .performance-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: start;
+  }
+
+  .charts-container {
+    background: transparent;
+    border: none;
+    padding: 0;
+    height: 520px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .charts-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 16px;
+  }
+
+  .tab-button {
+    padding: 12px 24px;
+    background: transparent;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .tab-button:hover {
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+  }
+
+  .tab-button.active {
+    background: linear-gradient(135deg, var(--accent-primary) 0%, #8b5cf6 100%);
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 4px 12px rgba(99, 91, 255, 0.3);
+  }
+
+  .charts-content {
+    position: relative;
+    flex: 1;
+  }
+
+  .tab-panel {
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .tab-panel.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .dashboard-container {
+    min-height: 500px;
+  }
+
+  .metrics-highlight {
+    display: none;
+  }
+
+  @media (max-width: 1024px) {
+    .performance-content {
+      grid-template-columns: 1fr;
+    }
+    
+    .dashboard-container {
+      min-height: auto;
+    }
+  }
+
+  .benchmark-footer {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .benchmark-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 28px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    max-width: 800px;
+  }
+  
+  .benchmark-note svg {
+    color: var(--accent-primary);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  
+  .benchmark-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .benchmark-info p {
+    color: var(--text-subtle);
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+  }
+  
+  .benchmark-info strong {
+    color: var(--text-primary);
+  }
+  
+  .benchmark-source {
+    font-size: 13px !important;
+  }
+  
+  .benchmark-link {
+    color: var(--accent-primary);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  
+  .benchmark-link:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 1024px) {
+    .performance-content {
+      grid-template-columns: 1fr;
+    }
+    
+    .metrics-highlight {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .performance-section {
+      padding: 60px 16px;
+    }
+    
+    .metrics-highlight {
+      grid-template-columns: 1fr;
+    }
+    
+    .benchmark-note {
+      flex-direction: column;
+      text-align: center;
+      padding: 20px;
+    }
+  }
+</style>
+
+<script>
+  const tabButtons = document.querySelectorAll('.tab-button');
+  const tabPanels = document.querySelectorAll('.tab-panel');
+
+  tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const tab = button.dataset.tab;
+      
+      tabButtons.forEach(btn => btn.classList.remove('active'));
+      tabPanels.forEach(panel => panel.classList.remove('active'));
+      
+      button.classList.add('active');
+      document.querySelector(`.tab-panel[data-panel="${tab}"]`)?.classList.add('active');
+    });
+  });
+
+  const observerOptions = {
+    threshold: 0.2,
+    rootMargin: '0px'
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        if (entry.target.classList.contains('metric-card')) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+        
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  document.querySelectorAll('.metric-card').forEach((card, index) => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(20px)';
+    card.style.transition = `all 0.5s ease ${index * 0.1}s`;
+    observer.observe(card);
+  });
+</script>
