@@ -1,0 +1,68 @@
+# 微信公众号平台配置
+
+platform:
+  name: "WeChat Official Account"
+  name-zh: "微信公众号"
+  description: "微信公众号文章插图规范"
+
+sizes:
+  cover-large:
+    width: 900
+    height: 383
+    description: "首条封面大图"
+    ratio: "2.35:1"
+  cover-medium:
+    width: 900
+    height: 500
+    description: "次条封面图"
+    ratio: "1.8:1"
+  cover-small:
+    width: 200
+    height: 200
+    description: "封面小图"
+    ratio: "1:1"
+  inline:
+    width: 900
+    height: auto
+    min-height: 200
+    max-height: 800
+    description: "文中插图"
+  header:
+    width: 900
+    height: 300
+    description: "头图"
+    ratio: "3:1"
+  footer:
+    width: 900
+    height: 200
+    description: "尾图"
+    ratio: "4.5:1"
+
+safe-area:
+  top: 60
+  bottom: 40
+  left: 40
+  right: 40
+  description: "安全区域边距（像素）"
+
+format:
+  type: "static-html"
+  output: "png"
+  max-file-size: "2MB"
+  supported-formats:
+    - "png"
+    - "jpg"
+
+mobile:
+  base-device: "iPhone 14 Pro Max"
+  base-width: 430
+  base-height: 932
+  min-readable-font: 14
+  min-tap-target: 44
+
+constraints:
+  animation: false
+  interaction: false
+  video: false
+  external-resources: false
+  description: "微信公众号仅支持静态图片"

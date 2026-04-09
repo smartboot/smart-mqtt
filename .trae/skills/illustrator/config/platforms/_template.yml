@@ -1,0 +1,63 @@
+# Platform Configuration Template
+# Copy this file and rename to {platform-name}.yml, then customize for your platform
+
+platform:
+  name: "Platform Name"
+  description: "Brief description of the platform"
+
+sizes:
+  cover-large:
+    width: 900
+    height: 383
+    description: "Main cover image"
+  cover-medium:
+    width: 900
+    height: 500
+    description: "Secondary cover image"
+  cover-small:
+    width: 200
+    height: 200
+    description: "Thumbnail"
+  inline:
+    width: 900
+    height: auto
+    min-height: 200
+    max-height: 800
+    description: "In-article illustration"
+  header:
+    width: 900
+    height: 300
+    description: "Header image"
+  footer:
+    width: 900
+    height: 200
+    description: "Footer image"
+
+safe-area:
+  top: 60
+  bottom: 40
+  left: 40
+  right: 40
+  description: "Safe area margins in pixels"
+
+format:
+  type: "static-html"
+  output: "png"
+  max-file-size: "2MB"
+  supported-formats:
+    - "png"
+    - "jpg"
+    - "webp"
+
+mobile:
+  base-device: "iPhone 14 Pro Max"
+  base-width: 430
+  base-height: 932
+  min-readable-font: 14
+  min-tap-target: 44
+
+constraints:
+  animation: false
+  interaction: false
+  video: false
+  external-resources: false

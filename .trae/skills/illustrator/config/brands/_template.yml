@@ -1,0 +1,76 @@
+# Brand Configuration Template
+# Copy this file and rename to {brand-name}.yml, then customize for your brand
+
+brand:
+  name: "Your Brand Name"
+  tagline: "Your Brand Tagline"
+  description: "Brief description of your brand"
+
+colors:
+  primary: "#2563eb"
+  primary-light: "#3b82f6"
+  primary-dark: "#1d4ed8"
+  secondary: "#64748b"
+  accent: "#f59e0b"
+  success: "#10b981"
+  warning: "#f97316"
+  error: "#ef4444"
+
+neutral:
+  50: "#fafafa"
+  100: "#f5f5f5"
+  200: "#e5e5e5"
+  300: "#d4d4d4"
+  400: "#a3a3a3"
+  500: "#737373"
+  600: "#525252"
+  700: "#404040"
+  800: "#262626"
+  900: "#171717"
+
+art-style:
+  cream: "#fef9f3"
+  soft-pink: "#fce4ec"
+  lavender: "#f3e5f5"
+  mint: "#e8f5e9"
+  peach: "#fff3e0"
+  sky: "#e3f2fd"
+  primary: "#7c6ba0"
+  secondary: "#e8a4b8"
+  accent: "#e89b5a"
+  line: "#5d4e37"
+
+typography:
+  font-stack: "-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif"
+  art-font: "'ZCOOL KuaiLe', 'Ma Shan Zheng', 'ZCOOL XiaoWei', 'PingFang SC', sans-serif"
+
+logo:
+  text: "LOGO"
+  icon: ""
+  position: "bottom-right"
+
+article-types:
+  technical-tutorial:
+    primary: "#2563eb"
+    secondary: "#64748b"
+    accent: "#10b981"
+  product-release:
+    primary: "#c026d3"
+    secondary: "#64748b"
+    accent: "#f59e0b"
+  industry-news:
+    primary: "#0d9488"
+    secondary: "#64748b"
+    accent: "#ef4444"
+  opinion:
+    primary: "#ea580c"
+    secondary: "#64748b"
+    accent: "#f59e0b"
+  story:
+    primary: "#059669"
+    secondary: "#64748b"
+    accent: "#f97316"
+  promotion:
+    primary: "#db2777"
+    secondary: "#64748b"
+    accent: "#8b5cf6"
