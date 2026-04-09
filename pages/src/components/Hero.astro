@@ -12,9 +12,14 @@
   
   <div class="hero-main">
     <div class="content-col">
-      <div class="badge">
-        <span class="badge-dot"></span>
-        <span data-i18n="hero.badge">开源 MQTT Broker</span>
+      <div class="badge-row">
+        <div class="badge">
+          <span class="badge-dot"></span>
+          <span data-i18n="hero.badge">开源 MQTT Broker</span>
+        </div>
+        <a href="https://hub.docker.com/r/smartboot/smart-mqtt" target="_blank" rel="noopener" class="docker-badge">
+          <img src="https://img.shields.io/docker/pulls/smartboot/smart-mqtt" alt="Docker Pulls">
+        </a>
       </div>
       
       <h1 class="title">
@@ -248,6 +253,14 @@
     }
   }
   
+  .badge-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  
   .badge {
     display: inline-flex;
     align-items: center;
@@ -258,8 +271,24 @@
     border-radius: 9999px;
     font-size: 14px;
     color: var(--accent-primary);
-    margin-bottom: 24px;
     font-weight: 500;
+    margin-bottom: 0;
+  }
+  
+  .docker-badge {
+    display: inline-flex;
+    align-items: center;
+    transition: transform 0.2s ease;
+    line-height: 1;
+  }
+  
+  .docker-badge:hover {
+    transform: scale(1.05);
+  }
+  
+  .docker-badge img {
+    height: 20px;
+    width: auto;
   }
   
   .badge-dot {
