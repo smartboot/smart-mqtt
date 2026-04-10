@@ -194,7 +194,7 @@ public class EnterprisePlugin extends Plugin {
         showMetrics.addEnums(Enum.of("messages_qos2_sent", "发送给客户端的 QoS 2 消息数量"));
         schema.addItem(showMetrics);
 
-        Item openapi = Item.Object("openai", "openai服务配置");
+        Item openapi = Item.Object("openai", "openai服务配置").col(6);
         openapi.addItems(Item.String("url", "OpenAI URL"));
         openapi.addItems(Item.Password("apiKey", "API秘钥").col(6));
         openapi.addItems(Item.String("model", "模型").col(6));
