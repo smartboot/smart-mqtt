@@ -52,7 +52,7 @@ docker run --name smart-mqtt \
 ```bash
 # Download and extract
 curl -LO https://github.com/smartboot/smart-mqtt/releases/download/v1.5.5/smart-mqtt-full-v1.5.5.zip
-unzip smart-mqtt-full-v1.5.3.zip -d smart-mqtt && cd smart-mqtt
+unzip smart-mqtt-full-v1.5.5.zip -d smart-mqtt && cd smart-mqtt
 
 # Start service
 ./start.sh
