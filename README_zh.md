@@ -50,7 +50,7 @@ docker run --name smart-mqtt \
 
 ```bash
 # 下载并解压
-curl -LO https://gitee.com/smartboot/smart-mqtt/releases/download/v1.5.3/smart-mqtt-full-v1.5.3.zip
+curl -LO https://gitee.com/smartboot/smart-mqtt/releases/download/v1.5.5/smart-mqtt-full-v1.5.5.zip
 unzip smart-mqtt-full-v1.5.3.zip -d smart-mqtt && cd smart-mqtt
 
 # 启动服务
