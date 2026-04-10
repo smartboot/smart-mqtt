@@ -1,6 +1,6 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue.svg" alt="License"></a>
-  <a href="https://gitee.com/smartboot/smart-mqtt/releases"><img src="https://img.shields.io/badge/version-v1.5.3-green.svg" alt="Version"></a>
+  <a href="https://gitee.com/smartboot/smart-mqtt/releases"><img src="https://img.shields.io/badge/version-v1.5.5-green.svg" alt="Version"></a>
   <a href="https://hub.docker.com/r/smartboot/smart-mqtt"><img src="https://img.shields.io/docker/pulls/smartboot/smart-mqtt.svg" alt="Docker"></a>
   <a href="https://smartboot.tech/smart-mqtt/"><img src="https://img.shields.io/badge/docs-官方文档-blue.svg" alt="Documentation"></a>
 </p>
