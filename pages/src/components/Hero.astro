@@ -23,14 +23,17 @@
       </div>
       
       <h1 class="title">
-        <span class="title-line" data-i18n="hero.title1">用 Java 写的</span>
-        <span class="title-line highlight" data-i18n="hero.title2">MQTT Broker</span>
+        <span class="title-line highlight" data-i18n="hero.title1">用 Java 写的 MQTT Broker</span>
+        <span class="title-line">
+          成本降至 <span class="cost-10">1/10</span>，出了问题
+          <span class="author-highlight">找得到人</span>
+        </span>
       </h1>
       
       <p class="desc" data-i18n="hero.desc">
-        再也不用为了运维 MQTT 专门去学 Erlang。单机 30万+ 连接，8年持续维护。
+        <span class="pain-point">✅ 99% 的企业后端是 Java，为什么你的 MQTT 要用 Erlang？</span>
         <br>
-        作者本人工作日 24 小时内回复，出了问题找得到人。
+        <span class="pain-point">✅ 10万设备，某云一年成本数十万，我们一台服务器搞定</span>
       </p>
       
       <div class="btn-group">
@@ -335,18 +338,38 @@
   }
   
   .title-line.highlight {
-    background: linear-gradient(135deg, #635bff 0%, #00d4aa 100%);
+    background: linear-gradient(135deg, #635bff 0%, #8b5cf6 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  
+
+  .cost-10 {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 900;
+    padding: 0 4px;
+  }
+
+  .author-highlight {
+    color: #f59e0b;
+    font-weight: 800;
+    padding: 0 4px;
+  }
+
   .desc {
     font-size: 18px;
     color: var(--text-muted);
-    line-height: 1.7;
+    line-height: 2;
     margin-bottom: 32px;
-    max-width: 480px;
+    max-width: 560px;
+  }
+
+  .pain-point {
+    display: inline-block;
+    font-weight: 500;
   }
   
   /* 按钮 */
