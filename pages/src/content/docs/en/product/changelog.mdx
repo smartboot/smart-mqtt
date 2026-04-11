@@ -6,6 +6,16 @@ sidebar:
 
 # Changelog
 
+## smart-mqtt broker v1.5.5（2026-04-11）
+
+- **FlappingDetector Connection Anti-Flapping Mechanism**: Added sliding time window statistics and automatic banning strategy to proactively defend against connection storm attacks from "flapping clients" on the Broker
+- **Sliding Time Window Statistics**: Millisecond-precision time window for connection event statistics to accurately identify abnormal reconnection patterns
+- **High-Performance Concurrent Design**: Thread-safe statistics mechanism based on ConcurrentHashMap + ConcurrentLinkedDeque
+- **Lazy Expiration Cleanup**: Automatic ban expiration with background task for periodic redundant data cleanup, controllable memory overhead
+- **Multi-Scenario Defense**: Covers typical abnormal scenarios including unstable network edge devices, client program bugs, authentication loops due to configuration errors, and DDoS attacks
+
+Release Details: [smart-mqtt v1.5.5 Released: Proactive Defense Against Connection Storms](https://mp.weixin.qq.com/s/5yGWQ0dZzSYZJi-1X1kr-g)
+
 ## smart-mqtt broker v1.5.4（2026-03-31）
 
 - **Advanced Authentication Plugin**: Added `advanced-auth-plugin`, supporting Redis and HTTP authentication chains, more suitable for enterprise-level device access scenarios

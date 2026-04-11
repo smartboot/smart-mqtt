@@ -6,6 +6,16 @@ sidebar:
 
 # 发版记录
 
+## smart-mqtt broker v1.5.5（2026-04-11）
+
+- **FlappingDetector 连接防抖检测机制**：新增滑动时间窗口统计与自动封禁策略，主动防御"抖动客户端"对 Broker 造成的连接风暴冲击
+- **滑动时间窗口统计**：毫秒级精度的时间窗口统计连接事件，精准识别异常重连模式
+- **高性能并发设计**：基于 ConcurrentHashMap + ConcurrentLinkedDeque 实现并发安全的统计机制
+- **惰性过期清理**：封禁过期自动解除，后台任务定期清理冗余数据，内存开销可控
+- **多场景防御**：覆盖网络不稳定边缘设备、客户端程序Bug、配置错误认证循环、DDoS攻击等典型异常场景
+
+发版详情：《[smart-mqtt v1.5.5发布：主动防御连接风暴，让 Broker 更稳](https://mp.weixin.qq.com/s/5yGWQ0dZzSYZJi-1X1kr-g)》
+
 ## smart-mqtt broker v1.5.4（2026-03-31）
 
 - **高级认证插件**：新增 `advanced-auth-plugin`，支持 Redis 与 HTTP 认证链，更适合企业级设备接入场景
