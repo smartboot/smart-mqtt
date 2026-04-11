@@ -177,6 +177,52 @@ unzip smart-mqtt-full-v1.5.5.zip -d smart-mqtt && cd smart-mqtt</code></pre>
             </div>
           </div>
         </div>
+        
+        <!-- 验证运行状态 -->
+        <div class="verification-panel">
+          <div class="verify-header-inline">
+            <div class="verify-icon-inline">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <h3>验证服务运行</h3>
+            <span class="verify-subtitle">启动完成后，快速确认服务是否正常</span>
+          </div>
+          
+          <div class="verify-steps-inline">
+            <div class="verify-step">
+              <span class="step-label">查看进程</span>
+              <div class="code-inline">
+                <code>ps aux | grep smart-mqtt</code>
+                <button class="copy-btn-small" data-code="ps aux | grep smart-mqtt">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="verify-step">
+              <span class="step-label">端口监听</span>
+              <div class="code-inline">
+                <code>netstat -tlnp | grep 1883</code>
+                <button class="copy-btn-small" data-code="netstat -tlnp | grep 1883">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="verify-step">
+              <span class="step-label">浏览器访问</span>
+              <div class="code-inline">
+                <code>http://localhost:18083</code>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -197,20 +243,19 @@ unzip smart-mqtt-full-v1.5.5.zip -d smart-mqtt && cd smart-mqtt</code></pre>
   });
 
   // Copy functionality
-  document.querySelectorAll('.deployment-section .copy-btn').forEach(btn => {
+  document.querySelectorAll('.deployment-section .copy-btn, .deployment-section .copy-btn-small').forEach(btn => {
     btn.addEventListener('click', () => {
       const code = btn.dataset.code;
       if (code) {
         navigator.clipboard.writeText(code).then(() => {
-          const originalText = btn.innerHTML;
+          const originalHTML = btn.innerHTML;
           btn.innerHTML = `
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="20 6 9 17 4 12"/>
             </svg>
-            已复制
           `;
           setTimeout(() => {
-            btn.innerHTML = originalText;
+            btn.innerHTML = originalHTML;
           }, 2000);
         });
       }
@@ -349,6 +394,103 @@ unzip smart-mqtt-full-v1.5.5.zip -d smart-mqtt && cd smart-mqtt</code></pre>
     align-items: center;
     gap: 12px;
     margin-bottom: 8px;
+  }
+  
+  .verification-panel {
+    margin-top: 24px;
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  
+  .verify-header-inline {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  
+  .verify-icon-inline {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-primary);
+    border-radius: 10px;
+    color: white;
+  }
+  
+  .verify-header-inline h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  
+  .verify-subtitle {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-left: auto;
+  }
+  
+  .verify-steps-inline {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  
+  .verify-step {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .step-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+  
+  .code-inline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-code);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-family: 'SF Mono', 'Consolas', monospace;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  
+  .copy-btn-small {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-subtle);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  
+  .copy-btn-small:hover {
+    background: var(--bg-secondary);
+    color: var(--accent-primary);
+  }
+  
+  @media (max-width: 640px) {
+    .verify-subtitle {
+      margin-left: 0;
+      width: 100%;
+      margin-top: 4px;
+    }
   }
 
   .method-number {

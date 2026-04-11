@@ -22,7 +22,7 @@
       <a href="#cost" data-i18n="nav.cost">成本优势</a>
       <a href="#performance" data-i18n="nav.performance">性能表现</a>
       <a href="#deployment" data-i18n="nav.deployment">部署方式</a>
-      <a href="#enterprise" data-i18n="nav.enterprise">企业服务</a>
+      <a href="#pricing" data-i18n="nav.pricing">定价方案</a>
     </div>
     
     <div class="nav-actions">
@@ -66,7 +66,7 @@
     <a href="#cost" data-i18n="nav.cost">成本优势</a>
     <a href="#performance" data-i18n="nav.performance">性能表现</a>
     <a href="#deployment" data-i18n="nav.deployment">部署方式</a>
-    <a href="#enterprise" data-i18n="nav.enterprise">企业服务</a>
+    <a href="#pricing" data-i18n="nav.pricing">定价方案</a>
     <a href="https://github.com/smartboot/smart-mqtt" target="_blank" rel="noopener">GitHub</a>
     <a href="/smart-mqtt/en/" class="mobile-lang-toggle" id="mobileLangToggle">
       <span id="mobileLangText">English</span>
@@ -135,12 +135,13 @@
     text-decoration: none;
     font-size: 14px;
     font-weight: 500;
-    transition: color 0.2s;
+    transition: all 0.2s;
     position: relative;
   }
   
-  .nav-links a:hover {
-    color: var(--text-primary);
+  .nav-links a:hover,
+  .nav-links a.active {
+    color: var(--accent-primary);
   }
   
   .nav-links a::after {
@@ -154,7 +155,8 @@
     transition: width 0.3s;
   }
   
-  .nav-links a:hover::after {
+  .nav-links a:hover::after,
+  .nav-links a.active::after {
     width: 100%;
   }
   
@@ -314,11 +316,13 @@
     padding: 12px 16px;
     border-radius: 8px;
     transition: all 0.2s;
+    position: relative;
   }
   
-  .mobile-menu a:hover {
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
+  .mobile-menu a:hover,
+  .mobile-menu a.active {
+    background: var(--accent-bg);
+    color: var(--accent-primary);
   }
   
   .mobile-lang-toggle {
@@ -367,6 +371,38 @@
   const navbar = document.getElementById('navbar');
   let lastScroll = 0;
   
+  const sections = ['features', 'cost', 'performance', 'deployment', 'pricing'];
+  const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
+  const mobileLinks = document.querySelectorAll('.mobile-menu a[href^="#"]');
+  
+  function updateActiveNav() {
+    const scrollPosition = window.scrollY + 100;
+    
+    sections.forEach((sectionId) => {
+      const section = document.getElementById(sectionId);
+      if (!section) return;
+      
+      const sectionTop = section.offsetTop;
+      const sectionBottom = sectionTop + section.offsetHeight;
+      
+      if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === `#${sectionId}`) {
+            link.classList.add('active');
+          }
+        });
+        
+        mobileLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === `#${sectionId}`) {
+            link.classList.add('active');
+          }
+        });
+      }
+    });
+  }
+  
   window.addEventListener('scroll', () => {
     const currentScroll = window.pageYOffset;
     
@@ -376,7 +412,24 @@
       navbar.classList.remove('scrolled');
     }
     
+    updateActiveNav();
     lastScroll = currentScroll;
+  });
+  
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      e.preventDefault();
+      const targetId = this.getAttribute('href').substring(1);
+      const targetElement = document.getElementById(targetId);
+      
+      if (targetElement) {
+        const offsetTop = targetElement.offsetTop - 80;
+        window.scrollTo({
+          top: offsetTop,
+          behavior: 'smooth'
+        });
+      }
+    });
   });
   
   const mobileMenuBtn = document.getElementById('mobileMenuBtn');
