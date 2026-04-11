@@ -115,7 +115,7 @@
 
 <style>
   .features-section {
-    padding: 100px 24px;
+    padding: 64px 24px;
     background: var(--bg-primary);
     position: relative;
     transition: background-color 0.3s ease;
@@ -128,49 +128,48 @@
 
   .features-header {
     text-align: center;
-    margin-bottom: 64px;
+    margin-bottom: 40px;
   }
 
   .features-tag {
     display: inline-block;
-    padding: 8px 16px;
+    padding: 6px 14px;
     background: var(--accent-bg);
     border: 1px solid var(--accent-border);
     border-radius: 9999px;
     color: var(--accent-primary);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
   }
 
   .features-title {
-    font-size: clamp(28px, 4vw, 40px);
+    font-size: clamp(24px, 4vw, 32px);
     font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 16px;
+    margin-bottom: 8px;
     letter-spacing: -0.02em;
   }
 
   .features-description {
-    font-size: 18px;
+    font-size: 16px;
     color: var(--text-muted);
     max-width: 600px;
     margin: 0 auto;
-    line-height: 1.6;
+    line-height: 1.5;
   }
 
   .features-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    margin-bottom: 80px;
+    gap: 16px;
   }
 
   .feature-card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 32px;
+    border-radius: 14px;
+    padding: 20px;
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
@@ -200,47 +199,47 @@
   }
 
   .feature-icon {
-    width: 48px;
-    height: 48px;
+    width: 38px;
+    height: 38px;
     background: linear-gradient(135deg, #635bff 0%, #8b5cf6 100%);
-    border-radius: 12px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     color: white;
     position: relative;
   }
 
   .feature-icon svg {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
   }
 
   .feature-metric {
-    font-size: 28px;
+    font-size: 22px;
     font-weight: 700;
     background: var(--gradient-text);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     position: relative;
   }
 
   .feature-name {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 12px;
+    margin-bottom: 6px;
     position: relative;
   }
 
   .feature-text {
-    font-size: 14px;
+    font-size: 13px;
     color: var(--text-muted);
-    line-height: 1.6;
-    margin-bottom: 16px;
+    line-height: 1.5;
+    margin-bottom: 10px;
     position: relative;
   }
 
@@ -270,21 +269,20 @@
 
   @media (max-width: 768px) {
     .features-section {
-      padding: 60px 16px;
+      padding: 40px 16px;
     }
 
     .features-grid {
       grid-template-columns: 1fr;
-      gap: 16px;
-      margin-bottom: 48px;
+      gap: 12px;
     }
 
     .feature-card {
-      padding: 24px;
+      padding: 18px;
     }
 
     .features-title {
-      font-size: 24px;
+      font-size: 22px;
     }
   }
 </style>
