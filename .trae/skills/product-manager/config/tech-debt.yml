@@ -1,54 +1,54 @@
 # ============================================
 # smart-mqtt 技术债务账本
+# 当前版本: v1.5.5
 # ============================================
 
 meta:
-  version: "1.0"
-  total_debt_items: 0
+  version: "1.1"
+  current_version: "v1.5.5"
+  total_debt_items: 2
   high_risk_count: 0
   redemption_rate_target: 0.20
+  last_adr_review: "ADR-001"
 
 debt_items:
   DEBT-001:
-    area: "消息持久化"
+    area: "架构决策-已撤销"
     module: "store"
-    description: "当前实现不支持百万级队列回溯查询，需要重构索引结构"
+    description: "根据 ADR-001 决策：不做内置持久化，此债务项已撤销"
     introduced_version: "v1.4.0"
-    introduced_date: "2026-01-15"
-    planned_fix_version: "v1.7.0"
-    risk_level: "high"
-    interest: "每延迟一个版本，重构成本增加 30%"
-    affected_features:
-      - "消息回溯"
-      - "离线消息"
-    mitigation: "限制单队列回溯消息数"
+    closed_date: "2026-04-14"
+    closed_by: "ADR-001"
+    risk_level: "closed"
+    status: "archived"
 
   DEBT-002:
     area: "认证授权"
     module: "security"
-    description: "硬编码的权限判断逻辑散落在多处，需要抽象 SPI 接口"
+    description: "ACL 权限判断硬编码散落多处，未抽象统一 SPI 接口"
     introduced_version: "v1.2.0"
-    introduced_date: "2025-12-01"
+    introduced_date: "2025-10-15"
     planned_fix_version: "v1.6.0"
     risk_level: "medium"
-    interest: "新增认证方式开发周期 +2 天"
+    interest: "新增认证方式开发周期 +2 天，Bug 风险增加"
     affected_features:
-      - "ACL 控制"
-      - "多租户"
-    mitigation: "新增统一封装工具类"
+      - "多租户隔离"
+      - "第三方认证集成"
+    mitigation: "新增认证方式通过封装工具类统一处理"
 
   DEBT-003:
     area: "测试覆盖"
-    module: "integration-test"
-    description: "集群场景自动化测试覆盖率不足 30%"
+    module: "test"
+    description: "集群故障转移场景自动化用例覆盖率不足 30%"
     introduced_version: "v1.0.0"
-    introduced_date: "2025-10-01"
+    introduced_date: "2025-08-01"
     planned_fix_version: "v1.6.0"
     risk_level: "medium"
-    interest: "线上回归问题概率 × 2"
+    interest: "版本发布前集群回归测试需 3 人天，且漏测风险高"
     affected_features:
-      - "所有集群特性"
-    mitigation: "增加手动测试 Checklist"
+      - "集群高可用"
+      - "节点上下线"
+    mitigation: "发布前强制执行 72 小时混沌测试"
 
 redemption_rules:
   mandatory_redemption_ratio: 0.20

@@ -5,65 +5,85 @@
 
 meta:
   version: "1.0"
-  last_review: "2026-04-01"
-  next_review: "2026-07-01"
+  last_review: "2026-04-14"
+  next_review: "2026-07-14"
 
 insights:
   INS-001:
-    date: "2026-03-15"
-    source: "Gitee Issue #456"
+    date: "2026-03-10"
+    source: "Gitee Issue & 社区讨论"
     source_type: "community"
-    insight: "80% 的部署问题集中在集群配置，用户需要更智能的配置引导"
+    insight: "80% 新手卡在集群配置，但 90% 用户业务根本不需要集群。核心问题是认知误导，不是配置太难。"
     confidence: "high"
-    evidence_count: 12
+    evidence_count: 15
     related_features:
-      - "配置向导"
-      - "部署诊断工具"
+      - "文档前置场景引导：你真的需要集群吗？"
+      - "快速开始优先讲单实例部署"
+      - "集群放在高级文档部分"
     status: "validated"
-    action_taken: "v1.6.0 规划中"
+    action_taken: "v1.6.0 调整优先级"
     impact: "high"
+    see_also: "ADR-002"
 
   INS-002:
-    date: "2026-03-20"
-    source: "企业客户访谈-A公司"
+    date: "2026-03-15"
+    source: "企业客户商业咨询"
     source_type: "enterprise"
-    insight: "企业用户愿意为可观测性付费，需要可视化的消息追踪"
+    insight: "企业客户核心诉求：可观测性（消息追踪、监控告警）和多租户隔离"
     confidence: "high"
-    evidence_count: 5
+    evidence_count: 8
     related_features:
-      - "消息追踪"
-      - "监控大盘"
+      - "消息追踪仪表盘"
+      - "多租户管理"
+      - "告警规则配置"
     status: "validated"
-    action_taken: "v2.0 企业版规划"
+    action_taken: "v1.7.0 企业版特性规划"
     impact: "critical"
 
   INS-003:
     date: "2026-03-25"
-    source: "Docker Hub 评论"
+    source: "Docker Hub & 部署反馈"
     source_type: "community"
-    insight: "镜像体积过大是用户主要抱怨点，启动速度有待优化"
+    insight: "镜像 800KB 虽小，但容器化部署缺少 K8s Operator 和 Helm Chart"
     confidence: "medium"
-    evidence_count: 8
+    evidence_count: 6
     related_features:
-      - "镜像瘦身"
-      - "分层优化"
-    status: "investigating"
-    action_taken: "待评估"
+      - "K8s Operator"
+      - "Helm Chart"
+    status: "validated"
+    action_taken: "v1.6.0 规划中"
     impact: "medium"
 
   INS-004:
     date: "2026-04-01"
-    source: "AI 智能体用户反馈"
+    source: "Feat Agent 内测反馈"
     source_type: "internal"
-    insight: "用户期望 AI 不仅能生成文档，还能自动诊断运行问题"
+    insight: "用户期望 AI Agent 不仅能写文档，更能诊断运行问题、自动调优参数"
     confidence: "high"
-    evidence_count: 3
+    evidence_count: 5
     related_features:
       - "故障诊断智能体"
-      - "日志分析"
+      - "性能调优建议"
+      - "日志智能分析"
     status: "validated"
-    action_taken: "v1.7.0 规划"
+    action_taken: "v1.7.0 规划中"
     impact: "high"
+
+  INS-005:
+    date: "2026-04-14"
+    source: "ADR-001 架构决策"
+    source_type: "product"
+    insight: "smart-mqtt 定位是纯消息路由器，用户可通过桥接方式自由选择持久化方案，这是核心差异化优势"
+    confidence: "critical"
+    evidence_count: 1
+    related_features:
+      - "定位文档强化"
+      - "桥接插件示例"
+      - "首页醒目说明"
+    status: "validated"
+    action_taken: "全版本贯穿执行"
+    impact: "critical"
+    non_negotiable: true
 
 insights_usage_rule:
   min_insights_per_release: 2
