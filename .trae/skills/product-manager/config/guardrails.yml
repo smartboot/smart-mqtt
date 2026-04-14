@@ -1,0 +1,65 @@
+# ============================================
+# 产品方向护栏配置
+# 任何新规划必须通过这些护栏检查
+# ============================================
+
+north_star:
+  metric: "单实例稳定连接数"
+  target: "100万连接"
+  deviation_tolerance: 0.15
+  non_negotiable: true
+
+guardrails:
+  historical_consistency:
+    enabled: true
+    description: "与历史决策一致性检查"
+    check_window_months: 6
+    allowed_conflicts:
+      - "技术环境发生本质变化"
+      - "有三倍以上的新证据推翻原结论"
+    enforcement: "hard"
+
+  user_value_alignment:
+    enabled: true
+    description: "用户洞察支撑比例"
+    min_coverage_ratio: 0.60
+    require_validation: true
+    enforcement: "hard"
+
+  tech_debt_redemption:
+    enabled: true
+    description: "技术债偿还比例"
+    min_redemption_ratio: 0.20
+    enforcement: "hard"
+
+  architecture_alignement:
+    enabled: true
+    description: "架构愿景一致性"
+    allowed_deviation: "single-exception"
+    enforcement: "soft"
+
+checklist:
+  pre_planning:
+    - "回顾近 6 个月 ADR 记录"
+    - "Review 用户洞察库更新"
+    - "检查高风险技术债状态"
+    - "确认北极星指标对齐"
+
+  post_planning:
+    - "验证用户洞察覆盖率 ≥ 60%"
+    - "验证技术债偿还 ≥ 20%"
+    - "验证无历史决策冲突"
+    - "验证排期假设符合历史数据"
+
+violation_protocol:
+  level_1:
+    action: "warning"
+    requirement: "书面说明理由"
+
+  level_2:
+    action: "block"
+    requirement: "架构评审会 + 书面记录"
+
+  level_3:
+    action: "escalate"
+    requirement: "全员评审投票"

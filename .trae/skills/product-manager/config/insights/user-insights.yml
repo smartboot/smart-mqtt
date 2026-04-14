@@ -1,0 +1,71 @@
+# ============================================
+# smart-mqtt 用户洞察库
+# 所有产品规划必须可追溯到已验证的用户洞察
+# ============================================
+
+meta:
+  version: "1.0"
+  last_review: "2026-04-01"
+  next_review: "2026-07-01"
+
+insights:
+  INS-001:
+    date: "2026-03-15"
+    source: "Gitee Issue #456"
+    source_type: "community"
+    insight: "80% 的部署问题集中在集群配置，用户需要更智能的配置引导"
+    confidence: "high"
+    evidence_count: 12
+    related_features:
+      - "配置向导"
+      - "部署诊断工具"
+    status: "validated"
+    action_taken: "v1.6.0 规划中"
+    impact: "high"
+
+  INS-002:
+    date: "2026-03-20"
+    source: "企业客户访谈-A公司"
+    source_type: "enterprise"
+    insight: "企业用户愿意为可观测性付费，需要可视化的消息追踪"
+    confidence: "high"
+    evidence_count: 5
+    related_features:
+      - "消息追踪"
+      - "监控大盘"
+    status: "validated"
+    action_taken: "v2.0 企业版规划"
+    impact: "critical"
+
+  INS-003:
+    date: "2026-03-25"
+    source: "Docker Hub 评论"
+    source_type: "community"
+    insight: "镜像体积过大是用户主要抱怨点，启动速度有待优化"
+    confidence: "medium"
+    evidence_count: 8
+    related_features:
+      - "镜像瘦身"
+      - "分层优化"
+    status: "investigating"
+    action_taken: "待评估"
+    impact: "medium"
+
+  INS-004:
+    date: "2026-04-01"
+    source: "AI 智能体用户反馈"
+    source_type: "internal"
+    insight: "用户期望 AI 不仅能生成文档，还能自动诊断运行问题"
+    confidence: "high"
+    evidence_count: 3
+    related_features:
+      - "故障诊断智能体"
+      - "日志分析"
+    status: "validated"
+    action_taken: "v1.7.0 规划"
+    impact: "high"
+
+insights_usage_rule:
+  min_insights_per_release: 2
+  validation_required: true
+  quarterly_review_mandatory: true

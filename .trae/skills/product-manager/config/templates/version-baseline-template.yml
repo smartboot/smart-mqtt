@@ -1,0 +1,95 @@
+# ============================================
+# {version} 版本规划基线
+# ============================================
+
+version: "{version}"
+codename: "{codename}"
+theme: "{版本核心主题}"
+
+timeline:
+  kickoff: "{date}"
+  feature_freeze: "{date}"
+  rc_release: "{date}"
+  ga_release: "{date}"
+
+north_star_alignment:
+  metric: "{metric_name}"
+  expected_impact: "{percentage}%"
+  description: "{该版本对北极星的贡献}"
+
+core_insights:
+  coverage_ratio: {percentage}
+  linked_insights:
+    - INS-{id}: {洞察摘要}
+    - INS-{id}: {洞察摘要}
+
+tech_debt_redemption:
+  planned_ratio: {percentage}
+  debt_items:
+    - DEBT-{id}: {债务项}
+    - DEBT-{id}: {债务项}
+
+features:
+  must_have:
+    - name: {feature_name}
+      insight: INS-{id}
+      effort: {S/M/L}
+      assignee: {owner}
+    - name: {feature_name}
+      insight: INS-{id}
+      effort: {S/M/L}
+      assignee: {owner}
+
+  should_have:
+    - name: {feature_name}
+      insight: INS-{id}
+      effort: {S/M/L}
+      assignee: {owner}
+
+  could_have:
+    - name: {feature_name}
+      effort: {S/M/L}
+
+  wont_have:
+    - {feature_name}: {原因说明}
+
+historical_decisions_reviewed:
+  adr_count: {count}
+  conflicts_found: false
+  conflict_resolutions: []
+
+key_assumptions:
+  - {assumption_1}
+  - {assumption_2}
+
+risks:
+  - id: R{id}
+    description: {风险描述}
+    mitigation: {应对措施}
+    impact: {high/medium/low}
+
+---
+# 复盘区域 - 版本发布后填写
+
+postmortem:
+  release_date: "{date}"
+  actual_vs_plan:
+    features_delivered: {count}/{count}
+    schedule_deviation_days: {days}
+    scope_deviation: "{percentage}%"
+
+  assumption_validation:
+    - {assumption}: {validated/invalidated} - {原因}
+    - {assumption}: {validated/invalidated} - {原因}
+
+  lessons_learned:
+    what_went_well:
+      - {lesson}
+    what_went_wrong:
+      - {lesson}
+    action_items_for_next:
+      - {action}
+
+  actual_insight_coverage: {percentage}%
+  actual_debt_redemption: {percentage}%
+  north_star_actual_impact: "{percentage}%"
