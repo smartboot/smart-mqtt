@@ -1,0 +1,157 @@
+# ============================================
+# v1.6.0 版本规划基线
+# ============================================
+
+version: "v1.6.0"
+codename: "Ease-of-Use"
+theme: "部署体验优化 + 技术债偿还版本"
+
+timeline:
+  kickoff: "2026-04-15"
+  feature_freeze: "2026-05-15"
+  rc_release: "2026-05-22"
+  ga_release: "2026-05-30"
+
+north_star_alignment:
+  metric: "单实例稳定连接数"
+  expected_impact: "+15%"
+  description: "通过降低部署门槛，扩大用户基数，反哺稳定性优化"
+
+guardrails_check:
+  historical_consistency: "PASSED"
+  user_insight_coverage: "PASSED"
+  tech_debt_redemption: "PASSED"
+  overall: "PASSED"
+
+core_insights:
+  coverage_ratio: 1.0
+  linked_insights:
+    - INS-001: 80% 新手卡在集群配置，需引导和校验
+    - INS-003: 镜像虽小，但缺 K8s 编排方案
+    - INS-005: 强化"纯消息路由器"定位，这是核心差异化
+
+adr_reviewed:
+  - ADR-001: 不内置消息持久化
+  - ADR-002: 降低集群配置优先级
+  conflicts_found: false
+  alignment: "full"
+
+tech_debt_redemption:
+  planned_ratio: 0.40
+  debt_items:
+    - DEBT-002: ACL 权限硬编码抽象 SPI 接口
+    - DEBT-003: 集群故障转移自动化测试补全
+
+features:
+  must_have:
+    - name: "产品定位强化：纯消息路由器"
+      insight: "INS-005"
+      effort: "S"
+      assignee: "待分配"
+      status: "planned"
+      tasks:
+        - "README 首页醒目说明定位"
+        - "文档首页增加架构决策说明"
+        - "发布文案突出差异化优势"
+
+    - name: "K8s Helm Chart"
+      insight: "INS-003"
+      effort: "S"
+      assignee: "待分配"
+      status: "planned"
+
+    - name: "部署场景引导文档"
+      insight: "INS-001"
+      effort: "S"
+      assignee: "待分配"
+      status: "planned"
+      tasks:
+        - "你真的需要集群吗？判断指南"
+        - "快速开始优先讲单实例"
+        - "集群移到高级文档"
+
+    - name: "ACL 权限 SPI 重构"
+      tech_debt: "DEBT-002"
+      effort: "M"
+      assignee: "待分配"
+      status: "planned"
+      backward_compatible: true
+
+  should_have:
+    - name: "集群故障转移测试补全"
+      tech_debt: "DEBT-003"
+      effort: "M"
+      assignee: "待分配"
+      status: "planned"
+
+  could_have:
+    - name: "一键部署脚本优化"
+      insight: "INS-001"
+      effort: "S"
+      status: "nice-to-have"
+
+    - name: "Docker Compose 集群模板"
+      insight: "INS-003"
+      effort: "S"
+      status: "nice-to-have"
+
+    - name: "集群配置向导"
+      insight: "INS-001"
+      effort: "M"
+      status: "nice-to-have"
+      note: "仅 10% 用户真正需要，时间允许再做"
+
+  wont_have:
+    - "消息追踪仪表盘": "推迟到 v1.7.0，企业特性需要更多客户验证"
+    - "持久化引擎重构": "根据 ADR-001: 不做内置持久化"
+    - "部署诊断 Dashboard": "根据 ADR-002: 90% 用户不需要，改为文档引导"
+
+historical_decisions_reviewed:
+  adr_count: 0
+  conflicts_found: false
+  conflict_resolutions: []
+
+key_assumptions:
+  - "enterprise-plugin 现有控制台架构支持新增诊断页面"
+  - "SPI 重构可以做到完全向后兼容"
+  - "社区可以协助 Helm Chart 兼容性测试"
+
+risks:
+  - id: "R1"
+    description: "Helm Chart K8s 多版本兼容性"
+    mitigation: "RC 阶段社区灰度测试，标注支持的 K8s 版本范围"
+    impact: "medium"
+
+  - id: "R2"
+    description: "SPI 重构影响现有认证插件"
+    mitigation: "完整回归测试 + 旧接口兼容层保留 2 个版本"
+    impact: "medium"
+
+acceptance_criteria:
+  - "新手认知负担: 90% 用户不需要接触'集群'概念"
+  - "新手部署成功率: 从 20% → 90% (单实例)"
+  - "场景判断准确率: 用户能正确判断自己是否需要集群"
+  - "新增认证插件开发周期: 从 3 天 → 1 天"
+  - "所有现有插件零修改兼容"
+
+---
+# 复盘区域 - 版本发布后填写
+
+postmortem:
+  release_date: ""
+  actual_vs_plan:
+    features_delivered: ""
+    schedule_deviation_days: 0
+    scope_deviation: ""
+
+  assumption_validation: []
+
+  lessons_learned:
+    what_went_well: []
+    what_went_wrong: []
+    action_items_for_next: []
+
+  actual_insight_coverage: 0.0
+  actual_debt_redemption: 0.0
+  north_star_actual_impact: ""
+  release_quality: ""
