@@ -1,0 +1,27 @@
+kafka:
+  host: 0.0.0.0
+  port: 9092
+  broker_id: 1
+  cluster_id: smart-mqtt-kafka
+  advertised_host: 127.0.0.1
+  advertised_port: 9092
+  request_max_bytes: 10485760
+
+storage:
+  data_path: data
+  auto_create_topics: true
+  default_partition_count: 3
+  segment_bytes: 67108864
+  retention_bytes: 1073741824
+  retention_hours: 168
+  cleanup_interval_ms: 60000
+  flush_interval_ms: 1000
+  flush_on_every_write: false
+  mqtt_partition_strategy: round_robin
+
+metrics:
+  log_interval_ms: 30000
+
+topics:
+  - name: telemetry/device
+    partitions: 3

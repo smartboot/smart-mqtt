@@ -33,6 +33,7 @@
         <module>cluster-plugin</module>
         <module>bench-plugin</module>
         <module>advanced-auth-plugin</module>
+        <module>kafka-storage-plugin</module>
     </modules>
 
     <dependencies>
