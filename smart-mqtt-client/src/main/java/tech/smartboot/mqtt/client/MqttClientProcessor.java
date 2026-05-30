@@ -10,8 +10,8 @@
 
 package tech.smartboot.mqtt.client;
 
-import org.smartboot.socket.StateMachineEnum;
-import org.smartboot.socket.transport.AioSession;
+import io.github.smartboot.socket.StateMachineEnum;
+import io.github.smartboot.socket.transport.AioSession;
 import tech.smartboot.mqtt.client.processor.MqttAckProcessor;
 import tech.smartboot.mqtt.client.processor.MqttProcessor;
 import tech.smartboot.mqtt.client.processor.PubRelProcessor;

@@ -10,8 +10,8 @@
 
 package tech.smartboot.mqtt.plugin.spec;
 
-import org.smartboot.socket.timer.HashedWheelTimer;
-import org.smartboot.socket.timer.Timer;
+import io.github.smartboot.socket.timer.HashedWheelTimer;
+import io.github.smartboot.socket.timer.Timer;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
@@ -209,7 +209,7 @@ public abstract class Plugin implements PluginSubscriber {
         return timer;
     }
 
-    public void addPlugin(org.smartboot.socket.extension.plugins.Plugin<MqttMessage> plugin) {
+    public void addPlugin(io.github.smartboot.socket.Plugin<MqttMessage> plugin) {
         brokerContext.Options().addPlugin(new SocketPluginAdapter(plugin) {
             @Override
             public boolean enable() {

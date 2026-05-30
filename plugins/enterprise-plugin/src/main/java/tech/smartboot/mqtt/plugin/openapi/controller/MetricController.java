@@ -16,9 +16,8 @@ import com.sun.management.OperatingSystemMXBean;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-import org.smartboot.socket.StateMachineEnum;
-import org.smartboot.socket.extension.plugins.AbstractPlugin;
-import org.smartboot.socket.transport.AioSession;
+import io.github.smartboot.socket.StateMachineEnum;
+import io.github.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
@@ -81,9 +80,7 @@ import java.util.stream.Collectors;
  * @version V1.0 , 2023/2/21
  */
 @Controller
-@McpEndpoint(sseEndpoint = "/mcp/sse"
-        , sseMessageEndpoint = "/mcp/sse/message"
-        , streamableEndpoint = "/mcp/stream", loggingEnable = false)
+@McpEndpoint(streamableEndpoint = "/mcp/stream", loggingEnable = false)
 public class MetricController {
     private static final Logger LOGGER = LoggerFactory.getLogger(MetricController.class);
     @Autowired
@@ -218,7 +215,7 @@ public class MetricController {
             metrics.put(metricEnum, new MetricItemTO(metricEnum));
         }
 
-        plugin.addPlugin(new AbstractPlugin<MqttMessage>() {
+        plugin.addPlugin(new io.github.smartboot.socket.Plugin<MqttMessage>() {
             @Override
             public void afterRead(AioSession session, int readSize) {
                 if (readSize > 0) {

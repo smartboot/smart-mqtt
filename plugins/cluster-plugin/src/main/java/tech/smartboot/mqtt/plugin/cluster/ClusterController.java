@@ -1,7 +1,7 @@
 package tech.smartboot.mqtt.plugin.cluster;
 
-import org.smartboot.socket.transport.AioSession;
-import org.smartboot.socket.transport.WriteBuffer;
+import io.github.smartboot.socket.transport.AioSession;
+import io.github.smartboot.socket.transport.WriteBuffer;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.PathParam;

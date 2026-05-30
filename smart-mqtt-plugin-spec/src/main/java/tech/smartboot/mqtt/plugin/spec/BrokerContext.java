@@ -10,8 +10,8 @@
 
 package tech.smartboot.mqtt.plugin.spec;
 
-import org.smartboot.socket.buffer.BufferPagePool;
-import org.smartboot.socket.timer.Timer;
+import io.github.smartboot.socket.buffer.BufferPagePool;
+import io.github.smartboot.socket.timer.Timer;
 import tech.smartboot.mqtt.plugin.spec.bus.EventBus;
 import tech.smartboot.mqtt.plugin.spec.bus.MessageBus;
 import tech.smartboot.mqtt.plugin.spec.provider.Providers;

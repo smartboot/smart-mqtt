@@ -10,9 +10,9 @@
 
 package tech.smartboot.mqtt.common;
 
-import org.smartboot.socket.extension.plugins.AbstractPlugin;
-import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
-import org.smartboot.socket.transport.AioSession;
+import io.github.smartboot.socket.AbstractMessageProcessor;
+import io.github.smartboot.socket.Plugin;
+import io.github.smartboot.socket.transport.AioSession;
 import tech.smartboot.mqtt.common.message.MqttMessage;
 
 /**
@@ -24,7 +24,7 @@ public abstract class MqttMessageProcessor extends AbstractMessageProcessor<Mqtt
      * 自动添加一个插件，该插件在读取消息前执行，用于处理重试逻辑。
      */
     public MqttMessageProcessor() {
-        this.addPlugin(new AbstractPlugin<MqttMessage>() {
+        this.addPlugin(new Plugin<MqttMessage>() {
             @Override
             public void beforeRead(AioSession session) {
                 AbstractSession mqttSession = session.getAttachment();

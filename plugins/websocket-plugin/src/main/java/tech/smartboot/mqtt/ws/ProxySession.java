@@ -10,8 +10,8 @@
 
 package tech.smartboot.mqtt.ws;
 
-import org.smartboot.socket.transport.AioSession;
-import org.smartboot.socket.transport.WriteBuffer;
+import io.github.smartboot.socket.transport.AioSession;
+import io.github.smartboot.socket.transport.WriteBuffer;
 import tech.smartboot.feat.core.server.WebSocketResponse;
 
 import java.io.IOException;

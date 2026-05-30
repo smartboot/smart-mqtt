@@ -3,8 +3,8 @@ package tech.smartboot.mqtt.plugin.kafka.storage.kafka.protocol;
 import org.apache.kafka.common.message.RequestHeaderData;
 import org.apache.kafka.common.protocol.ApiKeys;
 import org.apache.kafka.common.protocol.ByteBufferAccessor;
-import org.smartboot.socket.Protocol;
-import org.smartboot.socket.transport.AioSession;
+import io.github.smartboot.socket.Protocol;
+import io.github.smartboot.socket.transport.AioSession;
 
 import java.nio.ByteBuffer;
 

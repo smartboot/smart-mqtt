@@ -10,7 +10,7 @@
 
 package tech.smartboot.mqtt.common;
 
-import org.smartboot.socket.timer.Timer;
+import io.github.smartboot.socket.timer.Timer;
 import tech.smartboot.mqtt.common.enums.MqttMessageType;
 import tech.smartboot.mqtt.common.enums.MqttVersion;
 import tech.smartboot.mqtt.common.exception.MqttException;

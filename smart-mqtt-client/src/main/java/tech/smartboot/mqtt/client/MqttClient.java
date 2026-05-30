@@ -10,11 +10,11 @@
 
 package tech.smartboot.mqtt.client;
 
-import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
-import org.smartboot.socket.timer.HashedWheelTimer;
-import org.smartboot.socket.timer.TimerTask;
-import org.smartboot.socket.transport.AioQuickClient;
-import org.smartboot.socket.transport.AioSession;
+import io.github.smartboot.socket.AbstractMessageProcessor;
+import io.github.smartboot.socket.timer.HashedWheelTimer;
+import io.github.smartboot.socket.timer.TimerTask;
+import io.github.smartboot.socket.transport.AioQuickClient;
+import io.github.smartboot.socket.transport.AioSession;
 import tech.smartboot.mqtt.common.AbstractSession;
 import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.DefaultMqttWriter;

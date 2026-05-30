@@ -10,9 +10,8 @@
 
 package tech.smartboot.mqtt.plugin.openapi.controller;
 
-import org.smartboot.socket.StateMachineEnum;
-import org.smartboot.socket.extension.plugins.AbstractPlugin;
-import org.smartboot.socket.transport.AioSession;
+import io.github.smartboot.socket.StateMachineEnum;
+import io.github.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
@@ -101,7 +100,7 @@ public class LicenseController {
         } catch (Exception e) {
             LOGGER.error("load license exception", e);
         }
-        plugin.addPlugin(new AbstractPlugin<MqttMessage>() {
+        plugin.addPlugin(new io.github.smartboot.socket.Plugin<MqttMessage>() {
             @Override
             public void stateEvent(StateMachineEnum stateMachineEnum, AioSession session, Throwable throwable) {
                 if (stateMachineEnum == StateMachineEnum.NEW_SESSION) {

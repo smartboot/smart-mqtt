@@ -10,7 +10,7 @@
 package tech.smartboot.mqtt.auth.advanced.provider;
 
 import com.alibaba.fastjson2.JSONObject;
-import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
+import io.github.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.FeatUtils;

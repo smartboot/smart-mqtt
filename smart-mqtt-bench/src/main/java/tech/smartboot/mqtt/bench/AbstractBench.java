@@ -10,7 +10,7 @@
 
 package tech.smartboot.mqtt.bench;
 
-import org.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
+import io.github.smartboot.socket.enhance.EnhanceAsynchronousChannelProvider;
 import tech.smartboot.mqtt.client.MqttClient;
 import tech.smartboot.mqtt.common.util.MqttUtil;
 

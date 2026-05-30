@@ -10,7 +10,7 @@
 
 package tech.smartboot.mqtt.ws;
 
-import org.smartboot.socket.StateMachineEnum;
+import io.github.smartboot.socket.StateMachineEnum;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
@@ -44,7 +44,7 @@ public class WebSocketPlugin extends Plugin {
         PluginConfig config = loadPluginConfig(PluginConfig.class);
         addUsagePort(config.getPort(), "websocket port");
         MqttProtocol protocol = new MqttProtocol(brokerContext.Options().getMaxPacketSize());
-        httpBootstrap = Feat.httpServer(serverOptions -> serverOptions.debug(true).bannerEnabled(false).readBufferSize(1024 * 1024)).httpHandler(new HttpHandler() {
+        httpBootstrap = Feat.httpServer(serverOptions -> serverOptions.debug(true).readBufferSize(1024 * 1024)).httpHandler(new HttpHandler() {
             @Override
             public void handle(HttpRequest request) throws Throwable {
                 request.getResponse().setHeader("Sec-WebSocket-Protocol", "mqtt");

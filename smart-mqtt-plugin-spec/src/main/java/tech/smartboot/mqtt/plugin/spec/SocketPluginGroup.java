@@ -1,8 +1,8 @@
 package tech.smartboot.mqtt.plugin.spec;
 
-import org.smartboot.socket.StateMachineEnum;
-import org.smartboot.socket.extension.plugins.Plugin;
-import org.smartboot.socket.transport.AioSession;
+import io.github.smartboot.socket.StateMachineEnum;
+import io.github.smartboot.socket.Plugin;
+import io.github.smartboot.socket.transport.AioSession;
 import tech.smartboot.mqtt.common.message.MqttMessage;
 
 import java.nio.channels.AsynchronousSocketChannel;

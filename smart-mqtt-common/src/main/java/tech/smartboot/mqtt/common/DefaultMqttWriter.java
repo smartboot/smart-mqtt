@@ -10,7 +10,7 @@
 
 package tech.smartboot.mqtt.common;
 
-import org.smartboot.socket.transport.WriteBuffer;
+import io.github.smartboot.socket.transport.WriteBuffer;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 
 import java.io.IOException;

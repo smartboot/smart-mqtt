@@ -10,8 +10,8 @@
 
 package tech.smartboot.mqtt.common;
 
-import org.smartboot.socket.Protocol;
-import org.smartboot.socket.transport.AioSession;
+import io.github.smartboot.socket.Protocol;
+import io.github.smartboot.socket.transport.AioSession;
 import tech.smartboot.mqtt.common.message.MqttMessage;
 
 import java.nio.ByteBuffer;

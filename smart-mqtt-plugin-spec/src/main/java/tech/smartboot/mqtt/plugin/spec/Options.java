@@ -10,7 +10,6 @@
 
 package tech.smartboot.mqtt.plugin.spec;
 
-import org.smartboot.socket.extension.plugins.Plugin;
 import tech.smartboot.mqtt.common.MqttMessageProcessor;
 import tech.smartboot.mqtt.common.message.MqttMessage;
 
@@ -395,7 +394,7 @@ public class Options {
         pluginGroup.addPlugin(plugins);
     }
 
-    public Plugin<MqttMessage> getPluginGroup() {
+    public io.github.smartboot.socket.Plugin<MqttMessage> getPluginGroup() {
         return pluginGroup;
     }
 
