@@ -382,7 +382,7 @@ public class BrokerContextImpl implements BrokerContext {
 //                LOGGER.info("receive Qos0 retain message,clear topic:{} retained messages", topic.getTopic());
                 retains.remove(topic.getTopic());
             }
-            retains.put(topic.getTopic(), new RetainMessage(message.getPayload(), topic.getTopic()));
+            retains.put(topic.getTopic(), new RetainMessage(message.getPayload()));
         }, Message::isRetained);
     }
 

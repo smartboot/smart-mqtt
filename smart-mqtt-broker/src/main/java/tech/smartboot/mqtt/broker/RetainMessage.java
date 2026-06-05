@@ -14,14 +14,8 @@ final class RetainMessage {
      */
     private final byte[] payload;
 
-    /**
-     * 主题
-     */
-    private final String topic;
-
-    public RetainMessage(byte[] payload, String topic) {
+    public RetainMessage(byte[] payload) {
         this.payload = payload;
-        this.topic = topic;
     }
 
     public long getCreateTime() {
@@ -32,7 +26,4 @@ final class RetainMessage {
         return payload;
     }
 
-    public String getTopic() {
-        return topic;
-    }
 }
