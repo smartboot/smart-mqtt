@@ -55,7 +55,7 @@ public class Options {
     /**
      * 当前smart-mqtt
      */
-    public static final String VERSION = "v1.5.5";
+    public static final String VERSION = "v1.6.0";
     public static final String VENDOR = "smart-mqtt";
 
     /**
