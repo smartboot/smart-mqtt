@@ -5,8 +5,17 @@ sidebar:
 ---
 
 # 发版记录
+## v1.6.0（2026-06-06）
+- smart-socket 升级至 2.0.0
+- Feat 升级至 2.1.0
+- 优化 RetainMessage 内存占用
+- 更新内置试用版 License
 
-## smart-mqtt broker v1.5.5（2026-04-11）
+> 本版本属于不兼容升级，建议升级前验证现有环境及自定义插件兼容性。
+
+发版详情：《[smart-mqtt v1.6.0 ：AI 时代，一人产品的边界在哪里？](https://mp.weixin.qq.com/s/QFw6auvPrqTK3YRiwdtdCg)》
+
+## v1.5.5（2026-04-11）
 
 - **FlappingDetector 连接防抖检测机制**：新增滑动时间窗口统计与自动封禁策略，主动防御"抖动客户端"对 Broker 造成的连接风暴冲击
 - **滑动时间窗口统计**：毫秒级精度的时间窗口统计连接事件，精准识别异常重连模式
@@ -16,7 +25,7 @@ sidebar:
 
 发版详情：《[smart-mqtt v1.5.5发布：主动防御连接风暴，让 Broker 更稳](https://mp.weixin.qq.com/s/5yGWQ0dZzSYZJi-1X1kr-g)》
 
-## smart-mqtt broker v1.5.4（2026-03-31）
+## v1.5.4（2026-03-31）
 
 - **高级认证插件**：新增 `advanced-auth-plugin`，支持 Redis 与 HTTP 认证链，更适合企业级设备接入场景
 - **认证链机制**：支持“Redis 优先、HTTP 兜底”的渐进式认证架构，便于平滑对接现有业务系统
@@ -25,7 +34,7 @@ sidebar:
 
 发版详情：《[smart-mqtt v1.5.4发布：从能认证，到更适合企业落地的认证体系](https://mp.weixin.qq.com/s/cVzxKQ4KjO5yr2zG5KZWZA)》
 
-## smart-mqtt broker v1.5.3（2026-03-17）
+## v1.5.3（2026-03-17）
 
 - **智能推送模型**：实时感知连接压力，在高负载场景下自动延迟消息推送，缓解拥塞风险
 - **柔性插件注销**：优化插件生命周期管理，插件卸载时更平滑地释放连接、会话与相关资源
@@ -34,7 +43,7 @@ sidebar:
 
 发版详情：《[smart-mqtt v1.5.3发布，增强可观测性](https://mp.weixin.qq.com/s/DwAIiXidt9m5B04tgGs3kg)》
 
-## smart-mqtt broker v1.5.2（2026-03-04）
+## v1.5.2（2026-03-04）
 
 - **AI Agent 智能助手**：集成 Feat AI Agent 能力，为企业版注入智能化交互体验，支持 7×24 小时技术答疑
 - **压测模块插件化**：将原 `smart-mqtt-bench` 独立模块重构为 `bench-plugin` 插件，开箱即用
@@ -42,7 +51,7 @@ sidebar:
 
 发版详情：《[smart-mqtt v1.5.2发布，个人开发者如何用1/10的投入撬动10倍产品价值](https://mp.weixin.qq.com/s/dVSzcgNHoWOWddtyPBoyww)》
 
-## smart-mqtt broker v1.5.1（2026-02-08）
+## v1.5.1（2026-02-08）
 
 - **异步事件总线**：引入异步特性，大幅提升三方连接认证模式下的并发处理能力
 - **Schema 配置规范**：插件接口新增 Schema 规范，实现配置页面的自适应渲染
@@ -51,7 +60,7 @@ sidebar:
 
 发版详情：《[smart-mqtt v1.5.1发布，一人产品比一人公司靠谱多了](https://mp.weixin.qq.com/s/pe3hAz3GHCyXuDwnZBD5JQ)》
 
-## smart-mqtt broker v1.5.0（2025-11-2）
+## v1.5.0（2025-11-2）
 
 - **企业版极致瘦身**：完整软件包从 29.3MB 下降至 12.6MB，减少约 57%
 - **Redis 桥接插件优化**：自研 Redis 客户端框架 Redisun，使 redis 桥接插件从 15.5MB 降至 81KB
@@ -60,7 +69,7 @@ sidebar:
 
 发版详情：《[smart-mqtt v1.5.0：仅需淘汰netty，便可实现企业版软件包瘦身57%](https://mp.weixin.qq.com/s/fRCAF_wSqG5NL5czpBNJnw)》
 
-## smart-mqtt broker v1.4.0（2025-10-15）
+## v1.4.0（2025-10-15）
 
 - **发行包极致瘦身**：开源版发行包体积从 3MB 降至不足 800KB，减少约 73%
 - **配置方式全面革新**：废弃传统的 YAML 配置，拥抱云原生标准的系统属性和环境变量
@@ -73,19 +82,19 @@ sidebar:
 
 ---
 
-## smart-mqtt broker v1.3.0（2025-07-16）
+## v1.3.0（2025-07-16）
 
 发版详情：《[轻量级 MQTT Broker 再进化！smart-mqtt v1.3.0 支持多节点集群部署](https://mp.weixin.qq.com/s/qlrM64slFXpelW_1Wc9LfA)》
 
 ---
 
-## smart-mqtt broker v1.2.0（2025-06-18）
+## v1.2.0（2025-06-18）
 
 发版详情：《[历经300万次重连压测，smart-mqtt v1.2.0证明自己有多稳定！](https://mp.weixin.qq.com/s/9KlKRbr4GmxyPRPUn95HVw)》
 
 ---
 
-## smart-mqtt broker v1.1.0（2025-04-30）
+## v1.1.0（2025-04-30）
 
 - 发布 smart-mqtt 插件开发规范组件：smart-mqtt-plugin-spec
 - 发布 smart-mqtt plugin 本地运行 maven 插件，满足本地开发调试需求
@@ -101,13 +110,13 @@ sidebar:
 
 ---
 
-## smart-mqtt broker v1.0.0（2025-04-20）
+## v1.0.0（2025-04-20）
 
 发版详情：[https://mp.weixin.qq.com/s/xsv_l9azTIQ4a1vVEucH5g](https://mp.weixin.qq.com/s/xsv_l9azTIQ4a1vVEucH5g)
 
 ---
 
-## smart-mqtt broker v0.42（2025-04-13）
+## v0.42（2025-04-13）
 
 1. 改进消息队列的类结构设计，精简内存开销
 2. 重构消息推送的相关接口设计
@@ -117,7 +126,7 @@ sidebar:
 
 ---
 
-## smart-mqtt broker v0.41（2025-02-26）
+## v0.41（2025-02-26）
 
 1. 开源压测模块：smart-mqtt-bench
 2. 开源企业版后台模块：smart-mqtt-plugin-enterprise
@@ -130,7 +139,7 @@ sidebar:
 
 ---
 
-## smart-mqtt broker v0.40（2024-12-06）
+## v0.40（2024-12-06）
 
 1. 优化消息推送模型，提升通信性能
 2. 增加消息队列历史数据清退功能，节省服务内存开销
@@ -142,7 +151,7 @@ sidebar:
 
 ---
 
-## smart-mqtt broker v0.37（2024-04-06）
+## v0.37（2024-04-06）
 
 1. 采用更高效的编解码算法，TPS 提升至 790万/秒
 2. 重构解码算法，提升代码可读性
@@ -151,7 +160,7 @@ sidebar:
 
 ---
 
-## smart-mqtt broker v0.36（2024-03-07）
+## v0.36（2024-03-07）
 
 1. 降低控制台指标监控打印频次
 2. 新增共享订阅特性
@@ -159,7 +168,7 @@ sidebar:
 
 ---
 
-## smart-mqtt broker v0.35（2024-01-28）
+## v0.35（2024-01-28）
 
 1. 优化消息总线 Consumer 的接口设计
 2. 临时性事件类型执行完毕后自动销毁订阅者

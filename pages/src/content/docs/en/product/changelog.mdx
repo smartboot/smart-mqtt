@@ -6,7 +6,17 @@ sidebar:
 
 # Changelog
 
-## smart-mqtt broker v1.5.5（2026-04-11）
+## v1.6.0（2026-06-06）
+- smart-socket upgraded to 2.0.0
+- Feat upgraded to 2.1.0
+- Optimized RetainMessage memory usage
+- Updated built-in trial license
+
+> This version is an incompatible upgrade. It is recommended to verify the compatibility of existing environments and custom plugins before upgrading.
+
+Release Details: [smart-mqtt v1.6.0: In the AI Era, Where Are the Boundaries of a One-Person Product?](https://mp.weixin.qq.com/s/QFw6auvPrqTK3YRiwdtdCg)
+
+## v1.5.5（2026-04-11）
 
 - **FlappingDetector Connection Anti-Flapping Mechanism**: Added sliding time window statistics and automatic banning strategy to proactively defend against connection storm attacks from "flapping clients" on the Broker
 - **Sliding Time Window Statistics**: Millisecond-precision time window for connection event statistics to accurately identify abnormal reconnection patterns
@@ -16,7 +26,7 @@ sidebar:
 
 Release Details: [smart-mqtt v1.5.5 Released: Proactive Defense Against Connection Storms](https://mp.weixin.qq.com/s/5yGWQ0dZzSYZJi-1X1kr-g)
 
-## smart-mqtt broker v1.5.4（2026-03-31）
+## v1.5.4（2026-03-31）
 
 - **Advanced Authentication Plugin**: Added `advanced-auth-plugin`, supporting Redis and HTTP authentication chains, more suitable for enterprise-level device access scenarios
 - **Authentication Chain Mechanism**: Supports "Redis first, HTTP fallback" progressive authentication architecture, facilitating smooth integration with existing business systems
@@ -25,7 +35,7 @@ Release Details: [smart-mqtt v1.5.5 Released: Proactive Defense Against Connecti
 
 Release Details: [smart-mqtt v1.5.4 Released: From Basic Authentication to Enterprise-Ready Authentication System](https://mp.weixin.qq.com/s/cVzxKQ4KjO5yr2zG5KZWZA)
 
-## smart-mqtt broker v1.5.3（2026-03-17）
+## v1.5.3（2026-03-17）
 
 - **Intelligent Push Model**: Real-time awareness of connection pressure, automatically delaying message push in high-load scenarios to alleviate congestion risks
 - **Graceful Plugin Unregistration**: Optimized plugin lifecycle management, more smoothly releasing connections, sessions, and related resources during plugin uninstallation
@@ -34,7 +44,7 @@ Release Details: [smart-mqtt v1.5.4 Released: From Basic Authentication to Enter
 
 Release Details: [smart-mqtt v1.5.3 Released, Enhanced Observability](https://mp.weixin.qq.com/s/DwAIiXidt9m5B04tgGs3kg)
 
-## smart-mqtt broker v1.5.2（2026-03-04）
+## v1.5.2（2026-03-04）
 
 - **AI Agent Intelligent Assistant**: Integrated Feat AI Agent capabilities, injecting intelligent interactive experience into the enterprise edition, supporting 24/7 technical Q&A
 - **Stress Testing Module Pluginization**: Refactored the original standalone `smart-mqtt-bench` module into a `bench-plugin` plugin, ready to use out of the box
@@ -42,7 +52,7 @@ Release Details: [smart-mqtt v1.5.3 Released, Enhanced Observability](https://mp
 
 Release Details: [smart-mqtt v1.5.2 Released, How Individual Developers Can Leverage 10x Product Value with 1/10 Investment](https://mp.weixin.qq.com/s/dVSzcgNHoWOWddtyPBoyww)
 
-## smart-mqtt broker v1.5.1（2026-02-08）
+## v1.5.1（2026-02-08）
 
 - **Asynchronous Event Bus**: Introduced asynchronous features, significantly improving concurrent processing capabilities in third-party connection authentication mode
 - **Schema Configuration Specification**: Plugin interface added Schema specification, implementing adaptive rendering of configuration pages
@@ -51,7 +61,7 @@ Release Details: [smart-mqtt v1.5.2 Released, How Individual Developers Can Leve
 
 Release Details: [smart-mqtt v1.5.1 Released, One-Person Product is More Reliable Than One-Person Company](https://mp.weixin.qq.com/s/pe3hAz3GHCyXuDwnZBD5JQ)
 
-## smart-mqtt broker v1.5.0（2025-11-2）
+## v1.5.0（2025-11-2）
 
 - **Enterprise Edition Extreme Slimming**: Complete software package reduced from 29.3MB to 12.6MB, a reduction of about 57%
 - **Redis Bridge Plugin Optimization**: Self-developed Redis client framework Redisun, reducing redis bridge plugin from 15.5MB to 81KB
@@ -60,7 +70,7 @@ Release Details: [smart-mqtt v1.5.1 Released, One-Person Product is More Reliabl
 
 Release Details: [smart-mqtt v1.5.0: Just by Eliminating Netty, Enterprise Edition Package Slimmed by 57%](https://mp.weixin.qq.com/s/fRCAF_wSqG5NL5czpBNJnw)
 
-## smart-mqtt broker v1.4.0（2025-10-15）
+## v1.4.0（2025-10-15）
 
 - **Distribution Package Extreme Slimming**: Open source edition distribution package size reduced from 3MB to less than 800KB, a reduction of about 73%
 - **Configuration Method Comprehensive Innovation**: Deprecated traditional YAML configuration, embracing cloud-native standard system properties and environment variables
@@ -73,19 +83,19 @@ Release Details: [smart-mqtt v1.4.0 Extreme Slimming, Carrying 10M/Second Messag
 
 ---
 
-## smart-mqtt broker v1.3.0（2025-07-16）
+## v1.3.0（2025-07-16）
 
 Release Details: [Lightweight MQTT Broker Evolution! smart-mqtt v1.3.0 Supports Multi-Node Cluster Deployment](https://mp.weixin.qq.com/s/qlrM64slFXpelW_1Wc9LfA)
 
 ---
 
-## smart-mqtt broker v1.2.0（2025-06-18）
+## v1.2.0（2025-06-18）
 
 Release Details: [After 3 Million Reconnection Stress Tests, smart-mqtt v1.2.0 Proves Its Stability!](https://mp.weixin.qq.com/s/9KlKRbr4GmxyPRPUn95HVw)
 
 ---
 
-## smart-mqtt broker v1.1.0（2025-04-30）
+## v1.1.0（2025-04-30）
 
 - Released smart-mqtt plugin development specification component: smart-mqtt-plugin-spec
 - Released smart-mqtt plugin local runtime maven plugin, meeting local development and debugging needs
@@ -101,13 +111,13 @@ Release Details: [After 3 Million Reconnection Stress Tests, smart-mqtt v1.2.0 P
 
 ---
 
-## smart-mqtt broker v1.0.0（2025-04-20）
+## v1.0.0（2025-04-20）
 
 Release Details: [https://mp.weixin.qq.com/s/xsv_l9azTIQ4a1vVEucH5g](https://mp.weixin.qq.com/s/xsv_l9azTIQ4a1vVEucH5g)
 
 ---
 
-## smart-mqtt broker v0.42（2025-04-13）
+## v0.42（2025-04-13）
 
 1. Improved message queue class structure design, streamlined memory overhead
 2. Refactored message push related interface design
@@ -117,7 +127,7 @@ Release Details: [https://mp.weixin.qq.com/s/xsv_l9azTIQ4a1vVEucH5g](https://mp.
 
 ---
 
-## smart-mqtt broker v0.41（2025-02-26）
+## v0.41（2025-02-26）
 
 1. Open sourced stress testing module: smart-mqtt-bench
 2. Open sourced enterprise edition backend module: smart-mqtt-plugin-enterprise
@@ -130,7 +140,7 @@ Release Details: [https://mp.weixin.qq.com/s/xsv_l9azTIQ4a1vVEucH5g](https://mp.
 
 ---
 
-## smart-mqtt broker v0.40（2024-12-06）
+## v0.40（2024-12-06）
 
 1. Optimized message push model, improved communication performance
 2. Added message queue historical data cleanup function, saving server memory overhead
@@ -142,7 +152,7 @@ Release Details: [https://mp.weixin.qq.com/s/xsv_l9azTIQ4a1vVEucH5g](https://mp.
 
 ---
 
-## smart-mqtt broker v0.37（2024-04-06）
+## v0.37（2024-04-06）
 
 1. Adopted more efficient encoding/decoding algorithms, TPS increased to 7.9M/second
 2. Refactored decoding algorithm, improved code readability
@@ -151,7 +161,7 @@ Release Details: [https://mp.weixin.qq.com/s/xsv_l9azTIQ4a1vVEucH5g](https://mp.
 
 ---
 
-## smart-mqtt broker v0.36（2024-03-07）
+## v0.36（2024-03-07）
 
 1. Reduced console metric monitoring print frequency
 2. Added shared subscription feature
@@ -159,7 +169,7 @@ Release Details: [https://mp.weixin.qq.com/s/xsv_l9azTIQ4a1vVEucH5g](https://mp.
 
 ---
 
-## smart-mqtt broker v0.35（2024-01-28）
+## v0.35（2024-01-28）
 
 1. Optimized message bus Consumer interface design
 2. Temporary event types automatically destroy subscribers after execution
