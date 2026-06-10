@@ -1,0 +1,93 @@
+networks:
+  mqtt-lb-network:
+    driver: bridge
+
+services:
+  # ==================== MQTT Broker 集群 ====================
+  mqtt-broker-1:
+    container_name: mqtt-broker-1
+    hostname: mqtt-broker-1
+    image: smartboot/smart-mqtt:latest
+    networks:
+      mqtt-lb-network:
+    environment:
+      ENTERPRISE_ENABLE: "true"
+      BROKER_MAXINFLIGHT: 256
+    restart: always
+    privileged: true
+    security_opt:
+      - no-new-privileges:true
+    user: root:root
+    ports:
+      - "18083:18083"   # 管理面板 - broker1
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "1"
+
+  mqtt-broker-2:
+    container_name: mqtt-broker-2
+    hostname: mqtt-broker-2
+    image: smartboot/smart-mqtt:latest
+    networks:
+      mqtt-lb-network:
+    environment:
+      ENTERPRISE_ENABLE: "true"
+      BROKER_MAXINFLIGHT: 256
+    restart: always
+    privileged: true
+    security_opt:
+      - no-new-privileges:true
+    user: root:root
+    ports:
+      - "28083:18083"   # 管理面板 - broker2
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "1"
+
+  mqtt-broker-3:
+    container_name: mqtt-broker-3
+    hostname: mqtt-broker-3
+    image: smartboot/smart-mqtt:latest
+    networks:
+      mqtt-lb-network:
+    environment:
+      ENTERPRISE_ENABLE: "true"
+      BROKER_MAXINFLIGHT: 256
+    restart: always
+    privileged: true
+    security_opt:
+      - no-new-privileges:true
+    user: root:root
+    ports:
+      - "38083:18083"   # 管理面板 - broker3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "1"
+
+  # ==================== HAProxy 负载均衡 ====================
+  haproxy:
+    container_name: haproxy
+    image: haproxy:latest
+    networks:
+      mqtt-lb-network:
+    depends_on:
+      - mqtt-broker-1
+      - mqtt-broker-2
+      - mqtt-broker-3
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    ports:
+      - "1883:1883"     # MQTT 负载均衡入口
+      - "8404:8404"     # HAProxy 统计页面
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "1"
