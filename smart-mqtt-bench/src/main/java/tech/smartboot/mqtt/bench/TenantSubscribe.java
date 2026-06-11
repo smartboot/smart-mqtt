@@ -66,7 +66,7 @@ public class TenantSubscribe extends AbstractBench {
         AtomicInteger index = new AtomicInteger();
         byte[] payload = new byte[size];
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
-        AsynchronousChannelGroup channelGroup = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), r -> new Thread(r, "client" + "-pool"));
+        AsynchronousChannelGroup channelGroup = new EnhanceAsynchronousChannelProvider().openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), r -> new Thread(r, "client" + "-pool"));
         for (int i = 0; i < publisher; i++) {
             MqttClient publish = subscribe.newClient(channelGroup);
             publish.connect();
