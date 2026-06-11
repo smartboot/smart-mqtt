@@ -57,7 +57,7 @@ public class EnterprisePlugin extends Plugin {
 
         addPlugin(new MonitorPlugin<>(60));
 
-        asynchronousChannelGroup = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
+        asynchronousChannelGroup = new EnhanceAsynchronousChannelProvider().openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
             int i;
 
             @Override

@@ -39,7 +39,7 @@ public class AbstractBench {
         int count = MqttUtil.toInt(System.getProperty("connect"), 1000);
         boolean lowMemory = Boolean.parseBoolean(System.getenv("BROKER_LOWMEMORY"));
         System.out.println("lowMemory: " + lowMemory);
-        AsynchronousChannelGroup channelGroup = new EnhanceAsynchronousChannelProvider(lowMemory).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
+        AsynchronousChannelGroup channelGroup = new EnhanceAsynchronousChannelProvider().openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
             @Override
             public Thread newThread(Runnable r) {
                 return new Thread(r, "client-pool");

@@ -276,7 +276,7 @@ public class BrokerContextImpl implements BrokerContext {
             server = new AioQuickServer(options.getHost(), options.getPort(), new MqttProtocol(options.getMaxPacketSize()), processor);
             server.setBannerEnabled(false).setReadBufferSize(options.getBufferSize()).setWriteBuffer(options.getBufferSize(), Math.min(options.getMaxInflight(), 16)).setBufferPagePool(bufferPagePool).setThreadNum(Math.max(2, options.getThreadNum()));
             if (!options.isLowMemory()) {
-                server.disableLowMemory();
+                server.retainReadBuffer();
             }
             server.start(options.getChannelGroup());
         } catch (Exception e) {
@@ -453,7 +453,7 @@ public class BrokerContextImpl implements BrokerContext {
     private void updateBrokerConfigure() throws IOException {
         updateOptions();
         System.out.println("Broker Options: " + options);
-        options.setChannelGroup(new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
+        options.setChannelGroup(new EnhanceAsynchronousChannelProvider().openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
             int i;
 
             @Override

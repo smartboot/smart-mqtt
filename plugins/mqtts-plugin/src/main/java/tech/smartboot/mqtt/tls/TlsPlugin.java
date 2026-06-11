@@ -48,7 +48,7 @@ public class TlsPlugin extends Plugin {
         server = new AioQuickServer(options.getHost(), pluginConfig.getPort(), new MqttProtocol(options.getMaxPacketSize()), proxy);
         server.setBannerEnabled(false).setReadBufferSize(options.getBufferSize()).setWriteBuffer(options.getBufferSize(), Math.min(options.getMaxInflight(), 16)).setBufferPagePool(brokerContext.bufferPagePool()).setThreadNum(Math.max(2, options.getThreadNum()));
         if (!options.isLowMemory()) {
-            server.disableLowMemory();
+            server.retainReadBuffer();
         }
         server.start(options.getChannelGroup());
 

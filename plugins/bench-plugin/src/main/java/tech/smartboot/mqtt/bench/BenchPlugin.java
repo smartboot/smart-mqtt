@@ -65,7 +65,7 @@ public class BenchPlugin extends Plugin {
             logger("[bench-plugin] 压测场景: " + scenario);
             AsynchronousChannelGroup group = null;
             try {
-                group = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
+                group = new EnhanceAsynchronousChannelProvider().openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
                     int i;
 
                     @Override
@@ -239,7 +239,7 @@ public class BenchPlugin extends Plugin {
         Arrays.fill(payload, (byte) 1);
 
         // 创建发布者线程
-        AsynchronousChannelGroup publishGroup = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
+        AsynchronousChannelGroup publishGroup = new EnhanceAsynchronousChannelProvider().openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
             int i;
 
             @Override

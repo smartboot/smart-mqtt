@@ -47,7 +47,7 @@ public class HttpAuthenticator extends AbstractAuthenticator {
 
     @Override
     public void initialize() throws IOException {
-        group = new EnhanceAsynchronousChannelProvider(false).openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), r -> new Thread(r, "HttpAuthenticator-" + getName()));
+        group = new EnhanceAsynchronousChannelProvider().openAsynchronousChannelGroup(Runtime.getRuntime().availableProcessors(), r -> new Thread(r, "HttpAuthenticator-" + getName()));
         httpClient = Feat.httpClient(config.getUrl(), options -> {
             options.group(group);
             options.connectTimeout(config.getTimeout());
