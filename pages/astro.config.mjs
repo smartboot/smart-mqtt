@@ -102,7 +102,7 @@ export default defineConfig({
                     autogenerate: {directory: 'plugins'}
                 },
                 {
-                    label: '开发参考',
+                    label: '开发者社区',
                     translations: {
                         en: 'Development Reference',
                     },
