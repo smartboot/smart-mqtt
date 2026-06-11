@@ -53,8 +53,12 @@ public class ClusterController {
     @PostConstruct
     public void init() {
         plugin.subscribe(ClusterPlugin.CLIENT_DIRECT_TO_CORE_BROKER, (eventType, message) -> {
+            if (ClusterController.this.workerNodes.isEmpty()) {
+                LOGGER.debug("no worker node online");
+                return;
+            }
             byte[] bytes = toBytes(message);
-            LOGGER.info("receive cluster message, workerNodes:{}", ClusterController.this.workerNodes.size());
+            LOGGER.debug("receive cluster message, workerNodes:{}", ClusterController.this.workerNodes.size());
             ClusterController.this.workerNodes.forEach((nodeId, emitter) -> emitter.send(bytes));
         });
     }

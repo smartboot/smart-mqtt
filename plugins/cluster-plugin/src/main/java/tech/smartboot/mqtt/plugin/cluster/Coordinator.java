@@ -95,7 +95,7 @@ class Coordinator extends AsyncTask {
                     clusterClient.httpClient = null;
                 }
                 clusterClient.httpClient = new HttpClient(clusterClient.baseURL);
-                clusterClient.httpClient.options().debug(false).connectTimeout(5000).group(brokerContext.Options().getChannelGroup());
+                clusterClient.httpClient.options().debug(true).connectTimeout(5000).group(brokerContext.Options().getChannelGroup());
                 clusterClient.checkPending = true;
                 clusterClient.httpClient.get("/cluster/status").onSuccess(httpResponse -> {
                     LOGGER.info("check node status success.");
@@ -268,13 +268,13 @@ class Coordinator extends AsyncTask {
                         if (pluginConfig.isCore()) {
                             for (ClusterClient clusterClient : clients) {
                                 if (clusterClient.httpEnable) {
-                                    LOGGER.info("send message to cluster");
+                                    LOGGER.debug("send message to cluster");
                                     //core节点分发消息至集群其他core节点
                                     clusterClient.httpClient.post("/cluster/put/core").header(header -> header.keepalive(true).set("access_token", ACCESS_TOKEN).setContentLength(message.getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getPayload())).onFailure(throwable -> {
                                         clusterClient.httpEnable = false;
                                         LOGGER.error("send message to cluster error", throwable);
                                     }).onSuccess(httpResponse -> {
-                                        LOGGER.info("send message to cluster success");
+                                        LOGGER.debug("send message to cluster success");
                                     }).submit();
                                 } else {
                                     LOGGER.error("send message to cluster error");
