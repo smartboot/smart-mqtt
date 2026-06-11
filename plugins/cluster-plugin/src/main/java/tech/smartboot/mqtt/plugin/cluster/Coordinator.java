@@ -95,7 +95,7 @@ class Coordinator extends AsyncTask {
                     clusterClient.httpClient = null;
                 }
                 clusterClient.httpClient = new HttpClient(clusterClient.baseURL);
-                clusterClient.httpClient.options().debug(true).connectTimeout(5000).group(brokerContext.Options().getChannelGroup());
+                clusterClient.httpClient.options().debug(false).connectTimeout(5000).group(brokerContext.Options().getChannelGroup());
                 clusterClient.checkPending = true;
                 clusterClient.httpClient.get("/cluster/status").onSuccess(httpResponse -> {
                     LOGGER.info("check node status success.");
