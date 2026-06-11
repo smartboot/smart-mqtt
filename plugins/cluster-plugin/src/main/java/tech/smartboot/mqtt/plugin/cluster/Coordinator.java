@@ -289,8 +289,8 @@ class Coordinator extends AsyncTask {
                             }).submit();
                         }
                     } while ((nextMessage = distributorQueue.poll()) != null);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                } catch (Throwable e) {
+                    LOGGER.error("distributor error", e);
                 }
             }
             LOGGER.info("distributor finished.");
