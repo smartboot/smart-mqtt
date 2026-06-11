@@ -54,7 +54,8 @@ public class KeepAliveMonitorSubscriber implements EventBusConsumer<AsyncEventOb
 //                    LOGGER.info("continue monitor, wait:{},current:{} latestReceiveTime:{} timeout:{}", remainingTime, System.currentTimeMillis(), session.getLatestReceiveMessageTime(), finalTimeout);
                     session.setKeepAliveTimer(context.getTimer().schedule(this, remainingTime, TimeUnit.MILLISECONDS));
                 } else {
-//                    LOGGER.info("session:{} keepalive timeout,current:{} latestReceiveTime:{} timeout:{}", session.getClientId(), System.currentTimeMillis(), session.getLatestReceiveMessageTime(), finalTimeout);
+                    //由于存在 ping 消息，正常情况下不会进入该分支，可能客户端有问题或网络拥塞
+                    System.err.println("session:" + session.getClientId() + " keepalive timeout,current:" + System.currentTimeMillis() + " latestReceiveTime:" + session.getLatestReceiveMessageTime() + " timeout:" + finalTimeout);
                     session.disconnect();
                 }
             }
