@@ -15,6 +15,11 @@ public class PluginConfig {
     private int queueLength = 1024;
     private int queueDiscardPolicy;
 
+    /**
+     * 批量分发配置
+     */
+    private int batchSize = 50;           // 每批最多消息数
+
     private List<String> clusters;
 
     public boolean isCore() {
@@ -64,4 +69,13 @@ public class PluginConfig {
     public void setQueueDiscardPolicy(int queueDiscardPolicy) {
         this.queueDiscardPolicy = queueDiscardPolicy;
     }
+
+    public int getBatchSize() {
+        return batchSize;
+    }
+
+    public void setBatchSize(int batchSize) {
+        this.batchSize = batchSize;
+    }
+
 }
