@@ -1,6 +1,7 @@
 package tech.smartboot.mqtt.plugin.cluster;
 
 import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -95,7 +96,7 @@ class Coordinator extends AsyncTask {
                     clusterClient.httpClient = null;
                 }
                 clusterClient.httpClient = new HttpClient(clusterClient.baseURL);
-                clusterClient.httpClient.options().debug(false).connectTimeout(5000).group(brokerContext.Options().getChannelGroup());
+                clusterClient.httpClient.options().debug(true).connectTimeout(5000).group(brokerContext.Options().getChannelGroup());
                 clusterClient.checkPending = true;
                 clusterClient.httpClient.get("/cluster/status").onSuccess(httpResponse -> {
                     LOGGER.info("check node status success.");
@@ -127,7 +128,7 @@ class Coordinator extends AsyncTask {
         if (pluginConfig.getQueueDiscardPolicy() == QUEUE_POLICY_DISCARD_NEWEST) {
             boolean suc = clusterMessageQueue.offer(message);
             if (!suc) {
-                LOGGER.warn("queue is full, discard message: {}", message);
+//                LOGGER.warn("queue is full, discard message: {}", message);
             }
         } else {
             while (!clusterMessageQueue.offer(message)) {
@@ -270,12 +271,12 @@ class Coordinator extends AsyncTask {
                                 if (clusterClient.httpEnable) {
                                     LOGGER.debug("send message to cluster");
                                     //core节点分发消息至集群其他core节点
-                                    clusterClient.httpClient.post("/cluster/put/core").header(header -> header.keepalive(true).set("access_token", ACCESS_TOKEN).setContentLength(message.getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getPayload())).onFailure(throwable -> {
+                                    distributeCluster(clusterClient.httpClient.post("/cluster/put/core").onFailure(throwable -> {
                                         clusterClient.httpEnable = false;
                                         LOGGER.error("send message to cluster error", throwable);
                                     }).onSuccess(httpResponse -> {
                                         LOGGER.debug("send message to cluster success");
-                                    }).submit();
+                                    }), message);
                                 } else {
                                     LOGGER.error("send message to cluster error");
                                 }
@@ -283,10 +284,10 @@ class Coordinator extends AsyncTask {
                             //当客户端直接将消息发送给core节点，需要分发给相连的worker节点
                             brokerContext.getEventBus().publish(ClusterPlugin.CLIENT_DIRECT_TO_CORE_BROKER, message);
                         } else if (workerClient != null) {
-                            workerClient.httpClient.post("/cluster/put/worker").header(header -> header.keepalive(true).set("access_token", ACCESS_TOKEN).setContentLength(message.getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getPayload())).onFailure(throwable -> {
+                            distributeCluster(workerClient.httpClient.post("/cluster/put/worker").onFailure(throwable -> {
                                 workerClient.httpEnable = false;
                                 LOGGER.error("send message to cluster error", throwable);
-                            }).submit();
+                            }), message);
                         }
                     } while ((nextMessage = distributorQueue.poll()) != null);
                 } catch (Throwable e) {
@@ -294,6 +295,12 @@ class Coordinator extends AsyncTask {
                 }
             }
             LOGGER.info("distributor finished.");
+        }
+
+        private void distributeCluster(HttpPost rest, Message message) {
+            rest.header(header -> header.keepalive(true).set("access_token", ACCESS_TOKEN).setContentLength(message.getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic()))
+                    .body(requestBody -> requestBody.write(message.getPayload()))
+                    .submit();
         }
 
         public void destroy() {
