@@ -1,7 +1,6 @@
 package tech.smartboot.mqtt.plugin.cluster;
 
 import tech.smartboot.feat.core.client.HttpClient;
-import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -257,77 +256,44 @@ class Coordinator extends AsyncTask {
                     return enabled;
                 }
             });
-            List<Message> batch = new ArrayList<>(pluginConfig.getBatchSize());
             while (enabled) {
                 try {
                     Message nextMessage = distributorQueue.take();
-                    if (SHUTDOWN_MESSAGE == nextMessage) {
-                        break;
-                    }
-                    batch.clear();
-                    batch.add(nextMessage);
-                    while ((nextMessage = distributorQueue.poll()) != null) {
-                        //此时 enabled 必然为 false
+                    do {
                         if (SHUTDOWN_MESSAGE == nextMessage) {
                             break;
                         }
-                        batch.add(nextMessage);
-                        if (batch.size() >= pluginConfig.getBatchSize()) {
-                            break;
-                        }
-                    }
-
-                    //分发给各节点
-                    if (pluginConfig.isCore()) {
-                        for (ClusterClient clusterClient : clients) {
-                            if (clusterClient.httpEnable) {
-                                LOGGER.debug("send message to cluster");
-                                //core节点分发消息至集群其他core节点
-                                HttpPost httpPost = clusterClient.httpClient.post("/cluster/put/core");
-                                httpPost.onFailure(throwable -> {
-                                    clusterClient.httpEnable = false;
-                                    LOGGER.error("send message to cluster error", throwable);
-                                }).onSuccess(httpResponse -> {
-                                    LOGGER.debug("send message to cluster success");
-                                });
-                                distributeCluster(httpPost, batch);
-                            } else {
-                                LOGGER.error("send message to cluster error");
+                        //分发给各节点
+                        final Message message = nextMessage;
+                        if (pluginConfig.isCore()) {
+                            for (ClusterClient clusterClient : clients) {
+                                if (clusterClient.httpEnable) {
+                                    LOGGER.debug("send message to cluster");
+                                    //core节点分发消息至集群其他core节点
+                                    clusterClient.httpClient.post("/cluster/put/core").header(header -> header.keepalive(true).set("access_token", ACCESS_TOKEN).setContentLength(message.getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getPayload())).onFailure(throwable -> {
+                                        clusterClient.httpEnable = false;
+                                        LOGGER.error("send message to cluster error", throwable);
+                                    }).onSuccess(httpResponse -> {
+                                        LOGGER.debug("send message to cluster success");
+                                    }).submit();
+                                } else {
+                                    LOGGER.error("send message to cluster error");
+                                }
                             }
-                        }
-                        //当客户端直接将消息发送给core节点，需要分发给相连的worker节点
-                        for (Message message : batch) {
+                            //当客户端直接将消息发送给core节点，需要分发给相连的worker节点
                             brokerContext.getEventBus().publish(ClusterPlugin.CLIENT_DIRECT_TO_CORE_BROKER, message);
+                        } else if (workerClient != null) {
+                            workerClient.httpClient.post("/cluster/put/worker").header(header -> header.keepalive(true).set("access_token", ACCESS_TOKEN).setContentLength(message.getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getPayload())).onFailure(throwable -> {
+                                workerClient.httpEnable = false;
+                                LOGGER.error("send message to cluster error", throwable);
+                            }).submit();
                         }
-                    } else if (workerClient != null) {
-                        HttpPost httpPost = workerClient.httpClient.post("/cluster/put/worker");
-                        httpPost.onFailure(throwable -> {
-                            workerClient.httpEnable = false;
-                            LOGGER.error("send message to cluster error", throwable);
-                        });
-                        distributeCluster(httpPost, batch);
-                    }
+                    } while ((nextMessage = distributorQueue.poll()) != null);
                 } catch (Throwable e) {
                     LOGGER.error("distributor error", e);
                 }
             }
             LOGGER.info("distributor finished.");
-        }
-
-        private void distributeCluster(HttpPost rest, List<Message> messages) {
-            rest.header().keepalive(true).set("access_token", ACCESS_TOKEN).set(ClusterController.HEADER_BATCH_SIZE, messages.size());
-            int i = 0;
-            int total = 0;
-            for (Message message : messages) {
-                rest.header().set(ClusterController.HEADER_TOPIC + i, message.getTopic().getTopic()).set(ClusterController.HEADER_MESSAGE_SIZE + i, message.getPayload().length);
-                total += message.getPayload().length;
-                i++;
-            }
-            rest.header().setContentLength(total);
-            for (Message message : messages) {
-                rest.body().write(message.getPayload());
-            }
-            rest.submit();
         }
 
         public void destroy() {

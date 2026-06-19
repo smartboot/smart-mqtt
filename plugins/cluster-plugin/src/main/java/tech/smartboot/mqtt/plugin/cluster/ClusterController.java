@@ -24,9 +24,6 @@ import tech.smartboot.mqtt.plugin.spec.Plugin;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -39,9 +36,7 @@ public class ClusterController {
     private static final String NODE_TYPE_CORE = "core";
     private static final String NODE_TYPE_WORKER = "worker";
     private static final Logger LOGGER = LoggerFactory.getLogger(ClusterController.class);
-    public static final String HEADER_BATCH_SIZE = "b";
-    public static final String HEADER_TOPIC = "t";
-    public static final String HEADER_MESSAGE_SIZE = "s";
+    public static final String HEADER_TOPIC = "topic";
     public static final String HEADER_RETAIN = "retain";
     @Autowired
     private MqttSession mqttSession;
@@ -82,24 +77,22 @@ public class ClusterController {
     @RequestMapping("/put/worker")
     public void putMessage(HttpRequest request) throws IOException {
         String token = request.getHeader("access_token");
-        List<Message> messages = parseMessage(request);
-        for (Message message : messages) {
-            byte[] bytes = toBytes(message);
-            for (Map.Entry<String, SseEmitter> entry : coreNodes.entrySet()) {
-                SseEmitter value = entry.getValue();
-                value.send(bytes);
-            }
-
-            workerNodes.forEach((accessToken, emitter) -> {
-                if (token.equals(accessToken)) {
-                    return;
-                }
-                LOGGER.info("分发消息至集群节点:{}", emitter.getAccessToken());
-                emitter.send(bytes);
-            });
-            //推送给自己
-            brokerContext.getMessageBus().publish(mqttSession, message);
+        Message message = parseMessage(request);
+        byte[] bytes = toBytes(message);
+        for (Map.Entry<String, SseEmitter> entry : coreNodes.entrySet()) {
+            SseEmitter value = entry.getValue();
+            value.send(bytes);
         }
+
+        workerNodes.forEach((accessToken, emitter) -> {
+            if (token.equals(accessToken)) {
+                return;
+            }
+            LOGGER.info("分发消息至集群节点:{}", emitter.getAccessToken());
+            emitter.send(bytes);
+        });
+        //推送给自己
+        brokerContext.getMessageBus().publish(mqttSession, message);
         request.getResponse().setHttpStatus(HttpStatus.ACCEPTED);
         request.getResponse().getOutputStream().disableChunked();
     }
@@ -111,44 +104,24 @@ public class ClusterController {
      */
     @RequestMapping("/put/core")
     public void putCoreMessage(HttpRequest request) throws IOException {
-        List<Message> messages = parseMessage(request);
-        for (Message message : messages) {
-            byte[] bytes = toBytes(message);
-//        System.out.println("receive cluster message...");
-            workerNodes.forEach((nodeId, emitter) -> emitter.send(bytes));
+        Message message = parseMessage(request);
+        byte[] bytes = toBytes(message);
+        System.out.println("receive cluster message...");
+        workerNodes.forEach((nodeId, emitter) -> emitter.send(bytes));
 
-            //推送给自己
-            brokerContext.getMessageBus().publish(mqttSession, message);
-        }
-//        System.out.println("receive cluster done...");
+        //推送给自己
+        brokerContext.getMessageBus().publish(mqttSession, message);
+        System.out.println("receive cluster done...");
         request.getResponse().setHttpStatus(HttpStatus.ACCEPTED);
         request.getResponse().getOutputStream().disableChunked();
     }
 
-    private List<Message> parseMessage(HttpRequest request) throws IOException {
-        int batch = FeatUtils.toInt(request.getHeader(HEADER_BATCH_SIZE), -1);
-        if (batch <= 0) {
-            LOGGER.error("invalid request");
-            return Collections.emptyList();
-        }
-        List<Message> messages = new ArrayList<>(batch);
-        for (int i = 0; i < batch; i++) {
-            String topic = request.getHeader(HEADER_TOPIC + i);
-            ValidateUtils.notBlank(topic, "topic is null");
-            int size = FeatUtils.toInt(request.getHeader(HEADER_MESSAGE_SIZE + i), -1);
-            String retain = request.getHeader(HEADER_RETAIN + i);
-            byte[] payload = new byte[size];
-            int len = 0;
-            int index = 0;
-            while ((len = request.getInputStream().read(payload, index, size - index)) != -1) {
-                index += len;
-                if (index == size) {
-                    messages.add(new Message(brokerContext.getOrCreateTopic(topic), MqttQoS.AT_MOST_ONCE, payload, retain != null));
-                    break;
-                }
-            }
-        }
-        return messages;
+    private Message parseMessage(HttpRequest request) throws IOException {
+        String topic = request.getHeader(HEADER_TOPIC);
+        ValidateUtils.notBlank(topic, "topic is null");
+        String retain = request.getHeader(HEADER_RETAIN);
+        byte[] payload = FeatUtils.toByteArray(request.getInputStream());
+        return new Message(brokerContext.getOrCreateTopic(topic), MqttQoS.AT_MOST_ONCE, payload, retain != null);
     }
 
     public byte[] toBytes(Message message) {
