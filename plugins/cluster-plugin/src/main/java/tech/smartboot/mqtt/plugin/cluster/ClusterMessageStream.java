@@ -44,7 +44,7 @@ public abstract class ClusterMessageStream implements Stream {
         int pos = 0;
         int valuePos = -1;
 
-        int state = STATE_TAG;
+        int state = bytes.length > 0 && bytes[0] == '\n' ? STATE_END_CHECK : STATE_TAG;
         byte tag = 0;
         for (int i = 0; i < bytes.length; i++) {
             final byte b = bytes[i];
@@ -93,7 +93,7 @@ public abstract class ClusterMessageStream implements Stream {
                 case STATE_TAG_PAYLOAD:
                     if (b == ' ') {
                         int length = Integer.parseInt(new String(bytes, valuePos, i - valuePos));
-                        if (bytes.length - i >= length + 1) {
+                        if (bytes.length - i > length + 1) {
                             if (bytes[i + length + 1] != '\n') {
                                 throw new IllegalStateException("Unexpected value: " + tag);
                             }
