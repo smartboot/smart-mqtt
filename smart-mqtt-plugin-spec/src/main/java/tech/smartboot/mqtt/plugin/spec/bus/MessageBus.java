@@ -10,6 +10,7 @@
 
 package tech.smartboot.mqtt.plugin.spec.bus;
 
+import tech.smartboot.mqtt.plugin.spec.BrokerTopic;
 import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 
@@ -35,12 +36,12 @@ public interface MessageBus {
      * @param filter   消费条件
      */
     default void consumer(MessageBusConsumer consumer, Predicate<Message> filter) {
-        consumer((session, publishMessage) -> {
+        consumer((session, t, publishMessage) -> {
             if (filter.test(publishMessage)) {
-                consumer.consume(session, publishMessage);
+                consumer.consume(session, t,publishMessage);
             }
         });
     }
 
-    void publish(MqttSession mqttSession, Message publishMessage);
+    void publish(MqttSession mqttSession, BrokerTopic topic, Message publishMessage);
 }

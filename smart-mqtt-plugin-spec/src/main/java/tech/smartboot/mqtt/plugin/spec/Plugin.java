@@ -176,8 +176,8 @@ public abstract class Plugin implements PluginSubscriber {
     public void consumer(MessageBusConsumer consumer) {
         brokerContext.getMessageBus().consumer(new MessageBusConsumer() {
             @Override
-            public void consume(MqttSession session, Message message) {
-                consumer.consume(session, message);
+            public void consume(MqttSession session, BrokerTopic topic, Message message) {
+                consumer.consume(session, topic, message);
             }
 
             @Override

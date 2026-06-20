@@ -25,11 +25,6 @@ public final class Message {
      */
     private final byte[] payload;
 
-    /**
-     * 主题
-     */
-    private final BrokerTopic topic;
-
     private final boolean retained;
     /**
      * 存储的消息偏移量
@@ -42,26 +37,18 @@ public final class Message {
      */
     private AtomicInteger pushSemaphore;
 
-    public Message(MqttPublishMessage message, BrokerTopic topic) {
-        this.payload = message.getPayload().getPayload();
-        this.retained = message.getFixedHeader().isRetain();
-        this.topic = topic;
-        this.qos = message.getFixedHeader().getQosLevel();
+    public Message(MqttPublishMessage message) {
+        this(message.getFixedHeader().getQosLevel(), message.getPayload().getPayload(), message.getFixedHeader().isRetain());
     }
 
-    public Message(BrokerTopic topic, MqttQoS qos, byte[] message, boolean retained) {
+    public Message(MqttQoS qos, byte[] message, boolean retained) {
         this.payload = message;
         this.retained = retained;
-        this.topic = topic;
         this.qos = qos;
     }
 
     public byte[] getPayload() {
         return payload;
-    }
-
-    public BrokerTopic getTopic() {
-        return topic;
     }
 
     public boolean isRetained() {

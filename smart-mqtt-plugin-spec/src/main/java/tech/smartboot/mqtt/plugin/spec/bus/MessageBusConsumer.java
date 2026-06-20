@@ -11,6 +11,7 @@
 package tech.smartboot.mqtt.plugin.spec.bus;
 
 
+import tech.smartboot.mqtt.plugin.spec.BrokerTopic;
 import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 
@@ -21,10 +22,11 @@ import tech.smartboot.mqtt.plugin.spec.MqttSession;
 public interface MessageBusConsumer {
     /**
      * 消息消费
-     * @param session   消息来源
+     *
+     * @param session 消息来源
      * @param message
      */
-    void consume(MqttSession session, Message message);
+    void consume(MqttSession session, BrokerTopic topic, Message message);
 
     default boolean enable() {
         return true;

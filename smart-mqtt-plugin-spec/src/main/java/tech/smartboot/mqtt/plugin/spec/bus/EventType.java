@@ -17,6 +17,7 @@ import tech.smartboot.mqtt.common.message.MqttMessage;
 import tech.smartboot.mqtt.common.message.MqttTopicSubscription;
 import tech.smartboot.mqtt.common.message.MqttUnsubscribeMessage;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
+import tech.smartboot.mqtt.plugin.spec.BrokerTopic;
 import tech.smartboot.mqtt.plugin.spec.MessageDeliver;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.Options;
@@ -64,7 +65,7 @@ public class EventType<T> {
     /**
      * 创建新Topic
      */
-    public static final EventType<String> TOPIC_CREATE = new EventType<>("topicCreate");
+    public static final EventType<BrokerTopic> TOPIC_CREATE = new EventType<>("topicCreate");
 
     /**
      * 接受订阅请求
