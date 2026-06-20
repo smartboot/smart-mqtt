@@ -48,6 +48,7 @@ import tech.smartboot.mqtt.plugin.openapi.enums.MqttMetricEnum;
 import tech.smartboot.mqtt.plugin.openapi.to.BrokerNodeTO;
 import tech.smartboot.mqtt.plugin.openapi.to.MetricItemTO;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
+import tech.smartboot.mqtt.plugin.spec.BrokerTopic;
 import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.Options;
@@ -298,9 +299,9 @@ public class MetricController {
             final LongAdder qos2Received = metrics.get(MqttMetricEnum.MESSAGE_QOS2_RECEIVED).getMetric();
 
             @Override
-            public void consume(MqttSession session, Message publishMessage) {
+            public void consume(MqttSession session, BrokerTopic topic, Message publishMessage) {
                 publishReceived.increment();
-                expectPublishSent.add(publishMessage.getTopic().subscribeCount());
+                expectPublishSent.add(topic.subscribeCount());
                 switch (publishMessage.getQos()) {
                     case AT_MOST_ONCE:
                         qos0Received.increment();

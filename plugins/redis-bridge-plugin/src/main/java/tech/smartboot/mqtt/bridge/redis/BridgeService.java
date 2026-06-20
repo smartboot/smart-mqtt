@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.mqtt.common.enums.PayloadEncodeEnum;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
+import tech.smartboot.mqtt.plugin.spec.BrokerTopic;
 import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.bus.MessageBusConsumer;
@@ -30,11 +31,11 @@ class BridgeService {
         PayloadEncodeEnum encodeEnum = PayloadEncodeEnum.getEnumByCode(config.getEncode());
         context.getMessageBus().consumer(new MessageBusConsumer() {
             @Override
-            public void consume(MqttSession session, Message publishMessage) {
+            public void consume(MqttSession session, BrokerTopic topic, Message publishMessage) {
                 long timestamp = System.currentTimeMillis();
                 JSONObject json = toJsonString(publishMessage, encodeEnum);
                 json.put("timestamp", timestamp);
-                CompletableFuture<Integer> future = redisun.asyncZadd(publishMessage.getTopic().getTopic(), timestamp, json.toString());
+                CompletableFuture<Integer> future = redisun.asyncZadd(topic.getTopic(), timestamp, json.toString());
                 future.exceptionally(throwable -> {
                     System.err.println("redis bridge error");
                     return null;
