@@ -119,6 +119,7 @@ public abstract class ClusterMessageStream implements Stream {
                         topic = null;
                         payload = null;
                         retained = false;
+                        state = STATE_TAG;
                     } else {
                         tag = b;
                         state = STATE_COLON;
