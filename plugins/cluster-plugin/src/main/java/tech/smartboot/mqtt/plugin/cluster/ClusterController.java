@@ -57,7 +57,7 @@ public class ClusterController {
                 LOGGER.debug("no worker node online");
                 return;
             }
-            byte[] bytes = toBytes(message);
+            byte[] bytes = toBytes(message.getTopic().getTopic(),message.getMessage());
             LOGGER.debug("receive cluster message, workerNodes:{}", ClusterController.this.workerNodes.size());
             ClusterController.this.workerNodes.forEach((nodeId, emitter) -> emitter.send(bytes));
         });
@@ -77,8 +77,10 @@ public class ClusterController {
     @RequestMapping("/put/worker")
     public void putMessage(HttpRequest request) throws IOException {
         String token = request.getHeader("access_token");
+        String topic = request.getHeader(HEADER_TOPIC);
+        ValidateUtils.notBlank(topic, "topic is null");
         Message message = parseMessage(request);
-        byte[] bytes = toBytes(message);
+        byte[] bytes = toBytes(topic, message);
         for (Map.Entry<String, SseEmitter> entry : coreNodes.entrySet()) {
             SseEmitter value = entry.getValue();
             value.send(bytes);
@@ -92,7 +94,7 @@ public class ClusterController {
             emitter.send(bytes);
         });
         //推送给自己
-        brokerContext.getMessageBus().publish(mqttSession, message);
+        brokerContext.getMessageBus().publish(mqttSession, brokerContext.getOrCreateTopic(topic), message);
         request.getResponse().setHttpStatus(HttpStatus.ACCEPTED);
         request.getResponse().getOutputStream().disableChunked();
     }
@@ -105,31 +107,31 @@ public class ClusterController {
     @RequestMapping("/put/core")
     public void putCoreMessage(HttpRequest request) throws IOException {
         Message message = parseMessage(request);
-        byte[] bytes = toBytes(message);
+        String topic = request.getHeader(HEADER_TOPIC);
+        ValidateUtils.notBlank(topic, "topic is null");
+        byte[] bytes = toBytes(topic, message);
         System.out.println("receive cluster message...");
         workerNodes.forEach((nodeId, emitter) -> emitter.send(bytes));
 
         //推送给自己
-        brokerContext.getMessageBus().publish(mqttSession, message);
+        brokerContext.getMessageBus().publish(mqttSession, brokerContext.getOrCreateTopic(topic), message);
         System.out.println("receive cluster done...");
         request.getResponse().setHttpStatus(HttpStatus.ACCEPTED);
         request.getResponse().getOutputStream().disableChunked();
     }
 
     private Message parseMessage(HttpRequest request) throws IOException {
-        String topic = request.getHeader(HEADER_TOPIC);
-        ValidateUtils.notBlank(topic, "topic is null");
         String retain = request.getHeader(HEADER_RETAIN);
         byte[] payload = FeatUtils.toByteArray(request.getInputStream());
-        return new Message(brokerContext.getOrCreateTopic(topic), MqttQoS.AT_MOST_ONCE, payload, retain != null);
+        return new Message(MqttQoS.AT_MOST_ONCE, payload, retain != null);
     }
 
-    public byte[] toBytes(Message message) {
+    public byte[] toBytes(String topic, Message message) {
         ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream(message.getPayload().length + 32);
         try {
             byteOutputStream.write(ClusterMessageStream.TAG_TOPIC);
             byteOutputStream.write(':');
-            byteOutputStream.write(message.getTopic().getTopic().getBytes());
+            byteOutputStream.write(topic.getBytes());
             byteOutputStream.write('\n');
 
             if (message.isRetained()) {

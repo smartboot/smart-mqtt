@@ -8,6 +8,7 @@ import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.enums.MqttQoS;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
+import tech.smartboot.mqtt.plugin.spec.BrokerTopic;
 import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.bus.MessageBusConsumer;
@@ -20,7 +21,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 class Coordinator extends AsyncTask {
     private static final Logger LOGGER = LoggerFactory.getLogger(Coordinator.class);
-    private static final Message SHUTDOWN_MESSAGE = new Message(null, null, null, false);
+    private static final ClusterMessage SHUTDOWN_MESSAGE = new ClusterMessage(null, null);
     private static final String ACCESS_TOKEN = UUID.randomUUID().toString();
     private static final int QUEUE_POLICY_DISCARD_NEWEST = 0;
     private static final int QUEUE_POLICY_DISCARD_OLDEST = 1;
@@ -123,7 +124,7 @@ class Coordinator extends AsyncTask {
         LOGGER.info("coordinator stopped.");
     }
 
-    private void offer(Message message, ArrayBlockingQueue<Message> clusterMessageQueue) {
+    private void offer(ClusterMessage message, ArrayBlockingQueue<ClusterMessage> clusterMessageQueue) {
         if (pluginConfig.getQueueDiscardPolicy() == QUEUE_POLICY_DISCARD_NEWEST) {
             boolean suc = clusterMessageQueue.offer(message);
             if (!suc) {
@@ -131,7 +132,7 @@ class Coordinator extends AsyncTask {
             }
         } else {
             while (!clusterMessageQueue.offer(message)) {
-                Message discard = clusterMessageQueue.poll();
+                ClusterMessage discard = clusterMessageQueue.poll();
                 if (discard != null) {
                     LOGGER.warn("queue is full, discard message: {}", discard);
                 }
@@ -154,14 +155,14 @@ class Coordinator extends AsyncTask {
         /**
          * 来自集群节点推送过来的消息
          */
-        private final ArrayBlockingQueue<Message> receiverQueue = new ArrayBlockingQueue<>(queueLength);
+        private final ArrayBlockingQueue<ClusterMessage> receiverQueue = new ArrayBlockingQueue<>(queueLength);
 
         @Override
         public void run() {
             LOGGER.info("receiver started.");
             while (enabled) {
                 try {
-                    Message message = receiverQueue.take();
+                    ClusterMessage message = receiverQueue.take();
                     do {
                         if (SHUTDOWN_MESSAGE == message) {
                             break;
@@ -170,7 +171,7 @@ class Coordinator extends AsyncTask {
                         if (pluginConfig.isCore()) {
                             brokerContext.getEventBus().publish(ClusterPlugin.CLIENT_DIRECT_TO_CORE_BROKER, message);
                         }
-                        brokerContext.getMessageBus().publish(mqttSession, message);
+                        brokerContext.getMessageBus().publish(mqttSession, message.getTopic(), message.getMessage());
                     } while ((message = receiverQueue.poll()) != null);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -206,7 +207,7 @@ class Coordinator extends AsyncTask {
                         LOGGER.warn("cluster-plugin-consume-message-error");
                         return;
                     }
-                    Message message = new Message(brokerContext.getOrCreateTopic(topic), MqttQoS.AT_MOST_ONCE, payload, retained);
+                    ClusterMessage message = new ClusterMessage(brokerContext.getOrCreateTopic(topic), new Message(MqttQoS.AT_MOST_ONCE, payload, retained));
                     offer(message, receiverQueue);
                 }
             }).onFailure(throwable -> {
@@ -235,20 +236,20 @@ class Coordinator extends AsyncTask {
         /**
          * 当前节点需要分发消息的队列
          */
-        private final ArrayBlockingQueue<Message> distributorQueue = new ArrayBlockingQueue<>(queueLength);
+        private final ArrayBlockingQueue<ClusterMessage> distributorQueue = new ArrayBlockingQueue<>(queueLength);
 
         public void run() {
             LOGGER.info("distributor started.");
             //将消息总线中的消息发送给集群
             brokerContext.getMessageBus().consumer(new MessageBusConsumer() {
                 @Override
-                public void consume(MqttSession session, Message message) {
+                public void consume(MqttSession session, BrokerTopic topic, Message message) {
                     //忽略来自集群的消息,包括core和worker节点
                     if (session == mqttSession) {
                         return;
                     }
                     //只有直接连接该core节点的客户端消息才会触发以下逻辑
-                    offer(message, distributorQueue);
+                    offer(new ClusterMessage(topic, message), distributorQueue);
                 }
 
                 @Override
@@ -258,19 +259,19 @@ class Coordinator extends AsyncTask {
             });
             while (enabled) {
                 try {
-                    Message nextMessage = distributorQueue.take();
+                    ClusterMessage nextMessage = distributorQueue.take();
                     do {
                         if (SHUTDOWN_MESSAGE == nextMessage) {
                             break;
                         }
                         //分发给各节点
-                        final Message message = nextMessage;
+                        final ClusterMessage message = nextMessage;
                         if (pluginConfig.isCore()) {
                             for (ClusterClient clusterClient : clients) {
                                 if (clusterClient.httpEnable) {
                                     LOGGER.debug("send message to cluster");
                                     //core节点分发消息至集群其他core节点
-                                    clusterClient.httpClient.post("/cluster/put/core").header(header -> header.keepalive(true).set("access_token", ACCESS_TOKEN).setContentLength(message.getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getPayload())).onFailure(throwable -> {
+                                    clusterClient.httpClient.post("/cluster/put/core").header(header -> header.keepalive(true).set("access_token", ACCESS_TOKEN).setContentLength(message.getMessage().getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getMessage().getPayload())).onFailure(throwable -> {
                                         clusterClient.httpEnable = false;
                                         LOGGER.error("send message to cluster error", throwable);
                                     }).onSuccess(httpResponse -> {
@@ -283,7 +284,7 @@ class Coordinator extends AsyncTask {
                             //当客户端直接将消息发送给core节点，需要分发给相连的worker节点
                             brokerContext.getEventBus().publish(ClusterPlugin.CLIENT_DIRECT_TO_CORE_BROKER, message);
                         } else if (workerClient != null) {
-                            workerClient.httpClient.post("/cluster/put/worker").header(header -> header.keepalive(true).set("access_token", ACCESS_TOKEN).setContentLength(message.getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getPayload())).onFailure(throwable -> {
+                            workerClient.httpClient.post("/cluster/put/worker").header(header -> header.keepalive(true).set("access_token", ACCESS_TOKEN).setContentLength(message.getMessage().getPayload().length).set(ClusterController.HEADER_TOPIC, message.getTopic().getTopic())).body(requestBody -> requestBody.write(message.getMessage().getPayload())).onFailure(throwable -> {
                                 workerClient.httpEnable = false;
                                 LOGGER.error("send message to cluster error", throwable);
                             }).submit();

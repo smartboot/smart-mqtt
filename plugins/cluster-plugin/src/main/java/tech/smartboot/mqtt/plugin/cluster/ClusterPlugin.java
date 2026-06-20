@@ -3,7 +3,6 @@ package tech.smartboot.mqtt.plugin.cluster;
 import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
-import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.Options;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
@@ -13,7 +12,7 @@ import tech.smartboot.mqtt.plugin.spec.bus.EventType;
  * @version v1.0 6/23/25
  */
 public class ClusterPlugin extends Plugin {
-    public static final EventType<Message> CLIENT_DIRECT_TO_CORE_BROKER = new EventType<>("client_direct_to_core_broker");
+    public static final EventType<ClusterMessage> CLIENT_DIRECT_TO_CORE_BROKER = new EventType<>("client_direct_to_core_broker");
 
     private HttpServer httpServer;
 
