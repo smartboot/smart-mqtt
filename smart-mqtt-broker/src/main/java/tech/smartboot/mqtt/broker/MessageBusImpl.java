@@ -10,6 +10,7 @@
 
 package tech.smartboot.mqtt.broker;
 
+import tech.smartboot.mqtt.plugin.spec.BrokerTopic;
 import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.bus.MessageBus;
@@ -38,12 +39,12 @@ class MessageBusImpl implements MessageBus {
     }
 
     @Override
-    public void publish(MqttSession mqttSession, Message message) {
+    public void publish(MqttSession mqttSession, BrokerTopic topic, Message message) {
         boolean remove = false;
         for (MessageBusConsumer messageConsumer : messageBuses) {
             try {
                 if (messageConsumer.enable()) {
-                    messageConsumer.consume(mqttSession, message);
+                    messageConsumer.consume(mqttSession, topic, message);
                 } else {
                     remove = true;
                 }

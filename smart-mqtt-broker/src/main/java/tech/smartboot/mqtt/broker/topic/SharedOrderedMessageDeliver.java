@@ -81,7 +81,7 @@ class SharedOrderedMessageDeliver extends BaseMessageDeliver implements Runnable
             if (!record.isEnable() || record.getMqttSession().isDisconnect()) {
                 continue;
             }
-            PublishBuilder publishBuilder = PublishBuilder.builder().payload(message.getPayload()).qos(record.getMqttQoS()).topic(message.getTopic());
+            PublishBuilder publishBuilder = PublishBuilder.builder().payload(message.getPayload()).qos(record.getMqttQoS()).topic(topic);
             if (record.getMqttSession().getMqttVersion() == MqttVersion.MQTT_5) {
                 publishBuilder.publishProperties(new PublishProperties());
             }

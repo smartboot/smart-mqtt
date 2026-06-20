@@ -23,7 +23,6 @@ import tech.smartboot.mqtt.common.exception.MqttException;
 import tech.smartboot.mqtt.common.util.MqttUtil;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
-import tech.smartboot.mqtt.plugin.spec.BrokerTopic;
 import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.Options;
@@ -353,8 +352,8 @@ public class BrokerContextImpl implements BrokerContext {
      */
     private void subscribeMessageBus() {
         //持久化消息
-        messageBus.consumer((session, publishMessage) -> {
-            BrokerTopicImpl brokerTopic = (BrokerTopicImpl) publishMessage.getTopic();
+        messageBus.consumer((session, topic, publishMessage) -> {
+            BrokerTopicImpl brokerTopic = (BrokerTopicImpl) topic;
             int count = brokerTopic.subscribeCount();
             if (count > 0) {
                 publishMessage.setPushSemaphore(count);
@@ -364,8 +363,7 @@ public class BrokerContextImpl implements BrokerContext {
             }
         });
         //消费retain消息
-        messageBus.consumer((session, message) -> {
-            BrokerTopic topic = message.getTopic();
+        messageBus.consumer((session, topic, message) -> {
             //保留标志为 1 且有效载荷为零字节的 PUBLISH 报文会被服务端当作正常消息处理，它会被发送给订阅主题匹配的客户端。
             // 此外，同一个主题下任何现存的保留消息必须被移除，因此这个主题之后的任何订阅者都不会收到一个保留消息。
             if (message.getPayload().length == 0) {
@@ -423,7 +421,7 @@ public class BrokerContextImpl implements BrokerContext {
             session.idleConnectTimer = null;
         }));
 
-        eventBus.subscribe(EventType.TOPIC_CREATE, (eventType, brokerTopic) -> subscribeTopicTree.match(getOrCreateTopic(brokerTopic)));
+        eventBus.subscribe(EventType.TOPIC_CREATE, (eventType, brokerTopic) -> subscribeTopicTree.match((BrokerTopicImpl) brokerTopic));
     }
 
     /**
@@ -643,7 +641,7 @@ public class BrokerContextImpl implements BrokerContext {
                     brokerTopic = new BrokerTopicImpl(topic, options.getMaxMessageQueueLength(), pushThreadPool);
                     topicMatcher.add(brokerTopic);
                     topicMap.put(topic, brokerTopic);
-                    eventBus.publish(EventType.TOPIC_CREATE, topic);
+                    eventBus.publish(EventType.TOPIC_CREATE, brokerTopic);
                 }
             }
         }

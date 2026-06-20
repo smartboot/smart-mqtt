@@ -28,6 +28,7 @@ import tech.smartboot.mqtt.common.message.variable.MqttPacketIdVariableHeader;
 import tech.smartboot.mqtt.common.message.variable.properties.ConnectProperties;
 import tech.smartboot.mqtt.common.message.variable.properties.PublishProperties;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
+import tech.smartboot.mqtt.plugin.spec.BrokerTopic;
 import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MessageDeliver;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
@@ -116,8 +117,9 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
 
     @Override
     public void accepted(MqttPublishMessage mqttMessage) {
-        Message message = new Message(mqttMessage, mqttContext.getOrCreateTopic(mqttMessage.getVariableHeader().getTopicName()));
-        mqttContext.getMessageBus().publish(this, message);
+        BrokerTopic topic = mqttContext.getOrCreateTopic(mqttMessage.getVariableHeader().getTopicName());
+        Message message = new Message(mqttMessage);
+        mqttContext.getMessageBus().publish(this, topic, message);
     }
 
     public boolean hasQueuedThreads() {
@@ -150,8 +152,9 @@ public class MqttSessionImpl extends AbstractSession implements MqttSession {
 
         if (willMessage != null) {
             //非正常中断，推送遗嘱消息
-            Message message = new Message(willMessage, mqttContext.getOrCreateTopic(willMessage.getVariableHeader().getTopicName()));
-            mqttContext.getMessageBus().publish(this, message);
+            BrokerTopic topic = mqttContext.getOrCreateTopic(willMessage.getVariableHeader().getTopicName());
+            Message message = new Message(willMessage);
+            mqttContext.getMessageBus().publish(this, topic, message);
             willMessage = null;
         }
         subscribers.keySet().forEach(this::unsubscribe);
