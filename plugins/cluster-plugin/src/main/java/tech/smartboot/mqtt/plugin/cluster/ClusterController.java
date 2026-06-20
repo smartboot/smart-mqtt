@@ -110,12 +110,12 @@ public class ClusterController {
         String topic = request.getHeader(HEADER_TOPIC);
         ValidateUtils.notBlank(topic, "topic is null");
         byte[] bytes = toBytes(topic, message);
-        System.out.println("receive cluster message...");
+//        System.out.println("receive cluster message...");
         workerNodes.forEach((nodeId, emitter) -> emitter.send(bytes));
 
         //推送给自己
         brokerContext.getMessageBus().publish(mqttSession, brokerContext.getOrCreateTopic(topic), message);
-        System.out.println("receive cluster done...");
+//        System.out.println("receive cluster done...");
         request.getResponse().setHttpStatus(HttpStatus.ACCEPTED);
         request.getResponse().getOutputStream().disableChunked();
     }
