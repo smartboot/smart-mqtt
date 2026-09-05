@@ -84,18 +84,8 @@
                 </dependency>
                 <dependency>
                     <groupId>tech.smartboot.feat</groupId>
-                    <artifactId>feat-cloud-starter</artifactId>
+                    <artifactId>feat-cloud</artifactId>
                     <version>${feat.version}</version>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>org.mybatis</groupId>
-                            <artifactId>mybatis</artifactId>
-                        </exclusion>
-                        <exclusion>
-                            <groupId>tech.smartboot.feat</groupId>
-                            <artifactId>feat-cloud-aot</artifactId>
-                        </exclusion>
-                    </exclusions>
                 </dependency>
                 <dependency>
                     <groupId>org.yaml</groupId>
