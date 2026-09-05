@@ -85,7 +85,8 @@ jobs:
           mkdir -p deploy/plugins/_storage/enterprise-plugin/repository
           mv deploy/plugins/*.jar deploy/plugins/_storage/enterprise-plugin/repository
           mv deploy/plugins/_storage/enterprise-plugin/repository/enterprise-plugin-*.jar deploy/plugins/
-          cp smart-mqtt-enterprise/Dockerfile* .
+          cp smart-mqtt-enterprise/Dockerfile .
+          cp smart-mqtt-enterprise/Dockerfile_alpine .
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v3
