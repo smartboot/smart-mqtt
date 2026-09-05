@@ -193,7 +193,11 @@ public class PluginManagerController {
         if (!current && plugin == null) {
             return RestResult.fail("插件不存在");
         }
-        File file = new File(current ? storage : plugin.plugin.storage(), "plugin.yaml");
+        File dir = current ? storage : plugin.plugin.storage();
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        File file = new File(dir, "plugin.yaml");
         try (FileOutputStream outputStream = new FileOutputStream(file);) {
             outputStream.write(config.getBytes());
             outputStream.flush();
