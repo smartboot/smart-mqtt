@@ -1,6 +1,6 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue.svg" alt="License"></a>
-  <a href="https://gitee.com/smartboot/smart-mqtt/releases"><img src="https://img.shields.io/badge/version-v1.5.5-green.svg" alt="Version"></a>
+  <a href="https://gitee.com/smartboot/smart-mqtt/releases"><img src="https://img.shields.io/badge/version-v1.7.0-green.svg" alt="Version"></a>
   <a href="https://hub.docker.com/r/smartboot/smart-mqtt"><img src="https://img.shields.io/docker/pulls/smartboot/smart-mqtt.svg" alt="Docker"></a>
   <a href="https://smartboot.tech/smart-mqtt/"><img src="https://img.shields.io/badge/docs-官方文档-blue.svg" alt="Documentation"></a>
 </p>
@@ -50,8 +50,8 @@ docker run --name smart-mqtt \
 
 ```bash
 # 下载并解压
-curl -LO https://gitee.com/smartboot/smart-mqtt/releases/download/v1.5.5/smart-mqtt-full-v1.5.5.zip
-unzip smart-mqtt-full-v1.5.5.zip -d smart-mqtt && cd smart-mqtt
+curl -LO https://gitee.com/smartboot/smart-mqtt/releases/download/v1.7.0/smart-mqtt-full-v1.7.0.zip
+unzip smart-mqtt-full-v1.7.0.zip -d smart-mqtt && cd smart-mqtt
 
 # 启动服务
 ./start.sh
