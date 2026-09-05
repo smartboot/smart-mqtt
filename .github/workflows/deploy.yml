@@ -67,24 +67,24 @@ jobs:
       - name: 编译 smart-mqtt 基础组件
         run: mvn -B install --file smart-mqtt/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: 编译 smart-mqtt broker 模块
-        run: mvn -B install --file smart-mqtt/smart-mqtt-broker/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
-      - name: 构建 MQTT Broker社区版
-        run: FEAT_LICENSE=${{ secrets.FEAT_LICENSE }} mvn -B -f smart-mqtt-enterprise/poms/pom.xml clean package -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+        run: mvn -B clean package -Pdeploy --file smart-mqtt/smart-mqtt-broker/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+#      - name: 构建 MQTT Broker社区版
+#        run: FEAT_LICENSE=${{ secrets.FEAT_LICENSE }} mvn -B -f smart-mqtt-enterprise/poms/pom.xml clean package -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
 
       - name: deploy dir
         run: |
           mkdir -p smart-mqtt-enterprise/deploy/plugins
-          cp smart-mqtt-enterprise/poms/target/smart-mqtt-broker-*.jar smart-mqtt-enterprise/deploy/smart-mqtt.jar
-          cp smart-mqtt-enterprise/start.sh smart-mqtt-enterprise/deploy/
+          cp smart-mqtt/smart-mqtt-broker/target/smart-mqtt-broker-*.jar smart-mqtt-enterprise/deploy/smart-mqtt.jar
+          cp smart-mqtt/start.sh smart-mqtt-enterprise/deploy/
 
       ## 构建企业版插件
-      - name: 构建 MQTT Broker企业版
-        run: FEAT_LICENSE=${{ secrets.FEAT_LICENSE }} mvn -B -f smart-mqtt-enterprise/poms/pom.xml clean package -Penterprise -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+#      - name: 构建 MQTT Broker企业版
+#        run: FEAT_LICENSE=${{ secrets.FEAT_LICENSE }} mvn -B -f smart-mqtt-enterprise/poms/pom.xml clean package -Penterprise -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Build enterprise-plugin
         run: FEAT_LICENSE=${{ secrets.FEAT_LICENSE }} mvn -B -f smart-mqtt/plugins/pom.xml clean package -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Copy enterprise-plugin
         run: |
-          cp smart-mqtt-enterprise/poms/target/smart-mqtt-broker-*.jar smart-mqtt-enterprise/deploy/smart-mqtt.jar
+#          cp smart-mqtt-enterprise/poms/target/smart-mqtt-broker-*.jar smart-mqtt-enterprise/deploy/smart-mqtt.jar
           cp smart-mqtt/plugins/*-plugin/target/*.jar smart-mqtt-enterprise/deploy/plugins
           rm -rf smart-mqtt-enterprise/deploy/plugins/original-*.jar
           mkdir -p smart-mqtt-enterprise/deploy/plugins/_storage/enterprise-plugin/repository

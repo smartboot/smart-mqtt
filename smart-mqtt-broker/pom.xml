@@ -11,6 +11,7 @@
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <feat.version>2.4.1</feat.version>
     </properties>
     <dependencies>
         <dependency>
@@ -30,6 +31,32 @@
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
+            <plugin>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>tech.smartboot.mqtt.broker.Bootstrap</mainClass>
+                                </transformer>
+                                <!-- 采用追加的方式 -->
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/services/tech.smartboot.mqtt.broker.plugin.Plugin</resource>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
         <pluginManagement>
             <plugins>
@@ -46,6 +73,38 @@
             </plugins>
         </pluginManagement>
     </build>
+    <profiles>
+        <profile>
+            <id>deploy</id>
+            <dependencies>
+                <dependency>
+                    <groupId>tech.smartboot.mqtt</groupId>
+                    <artifactId>smart-mqtt-client</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>tech.smartboot.feat</groupId>
+                    <artifactId>feat-cloud-starter</artifactId>
+                    <version>${feat.version}</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>org.mybatis</groupId>
+                            <artifactId>mybatis</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>tech.smartboot.feat</groupId>
+                            <artifactId>feat-cloud-aot</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+                <dependency>
+                    <groupId>org.yaml</groupId>
+                    <artifactId>snakeyaml</artifactId>
+                    <version>2.0</version>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
     <repositories>
         <repository>
             <id>central</id>
