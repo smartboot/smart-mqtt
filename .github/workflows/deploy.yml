@@ -85,6 +85,7 @@ jobs:
           mkdir -p deploy/plugins/_storage/enterprise-plugin/repository
           mv deploy/plugins/*.jar deploy/plugins/_storage/enterprise-plugin/repository
           mv deploy/plugins/_storage/enterprise-plugin/repository/enterprise-plugin-*.jar deploy/plugins/
+          cp smart-mqtt-enterprise/Dockerfile* .
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -101,7 +102,6 @@ jobs:
         name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: smart-mqtt-enterprise
           push: true
           no-cache: true
           tags: smartboot/smart-mqtt:latest,smartboot/smart-mqtt:${{ github.ref_name }}
@@ -109,8 +109,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: smart-mqtt-enterprise
-          file: smart-mqtt-enterprise/Dockerfile_alpine
+          file: Dockerfile_alpine
           push: true
           no-cache: true
           tags: smartboot/smart-mqtt:latest-alpine,smartboot/smart-mqtt:${{ github.ref_name }}-alpine
