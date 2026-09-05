@@ -103,6 +103,8 @@ jobs:
         name: Build and push
         uses: docker/build-push-action@v6
         with:
+          context: ./
+          file: Dockerfile
           push: true
           no-cache: true
           tags: smartboot/smart-mqtt:latest,smartboot/smart-mqtt:${{ github.ref_name }}
@@ -110,6 +112,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
+          context: ./
           file: Dockerfile_alpine
           push: true
           no-cache: true
