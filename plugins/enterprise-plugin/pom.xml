@@ -54,26 +54,4 @@
         </dependency>
 
     </dependencies>
-
-    <profiles>
-        <profile>
-            <id>feat-aot-vm</id>
-            <properties>
-                <maven.compiler.parameters>true</maven.compiler.parameters>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>tech.smartboot.feat</groupId>
-                    <artifactId>feat-cloud-starter</artifactId>
-                    <version>${feat.version}</version>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>tech.smartboot.feat</groupId>
-                            <artifactId>feat-cloud-aot</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
 </project>
