@@ -107,9 +107,9 @@ public class PluginManagerController {
             for (Plugin plugin : serviceLoader) {
                 if (plugin.getClass().getClassLoader() == classLoader) {
                     File pluginStorage = new File(storage.getParent(), plugin.pluginName());
-                    if (!pluginStorage.exists()) {
-                        pluginStorage.mkdirs();
-                    }
+//                    if (!pluginStorage.exists()) {
+//                        pluginStorage.mkdirs();
+//                    }
                     plugin.setStorage(pluginStorage);
                     plugins.add(plugin);
                 }
