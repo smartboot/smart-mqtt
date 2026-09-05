@@ -42,8 +42,8 @@ class PluginRegistryImpl implements PluginRegistry {
             baseDirPath = System.getenv("SMART_MQTT_PLUGINS");
         }
         if (baseDirPath == null) {
-            System.out.println("SMART_MQTT_PLUGINS is not set,plugin will not be loaded!");
-            return;
+            baseDirPath = "plugins";
+            System.out.println("SMART_MQTT_PLUGINS is not set,set default: plugins!");
         }
         baseDir = new File(baseDirPath);
         if (baseDir.isFile()) {

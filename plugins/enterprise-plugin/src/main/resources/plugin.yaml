@@ -6,7 +6,7 @@ database:
   url:
   username:
   password:
-registry: "http://115.190.30.166:8083/"
+#registry: "http://115.190.30.166:8083/"
 showMetrics:
   - packets_publish_rate
   - topic_count
