@@ -13,11 +13,11 @@ package tech.smartboot.mqtt.plugin.openapi.controller;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.sun.management.OperatingSystemMXBean;
+import io.github.smartboot.socket.StateMachineEnum;
+import io.github.smartboot.socket.transport.AioSession;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-import io.github.smartboot.socket.StateMachineEnum;
-import io.github.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
@@ -30,6 +30,7 @@ import tech.smartboot.feat.cloud.annotation.mcp.Tool;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
+import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.message.MqttConnAckMessage;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
@@ -61,6 +62,7 @@ import tech.smartboot.mqtt.plugin.spec.bus.MessageBusConsumer;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -427,6 +429,61 @@ public class MetricController {
             return RestResult.ok(metrics.get(metricEnum).getMetric().longValue());
         }
         return RestResult.fail("该指标不存在");
+    }
+
+    /**
+     * Prometheus 文本暴露协议要求的响应类型
+     */
+    private static final String PROMETHEUS_CONTENT_TYPE = "text/plain; version=0.0.4; charset=utf-8";
+    private static final String METRIC_NAME_PREFIX = "smart_mqtt_";
+
+    @RequestMapping("/metrics")
+    public void prometheus(HttpResponse response) throws IOException {
+        StringBuilder builder = new StringBuilder(2048);
+        for (MqttMetricEnum metricEnum : MqttMetricEnum.values()) {
+            if (!metricEnum.isPrometheusSupport()) {
+                continue;
+            }
+            MetricItemTO metric = metrics.get(metricEnum);
+            if (metric == null) {
+                continue;
+            }
+            boolean counter = metricEnum.isPrometheusMetricTypeCounter();
+            //Prometheus约定counter类型指标名必须以 _total 结尾
+            String name = METRIC_NAME_PREFIX + metricEnum.getCode() + (counter ? "_total" : "");
+            builder.append("# HELP ").append(name).append(' ').append(escapeHelpText(metricEnum.getDesc())).append('\n');
+            builder.append("# TYPE ").append(name).append(' ').append(counter ? "counter" : "gauge").append('\n');
+            builder.append(name).append(' ').append(metric.getValue()).append('\n');
+        }
+        appendRuntimeMetrics(builder);
+        response.setContentType(PROMETHEUS_CONTENT_TYPE);
+        response.write(builder.toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+    private void appendRuntimeMetrics(StringBuilder builder) {
+        appendGauge(builder, "uptime_seconds", "Broker运行时长(秒)", (System.currentTimeMillis() - START_TIME) / 1000);
+
+        Runtime runtime = Runtime.getRuntime();
+        appendGauge(builder, "jvm_memory_used_bytes", "JVM已使用内存(字节)", runtime.totalMemory() - runtime.freeMemory());
+        appendGauge(builder, "jvm_memory_total_bytes", "JVM已申请内存(字节)", runtime.totalMemory());
+        appendGauge(builder, "jvm_memory_max_bytes", "JVM可申请最大内存(字节)", runtime.maxMemory());
+
+        OperatingSystemMXBean systemMXBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+        appendGauge(builder, "process_cpu_usage_percent", "进程CPU使用率(百分比)", (long) (systemMXBean.getProcessCpuLoad() * 100));
+        appendGauge(builder, "system_cpu_usage_percent", "系统CPU使用率(百分比)", (long) (systemMXBean.getSystemCpuLoad() * 100));
+    }
+
+    private void appendGauge(StringBuilder builder, String name, String help, long value) {
+        builder.append("# HELP ").append(METRIC_NAME_PREFIX).append(name).append(' ').append(help).append('\n');
+        builder.append("# TYPE ").append(METRIC_NAME_PREFIX).append(name).append(" gauge\n");
+        builder.append(METRIC_NAME_PREFIX).append(name).append(' ').append(value).append('\n');
+    }
+
+    /**
+     * HELP文本中的反斜杠与换行需转义
+     */
+    private static String escapeHelpText(String help) {
+        return help.replace("\\", "\\\\").replace("\n", "\\n");
     }
 
     public void setBrokerContext(BrokerContext brokerContext) {

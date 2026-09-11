@@ -15,56 +15,73 @@ package tech.smartboot.mqtt.plugin.openapi.enums;
  * @version V1_0 , 2023/1/26
  */
 public enum MqttMetricEnum {
-    CLIENT_ONLINE("client_online", "客户端在线数", false),
-    CLIENT_CONNECT("client_connect", "客户端连接次数"),
-    CLIENT_DISCONNECT("client_disconnected", "客户端断开连接次数"),
-    CLIENT_SUBSCRIBE("client_subscribe", "订阅次数"),
-    CLIENT_UNSUBSCRIBE("client_unsubscribe", "取消订阅次数"),
+    CLIENT_ONLINE("client_online", "客户端在线数", gauge()),
 
-    SUBSCRIBE_RELATION("subscribe_relation", "订阅关系数", false),
+    CLIENT_CONNECT("client_connect", "客户端连接次数", counter()),
+    CLIENT_DISCONNECT("client_disconnected", "客户端断开连接次数", counter()),
+    CLIENT_SUBSCRIBE("client_subscribe", "订阅次数", counter()),
+    CLIENT_UNSUBSCRIBE("client_unsubscribe", "取消订阅次数", counter()),
 
-    BYTES_RECEIVED("bytes_received", "已接收字节数"),
-    BYTES_SENT("bytes_sent", "已发送字节数"),
+    SUBSCRIBE_RELATION("subscribe_relation", "订阅关系数", gauge()),
 
-    PACKETS_CONNECT_RECEIVED("packets_connect_received", "接收的 CONNECT 报文数量"),
-    PACKETS_CONNACK_SENT("packets_connack_sent", "发送的 CONNACK 报文数量"),
+    BYTES_RECEIVED("bytes_received", "已接收字节数", counter()),
+    BYTES_SENT("bytes_sent", "已发送字节数", counter()),
 
-    PACKETS_PUBLISH_RECEIVED("packets_publish_received", "接收的 PUBLISH 报文数量"),
-    PACKETS_EXPECT_PUBLISH_SENT("packets_expect_publish_sent", "期望发送的 PUBLISH 报文数量"),
-    PACKETS_PUBLISH_SENT("packets_publish_sent", "发送的 PUBLISH 报文数量"),
-    PACKETS_PUBLISH_RATE("packets_publish_rate", "消息推送率",false ),
+    PACKETS_CONNECT_RECEIVED("packets_connect_received", "接收的 CONNECT 报文数量", counter()),
+    PACKETS_CONNACK_SENT("packets_connack_sent", "发送的 CONNACK 报文数量", counter()),
 
-    PACKETS_RECEIVED("packets_received", "接收的报文数量"),
-    PACKETS_SENT("packets_sent", "发送的报文数量"),
+    PACKETS_PUBLISH_RECEIVED("packets_publish_received", "接收的 PUBLISH 报文数量", counter()),
+    PACKETS_EXPECT_PUBLISH_SENT("packets_expect_publish_sent", "期望发送的 PUBLISH 报文数量", counter()),
+    PACKETS_PUBLISH_SENT("packets_publish_sent", "发送的 PUBLISH 报文数量", counter()),
+    PACKETS_PUBLISH_RATE("packets_publish_rate", "消息推送率", gauge()),
+
+    PACKETS_RECEIVED("packets_received", "接收的报文数量", counter()),
+    PACKETS_SENT("packets_sent", "发送的报文数量", counter()),
 
 
-    TOPIC_COUNT("topic_count", "Topic数量", false),
+    TOPIC_COUNT("topic_count", "Topic数量", gauge()),
 
-    MESSAGE_QOS0_RECEIVED("messages_qos0_received", "接收来自客户端的 QoS 0 消息数量"),
-    MESSAGE_QOS1_RECEIVED("messages_qos1_received", "接收来自客户端的 QoS 1 消息数量"),
-    MESSAGE_QOS2_RECEIVED("messages_qos2_received", "接收来自客户端的 QoS 2 消息数量"),
-    MESSAGE_QOS0_SENT("messages_qos0_sent", "发送给客户端的 QoS 0 消息数量"),
-    MESSAGE_QOS1_SENT("messages_qos1_sent", "发送给客户端的 QoS 1 消息数量"),
-    MESSAGE_QOS2_SENT("messages_qos2_sent", "发送给客户端的 QoS 2 消息数量"),
-
-//    PERIOD_MESSAGE_RECEIVED("period_message_received", "周期内接收消息数"),
-
-//    PERIOD_MESSAGE_SENT("period_message_sent", "周期内发送消息数")
+    MESSAGE_QOS0_RECEIVED("messages_qos0_received", "接收来自客户端的 QoS 0 消息数量", counter()),
+    MESSAGE_QOS1_RECEIVED("messages_qos1_received", "接收来自客户端的 QoS 1 消息数量", counter()),
+    MESSAGE_QOS2_RECEIVED("messages_qos2_received", "接收来自客户端的 QoS 2 消息数量", counter()),
+    MESSAGE_QOS0_SENT("messages_qos0_sent", "发送给客户端的 QoS 0 消息数量", counter()),
+    MESSAGE_QOS1_SENT("messages_qos1_sent", "发送给客户端的 QoS 1 消息数量", counter()),
+    MESSAGE_QOS2_SENT("messages_qos2_sent", "发送给客户端的 QoS 2 消息数量", counter()),
     ;
 
     private final String code;
     private final String desc;
 
-    private final boolean periodRest;
+    /**
+     * 周期性任务按增量差值落库（当前值 - 上次值），否则直接落库当前值
+     */
+    private static final int FLAG_DB_STEP_SAVE = 0x1;
+    private static final int FLAG_PROMETHEUS_METRIC_TYPE_COUNTER = 1 << 1;
+    private static final int FLAG_PROMETHEUS_METRIC_TYPE_GAUGE = 1 << 2;
+    private final int flag;
 
-    MqttMetricEnum(String code, String desc) {
-        this(code, desc, true);
+    /**
+     * Prometheus counter 类型：单调递增的累计值
+     */
+    static int counter() {
+        return FLAG_DB_STEP_SAVE | FLAG_PROMETHEUS_METRIC_TYPE_COUNTER;
     }
 
-    MqttMetricEnum(String code, String desc, boolean periodRest) {
+    /**
+     * Prometheus gauge 类型：可增可减的瞬时值
+     */
+    static int gauge() {
+        return FLAG_PROMETHEUS_METRIC_TYPE_GAUGE;
+    }
+
+    MqttMetricEnum(String code, String desc) {
+        this(code, desc, counter());
+    }
+
+    MqttMetricEnum(String code, String desc, int flag) {
         this.code = code;
         this.desc = desc;
-        this.periodRest = periodRest;
+        this.flag = flag;
     }
 
     public String getCode() {
@@ -76,7 +93,19 @@ public enum MqttMetricEnum {
     }
 
     public boolean isPeriodRest() {
-        return periodRest;
+        return (flag & FLAG_DB_STEP_SAVE) > 0;
+    }
+
+    public boolean isPrometheusSupport() {
+        return isPrometheusMetricTypeCounter() || isPrometheusMetricTypeGauge();
+    }
+
+    public boolean isPrometheusMetricTypeCounter() {
+        return (flag & FLAG_PROMETHEUS_METRIC_TYPE_COUNTER) > 0;
+    }
+
+    public boolean isPrometheusMetricTypeGauge() {
+        return (flag & FLAG_PROMETHEUS_METRIC_TYPE_GAUGE) > 0;
     }
 
     public static MqttMetricEnum getByCode(String code) {
