@@ -16,19 +16,6 @@ CREATE TABLE IF NOT EXISTS broker_node
     PRIMARY KEY (id)
 );
 
--- 插件配置表
--- drop table plugin_config;
-CREATE TABLE IF NOT EXISTS plugin_config
-(
-    id          int         NOT NULL COMMENT '主键ID' AUTO_INCREMENT,
-    plugin_type varchar(32) NOT NULL COMMENT '插件类型',
-    status      int         not null comment '插件状态：0:停止,1:启用',
-    config      text        NOT NULL COMMENT '插件配置',
-    create_time timestamp            DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    edit_time   timestamp            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    deleted     tinyint(1)  NOT NULL DEFAULT 0 COMMENT '是否删除',
-    PRIMARY KEY (id)
-);
 
 CREATE TABLE IF NOT EXISTS subscriptions
 (
@@ -71,22 +58,22 @@ CREATE TABLE IF NOT EXISTS connection
 );
 
 -- 运行指标
-CREATE TABLE IF NOT EXISTS metric
-(
-    id          int         NOT NULL COMMENT '主键ID' AUTO_INCREMENT,
-    node_name   varchar(30) NOT NULL COMMENT '节点名称',
-    object_id   varchar(30) NOT NULL COMMENT '指标对象ID',
-    object_type varchar(30) NOT NULL COMMENT '指标对象类型: Node,Client,Topic',
-    code        varchar(30) NOT NULL COMMENT '指标编码',
-    value       long         NOT NULL COMMENT '指标值',
-    create_time timestamp DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    edit_time   timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    PRIMARY KEY (id),
-    INDEX       idx_code (code),
-    INDEX       idx_node_name (node_name),
-    INDEX       idx_node_code (node_name, code),
-    INDEX       idx_create_time (create_time)
-);
+-- CREATE TABLE IF NOT EXISTS metric
+-- (
+--     id          int         NOT NULL COMMENT '主键ID' AUTO_INCREMENT,
+--     node_name   varchar(30) NOT NULL COMMENT '节点名称',
+--     object_id   varchar(30) NOT NULL COMMENT '指标对象ID',
+--     object_type varchar(30) NOT NULL COMMENT '指标对象类型: Node,Client,Topic',
+--     code        varchar(30) NOT NULL COMMENT '指标编码',
+--     value       long         NOT NULL COMMENT '指标值',
+--     create_time timestamp DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+--     edit_time   timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+--     PRIMARY KEY (id),
+--     INDEX       idx_code (code),
+--     INDEX       idx_node_name (node_name),
+--     INDEX       idx_node_code (node_name, code),
+--     INDEX       idx_create_time (create_time)
+-- );
 
 -- 用户信息
 CREATE TABLE IF NOT EXISTS user_info
