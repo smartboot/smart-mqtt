@@ -44,6 +44,7 @@ import tech.smartboot.mqtt.plugin.dao.mapper.MetricMapper;
 import tech.smartboot.mqtt.plugin.dao.model.BrokerNodeDO;
 import tech.smartboot.mqtt.plugin.dao.model.MetricDO;
 import tech.smartboot.mqtt.plugin.dao.model.RegionDO;
+import tech.smartboot.mqtt.plugin.openapi.HistogramMetric;
 import tech.smartboot.mqtt.plugin.openapi.enums.BrokerStatueEnum;
 import tech.smartboot.mqtt.plugin.openapi.enums.MqttMetricEnum;
 import tech.smartboot.mqtt.plugin.openapi.to.BrokerNodeTO;
@@ -99,6 +100,13 @@ public class MetricController {
     private SqlSessionFactory sessionFactory;
 
     private final Map<MqttMetricEnum, MetricItemTO> metrics = new HashMap<>();
+
+    private final HistogramMetric publishProcessingDuration = new HistogramMetric(
+            "smart_mqtt_publish_processing_duration_seconds",
+            "PUBLISH消息处理耗时(秒)",
+            new double[]{0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 5}
+    );
+
     private boolean h2;
 
     /**
@@ -293,6 +301,7 @@ public class MetricController {
             }
         });
         plugin.subscribe(EventType.TOPIC_CREATE, (eventType, object) -> metrics.get(MqttMetricEnum.TOPIC_COUNT).getMetric().increment());
+        plugin.subscribe(EventType.PUBLISH_MESSAGE_CONSUME_COST, (eventType, cost) -> publishProcessingDuration.observe(cost / 1_000_000_000D));
         plugin.consumer(new MessageBusConsumer() {
             final LongAdder publishReceived = metrics.get(MqttMetricEnum.PACKETS_PUBLISH_RECEIVED).getMetric();
             final LongAdder expectPublishSent = metrics.get(MqttMetricEnum.PACKETS_EXPECT_PUBLISH_SENT).getMetric();
@@ -317,7 +326,6 @@ public class MetricController {
                     default:
                         throw new IllegalStateException();
                 }
-
             }
         });
     }
@@ -431,12 +439,6 @@ public class MetricController {
         return RestResult.fail("该指标不存在");
     }
 
-    /**
-     * Prometheus 文本暴露协议要求的响应类型
-     */
-    private static final String PROMETHEUS_CONTENT_TYPE = "text/plain; version=0.0.4; charset=utf-8";
-    private static final String METRIC_NAME_PREFIX = "smart_mqtt_";
-
     @RequestMapping("/metrics")
     public void prometheus(HttpResponse response) throws IOException {
         StringBuilder builder = new StringBuilder(2048);
@@ -449,41 +451,45 @@ public class MetricController {
                 continue;
             }
             boolean counter = metricEnum.isPrometheusMetricTypeCounter();
-            //Prometheus约定counter类型指标名必须以 _total 结尾
-            String name = METRIC_NAME_PREFIX + metricEnum.getCode() + (counter ? "_total" : "");
-            builder.append("# HELP ").append(name).append(' ').append(escapeHelpText(metricEnum.getDesc())).append('\n');
+            String name = "smart_mqtt_" + metricEnum.getCode() + (counter ? "_total" : "");
+            builder.append("# HELP ").append(name).append(' ').append(metricEnum.getDesc()).append('\n');
             builder.append("# TYPE ").append(name).append(' ').append(counter ? "counter" : "gauge").append('\n');
             builder.append(name).append(' ').append(metric.getValue()).append('\n');
         }
+
         appendRuntimeMetrics(builder);
-        response.setContentType(PROMETHEUS_CONTENT_TYPE);
+        publishProcessingDuration.appendPrometheus(builder);
+
+        response.setContentType("text/plain; version=0.0.4; charset=utf-8");
         response.write(builder.toString().getBytes(StandardCharsets.UTF_8));
     }
 
     private void appendRuntimeMetrics(StringBuilder builder) {
-        appendGauge(builder, "uptime_seconds", "Broker运行时长(秒)", (System.currentTimeMillis() - START_TIME) / 1000);
+        appendGauge(builder, "uptime_seconds", "Broker运行时长(秒)",
+                (System.currentTimeMillis() - START_TIME) / 1000);
 
         Runtime runtime = Runtime.getRuntime();
-        appendGauge(builder, "jvm_memory_used_bytes", "JVM已使用内存(字节)", runtime.totalMemory() - runtime.freeMemory());
-        appendGauge(builder, "jvm_memory_total_bytes", "JVM已申请内存(字节)", runtime.totalMemory());
-        appendGauge(builder, "jvm_memory_max_bytes", "JVM可申请最大内存(字节)", runtime.maxMemory());
+        appendGauge(builder, "jvm_memory_used_bytes", "JVM已使用内存(字节)",
+                runtime.totalMemory() - runtime.freeMemory());
+        appendGauge(builder, "jvm_memory_total_bytes", "JVM已申请内存(字节)",
+                runtime.totalMemory());
+        appendGauge(builder, "jvm_memory_max_bytes", "JVM可申请最大内存(字节)",
+                runtime.maxMemory());
 
-        OperatingSystemMXBean systemMXBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-        appendGauge(builder, "process_cpu_usage_percent", "进程CPU使用率(百分比)", (long) (systemMXBean.getProcessCpuLoad() * 100));
-        appendGauge(builder, "system_cpu_usage_percent", "系统CPU使用率(百分比)", (long) (systemMXBean.getSystemCpuLoad() * 100));
+        OperatingSystemMXBean systemMXBean =
+                (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+
+        appendGauge(builder, "process_cpu_usage_percent", "进程CPU使用率(百分比)",
+                (long) (systemMXBean.getProcessCpuLoad() * 100));
+        appendGauge(builder, "system_cpu_usage_percent", "系统CPU使用率(百分比)",
+                (long) (systemMXBean.getSystemCpuLoad() * 100));
     }
 
-    private void appendGauge(StringBuilder builder, String name, String help, long value) {
-        builder.append("# HELP ").append(METRIC_NAME_PREFIX).append(name).append(' ').append(help).append('\n');
-        builder.append("# TYPE ").append(METRIC_NAME_PREFIX).append(name).append(" gauge\n");
-        builder.append(METRIC_NAME_PREFIX).append(name).append(' ').append(value).append('\n');
-    }
-
-    /**
-     * HELP文本中的反斜杠与换行需转义
-     */
-    private static String escapeHelpText(String help) {
-        return help.replace("\\", "\\\\").replace("\n", "\\n");
+    private void appendGauge(StringBuilder builder, String name, String description, long value) {
+        String metricName = "smart_mqtt_" + name;
+        builder.append("# HELP ").append(metricName).append(' ').append(description).append('\n');
+        builder.append("# TYPE ").append(metricName).append(" gauge\n");
+        builder.append(metricName).append(' ').append(value).append('\n');
     }
 
     public void setBrokerContext(BrokerContext brokerContext) {

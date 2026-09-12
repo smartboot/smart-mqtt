@@ -32,6 +32,8 @@ class EventBusImpl implements EventBus {
 
     public static List<EventBusConsumer> RECEIVE_MESSAGE_SUBSCRIBER_LIST = new CopyOnWriteArrayList<>();
 
+    public static List<EventBusConsumer> PUBLISH_MESSAGE_SUBSCRIBER_LIST = new CopyOnWriteArrayList<>();
+
 
     public <T> void subscribe(EventType<T> type, EventBusConsumer<T> subscriber) {
         if (type.isOnce() && !(subscriber instanceof DisposableEventBusSubscriber)) {
@@ -62,6 +64,9 @@ class EventBusImpl implements EventBus {
             }
             if (type == EventType.RECEIVE_MESSAGE) {
                 return RECEIVE_MESSAGE_SUBSCRIBER_LIST;
+            }
+            if (type == EventType.PUBLISH_MESSAGE_CONSUME_COST) {
+                return PUBLISH_MESSAGE_SUBSCRIBER_LIST;
             }
             return new CopyOnWriteArrayList<>();
         });

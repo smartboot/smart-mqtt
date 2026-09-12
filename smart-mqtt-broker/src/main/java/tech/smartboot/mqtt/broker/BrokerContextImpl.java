@@ -23,6 +23,7 @@ import tech.smartboot.mqtt.common.exception.MqttException;
 import tech.smartboot.mqtt.common.util.MqttUtil;
 import tech.smartboot.mqtt.common.util.ValidateUtils;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
+import tech.smartboot.mqtt.plugin.spec.BrokerTopic;
 import tech.smartboot.mqtt.plugin.spec.Message;
 import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.Options;
@@ -30,6 +31,7 @@ import tech.smartboot.mqtt.plugin.spec.Plugin;
 import tech.smartboot.mqtt.plugin.spec.PluginRegistry;
 import tech.smartboot.mqtt.plugin.spec.bus.AsyncEventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventBus;
+import tech.smartboot.mqtt.plugin.spec.bus.EventBusConsumer;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 import tech.smartboot.mqtt.plugin.spec.bus.MessageBus;
 import tech.smartboot.mqtt.plugin.spec.provider.Providers;
@@ -174,7 +176,22 @@ public class BrokerContextImpl implements BrokerContext {
      * </ul>
      * </p>
      */
-    private final MessageBusImpl messageBus = new MessageBusImpl();
+    private final MessageBusImpl messageBus = new MessageBusImpl() {
+        @Override
+        public void publish(MqttSession mqttSession, BrokerTopic topic, Message message) {
+            List<EventBusConsumer> consumers = EventBusImpl.PUBLISH_MESSAGE_SUBSCRIBER_LIST;
+            if (consumers.isEmpty()) {
+                super.publish(mqttSession, topic, message);
+            } else {
+                long startTime = System.nanoTime();
+                try {
+                    super.publish(mqttSession, topic, message);
+                } finally {
+                    eventBus.publish(EventType.PUBLISH_MESSAGE_CONSUME_COST, System.nanoTime() - startTime, consumers);
+                }
+            }
+        }
+    };
 
     /**
      * 事件总线，用于处理Broker内部的事件通知。

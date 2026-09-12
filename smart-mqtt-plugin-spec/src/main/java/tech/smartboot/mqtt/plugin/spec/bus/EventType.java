@@ -38,6 +38,11 @@ public class EventType<T> {
     public static final EventType<EventObject<MqttMessage>> RECEIVE_MESSAGE = new EventType<>("receiveMessage");
 
     /**
+     * 计算发布消息的消耗时间
+     */
+    public static final EventType<Long> PUBLISH_MESSAGE_CONSUME_COST = new EventType<>("publishMessageConsumeCost");
+
+    /**
      * 接收到客户端发送的任何消息
      */
     public static final EventType<MqttConnAckMessage> RECEIVE_CONN_ACK_MESSAGE = new EventType<>("connAckMessage");
