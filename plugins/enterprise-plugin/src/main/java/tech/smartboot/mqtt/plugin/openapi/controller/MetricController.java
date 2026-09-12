@@ -15,9 +15,6 @@ import com.alibaba.fastjson2.JSONObject;
 import com.sun.management.OperatingSystemMXBean;
 import io.github.smartboot.socket.StateMachineEnum;
 import io.github.smartboot.socket.transport.AioSession;
-import org.apache.ibatis.session.ExecutorType;
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
 import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
@@ -40,7 +37,6 @@ import tech.smartboot.mqtt.plugin.PluginConfig;
 import tech.smartboot.mqtt.plugin.cluster.NodeProcessInfo;
 import tech.smartboot.mqtt.plugin.convert.NodeConvert;
 import tech.smartboot.mqtt.plugin.dao.mapper.ConnectionMapper;
-import tech.smartboot.mqtt.plugin.dao.mapper.MetricMapper;
 import tech.smartboot.mqtt.plugin.dao.model.BrokerNodeDO;
 import tech.smartboot.mqtt.plugin.dao.model.MetricDO;
 import tech.smartboot.mqtt.plugin.dao.model.RegionDO;
@@ -91,13 +87,7 @@ public class MetricController {
     private BrokerContext brokerContext;
 
     @Autowired
-    private MetricMapper metricMapper;
-
-    @Autowired
     private ConnectionMapper connectionMapper;
-
-    @Autowired
-    private SqlSessionFactory sessionFactory;
 
     private final Map<MqttMetricEnum, MetricItemTO> metrics = new HashMap<>();
 
@@ -106,13 +96,6 @@ public class MetricController {
             "PUBLISH消息处理耗时(秒)",
             new double[]{0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 5}
     );
-
-    private boolean h2;
-
-    /**
-     * 是否启用指标记录到数据库
-     */
-    private boolean metricRecordEnabled;
 
     private final Map<MqttMetricEnum, List<MetricDO>> metricMap = new HashMap<>();
     private static final long START_TIME = System.currentTimeMillis();
@@ -125,9 +108,7 @@ public class MetricController {
 
     @PostConstruct
     public void init() {
-        h2 = pluginConfig.getDatabase().getDbType().contains("h2");
-        initMetric(brokerContext);
-        metricRecordEnabled = pluginConfig.getDatabase().isMetricRecord();
+        initMetric();
         //周期性重置指标值
         plugin.timer().scheduleWithFixedDelay(new AsyncTask() {
             @Override
@@ -146,43 +127,28 @@ public class MetricController {
 
 
                 LOGGER.debug("reset period metric...");
-                try (SqlSession session = sessionFactory.openSession(ExecutorType.BATCH)) {
-                    MetricMapper metricMapper = session.getMapper(MetricMapper.class);
-                    for (Map.Entry<MqttMetricEnum, MetricItemTO> entry : metrics.entrySet()) {
-                        MqttMetricEnum metric = entry.getKey();
-                        MetricItemTO value = entry.getValue();
-                        MetricDO metricDO = new MetricDO();
-                        metricDO.setNodeName("smart-mqtt");
-                        metricDO.setObjectType("node");
-                        metricDO.setObjectId("smart-mqtt");
-                        metricDO.setCode(metric.getCode());
-                        long currentValue = value.getValue();
-                        if (metric.isPeriodRest()) {
-                            metricDO.setValue(currentValue - value.getLatestValue());
-                        } else {
-                            metricDO.setValue(currentValue);
-                        }
-                        value.setLatestValue(currentValue);
-//                LOGGER.info("insert metric:{} value:{}", metricDO.getCode(), metricDO.getValue());
-                        if (metricRecordEnabled) {
-                            metricMapper.insert(metricDO);
-                        } else {
-                            List<MetricDO> list = metricMap.computeIfAbsent(entry.getKey(), mqttMetricEnum -> new LinkedList<>());
-                            if (list.size() >= 16) {
-                                list.remove(0);
-                            }
-                            metricDO.setCreateTime(new Date(System.currentTimeMillis() / 5000 * 5000));
-                            list.add(metricDO);
-                        }
+                for (Map.Entry<MqttMetricEnum, MetricItemTO> entry : metrics.entrySet()) {
+                    MqttMetricEnum metric = entry.getKey();
+                    MetricItemTO value = entry.getValue();
+                    MetricDO metricDO = new MetricDO();
+                    metricDO.setNodeName("smart-mqtt");
+                    metricDO.setObjectType("node");
+                    metricDO.setObjectId("smart-mqtt");
+                    metricDO.setCode(metric.getCode());
+                    long currentValue = value.getValue();
+                    if (metric.isPeriodRest()) {
+                        metricDO.setValue(currentValue - value.getLatestValue());
+                    } else {
+                        metricDO.setValue(currentValue);
                     }
-                    session.commit(true);
-                }
-                if (metricRecordEnabled) {
-                    //定期清除3天前的数据
-                    int count = metricMapper.deleteBefore(new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(3)));
-                    LOGGER.debug("clean {} metric data", count);
-                    count = metricMapper.clearBefore(new Date(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(3)));
-                    LOGGER.debug("clean {} metric data", count);
+                    value.setLatestValue(currentValue);
+//                LOGGER.info("insert metric:{} value:{}", metricDO.getCode(), metricDO.getValue());
+                    List<MetricDO> list = metricMap.computeIfAbsent(entry.getKey(), mqttMetricEnum -> new LinkedList<>());
+                    if (list.size() >= 16) {
+                        list.remove(0);
+                    }
+                    metricDO.setCreateTime(new Date(System.currentTimeMillis() / 5000 * 5000));
+                    list.add(metricDO);
                 }
             }
         }, 5, TimeUnit.SECONDS);
@@ -221,7 +187,7 @@ public class MetricController {
         return info;
     }
 
-    private void initMetric(BrokerContext context) {
+    private void initMetric() {
         for (MqttMetricEnum metricEnum : MqttMetricEnum.values()) {
             metrics.put(metricEnum, new MetricItemTO(metricEnum));
         }
@@ -330,13 +296,6 @@ public class MetricController {
         });
     }
 
-    @RequestMapping("/api/metric/clear")
-    public RestResult<Void> clear() {
-
-        return RestResult.ok(null);
-    }
-
-
     @RequestMapping("/api/cluster/nodes")
     @Tool(name = "nodes", description = "获取集群节点信息")
     public RestResult<Collection<BrokerNodeTO>> nodes() {
@@ -377,18 +336,11 @@ public class MetricController {
         if (step < 1) {
             step = 1;
         }
-        List<MetricDO> publishReceiveCount;
-        if (!metricRecordEnabled) {
-            publishReceiveCount = new ArrayList<>();
-            if ((System.currentTimeMillis() - START_TIME) > 10000) {
-                metrics.forEach(code -> publishReceiveCount.addAll(metricMap.get(MqttMetricEnum.getByCode(code))));
-            }
-
-        } else if (h2) {
-            publishReceiveCount = metricMapper.selectH2Metrics(nodeId, metrics, step, startTime, endTime);
-        } else {
-            publishReceiveCount = metricMapper.selectMetrics(nodeId, metrics, step, startTime, endTime);
+        List<MetricDO> publishReceiveCount = new ArrayList<>();
+        if ((System.currentTimeMillis() - START_TIME) > 10000) {
+            metrics.forEach(code -> publishReceiveCount.addAll(metricMap.get(MqttMetricEnum.getByCode(code))));
         }
+
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         JSONObject jsonObject = new JSONObject();
         publishReceiveCount.stream().collect(Collectors.groupingBy(MetricDO::getCode)).forEach((metric, list) -> {
@@ -496,10 +448,6 @@ public class MetricController {
         this.brokerContext = brokerContext;
     }
 
-    public void setMetricMapper(MetricMapper metricMapper) {
-        this.metricMapper = metricMapper;
-    }
-
     public void setConnectionMapper(ConnectionMapper connectionMapper) {
         this.connectionMapper = connectionMapper;
     }
@@ -507,10 +455,6 @@ public class MetricController {
 
     public void setPluginConfig(PluginConfig pluginConfig) {
         this.pluginConfig = pluginConfig;
-    }
-
-    public void setSessionFactory(SqlSessionFactory sessionFactory) {
-        this.sessionFactory = sessionFactory;
     }
 
     public void setPlugin(Plugin plugin) {

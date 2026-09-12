@@ -160,7 +160,6 @@ public class EnterprisePlugin extends Plugin {
         // 记录配置
         database.addItems(Item.Switch("connectRecord", "连接记录").col(4).tip("启用后将记录客户端连接信息到数据库"));
         database.addItems(Item.Switch("subscribeRecord", "订阅记录").col(4).tip("启用后将记录订阅信息到数据库"));
-        database.addItems(Item.Switch("metricRecord", "指标记录").col(4).tip("启用后将记录指标数据到数据库"));
         schema.addItem(database);
 
 

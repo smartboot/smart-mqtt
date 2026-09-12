@@ -129,11 +129,6 @@ public class PluginConfig {
          */
         private boolean subscribeRecord = false;
 
-        /**
-         * 指标记录开关
-         */
-        private boolean metricRecord = false;
-
         public String getDbType() {
             return dbType;
         }
@@ -180,14 +175,6 @@ public class PluginConfig {
 
         public void setSubscribeRecord(boolean subscribeRecord) {
             this.subscribeRecord = subscribeRecord;
-        }
-
-        public boolean isMetricRecord() {
-            return metricRecord;
-        }
-
-        public void setMetricRecord(boolean metricRecord) {
-            this.metricRecord = metricRecord;
         }
     }
 
