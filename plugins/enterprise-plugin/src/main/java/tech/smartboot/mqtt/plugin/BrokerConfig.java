@@ -90,8 +90,13 @@ public class BrokerConfig {
         // 设置基础连接参数
         options.setPort(port);
         options.setHost(host);
-        options.setMaxPacketSize(maxPacketSize);
-        options.setMaxInflight(maxInFlight);
+        if (maxPacketSize > 0) {
+            options.setMaxPacketSize(maxPacketSize);
+        }
+
+        if (maxInFlight > 0) {
+            options.setMaxInflight(maxInFlight);
+        }
 
         // 设置性能优化参数（仅当配置值大于 0 时生效）
         if (threadNum > 0) {
