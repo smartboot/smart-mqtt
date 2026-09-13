@@ -258,27 +258,14 @@ public class Options {
      */
     private AsynchronousChannelGroup channelGroup;
 
-
     /**
-     * 低内存运行模式开关。
+     * 服务器运行模式。
      * <p>
-     * 启用后的优化策略：
-     * <ul>
-     *   <li>减少消息缓存</li>
-     *   <li>更激进的内存回收</li>
-     *   <li>限制并发连接数</li>
-     *   <li>禁用部分非必要功能</li>
-     * </ul>
-     * 默认值：false
+     * 默认值：true（性能优先模式）
      * <p>
-     * 建议在以下场景启用：
-     * <ul>
-     *   <li>资源受限的设备</li>
-     *   <li>容器化部署</li>
-     *   <li>高密度部署</li>
-     * </ul>
+     * 说明：当设置为false时，表示启用内存优先模式。
      */
-    private boolean lowMemory = false;
+    private boolean perfMode = true;
 
     private MqttMessageProcessor processor;
 
@@ -381,13 +368,12 @@ public class Options {
         this.maxMessageQueueLength = maxMessageQueueLength;
     }
 
-
-    public boolean isLowMemory() {
-        return lowMemory;
+    public boolean isPerfMode() {
+        return perfMode;
     }
 
-    public void setLowMemory(boolean lowMemory) {
-        this.lowMemory = lowMemory;
+    public void setPerfMode(boolean perfMode) {
+        this.perfMode = perfMode;
     }
 
     public void addPlugin(SocketPluginAdapter plugins) {
@@ -400,7 +386,7 @@ public class Options {
 
     @Override
     public String toString() {
-        return "host='" + host + '\'' + ", port=" + port + ", bufferSize=" + bufferSize + ", topicLimit=" + topicLimit + ", maxPacketSize=" + maxPacketSize + ", threadNum=" + threadNum + ", maxKeepAliveTime=" + maxKeepAliveTime + ", pushThreadNum=" + pushThreadNum + ", noConnectIdleTimeout=" + noConnectIdleTimeout + ", maxInflight=" + maxInflight + ", maxMessageQueueLength=" + maxMessageQueueLength + ", lowMemory=" + lowMemory;
+        return "host='" + host + '\'' + ", port=" + port + ", bufferSize=" + bufferSize + ", topicLimit=" + topicLimit + ", maxPacketSize=" + maxPacketSize + ", threadNum=" + threadNum + ", maxKeepAliveTime=" + maxKeepAliveTime + ", pushThreadNum=" + pushThreadNum + ", noConnectIdleTimeout=" + noConnectIdleTimeout + ", maxInflight=" + maxInflight + ", maxMessageQueueLength=" + maxMessageQueueLength + ", perfMode=" + perfMode;
     }
 
     public MqttMessageProcessor getProcessor() {

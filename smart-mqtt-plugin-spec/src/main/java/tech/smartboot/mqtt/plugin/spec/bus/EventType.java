@@ -56,8 +56,6 @@ public class EventType<T> {
      */
     public static final EventType<BrokerContext> BROKER_STARTED = new EventType<>("brokerStarted", true);
 
-    public static final EventType<Options> BROKER_CONFIGURE_LOADED = new EventType<>("brokerConfigureLoaded", true);
-
     /**
      * 停止Broker服务
      */

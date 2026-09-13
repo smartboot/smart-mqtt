@@ -6,3 +6,15 @@ server:
   writeBufferSize: 8192
   gzip: true
   gzipThreshold: 256
+
+mqtt:
+  port: ${mqtt.server.port:1883}
+  host: ${mqtt.server.host:0.0.0.0}
+  maxPacketSize: ${mqtt.server.maxPacketSize}
+  maxInFlight: ${mqtt.server.maxInFlight}
+  threadNum: ${mqtt.server.threadNum}
+  bufferSize: ${mqtt.server.bufferSize}
+  pushThreadNum: ${mqtt.server.pushThreadNum}
+  topicLimit: ${mqtt.server.topicLimit}
+  maxMessageQueueLength: ${mqtt.server.maxMessageQueueLength}
+  perfMode: ${mqtt.server.perfMode:true}
