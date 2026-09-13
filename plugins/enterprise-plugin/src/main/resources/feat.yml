@@ -8,13 +8,13 @@ server:
   gzipThreshold: 256
 
 mqtt:
-  port: ${mqtt.server.port:1883}
-  host: ${mqtt.server.host:0.0.0.0}
-  maxPacketSize: ${mqtt.server.maxPacketSize}
-  maxInFlight: ${mqtt.server.maxInFlight}
-  threadNum: ${mqtt.server.threadNum}
-  bufferSize: ${mqtt.server.bufferSize}
-  pushThreadNum: ${mqtt.server.pushThreadNum}
-  topicLimit: ${mqtt.server.topicLimit}
-  maxMessageQueueLength: ${mqtt.server.maxMessageQueueLength}
-  perfMode: ${mqtt.server.perfMode:true}
+  port: ${mqtt.port:1883}
+  host: ${mqtt.host:0.0.0.0}
+  maxPacketSize: ${mqtt.maxPacketSize}
+  maxInFlight: ${mqtt.maxInFlight}
+  threadNum: ${mqtt.threadNum}
+  bufferSize: ${mqtt.bufferSize}
+  pushThreadNum: ${mqtt.pushThreadNum}
+  topicLimit: ${mqtt.topicLimit}
+  maxMessageQueueLength: ${mqtt.maxMessageQueueLength}
+  perfMode: ${mqtt.perfMode:true}
