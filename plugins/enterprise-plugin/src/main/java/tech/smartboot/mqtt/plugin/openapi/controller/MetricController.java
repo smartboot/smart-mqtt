@@ -391,6 +391,11 @@ public class MetricController {
         return RestResult.fail("该指标不存在");
     }
 
+    @RequestMapping("/api/metrics")
+    public void prometheus1(HttpResponse response) throws IOException {
+        prometheus(response);
+    }
+
     @RequestMapping("/metrics")
     public void prometheus(HttpResponse response) throws IOException {
         StringBuilder builder = new StringBuilder(2048);

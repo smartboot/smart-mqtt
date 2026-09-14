@@ -21,7 +21,6 @@ import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
-import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.mqtt.common.AsyncTask;
@@ -41,7 +40,6 @@ import tech.smartboot.mqtt.plugin.spec.MqttSession;
 import tech.smartboot.mqtt.plugin.spec.Plugin;
 import tech.smartboot.mqtt.plugin.spec.bus.AsyncEventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
-import tech.smartboot.mqtt.plugin.utils.IpUtil;
 
 import java.util.Date;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -96,17 +94,6 @@ public class ConnectionsController {
             connectionDO.setNodeId("smart-mqtt");
             try {
                 connectionDO.setIpAddress(object.getSession().getRemoteAddress().getHostString());
-                String region = IpUtil.search(connectionDO.getIpAddress());
-                String[] array = FeatUtils.split(region, "|");
-                if (array != null && array.length == 5) {
-                    connectionDO.setCountry(array[0]);
-                    connectionDO.setRegion(array[1]);
-                    connectionDO.setProvince(array[2]);
-                    connectionDO.setCity(array[3]);
-                    connectionDO.setIsp(array[4]);
-                } else {
-//                    LOGGER.error("unexpected ip:{} region: {}", connectionDO.getIpAddress(), region);
-                }
             } catch (Throwable e) {
                 connectionDO.setIpAddress("-");
                 LOGGER.error("decode ip exception", e);
