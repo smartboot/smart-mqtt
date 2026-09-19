@@ -11,10 +11,7 @@
 package tech.smartboot.mqtt.plugin.cluster;
 
 public class NodeProcessInfo {
-    /**
-     * 进程号
-     */
-    private String pid;
+
     /**
      * CPU使用率
      */
@@ -166,13 +163,5 @@ public class NodeProcessInfo {
 
     public void setRegion(String region) {
         this.region = region;
-    }
-
-    public String getPid() {
-        return pid;
-    }
-
-    public void setPid(String pid) {
-        this.pid = pid;
     }
 }

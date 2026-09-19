@@ -10,21 +10,15 @@
 
 package tech.smartboot.mqtt.plugin.openapi.controller;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.sun.management.OperatingSystemMXBean;
 import io.github.smartboot.socket.StateMachineEnum;
 import io.github.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
-import tech.smartboot.feat.cloud.annotation.Param;
-import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
-import tech.smartboot.feat.cloud.annotation.mcp.Tool;
-import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.HttpResponse;
@@ -35,15 +29,10 @@ import tech.smartboot.mqtt.common.message.MqttMessage;
 import tech.smartboot.mqtt.common.message.MqttPublishMessage;
 import tech.smartboot.mqtt.plugin.PluginConfig;
 import tech.smartboot.mqtt.plugin.cluster.NodeProcessInfo;
-import tech.smartboot.mqtt.plugin.convert.NodeConvert;
 import tech.smartboot.mqtt.plugin.dao.mapper.ConnectionMapper;
-import tech.smartboot.mqtt.plugin.dao.model.BrokerNodeDO;
 import tech.smartboot.mqtt.plugin.dao.model.MetricDO;
-import tech.smartboot.mqtt.plugin.dao.model.RegionDO;
 import tech.smartboot.mqtt.plugin.openapi.HistogramMetric;
-import tech.smartboot.mqtt.plugin.openapi.enums.BrokerStatueEnum;
 import tech.smartboot.mqtt.plugin.openapi.enums.MqttMetricEnum;
-import tech.smartboot.mqtt.plugin.openapi.to.BrokerNodeTO;
 import tech.smartboot.mqtt.plugin.openapi.to.MetricItemTO;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.BrokerTopic;
@@ -60,10 +49,6 @@ import tech.smartboot.mqtt.plugin.spec.bus.MessageBusConsumer;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -73,7 +58,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
-import java.util.stream.Collectors;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -85,9 +69,6 @@ public class MetricController {
     private static final Logger LOGGER = LoggerFactory.getLogger(MetricController.class);
     @Autowired
     private BrokerContext brokerContext;
-
-    @Autowired
-    private ConnectionMapper connectionMapper;
 
     private final Map<MqttMetricEnum, MetricItemTO> metrics = new HashMap<>();
 
@@ -153,15 +134,6 @@ public class MetricController {
             }
         }, 5, TimeUnit.SECONDS);
 
-    }
-
-    private void setNodeDO(BrokerNodeDO nodeDO) {
-        nodeDO.setIpAddress(brokerContext.Options().getHost());
-        nodeDO.setStatus(BrokerStatueEnum.RUNNING.getCode());
-        nodeDO.setPort(brokerContext.Options().getPort());
-        nodeDO.setStartTime(new Date(START_TIME));
-        nodeDO.setNodeId("smart-mqtt");
-        nodeDO.setProcess(JSONObject.toJSONString(getCurrentNode()));
     }
 
     private NodeProcessInfo getCurrentNode() {
@@ -296,27 +268,6 @@ public class MetricController {
         });
     }
 
-    @RequestMapping("/api/cluster/nodes")
-    @Tool(name = "nodes", description = "获取集群节点信息")
-    public RestResult<Collection<BrokerNodeTO>> nodes() {
-        //broker节点
-        BrokerNodeDO node = new BrokerNodeDO();
-        setNodeDO(node);
-
-        List<BrokerNodeDO> nodes = Arrays.asList(node);
-        if (FeatUtils.isEmpty(nodes)) {
-            nodes = Collections.emptyList();
-        }
-        List<BrokerNodeTO> list = NodeConvert.convert(nodes);
-        list.stream().filter(brokerNodeTO -> BrokerStatueEnum.STOPPED.getCode().equals(brokerNodeTO.getStatus()) || BrokerStatueEnum.UNKNOWN.getCode().equals(brokerNodeTO.getStatus())).forEach(brokerNodeTO -> {
-            brokerNodeTO.setRuntime("-");
-            brokerNodeTO.setPid("-");
-            brokerNodeTO.setCpuUsage(0);
-            brokerNodeTO.setMemUsage(0);
-        });
-        return RestResult.ok(list);
-    }
-
     @RequestMapping("/api/cluster/metricCodes")
     public RestResult<List<String>> metrics() throws IOException {
         List<String> showMetrics = pluginConfig.getShowMetrics();
@@ -325,75 +276,6 @@ public class MetricController {
         } else {
             return RestResult.ok(showMetrics);
         }
-    }
-
-    @RequestMapping("/api/cluster/metrics")
-    public RestResult<JSONObject> clusterMetrics(@Param("nodeId") String nodeId, @Param("metrics") List<String> metrics, @Param("startTime") Date startTime, @Param("endTime") Date endTime) throws IOException {
-        if (FeatUtils.isEmpty(metrics)) {
-            return RestResult.ok(new JSONObject());
-        }
-        long step = ((endTime.getTime() - startTime.getTime()) / 1000 / 60);
-        if (step < 1) {
-            step = 1;
-        }
-        List<MetricDO> publishReceiveCount = new ArrayList<>();
-        if ((System.currentTimeMillis() - START_TIME) > 10000) {
-            metrics.forEach(code -> publishReceiveCount.addAll(metricMap.get(MqttMetricEnum.getByCode(code))));
-        }
-
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        JSONObject jsonObject = new JSONObject();
-        publishReceiveCount.stream().collect(Collectors.groupingBy(MetricDO::getCode)).forEach((metric, list) -> {
-            Map<Date, Map> group = new HashMap<>();
-            list.stream().collect(Collectors.groupingBy(MetricDO::getCreateTime)).forEach((date, sublist) -> {
-                Map<String, Object> nodesMetric = new HashMap<>();
-                nodesMetric.put("date", sdf.format(date));
-                sublist.forEach(metricDO -> nodesMetric.put(metricDO.getNodeName(), metricDO.getValue()));
-                group.put(date, nodesMetric);
-            });
-            List l = new ArrayList();
-            group.keySet().stream().sorted().forEach(date -> l.add(group.get(date)));
-            jsonObject.put(metric, l);
-        });
-
-        return RestResult.ok(jsonObject);
-    }
-
-    @RequestMapping("/api/metric/region")
-    public RestResult<List<RegionDO>> region() {
-        LOGGER.info("Connection Summary:{}", JSON.toJSONString(connectionMapper.groupByProvince()));
-        List<RegionDO> list = connectionMapper.groupByProvince();
-        list.forEach(regionDO -> regionDO.setName(regionDO.getName().replace("省", "")));
-        return RestResult.ok(list);
-    }
-
-    @RequestMapping("/api/metric/topic")
-    public RestResult<JSONObject> topic() {
-        JSONObject jsonObject = new JSONObject();
-        //topic总数
-        jsonObject.put("totalTopic", metrics.get(MqttMetricEnum.TOPIC_COUNT).getMetric().longValue());
-        //订阅总数
-        jsonObject.put("totalSub", metrics.get(MqttMetricEnum.CLIENT_SUBSCRIBE).getMetric().longValue() - metrics.get(MqttMetricEnum.CLIENT_UNSUBSCRIBE).getMetric().longValue());
-        //订阅关系总数
-        jsonObject.put("totalRelation", metrics.get(MqttMetricEnum.SUBSCRIBE_RELATION).getMetric().longValue());
-        return RestResult.ok(jsonObject);
-    }
-
-    @RequestMapping("/api/metric/get/:code")
-    public RestResult<Long> getMetric(@PathParam("code") String code) {
-        if (FeatUtils.isBlank(code)) {
-            return RestResult.fail("请输入指标名称");
-        }
-        MqttMetricEnum metricEnum = MqttMetricEnum.getByCode(code);
-        if (metricEnum != null) {
-            return RestResult.ok(metrics.get(metricEnum).getMetric().longValue());
-        }
-        return RestResult.fail("该指标不存在");
-    }
-
-    @RequestMapping("/api/metrics")
-    public void prometheus1(HttpResponse response) throws IOException {
-        prometheus(response);
     }
 
     @RequestMapping("/metrics")
@@ -415,6 +297,7 @@ public class MetricController {
         }
 
         appendRuntimeMetrics(builder);
+        appendNodeMetrics(builder);
         publishProcessingDuration.appendPrometheus(builder);
 
         response.setContentType("text/plain; version=0.0.4; charset=utf-8");
@@ -449,14 +332,46 @@ public class MetricController {
         builder.append(metricName).append(' ').append(value).append('\n');
     }
 
+    private void appendNodeMetrics(StringBuilder builder) {
+        NodeProcessInfo info = getCurrentNode();
+        String baseLabels = "node=\"smart-mqtt\""
+                + ",ip=\"" + escapeLabelValue(String.valueOf(brokerContext.Options().getHost())) + "\""
+                + ",port=\"" + brokerContext.Options().getPort() + "\"";
+
+        appendNodeGauge(builder, "node_info", "Broker节点信息",
+                baseLabels
+                        + ",version=\"" + escapeLabelValue(info.getVersion()) + "\""
+                        + ",vm_vendor=\"" + escapeLabelValue(info.getVmVendor()) + "\""
+                        + ",vm_version=\"" + escapeLabelValue(info.getVmVersion()) + "\""
+                        + ",os_name=\"" + escapeLabelValue(info.getOsName()) + "\""
+                        + ",os_arch=\"" + escapeLabelValue(info.getOsArch()) + "\""
+                        + ",host_name=\"" + escapeLabelValue(info.getHostName()) + "\"", 1);
+        appendNodeGauge(builder, "node_status", "Broker节点状态(1=运行中,0=停止)", baseLabels, 1);
+        appendNodeGauge(builder, "node_start_time_seconds", "Broker节点启动时间戳(秒)", baseLabels, START_TIME / 1000);
+        appendNodeGauge(builder, "node_runtime_seconds", "Broker节点运行时长(秒)", baseLabels,
+                (System.currentTimeMillis() - START_TIME) / 1000);
+        appendNodeGauge(builder, "node_cpu_usage_percent", "节点CPU使用率(百分比)", baseLabels, info.getCpuUsage());
+        appendNodeGauge(builder, "node_memory_used_bytes", "节点已使用内存(字节)", baseLabels, info.getMemUsage());
+        appendNodeGauge(builder, "node_memory_total_bytes", "节点内存上限(字节)", baseLabels, info.getMemoryLimit());
+    }
+
+    private void appendNodeGauge(StringBuilder builder, String name, String description, String labels, long value) {
+        String metricName = "smart_mqtt_" + name;
+        builder.append("# HELP ").append(metricName).append(' ').append(description).append('\n');
+        builder.append("# TYPE ").append(metricName).append(" gauge\n");
+        builder.append(metricName).append('{').append(labels).append("} ").append(value).append('\n');
+    }
+
+    private String escapeLabelValue(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
+    }
+
     public void setBrokerContext(BrokerContext brokerContext) {
         this.brokerContext = brokerContext;
     }
-
-    public void setConnectionMapper(ConnectionMapper connectionMapper) {
-        this.connectionMapper = connectionMapper;
-    }
-
 
     public void setPluginConfig(PluginConfig pluginConfig) {
         this.pluginConfig = pluginConfig;

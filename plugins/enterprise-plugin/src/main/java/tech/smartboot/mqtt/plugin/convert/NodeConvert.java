@@ -56,7 +56,6 @@ public class NodeConvert {
         NodeProcessInfo process = JSONObject.parseObject(nodeDO.getProcess(), NodeProcessInfo.class);
         if (process != null) {
             brokerNodeTO.setVersion(process.getVersion());
-            brokerNodeTO.setPid(process.getPid());
             brokerNodeTO.setVmVendor(process.getVmVendor());
             brokerNodeTO.setVmVersion(process.getVmVersion());
             brokerNodeTO.setOsVersion(process.getOsVersion());
