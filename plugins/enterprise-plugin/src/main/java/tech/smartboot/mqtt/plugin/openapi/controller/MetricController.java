@@ -28,7 +28,6 @@ import tech.smartboot.mqtt.common.message.MqttConnectMessage;
 import tech.smartboot.mqtt.common.message.MqttMessage;
 import tech.smartboot.mqtt.common.message.MqttPublishMessage;
 import tech.smartboot.mqtt.plugin.PluginConfig;
-import tech.smartboot.mqtt.plugin.cluster.NodeProcessInfo;
 import tech.smartboot.mqtt.plugin.dao.mapper.ConnectionMapper;
 import tech.smartboot.mqtt.plugin.dao.model.MetricDO;
 import tech.smartboot.mqtt.plugin.openapi.HistogramMetric;
@@ -48,6 +47,8 @@ import tech.smartboot.mqtt.plugin.spec.bus.MessageBusConsumer;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Date;
@@ -134,29 +135,6 @@ public class MetricController {
             }
         }, 5, TimeUnit.SECONDS);
 
-    }
-
-    private NodeProcessInfo getCurrentNode() {
-        NodeProcessInfo info = new NodeProcessInfo();
-        info.setVersion(Options.VERSION);
-        info.setVmVendor(System.getProperty("java.vendor"));
-        info.setVmVersion(System.getProperty("java.version"));
-        info.setOsName(System.getProperty("os.name"));
-        info.setOsArch(System.getProperty("os.arch"));
-        info.setOsVersion(System.getProperty("os.name") + " " + System.getProperty("os.version"));
-        info.setHostName(System.getProperty("user.name"));
-
-        OperatingSystemMXBean systemMXBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-        info.setCpuUsage((int) (systemMXBean.getSystemCpuLoad() * 100));
-        // 获取运行时对象
-        Runtime runtime = Runtime.getRuntime();
-
-        // 获取总内存（以字节为单位）
-        long totalMemory = runtime.totalMemory();
-        // 计算内存使用率（以百分比表示）
-        info.setMemoryLimit(totalMemory);
-        info.setMemUsage(totalMemory - runtime.freeMemory());
-        return info;
     }
 
     private void initMetric() {
@@ -297,7 +275,7 @@ public class MetricController {
         }
 
         appendRuntimeMetrics(builder);
-        appendNodeMetrics(builder);
+        appendNodeInfoMetric(builder);
         publishProcessingDuration.appendPrometheus(builder);
 
         response.setContentType("text/plain; version=0.0.4; charset=utf-8");
@@ -305,61 +283,84 @@ public class MetricController {
     }
 
     private void appendRuntimeMetrics(StringBuilder builder) {
-        appendGauge(builder, "uptime_seconds", "Broker运行时长(秒)",
-                (System.currentTimeMillis() - START_TIME) / 1000);
-
         Runtime runtime = Runtime.getRuntime();
-        appendGauge(builder, "jvm_memory_used_bytes", "JVM已使用内存(字节)",
+        long now = System.currentTimeMillis();
+
+        // 指标命名遵循业界通用做法（Micrometer/Prometheus 客户端库约定）
+        appendGauge(builder, "process_uptime_seconds", "进程运行时长(秒)", null, (now - START_TIME) / 1000);
+        appendGauge(builder, "process_start_time_seconds", "进程启动时间戳(秒)", null, START_TIME / 1000);
+
+        // JVM 内存指标对齐 JMX 命名（used/committed/max），并通过 area 标签标识内存区域，
+        // 便于 Grafana 面板与告警规则复用；未跑满堆时可直观对比 committed 与 max
+        appendGauge(builder, "jvm_memory_used_bytes", "JVM已使用内存(字节)", "area=\"heap\"",
                 runtime.totalMemory() - runtime.freeMemory());
-        appendGauge(builder, "jvm_memory_total_bytes", "JVM已申请内存(字节)",
+        appendGauge(builder, "jvm_memory_committed_bytes", "JVM已申请内存(字节)", "area=\"heap\"",
                 runtime.totalMemory());
-        appendGauge(builder, "jvm_memory_max_bytes", "JVM可申请最大内存(字节)",
+        appendGauge(builder, "jvm_memory_max_bytes", "JVM可申请最大内存(字节)", "area=\"heap\"",
                 runtime.maxMemory());
 
         OperatingSystemMXBean systemMXBean =
                 (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-
-        appendGauge(builder, "process_cpu_usage_percent", "进程CPU使用率(百分比)",
-                (long) (systemMXBean.getProcessCpuLoad() * 100));
-        appendGauge(builder, "system_cpu_usage_percent", "系统CPU使用率(百分比)",
-                (long) (systemMXBean.getSystemCpuLoad() * 100));
+        // CPU 使用率遵循 Prometheus 规范采用 0~1 的 ratio 表示，保留双精度；
+        // JMX 采样不可用时返回负值，由 appendCpuGauge 跳过，避免输出无意义样本
+        appendCpuGauge(builder, "process_cpu_usage", "进程CPU使用率(0~1)", null, systemMXBean.getProcessCpuLoad());
+        appendCpuGauge(builder, "system_cpu_usage", "系统CPU使用率(0~1)", null, systemMXBean.getSystemCpuLoad());
     }
 
-    private void appendGauge(StringBuilder builder, String name, String description, long value) {
-        String metricName = "smart_mqtt_" + name;
-        builder.append("# HELP ").append(metricName).append(' ').append(description).append('\n');
-        builder.append("# TYPE ").append(metricName).append(" gauge\n");
-        builder.append(metricName).append(' ').append(value).append('\n');
-    }
-
-    private void appendNodeMetrics(StringBuilder builder) {
-        NodeProcessInfo info = getCurrentNode();
-        String baseLabels = "node=\"smart-mqtt\""
+    /**
+     * 输出节点元信息指标（info 型指标），版本、JVM、操作系统等信息以标签形式携带。
+     * 其余资源指标（process_xxx、jvm_xxx）不加 node/ip/port 标签：
+     * Prometheus 采集时已自动附加 instance/job 标签标识采集目标，避免标签冗余。
+     */
+    private void appendNodeInfoMetric(StringBuilder builder) {
+        String hostname;
+        try {
+            hostname = InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            hostname = "unknown";
+        }
+        String labels = "node=\"smart-mqtt\""
                 + ",ip=\"" + escapeLabelValue(String.valueOf(brokerContext.Options().getHost())) + "\""
-                + ",port=\"" + brokerContext.Options().getPort() + "\"";
-
-        appendNodeGauge(builder, "node_info", "Broker节点信息",
-                baseLabels
-                        + ",version=\"" + escapeLabelValue(info.getVersion()) + "\""
-                        + ",vm_vendor=\"" + escapeLabelValue(info.getVmVendor()) + "\""
-                        + ",vm_version=\"" + escapeLabelValue(info.getVmVersion()) + "\""
-                        + ",os_name=\"" + escapeLabelValue(info.getOsName()) + "\""
-                        + ",os_arch=\"" + escapeLabelValue(info.getOsArch()) + "\""
-                        + ",host_name=\"" + escapeLabelValue(info.getHostName()) + "\"", 1);
-        appendNodeGauge(builder, "node_status", "Broker节点状态(1=运行中,0=停止)", baseLabels, 1);
-        appendNodeGauge(builder, "node_start_time_seconds", "Broker节点启动时间戳(秒)", baseLabels, START_TIME / 1000);
-        appendNodeGauge(builder, "node_runtime_seconds", "Broker节点运行时长(秒)", baseLabels,
-                (System.currentTimeMillis() - START_TIME) / 1000);
-        appendNodeGauge(builder, "node_cpu_usage_percent", "节点CPU使用率(百分比)", baseLabels, info.getCpuUsage());
-        appendNodeGauge(builder, "node_memory_used_bytes", "节点已使用内存(字节)", baseLabels, info.getMemUsage());
-        appendNodeGauge(builder, "node_memory_total_bytes", "节点内存上限(字节)", baseLabels, info.getMemoryLimit());
+                + ",port=\"" + brokerContext.Options().getPort() + "\""
+                + ",version=\"" + escapeLabelValue(Options.VERSION) + "\""
+                + ",vm_vendor=\"" + escapeLabelValue(System.getProperty("java.vendor")) + "\""
+                + ",vm_version=\"" + escapeLabelValue(System.getProperty("java.version")) + "\""
+                + ",os_name=\"" + escapeLabelValue(System.getProperty("os.name")) + "\""
+                + ",os_arch=\"" + escapeLabelValue(System.getProperty("os.arch")) + "\""
+                + ",hostname=\"" + escapeLabelValue(hostname) + "\"";
+        appendGauge(builder, "node_info", "Broker节点信息", labels, 1);
     }
 
-    private void appendNodeGauge(StringBuilder builder, String name, String description, String labels, long value) {
+    private void appendGauge(StringBuilder builder, String name, String description, String labels, long value) {
+        appendGauge(builder, name, description, labels, (double) value);
+    }
+
+    private void appendGauge(StringBuilder builder, String name, String description, String labels, double value) {
         String metricName = "smart_mqtt_" + name;
         builder.append("# HELP ").append(metricName).append(' ').append(description).append('\n');
         builder.append("# TYPE ").append(metricName).append(" gauge\n");
-        builder.append(metricName).append('{').append(labels).append("} ").append(value).append('\n');
+        builder.append(metricName);
+        if (labels != null && !labels.isEmpty()) {
+            builder.append('{').append(labels).append('}');
+        }
+        builder.append(' ').append(formatValue(value)).append('\n');
+    }
+
+    private void appendCpuGauge(StringBuilder builder, String name, String description, String labels, double load) {
+        // JMX 在 CPU 采样不可用时会返回负值，此时跳过该指标
+        if (load < 0) {
+            return;
+        }
+        appendGauge(builder, name, description, labels, load);
+    }
+
+    private String formatValue(double value) {
+        // 整数值以整型输出，避免 Double.toString 产生科学计数法
+        if (!Double.isNaN(value) && !Double.isInfinite(value)
+                && value == Math.rint(value) && Math.abs(value) < 1e15) {
+            return String.valueOf((long) value);
+        }
+        return String.valueOf(value);
     }
 
     private String escapeLabelValue(String value) {
