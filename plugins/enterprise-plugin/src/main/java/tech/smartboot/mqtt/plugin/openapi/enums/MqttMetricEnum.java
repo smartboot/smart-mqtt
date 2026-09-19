@@ -33,7 +33,6 @@ public enum MqttMetricEnum {
     PACKETS_PUBLISH_RECEIVED("packets_publish_received", "接收的 PUBLISH 报文数量", counter()),
     PACKETS_EXPECT_PUBLISH_SENT("packets_expect_publish_sent", "期望发送的 PUBLISH 报文数量", counter()),
     PACKETS_PUBLISH_SENT("packets_publish_sent", "发送的 PUBLISH 报文数量", counter()),
-    PACKETS_PUBLISH_RATE("packets_publish_rate", "消息推送率", gauge()),
 
     PACKETS_RECEIVED("packets_received", "接收的报文数量", counter()),
     PACKETS_SENT("packets_sent", "发送的报文数量", counter()),
@@ -52,10 +51,6 @@ public enum MqttMetricEnum {
     private final String code;
     private final String desc;
 
-    /**
-     * 周期性任务按增量差值落库（当前值 - 上次值），否则直接落库当前值
-     */
-    private static final int FLAG_DB_STEP_SAVE = 0x1;
     private static final int FLAG_PROMETHEUS_METRIC_TYPE_COUNTER = 1 << 1;
     private static final int FLAG_PROMETHEUS_METRIC_TYPE_GAUGE = 1 << 2;
     private final int flag;
@@ -64,7 +59,7 @@ public enum MqttMetricEnum {
      * Prometheus counter 类型：单调递增的累计值
      */
     static int counter() {
-        return FLAG_DB_STEP_SAVE | FLAG_PROMETHEUS_METRIC_TYPE_COUNTER;
+        return FLAG_PROMETHEUS_METRIC_TYPE_COUNTER;
     }
 
     /**
@@ -90,10 +85,6 @@ public enum MqttMetricEnum {
 
     public String getDesc() {
         return desc;
-    }
-
-    public boolean isPeriodRest() {
-        return (flag & FLAG_DB_STEP_SAVE) > 0;
     }
 
     public boolean isPrometheusSupport() {

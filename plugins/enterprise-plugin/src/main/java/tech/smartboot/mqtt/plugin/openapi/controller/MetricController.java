@@ -22,17 +22,14 @@ import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.message.MqttConnAckMessage;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
 import tech.smartboot.mqtt.common.message.MqttMessage;
 import tech.smartboot.mqtt.common.message.MqttPublishMessage;
 import tech.smartboot.mqtt.plugin.PluginConfig;
 import tech.smartboot.mqtt.plugin.dao.mapper.ConnectionMapper;
-import tech.smartboot.mqtt.plugin.dao.model.MetricDO;
 import tech.smartboot.mqtt.plugin.openapi.HistogramMetric;
 import tech.smartboot.mqtt.plugin.openapi.enums.MqttMetricEnum;
-import tech.smartboot.mqtt.plugin.openapi.to.MetricItemTO;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;
 import tech.smartboot.mqtt.plugin.spec.BrokerTopic;
 import tech.smartboot.mqtt.plugin.spec.Message;
@@ -51,13 +48,10 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
@@ -71,7 +65,7 @@ public class MetricController {
     @Autowired
     private BrokerContext brokerContext;
 
-    private final Map<MqttMetricEnum, MetricItemTO> metrics = new HashMap<>();
+    private final Map<MqttMetricEnum, LongAdder> metrics = new HashMap<>();
 
     private final HistogramMetric publishProcessingDuration = new HistogramMetric(
             "smart_mqtt_publish_processing_duration_seconds",
@@ -79,7 +73,6 @@ public class MetricController {
             new double[]{0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 5}
     );
 
-    private final Map<MqttMetricEnum, List<MetricDO>> metricMap = new HashMap<>();
     private static final long START_TIME = System.currentTimeMillis();
 
     @Autowired
@@ -91,90 +84,46 @@ public class MetricController {
     @PostConstruct
     public void init() {
         initMetric();
-        //周期性重置指标值
-        plugin.timer().scheduleWithFixedDelay(new AsyncTask() {
-            @Override
-            public void execute() {
-                //推送成功率
-                long sent = metrics.get(MqttMetricEnum.PACKETS_PUBLISH_SENT).getValue() - metrics.get(MqttMetricEnum.PACKETS_PUBLISH_SENT).getLatestValue();
-                long expect = metrics.get(MqttMetricEnum.PACKETS_EXPECT_PUBLISH_SENT).getValue() - metrics.get(MqttMetricEnum.PACKETS_EXPECT_PUBLISH_SENT).getLatestValue();
-                if (expect > 0 && sent < expect) {
-                    long rate = sent * 1000 / expect;
-//                System.out.println("push success rate:" + (rate) + " , expect:" + expect + " ,sent:" + sent);
-                    metrics.get(MqttMetricEnum.PACKETS_PUBLISH_RATE).setValue(rate);
-                } else {
-//                System.out.println("none push,sent: " + sent);
-                    metrics.get(MqttMetricEnum.PACKETS_PUBLISH_RATE).setValue(1000);
-                }
-
-
-                LOGGER.debug("reset period metric...");
-                for (Map.Entry<MqttMetricEnum, MetricItemTO> entry : metrics.entrySet()) {
-                    MqttMetricEnum metric = entry.getKey();
-                    MetricItemTO value = entry.getValue();
-                    MetricDO metricDO = new MetricDO();
-                    metricDO.setNodeName("smart-mqtt");
-                    metricDO.setObjectType("node");
-                    metricDO.setObjectId("smart-mqtt");
-                    metricDO.setCode(metric.getCode());
-                    long currentValue = value.getValue();
-                    if (metric.isPeriodRest()) {
-                        metricDO.setValue(currentValue - value.getLatestValue());
-                    } else {
-                        metricDO.setValue(currentValue);
-                    }
-                    value.setLatestValue(currentValue);
-//                LOGGER.info("insert metric:{} value:{}", metricDO.getCode(), metricDO.getValue());
-                    List<MetricDO> list = metricMap.computeIfAbsent(entry.getKey(), mqttMetricEnum -> new LinkedList<>());
-                    if (list.size() >= 16) {
-                        list.remove(0);
-                    }
-                    metricDO.setCreateTime(new Date(System.currentTimeMillis() / 5000 * 5000));
-                    list.add(metricDO);
-                }
-            }
-        }, 5, TimeUnit.SECONDS);
-
     }
 
     private void initMetric() {
         for (MqttMetricEnum metricEnum : MqttMetricEnum.values()) {
-            metrics.put(metricEnum, new MetricItemTO(metricEnum));
+            metrics.put(metricEnum, new LongAdder());
         }
 
         plugin.addPlugin(new io.github.smartboot.socket.Plugin<MqttMessage>() {
             @Override
             public void afterRead(AioSession session, int readSize) {
                 if (readSize > 0) {
-                    metrics.get(MqttMetricEnum.BYTES_RECEIVED).getMetric().add(readSize);
+                    metrics.get(MqttMetricEnum.BYTES_RECEIVED).add(readSize);
                 }
             }
 
             @Override
             public void afterWrite(AioSession session, int writeSize) {
                 if (writeSize > 0) {
-                    metrics.get(MqttMetricEnum.BYTES_SENT).getMetric().add(writeSize);
+                    metrics.get(MqttMetricEnum.BYTES_SENT).add(writeSize);
                 }
             }
 
             @Override
             public void stateEvent(StateMachineEnum stateMachineEnum, AioSession session, Throwable throwable) {
                 if (Objects.requireNonNull(stateMachineEnum) == StateMachineEnum.NEW_SESSION) {
-                    metrics.get(MqttMetricEnum.CLIENT_ONLINE).getMetric().increment();
+                    metrics.get(MqttMetricEnum.CLIENT_ONLINE).increment();
                 } else if (stateMachineEnum == StateMachineEnum.SESSION_CLOSED) {
-                    metrics.get(MqttMetricEnum.CLIENT_ONLINE).getMetric().decrement();
+                    metrics.get(MqttMetricEnum.CLIENT_ONLINE).decrement();
                 }
             }
         });
-        plugin.subscribe(EventType.CONNECT, AsyncEventObject.syncSubscriber((eventType, object) -> metrics.get(MqttMetricEnum.CLIENT_CONNECT).getMetric().increment()));
-        plugin.subscribe(EventType.DISCONNECT, (eventType, object) -> metrics.get(MqttMetricEnum.CLIENT_DISCONNECT).getMetric().increment());
-        plugin.subscribe(EventType.SUBSCRIBE_ACCEPT, (eventType, object) -> metrics.get(MqttMetricEnum.CLIENT_SUBSCRIBE).getMetric().increment());
-        plugin.subscribe(EventType.UNSUBSCRIBE_ACCEPT, (eventType, object) -> metrics.get(MqttMetricEnum.CLIENT_UNSUBSCRIBE).getMetric().increment());
-        plugin.subscribe(EventType.SUBSCRIBE_TOPIC, (eventType, object) -> metrics.get(MqttMetricEnum.SUBSCRIBE_RELATION).getMetric().increment());
-        plugin.subscribe(EventType.UNSUBSCRIBE_TOPIC, (eventType, object) -> metrics.get(MqttMetricEnum.SUBSCRIBE_RELATION).getMetric().decrement());
+        plugin.subscribe(EventType.CONNECT, AsyncEventObject.syncSubscriber((eventType, object) -> metrics.get(MqttMetricEnum.CLIENT_CONNECT).increment()));
+        plugin.subscribe(EventType.DISCONNECT, (eventType, object) -> metrics.get(MqttMetricEnum.CLIENT_DISCONNECT).increment());
+        plugin.subscribe(EventType.SUBSCRIBE_ACCEPT, (eventType, object) -> metrics.get(MqttMetricEnum.CLIENT_SUBSCRIBE).increment());
+        plugin.subscribe(EventType.UNSUBSCRIBE_ACCEPT, (eventType, object) -> metrics.get(MqttMetricEnum.CLIENT_UNSUBSCRIBE).increment());
+        plugin.subscribe(EventType.SUBSCRIBE_TOPIC, (eventType, object) -> metrics.get(MqttMetricEnum.SUBSCRIBE_RELATION).increment());
+        plugin.subscribe(EventType.UNSUBSCRIBE_TOPIC, (eventType, object) -> metrics.get(MqttMetricEnum.SUBSCRIBE_RELATION).decrement());
         plugin.subscribe(EventType.RECEIVE_MESSAGE, new EventBusConsumer<EventObject<MqttMessage>>() {
-            final LongAdder packetsReceived = metrics.get(MqttMetricEnum.PACKETS_RECEIVED).getMetric();
-            final LongAdder connectReceived = metrics.get(MqttMetricEnum.PACKETS_CONNECT_RECEIVED).getMetric();
+            final LongAdder packetsReceived = metrics.get(MqttMetricEnum.PACKETS_RECEIVED);
+            final LongAdder connectReceived = metrics.get(MqttMetricEnum.PACKETS_CONNECT_RECEIVED);
 
             @Override
             public void consumer(EventType<EventObject<MqttMessage>> eventType, EventObject<MqttMessage> object) {
@@ -185,13 +134,13 @@ public class MetricController {
             }
         });
         plugin.subscribe(EventType.WRITE_MESSAGE, new EventBusConsumer<EventObject<MqttMessage>>() {
-            final LongAdder packetsSent = metrics.get(MqttMetricEnum.PACKETS_SENT).getMetric();
-            final LongAdder connAckSent = metrics.get(MqttMetricEnum.PACKETS_CONNACK_SENT).getMetric();
-            final LongAdder publishSent = metrics.get(MqttMetricEnum.PACKETS_PUBLISH_SENT).getMetric();
+            final LongAdder packetsSent = metrics.get(MqttMetricEnum.PACKETS_SENT);
+            final LongAdder connAckSent = metrics.get(MqttMetricEnum.PACKETS_CONNACK_SENT);
+            final LongAdder publishSent = metrics.get(MqttMetricEnum.PACKETS_PUBLISH_SENT);
 
-            final LongAdder qos0Sent = metrics.get(MqttMetricEnum.MESSAGE_QOS0_SENT).getMetric();
-            final LongAdder qos1Sent = metrics.get(MqttMetricEnum.MESSAGE_QOS1_SENT).getMetric();
-            final LongAdder qos2Sent = metrics.get(MqttMetricEnum.MESSAGE_QOS2_SENT).getMetric();
+            final LongAdder qos0Sent = metrics.get(MqttMetricEnum.MESSAGE_QOS0_SENT);
+            final LongAdder qos1Sent = metrics.get(MqttMetricEnum.MESSAGE_QOS1_SENT);
+            final LongAdder qos2Sent = metrics.get(MqttMetricEnum.MESSAGE_QOS2_SENT);
 
             @Override
             public void consumer(EventType<EventObject<MqttMessage>> eventType, EventObject<MqttMessage> object) {
@@ -216,14 +165,14 @@ public class MetricController {
                 }
             }
         });
-        plugin.subscribe(EventType.TOPIC_CREATE, (eventType, object) -> metrics.get(MqttMetricEnum.TOPIC_COUNT).getMetric().increment());
+        plugin.subscribe(EventType.TOPIC_CREATE, (eventType, object) -> metrics.get(MqttMetricEnum.TOPIC_COUNT).increment());
         plugin.subscribe(EventType.PUBLISH_MESSAGE_CONSUME_COST, (eventType, cost) -> publishProcessingDuration.observe(cost / 1_000_000_000D));
         plugin.consumer(new MessageBusConsumer() {
-            final LongAdder publishReceived = metrics.get(MqttMetricEnum.PACKETS_PUBLISH_RECEIVED).getMetric();
-            final LongAdder expectPublishSent = metrics.get(MqttMetricEnum.PACKETS_EXPECT_PUBLISH_SENT).getMetric();
-            final LongAdder qos0Received = metrics.get(MqttMetricEnum.MESSAGE_QOS0_RECEIVED).getMetric();
-            final LongAdder qos1Received = metrics.get(MqttMetricEnum.MESSAGE_QOS1_RECEIVED).getMetric();
-            final LongAdder qos2Received = metrics.get(MqttMetricEnum.MESSAGE_QOS2_RECEIVED).getMetric();
+            final LongAdder publishReceived = metrics.get(MqttMetricEnum.PACKETS_PUBLISH_RECEIVED);
+            final LongAdder expectPublishSent = metrics.get(MqttMetricEnum.PACKETS_EXPECT_PUBLISH_SENT);
+            final LongAdder qos0Received = metrics.get(MqttMetricEnum.MESSAGE_QOS0_RECEIVED);
+            final LongAdder qos1Received = metrics.get(MqttMetricEnum.MESSAGE_QOS1_RECEIVED);
+            final LongAdder qos2Received = metrics.get(MqttMetricEnum.MESSAGE_QOS2_RECEIVED);
 
             @Override
             public void consume(MqttSession session, BrokerTopic topic, Message publishMessage) {
@@ -263,7 +212,7 @@ public class MetricController {
             if (!metricEnum.isPrometheusSupport()) {
                 continue;
             }
-            MetricItemTO metric = metrics.get(metricEnum);
+            LongAdder metric = metrics.get(metricEnum);
             if (metric == null) {
                 continue;
             }
@@ -271,7 +220,7 @@ public class MetricController {
             String name = "smart_mqtt_" + metricEnum.getCode() + (counter ? "_total" : "");
             builder.append("# HELP ").append(name).append(' ').append(metricEnum.getDesc()).append('\n');
             builder.append("# TYPE ").append(name).append(' ').append(counter ? "counter" : "gauge").append('\n');
-            builder.append(name).append(' ').append(metric.getValue()).append('\n');
+            builder.append(name).append(' ').append(metric.longValue()).append('\n');
         }
 
         appendRuntimeMetrics(builder);
