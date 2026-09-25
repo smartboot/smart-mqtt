@@ -27,7 +27,6 @@ import tech.smartboot.mqtt.common.message.MqttConnectMessage;
 import tech.smartboot.mqtt.common.message.MqttMessage;
 import tech.smartboot.mqtt.common.message.MqttPublishMessage;
 import tech.smartboot.mqtt.plugin.PluginConfig;
-import tech.smartboot.mqtt.plugin.dao.mapper.ConnectionMapper;
 import tech.smartboot.mqtt.plugin.openapi.HistogramMetric;
 import tech.smartboot.mqtt.plugin.openapi.enums.MqttMetricEnum;
 import tech.smartboot.mqtt.plugin.spec.BrokerContext;

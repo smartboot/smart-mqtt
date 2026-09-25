@@ -1,22 +1,3 @@
--- Broker集群节点
-CREATE TABLE IF NOT EXISTS broker_node
-(
-    id               varchar(30) NOT NULL COMMENT '节点ID',
-    node_type        varchar(20) NOT NULL COMMENT '节点类型：core:核心节点,worker:工作节点',
-    core_node_id     varchar(30) COMMENT '核心节点ID',
-    cluster_endpoint varchar(30) NOT NULL UNIQUE COMMENT '集群访问地址',
-    process          text COMMENT '进程信息',
-    config           text COMMENT '配置文件',
-    status           varchar(30) NOT NULL COMMENT '状态',
-    ip_address       varchar(20) NOT NULL COMMENT 'Broker IP地址',
-    port             int         NOT NULL COMMENT 'Broker端口号',
-    start_time       timestamp   NOT NULL COMMENT '启动时间',
-    create_time      timestamp DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    edit_time        timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    PRIMARY KEY (id)
-);
-
-
 CREATE TABLE IF NOT EXISTS subscriptions
 (
     clientId    varchar(32) NOT NULL COMMENT '客户端ID',
@@ -57,23 +38,6 @@ CREATE TABLE IF NOT EXISTS connection
     PRIMARY KEY (clientId)
 );
 
--- 运行指标
--- CREATE TABLE IF NOT EXISTS metric
--- (
---     id          int         NOT NULL COMMENT '主键ID' AUTO_INCREMENT,
---     node_name   varchar(30) NOT NULL COMMENT '节点名称',
---     object_id   varchar(30) NOT NULL COMMENT '指标对象ID',
---     object_type varchar(30) NOT NULL COMMENT '指标对象类型: Node,Client,Topic',
---     code        varchar(30) NOT NULL COMMENT '指标编码',
---     value       long         NOT NULL COMMENT '指标值',
---     create_time timestamp DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
---     edit_time   timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
---     PRIMARY KEY (id),
---     INDEX       idx_code (code),
---     INDEX       idx_node_name (node_name),
---     INDEX       idx_node_code (node_name, code),
---     INDEX       idx_create_time (create_time)
--- );
 
 -- 用户信息
 CREATE TABLE IF NOT EXISTS user_info
