@@ -56,17 +56,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 连接管理,支持两种部署形态,由 pluginConfig.controlUrl 是否配置决定:
+ * 连接管理。CONNECT/DISCONNECT 事件统一进入内存队列 consumers,由定时任务每秒消费一批,消费出口由部署形态决定:
  * <ul>
- *     <li>控制面/单机模式(controlUrl 为空):CONNECT/DISCONNECT 事件入内存队列,由定时任务批量落库;
- *     同时通过内部接口接收数据面节点上报的客户端状态快照,并对长期未更新的客户端判定离线;</li>
- *     <li>数据面模式(controlUrl 非空):内存中维护本节点客户端状态表,定期向控制面上报全量快照,本节点不直写连接表。</li>
+ *     <li>控制面/单机模式(controlUrl 为空):批量写入数据库,并通过内部接口接收数据面节点上报的客户端状态;</li>
+ *     <li>数据面模式(controlUrl 非空):批量上报至控制面,本节点不直写连接表。</li>
  * </ul>
  * 内部接口仅供集群节点间通信使用,请勿将 OpenAPI 端口直接暴露至公网。
  *
@@ -78,19 +75,9 @@ public class ConnectionsController {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionsController.class);
 
     /**
-     * 单次批量落库的最大事件数
+     * 单次批量消费(落库或上报)的最大事件数
      */
     private static final int MAX_BATCH_SIZE = 500;
-
-    /**
-     * 数据面向控制面上报客户端状态快照的周期(毫秒)
-     */
-    private static final long REPORT_INTERVAL = 10_000L;
-
-    /**
-     * 控制面判定客户端离线的阈值(毫秒):超过 3 个上报周期未收到快照即视为离线
-     */
-    private static final long OFFLINE_THRESHOLD = REPORT_INTERVAL * 3;
 
     @Autowired
     private BrokerContext brokerContext;
@@ -106,20 +93,10 @@ public class ConnectionsController {
     private Plugin plugin;
 
     /**
-     * 控制面/单机模式:待落库事件队列
+     * 统一事件队列:数据面模式下为待上报状态,控制面/单机模式下为待落库状态
      */
     private final ConcurrentLinkedQueue<ClientStateTO> consumers = new ConcurrentLinkedQueue<>();
     private long lastestTime = System.currentTimeMillis();
-
-    /**
-     * 数据面模式:本节点客户端状态表,定时任务对其做全量快照上报
-     */
-    private final ConcurrentHashMap<String, ClientStateTO> clientStates = new ConcurrentHashMap<>();
-
-    /**
-     * 控制面模式:各客户端最近一次快照上报时间,用于超时判离线
-     */
-    private final ConcurrentHashMap<String, Long> lastReportTimes = new ConcurrentHashMap<>();
 
     /**
      * 数据面模式下的控制面 HTTP 客户端,其他模式为 null
@@ -132,38 +109,10 @@ public class ConnectionsController {
             LOGGER.debug("connect record is disabled");
             return;
         }
-        if (!FeatUtils.isBlank(pluginConfig.getControlUrl())) {
-            initDataPlane();
-        } else {
-            initControlPlane();
-        }
-    }
-
-    /**
-     * 数据面模式:客户端状态入内存表,定期上报控制面,本节点不直写连接表
-     */
-    private void initDataPlane() {
-        controlPlaneClient = new HttpClient(pluginConfig.getControlUrl());
-        LOGGER.info("data plane mode enabled, control plane: {}", pluginConfig.getControlUrl());
-
-        plugin.subscribe(EventType.CONNECT, AsyncEventObject.syncSubscriber((eventType, object) -> {
-            clientStates.put(object.getSession().getClientId(), buildClientState(resolveBrokerIp(), object));
-        }));
-        plugin.subscribe(EventType.DISCONNECT, (eventType, object) -> markOffline(object.getClientId()));
-
-        plugin.timer().scheduleWithFixedDelay(new AsyncTask() {
-            @Override
-            public void execute() {
-                reportSnapshot();
-            }
-        }, REPORT_INTERVAL, TimeUnit.MILLISECONDS);
-    }
-
-    /**
-     * 控制面/单机模式:事件入队批量落库,同时接收数据面上报的快照
-     */
-    private void initControlPlane() {
         String brokerIp = resolveBrokerIp();
+        if (!FeatUtils.isBlank(pluginConfig.getControlUrl())) {
+            controlPlaneClient = new HttpClient(pluginConfig.getControlUrl());
+        }
 
         plugin.subscribe(EventType.DISCONNECT, (eventType, object) -> {
             ClientStateTO state = new ClientStateTO();
@@ -192,100 +141,13 @@ public class ConnectionsController {
             @Override
             public void execute() {
                 flush();
-                checkOffline();
             }
         }, 1000, TimeUnit.MILLISECONDS);
     }
 
     /**
-     * 数据面模式:全量快照上报。失败时保留本地状态,等待下一周期重试
+     * 批量消费:数据面模式上报至控制面,控制面/单机模式写入数据库
      */
-    private void reportSnapshot() {
-        if (clientStates.isEmpty()) {
-            return;
-        }
-        List<ClientStateTO> snapshot = new ArrayList<>(clientStates.size());
-        List<ClientStateTO> offlineStates = new ArrayList<>();
-        long now = System.currentTimeMillis();
-        for (ClientStateTO state : clientStates.values()) {
-            state.setReportTime(now);
-            snapshot.add(state);
-            if (!state.isOnline()) {
-                offlineStates.add(state);
-            }
-        }
-        if (!report(snapshot)) {
-            return;
-        }
-        //上报成功后移除离线条目;若期间客户端重连(状态已回在线),则保留
-        for (ClientStateTO state : offlineStates) {
-            clientStates.computeIfPresent(state.getClientId(), (clientId, current) -> current.isOnline() ? current : null);
-        }
-    }
-
-    private boolean report(List<ClientStateTO> snapshot) {
-        byte[] body = JSON.toJSONBytes(snapshot);
-        try {
-            tech.smartboot.feat.core.client.HttpResponse response = controlPlaneClient.post(OpenApi.INTERNAL_CLIENTS_REPORT)
-                    .header(header -> {
-                        header.setContentType("application/json");
-                        header.setContentLength(body.length);
-                    })
-                    .body(requestBody -> requestBody.write(body))
-                    .submit().get(5, TimeUnit.SECONDS);
-            if (response.statusCode() != HttpStatus.ACCEPTED.value()) {
-                LOGGER.warn("report to control plane failed, status: {}", response.statusCode());
-                return false;
-            }
-            return true;
-        } catch (Throwable throwable) {
-            LOGGER.error("report to control plane exception: {}", throwable.getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * 数据面模式:标记客户端离线
-     */
-    private void markOffline(String clientId) {
-        ClientStateTO state = clientStates.get(clientId);
-        if (state == null) {
-            state = new ClientStateTO();
-            state.setClientId(clientId);
-            state.setBrokerIp(resolveBrokerIp());
-            state.setOnline(false);
-            clientStates.put(clientId, state);
-        } else {
-            state.setOnline(false);
-        }
-    }
-
-    /**
-     * 控制面模式:检查超时未上报的客户端,判定离线
-     */
-    private void checkOffline() {
-        if (lastReportTimes.isEmpty()) {
-            return;
-        }
-        long now = System.currentTimeMillis();
-        List<String> timeoutClientIds = new ArrayList<>();
-        for (Map.Entry<String, Long> entry : lastReportTimes.entrySet()) {
-            if (now - entry.getValue() > OFFLINE_THRESHOLD) {
-                timeoutClientIds.add(entry.getKey());
-            }
-        }
-        for (String clientId : timeoutClientIds) {
-            lastReportTimes.remove(clientId);
-            ClientStateTO state = new ClientStateTO();
-            state.setClientId(clientId);
-            state.setOnline(false);
-            consumers.offer(state);
-        }
-        if (!timeoutClientIds.isEmpty()) {
-            LOGGER.info("mark {} clients offline caused by report timeout", timeoutClientIds.size());
-        }
-    }
-
     private void flush() {
         if (consumers.isEmpty()) {
             LOGGER.debug("batch consume 0 records");
@@ -297,12 +159,37 @@ public class ConnectionsController {
         while (batch.size() < MAX_BATCH_SIZE && (item = consumers.poll()) != null) {
             batch.add(item);
         }
-        save(batch);
+        if (controlPlaneClient != null) {
+            report(batch);
+        } else {
+            save(batch);
+        }
         LOGGER.info("batch consume {} records, cost: {}ms", batch.size(), System.currentTimeMillis() - lastestTime);
     }
 
     /**
-     * 批量落库
+     * 数据面模式:批量上报至控制面。失败时直接丢弃,与本地模式积压丢弃策略保持一致
+     */
+    private void report(List<ClientStateTO> batch) {
+        byte[] body = JSON.toJSONBytes(batch);
+        try {
+            tech.smartboot.feat.core.client.HttpResponse response = controlPlaneClient.post(OpenApi.INTERNAL_CLIENTS_REPORT)
+                    .header(header -> {
+                        header.setContentType("application/json");
+                        header.setContentLength(body.length);
+                    })
+                    .body(requestBody -> requestBody.write(body))
+                    .submit().get(5, TimeUnit.SECONDS);
+            if (response.statusCode() != HttpStatus.ACCEPTED.value()) {
+                LOGGER.warn("report to control plane failed, status: {}", response.statusCode());
+            }
+        } catch (Throwable throwable) {
+            LOGGER.error("report to control plane exception: {}", throwable.getMessage());
+        }
+    }
+
+    /**
+     * 控制面/单机模式:批量落库
      */
     private void save(List<ClientStateTO> batch) {
         try (SqlSession session = sessionFactory.openSession(ExecutorType.BATCH)) {
@@ -368,7 +255,7 @@ public class ConnectionsController {
     }
 
     /**
-     * 内部接口:数据面客户端状态快照上报入口。快照入队后立即返回 202,由定时任务批量落库
+     * 内部接口:数据面客户端状态上报入口。状态入队后立即返回 202,由定时任务批量落库
      */
     @RequestMapping(OpenApi.INTERNAL_CLIENTS_REPORT)
     public RestResult<Void> report(HttpRequest request, HttpResponse response) throws Exception {
@@ -379,13 +266,6 @@ public class ConnectionsController {
         byte[] body = readBody(request);
         List<ClientStateTO> states = JSON.parseArray(new String(body, StandardCharsets.UTF_8), ClientStateTO.class);
         if (states != null && !states.isEmpty()) {
-            long now = System.currentTimeMillis();
-            for (ClientStateTO state : states) {
-                if (state.isOnline()) {
-                    //仅跟踪在线客户端,离线状态由本次快照直接落库订正
-                    lastReportTimes.put(state.getClientId(), now);
-                }
-            }
             consumers.addAll(states);
         }
         response.setHttpStatus(HttpStatus.ACCEPTED);
