@@ -12,7 +12,6 @@
 package tech.smartboot.mqtt.plugin.dao.query;
 
 import java.util.Date;
-import java.util.List;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -33,10 +32,6 @@ public class ConnectionQuery extends Query {
      * 状态：已连接、认证失败、已离线
      */
     private String status;
-    /**
-     * Broker IP地址
-     */
-    private List<String> brokers;
 
     /**
      * IP地址
@@ -75,14 +70,6 @@ public class ConnectionQuery extends Query {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public List<String> getBrokers() {
-        return brokers;
-    }
-
-    public void setBrokers(List<String> brokers) {
-        this.brokers = brokers;
     }
 
     public String getIpAddress() {

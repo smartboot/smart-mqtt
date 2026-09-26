@@ -31,7 +31,7 @@ public class ConnectionConvert {
         connectionTO.setUsername(connectionDO.getUsername());
         connectionTO.setStatus(connectionDO.getStatus());
         connectionTO.setIpAddress(connectionDO.getIpAddress());
-        connectionTO.setNodeId(connectionDO.getNodeId());
+        connectionTO.setBrokerIp(connectionDO.getBrokerIp());
         connectionTO.setKeepalive(connectionDO.getKeepalive());
         connectionTO.setConnectTime(connectionDO.getConnectTime());
         return connectionTO;

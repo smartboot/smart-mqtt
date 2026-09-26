@@ -32,13 +32,14 @@ public class ConnectionDO {
      * 状态：已连接、认证失败、已离线
      */
     private String status;
-    /**
-     * Broker NodeId
-     */
-    private String nodeId;
 
     /**
-     * IP地址
+     * 客户端所连接的Broker本机IP
+     */
+    private String brokerIp;
+
+    /**
+     * 客户端IP地址
      */
     private String ipAddress;
 
@@ -51,31 +52,6 @@ public class ConnectionDO {
      * 连接时间
      */
     private Date connectTime;
-
-    /**
-     * 国家
-     */
-    private String country;
-
-    /**
-     * 区域
-     */
-    private String region;
-
-    /**
-     * 省份
-     */
-    private String province;
-
-    /**
-     * 城市
-     */
-    private String city;
-
-    /**
-     * 运营商
-     */
-    private String isp;
 
     public String getClientId() {
         return clientId;
@@ -101,6 +77,14 @@ public class ConnectionDO {
         this.status = status;
     }
 
+    public String getBrokerIp() {
+        return brokerIp;
+    }
+
+    public void setBrokerIp(String brokerIp) {
+        this.brokerIp = brokerIp;
+    }
+
     public String getIpAddress() {
         return ipAddress;
     }
@@ -123,53 +107,5 @@ public class ConnectionDO {
 
     public void setConnectTime(Date connectTime) {
         this.connectTime = connectTime;
-    }
-
-    public String getNodeId() {
-        return nodeId;
-    }
-
-    public void setNodeId(String nodeId) {
-        this.nodeId = nodeId;
-    }
-
-    public String getCountry() {
-        return country;
-    }
-
-    public void setCountry(String country) {
-        this.country = country;
-    }
-
-    public String getRegion() {
-        return region;
-    }
-
-    public void setRegion(String region) {
-        this.region = region;
-    }
-
-    public String getProvince() {
-        return province;
-    }
-
-    public void setProvince(String province) {
-        this.province = province;
-    }
-
-    public String getCity() {
-        return city;
-    }
-
-    public void setCity(String city) {
-        this.city = city;
-    }
-
-    public String getIsp() {
-        return isp;
-    }
-
-    public void setIsp(String isp) {
-        this.isp = isp;
     }
 }

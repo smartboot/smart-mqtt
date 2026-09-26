@@ -27,6 +27,13 @@ public class PluginConfig {
     private String registry;
 
     /**
+     * 控制面地址，例如 http://192.168.1.100:18083
+     * 为空时本节点直写数据库（单机模式，或作为控制面节点）；非空时本节点作为数据面，
+     * 定期向控制面上报客户端状态快照，由控制面统一落库
+     */
+    private String controlUrl;
+
+    /**
      * 显示的指标项列表
      */
     private List<String> showMetrics;
@@ -51,6 +58,14 @@ public class PluginConfig {
 
     public void setRegistry(String registry) {
         this.registry = registry;
+    }
+
+    public String getControlUrl() {
+        return controlUrl;
+    }
+
+    public void setControlUrl(String controlUrl) {
+        this.controlUrl = controlUrl;
     }
 
     public List<String> getShowMetrics() {

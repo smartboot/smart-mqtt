@@ -28,6 +28,11 @@ public class OpenApi {
      */
     public static final String DIS_CONNECTION = BASE_API + "/disconnection";
 
+    /**
+     * 内部接口：数据面定期向控制面上报客户端状态快照
+     */
+    public static final String INTERNAL_CLIENTS_REPORT = "/internal/clients/report";
+
     public static final String SUBSCRIPTIONS = BASE_API + "/subscriptions";
 
     /**

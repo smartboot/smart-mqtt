@@ -16,27 +16,22 @@ CREATE TABLE IF NOT EXISTS connection
     clientId     varchar(32) NOT NULL COMMENT '客户端ID',
     username     varchar(30) NULL COMMENT '用户名',
     status       varchar(30) NOT NULL COMMENT '状态',
-    node_id      varchar(30) NOT NULL COMMENT 'Broker 节点ID',
-    ip_address   varchar(20) NOT NULL COMMENT 'IP地址',
+    broker_ip    varchar(39) NOT NULL COMMENT '客户端所连接的Broker本机IP',
+    ip_address   varchar(39) NOT NULL COMMENT '客户端IP地址',
     keepalive    int         NOT NULL COMMENT '心跳',
     connect_time timestamp   NOT NULL COMMENT '连接时间',
-    country      varchar(64) COMMENT '国家',
-    region       varchar(64) COMMENT '区域',
-    province     varchar(64) COMMENT '省份',
-    city         varchar(64) COMMENT '城市',
-    isp          varchar(64) COMMENT '运营商',
     create_time  timestamp DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     edit_time    timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    INDEX        idx_connection_node_id (node_id),
-    INDEX        idx_country (country),
-    INDEX        idx_region (region),
-    INDEX        idx_province (province),
-    INDEX        idx_city (city),
+    INDEX        idx_connection_broker_ip (broker_ip),
     INDEX        idx_connection_create_time(create_time),
     INDEX        idx_connection_edit_time (edit_time),
-    INDEX        idx_isp (isp),
     PRIMARY KEY (clientId)
 );
+
+-- v1.8.0 及之前版本的存量库升级语句:
+-- ALTER TABLE connection DROP INDEX idx_connection_node_id, DROP INDEX idx_country, DROP INDEX idx_region, DROP INDEX idx_province, DROP INDEX idx_city, DROP INDEX idx_isp;
+-- ALTER TABLE connection DROP COLUMN node_id, DROP COLUMN country, DROP COLUMN region, DROP COLUMN province, DROP COLUMN city, DROP COLUMN isp;
+-- ALTER TABLE connection ADD COLUMN broker_ip varchar(39) NOT NULL DEFAULT '' COMMENT '客户端所连接的Broker本机IP' AFTER status, ADD INDEX idx_connection_broker_ip (broker_ip);
 
 
 -- 用户信息

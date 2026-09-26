@@ -162,6 +162,9 @@ public class EnterprisePlugin extends Plugin {
         database.addItems(Item.Switch("subscribeRecord", "订阅记录").col(4).tip("启用后将记录订阅信息到数据库"));
         schema.addItem(database);
 
+        Item controlUrl = Item.String("controlUrl", "控制面地址").col(9).tip("集群部署下数据面/控制面分离的预留配置，数据面将定期向控制面上报客户端状态（未实现），例如：http://192.168.1.100:18083");
+        schema.addItem(controlUrl);
+
 
         Item registry = Item.String("registry", "插件市场").col(6);
         schema.addItem(registry);

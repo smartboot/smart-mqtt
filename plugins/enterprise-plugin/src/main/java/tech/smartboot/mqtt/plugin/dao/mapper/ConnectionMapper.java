@@ -20,7 +20,6 @@ import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 import tech.smartboot.mqtt.plugin.dao.model.ConnectionDO;
-import tech.smartboot.mqtt.plugin.dao.model.RegionDO;
 import tech.smartboot.mqtt.plugin.dao.query.ConnectionQuery;
 
 import java.util.List;
@@ -54,48 +53,24 @@ public interface ConnectionMapper {
             "<when test='connectStartTime!=null'>",
             "AND connect_time > #{connectStartTime}",
             "</when>",
-            "<if test='brokers!= null and brokers.size()>0'>" +
-                    "   AND node_id IN" +
-                    "   <foreach collection='brokers' item='broker' index='index'" +
-                    "          open='(' close=')' separator=','>" +
-                    "      #{broker}" +
-                    "   </foreach>" +
-                    "</if>" +
-                    "order by status,connect_time desc",
+            "order by status,connect_time desc",
             "</script>"})
     @ResultType(ConnectionDO.class)
     @Results({
             @Result(column = "ip_address",property = "ipAddress"),
-            @Result(column = "connect_time",property = "connectTime"),
-            @Result(column = "node_id",property = "nodeId")
+            @Result(column = "broker_ip",property = "brokerIp"),
+            @Result(column = "connect_time",property = "connectTime")
     })
     List<ConnectionDO> select(ConnectionQuery query);
-
-    @Results({
-            @Result(property = "name", column = "city"),
-            @Result(property = "value", column = "count")}
-    )
-    @Select("select city,count(1) as count from connection where country='中国' group by city")
-    List<RegionDO> groupByCity();
-
-    @Results({
-            @Result(property = "name", column = "province"),
-            @Result(property = "value", column = "count")}
-    )
-    @Select("select province,count(1) as count from connection where country='中国' group by province")
-    List<RegionDO> groupByProvince();
 
     /**
      * 新增订阅记录
      */
-    @Insert("insert into connection(clientId,username,status,node_id,ip_address,keepalive,country,region,province,city,isp,connect_time) values(#{clientId},#{username},#{status},#{nodeId},#{ipAddress},#{keepalive},#{country},#{region},#{province},#{city},#{isp},#{connectTime})")
+    @Insert("insert into connection(clientId,username,status,broker_ip,ip_address,keepalive,connect_time) values(#{clientId},#{username},#{status},#{brokerIp},#{ipAddress},#{keepalive},#{connectTime})")
     int insert(ConnectionDO connectionDO);
 
     @Update("update connection set status=#{status} where clientId=#{clientId}")
     int updateStatus(@Param("clientId") String clientId, @Param("status") String status);
-
-    @Update("update connection set status=#{status} where node_id=#{nodeId}")
-    int updateStatusByBroker(@Param("nodeId") String nodeId, @Param("status") String status);
 
     @Delete("delete from connection where clientId=#{clientId}")
     int deleteById(String clientId);

@@ -42,10 +42,11 @@ public class ConnectionTO {
     private String ipAddress;
 
     /**
-     * Broker IP地址
+     * 客户端所连接的Broker本机IP
      */
-    @JSONField(name = "nodeId")
-    private String nodeId;
+    @JSONField(name = "broker_ip")
+    private String brokerIp;
+
     /**
      * 心跳
      */
@@ -131,11 +132,11 @@ public class ConnectionTO {
         this.connectTime = connectTime;
     }
 
-    public String getNodeId() {
-        return nodeId;
+    public String getBrokerIp() {
+        return brokerIp;
     }
 
-    public void setNodeId(String nodeId) {
-        this.nodeId = nodeId;
+    public void setBrokerIp(String brokerIp) {
+        this.brokerIp = brokerIp;
     }
 }
