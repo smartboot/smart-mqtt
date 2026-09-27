@@ -52,8 +52,13 @@ import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -185,17 +190,32 @@ public class ConnectionsController {
     }
 
     /**
-     * 控制面/单机模式:批量落库
+     * 控制面/单机模式:批量落库。同批内同一客户端的多条事件先去重,仅保留最终状态;
+     * 在线客户端通过一次批量查询判存在性,不存在则插入,已存在则更新;离线客户端仅更新状态
      */
     private void save(List<ClientStateTO> batch) {
+        Map<String, ClientStateTO> merged = new LinkedHashMap<>(batch.size());
+        for (ClientStateTO state : batch) {
+            merged.put(state.getClientId(), state);
+        }
+        List<String> onlineClientIds = new ArrayList<>(merged.size());
+        for (ClientStateTO state : merged.values()) {
+            if (state.isOnline()) {
+                onlineClientIds.add(state.getClientId());
+            }
+        }
         try (SqlSession session = sessionFactory.openSession(ExecutorType.BATCH)) {
             SubscriberMapper subscriberMapper = session.getMapper(SubscriberMapper.class);
             ConnectionMapper mapper = session.getMapper(ConnectionMapper.class);
-            for (ClientStateTO state : batch) {
+            Set<String> existing = onlineClientIds.isEmpty() ? Collections.emptySet() : new HashSet<>(mapper.selectExistingIds(onlineClientIds));
+            for (ClientStateTO state : merged.values()) {
                 if (state.isOnline()) {
                     subscriberMapper.deleteById(state.getClientId());
-                    mapper.deleteById(state.getClientId());
-                    mapper.insert(convert(state));
+                    if (existing.contains(state.getClientId())) {
+                        mapper.update(convert(state));
+                    } else {
+                        mapper.insert(convert(state));
+                    }
                 } else {
                     mapper.updateStatus(state.getClientId(), ConnectionStatusEnum.DIS_CONNECT.getStatus());
                 }

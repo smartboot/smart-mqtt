@@ -10,7 +10,6 @@
 
 package tech.smartboot.mqtt.plugin.dao.mapper;
 
-import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -69,9 +68,20 @@ public interface ConnectionMapper {
     @Insert("insert into connection(clientId,username,status,broker_ip,ip_address,keepalive,connect_time) values(#{clientId},#{username},#{status},#{brokerIp},#{ipAddress},#{keepalive},#{connectTime})")
     int insert(ConnectionDO connectionDO);
 
+    /**
+     * 批量查询已存在的客户端ID
+     */
+    @Select({"<script>",
+            "select clientId from connection where clientId in",
+            "<foreach collection='clientIds' item='clientId' open='(' separator=',' close=')'>",
+            "#{clientId}",
+            "</foreach>",
+            "</script>"})
+    List<String> selectExistingIds(@Param("clientIds") List<String> clientIds);
+
+    @Update("update connection set username=#{username},status=#{status},broker_ip=#{brokerIp},ip_address=#{ipAddress},keepalive=#{keepalive},connect_time=#{connectTime} where clientId=#{clientId}")
+    int update(ConnectionDO connectionDO);
+
     @Update("update connection set status=#{status} where clientId=#{clientId}")
     int updateStatus(@Param("clientId") String clientId, @Param("status") String status);
-
-    @Delete("delete from connection where clientId=#{clientId}")
-    int deleteById(String clientId);
 }
