@@ -16,6 +16,7 @@ import com.github.pagehelper.PageHelper;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
+import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
@@ -24,10 +25,10 @@ import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.mqtt.common.AsyncTask;
 import tech.smartboot.mqtt.common.message.MqttConnectMessage;
@@ -49,10 +50,7 @@ import tech.smartboot.mqtt.plugin.spec.Plugin;
 import tech.smartboot.mqtt.plugin.spec.bus.AsyncEventObject;
 import tech.smartboot.mqtt.plugin.spec.bus.EventType;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.net.InetAddress;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -111,7 +109,7 @@ public class ConnectionsController {
         }
         String brokerIp = resolveBrokerIp();
         if (!FeatUtils.isBlank(pluginConfig.getControlUrl())) {
-            controlPlaneClient = new HttpClient(pluginConfig.getControlUrl());
+            controlPlaneClient = Feat.httpClient(pluginConfig.getControlUrl());
         }
 
         plugin.subscribe(EventType.DISCONNECT, (eventType, object) -> {
@@ -140,31 +138,29 @@ public class ConnectionsController {
         plugin.timer().scheduleWithFixedDelay(new AsyncTask() {
             @Override
             public void execute() {
-                flush();
+                if (consumers.isEmpty()) {
+                    LOGGER.debug("batch consume 0 records");
+                    return;
+                }
+                lastestTime = System.currentTimeMillis();
+                List<ClientStateTO> batch = new ArrayList<>(MAX_BATCH_SIZE);
+                for (int i = 0; i < MAX_BATCH_SIZE; i++) {
+                    ClientStateTO state = consumers.poll();
+                    if (state == null) {
+                        break;
+                    }
+                    batch.add(state);
+                }
+                if (batch.isEmpty()) {
+                    return;
+                }
+                if (controlPlaneClient != null) {
+                    report(batch);
+                } else {
+                    save(batch);
+                }
             }
         }, 1000, TimeUnit.MILLISECONDS);
-    }
-
-    /**
-     * 批量消费:数据面模式上报至控制面,控制面/单机模式写入数据库
-     */
-    private void flush() {
-        if (consumers.isEmpty()) {
-            LOGGER.debug("batch consume 0 records");
-            return;
-        }
-        lastestTime = System.currentTimeMillis();
-        List<ClientStateTO> batch = new ArrayList<>();
-        ClientStateTO item;
-        while (batch.size() < MAX_BATCH_SIZE && (item = consumers.poll()) != null) {
-            batch.add(item);
-        }
-        if (controlPlaneClient != null) {
-            report(batch);
-        } else {
-            save(batch);
-        }
-        LOGGER.info("batch consume {} records, cost: {}ms", batch.size(), System.currentTimeMillis() - lastestTime);
     }
 
     /**
@@ -175,7 +171,7 @@ public class ConnectionsController {
         try {
             tech.smartboot.feat.core.client.HttpResponse response = controlPlaneClient.post(OpenApi.INTERNAL_CLIENTS_REPORT)
                     .header(header -> {
-                        header.setContentType("application/json");
+                        header.setContentType(HeaderValue.ContentType.APPLICATION_JSON);
                         header.setContentLength(body.length);
                     })
                     .body(requestBody -> requestBody.write(body))
@@ -258,29 +254,16 @@ public class ConnectionsController {
      * 内部接口:数据面客户端状态上报入口。状态入队后立即返回 202,由定时任务批量落库
      */
     @RequestMapping(OpenApi.INTERNAL_CLIENTS_REPORT)
-    public RestResult<Void> report(HttpRequest request, HttpResponse response) throws Exception {
+    public RestResult<Void> report(List<ClientStateTO> states, HttpResponse response) throws Exception {
         if (controlPlaneClient != null) {
             response.setHttpStatus(HttpStatus.BAD_REQUEST);
             return RestResult.fail("this node is not a control plane node");
         }
-        byte[] body = readBody(request);
-        List<ClientStateTO> states = JSON.parseArray(new String(body, StandardCharsets.UTF_8), ClientStateTO.class);
         if (states != null && !states.isEmpty()) {
             consumers.addAll(states);
         }
         response.setHttpStatus(HttpStatus.ACCEPTED);
         return RestResult.ok(null);
-    }
-
-    private static byte[] readBody(HttpRequest request) throws Exception {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        InputStream in = request.getInputStream();
-        byte[] buffer = new byte[4096];
-        int len;
-        while ((len = in.read(buffer)) != -1) {
-            out.write(buffer, 0, len);
-        }
-        return out.toByteArray();
     }
 
     @RequestMapping(OpenApi.CONNECTIONS)
