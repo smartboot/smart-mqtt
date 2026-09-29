@@ -1,0 +1,13 @@
+SystemDiskSize: 40
+RuntimeType: Container
+ServiceType: private
+ArtifactSourceType: DockerCompose
+ServiceBuildRegion: ap-southeast-1
+RepoName: smartboot/smart-mqtt
+DockerComposeEnvPath: .env
+RegionId: cn-hangzhou
+CustomParameters: ''
+DockerComposeYamlPath: docker/docker-compose.yml
+Owner: smartdms
+Branch: master
+Platform: gitee

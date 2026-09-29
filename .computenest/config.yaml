@@ -1,0 +1,83 @@
+Service:
+  RegionId: cn-hangzhou
+  DeployType: ros
+  OperationMetadata:
+    StatusOperationConfigs:
+    - TemplateName: ECS单机版
+      SupportOperations:
+      - Start
+      - Stop
+      - Restart
+    SupportBackup: true
+    ModifyParametersConfig:
+    - TemplateName: ECS单机版
+      Operation:
+      - Name: 变更ECS实例规格
+        Description: 变更ECS实例规格
+        Type: Custom
+        Parameters:
+        - EcsInstanceType
+      - Name: 变更ECS实例密码
+        Description: 变更ECS实例密码
+        Type: Custom
+        Parameters:
+        - InstancePassword
+  UpgradeMetadata:
+    Description: 升级
+    SupportUpgradeFromVersions: []
+    SupportRollback: true
+    UpgradeComponents:
+    - Configuration
+    - Resource
+  DeployMetadata:
+    SupplierDeployMetadata:
+      SupplierTemplateConfigs:
+      - Name: ECS单机版
+        Url: 'ros_templates/template.yaml'
+        ArchitectureDiagramUrl: 'resources/architecture/architecture.jpg'
+        AllowedRegions:
+        - ap-southeast-1
+      ArtifactRelation:
+        ecs_image_smart-mqtt:
+          ArtifactId: ${Artifact.EcsImage.ArtifactId}
+          ArtifactVersion: draft
+    TemplateConfigs:
+    - Name: ECS单机版
+      Url: 'ros_templates/template.yaml'
+      ArchitectureDiagramUrl: 'resources/architecture/architecture.jpg'
+      AllowedRegions:
+      - ap-southeast-1
+  ServiceType: private
+  ServiceInfo:
+    # 英文版可以再配置Locale为en-US的服务信息
+  - Locale: zh-CN
+    Name: smartboot/smart-mqtt
+    ShortDescription: Service description
+    Image: 
+      https://service-info-public.oss-cn-hangzhou.aliyuncs.com/1853370294850618/service-image/bfd30cc4-e959-4093-b5cb-77a05058b911.png
+    Softwares: []
+Artifact:
+  EcsImage:
+    ArtifactType: EcsImage
+    ArtifactName: ecs_image_smart-mqtt
+    Description: smart-mqtt EcsImage
+    SupportRegionIds:
+    - ap-southeast-1
+    ArtifactBuildProperty:
+      CodeRepo:
+        Platform: gitee
+        Owner: smartdms
+        RepoName: smartboot/smart-mqtt
+        Branch: master
+      RegionId: ap-southeast-1
+      CommandType: RunShellScript
+      SystemDiskSize: 40
+      CommandContent: |-
+        mkdir -p /root/application
+        mkdir -p "/root/application/docker"
+        if [ -e "/root/code/docker/docker-compose.yml" ]; then cp -r "/root/code/docker/docker-compose.yml" "/root/application/docker/"; fi
+        if [ -e "/root/code/.env" ]; then cp -r "/root/code/.env" "/root/application/"; fi
+        cd /root/application
+        sed -i 's/pull_policy: always/pull_policy: if_not_present/g' docker/docker-compose.yml
+        docker compose -f docker/docker-compose.yml build 
+        docker compose -f docker/docker-compose.yml pull 2>&1 | stdbuf -oL grep -viE 'Downloading|sha256|extracting|KiB|Downloaded' || true;

@@ -1,0 +1,495 @@
+ROSTemplateFormatVersion: '2015-09-01'
+Locals:
+  CurTime:
+    Type: Eval
+    Value:
+      Fn::FormatTime:
+        - '%Y%m%d-%H%M%S'
+        - Asia/Shanghai
+Conditions:
+  CreateVpcConditions:
+    Fn::Equals:
+      - NewVPC
+      - Ref: VpcOption
+Parameters:
+  VpcOption:
+    Type: String
+    AllowedValues:
+      - NewVPC
+      - ExistingVPC
+    AssociationPropertyMetadata:
+      ValueLabelMapping:
+        NewVPC:
+          zh-cn: 新建专有网络
+          en: New VPC
+        ExistingVPC:
+          zh-cn: 已有专有网络
+          en: Existing VPC
+    Label:
+      en: Select Existing or New VPC
+      zh-cn: 选择已有/新建的专有网络
+    Required: true
+    Default: NewVPC
+  VpcCidrBlock:
+    Type: String
+    Label:
+      en: VPC CIDR IPv4 Block
+      zh-cn: 专有网络IPv4网段
+    Description:
+      zh-cn: VPC的ip地址段范围，<br>您可以使用以下的ip地址段或其子网:<br><font color='green'>[10.0.0.0/8]</font><br><font color='green'>[172.16.0.0/12]</font><br><font color='green'>[192.168.0.0/16]</font>
+      en: 'The ip address range of the VPC in the CidrBlock form; <br>You can use the following ip address ranges and their subnets: <br><font color=''green''>[10.0.0.0/8]</font><br><font color=''green''>[172.16.0.0/12]</font><br><font color=''green''>[192.168.0.0/16]</font>'
+    Default: 192.168.0.0/16
+    Required:
+      Fn::Equals:
+        - NewVPC
+        - ${VpcOption}
+    AssociationProperty: ALIYUN::VPC::VPC::CidrBlock
+    AssociationPropertyMetadata:
+      Visible:
+        Condition:
+          Fn::Equals:
+            - NewVPC
+            - ${VpcOption}
+  VSwitchCidrBlock:
+    Type: String
+    Label:
+      en: VSwitch CIDR Block
+      zh-cn: 交换机子网网段
+    Description:
+      zh-cn: 必须属于VPC的子网段。
+      en: Must belong to the subnet segment of VPC.
+    Default: 192.168.1.0/24
+    Required:
+      Fn::Equals:
+        - NewVPC
+        - ${VpcOption}
+    AssociationProperty: ALIYUN::VPC::VSwitch::CidrBlock
+    AssociationPropertyMetadata:
+      VpcCidrBlock: VpcCidrBlock
+      Visible:
+        Condition:
+          Fn::Equals:
+            - NewVPC
+            - ${VpcOption}
+  PayType:
+    Type: String
+    Label:
+      en: ECS Instance Charge Type
+      zh-cn: 付费类型
+    Default: PostPaid
+    AllowedValues:
+      - PostPaid
+      - PrePaid
+    AssociationProperty: ChargeType
+    AssociationPropertyMetadata:
+      LocaleKey: InstanceChargeType
+  PayPeriodUnit:
+    Type: String
+    Label:
+      en: Pay Period Unit
+      zh-cn: 购买资源时长周期
+    Default: Month
+    AllowedValues:
+      - Month
+      - Year
+    AssociationProperty: PayPeriodUnit
+    AssociationPropertyMetadata:
+      Visible:
+        Condition:
+          Fn::Not:
+            Fn::Equals:
+              - ${PayType}
+              - PostPaid
+  PayPeriod:
+    Type: Number
+    Label:
+      en: Period
+      zh-cn: 购买资源时长
+    Default: 1
+    AllowedValues:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      - 6
+      - 7
+      - 8
+      - 9
+    AssociationProperty: PayPeriod
+    AssociationPropertyMetadata:
+      Visible:
+        Condition:
+          Fn::Not:
+            Fn::Equals:
+              - ${PayType}
+              - PostPaid
+  EcsInstanceType:
+    Type: String
+    Label:
+      en: Instance Type
+      zh-cn: 实例类型
+    AssociationProperty: ALIYUN::ECS::Instance::InstanceType
+    AssociationPropertyMetadata:
+      InstanceChargeType: ${PayType}
+      Constraints:
+        InstanceTypeFamily:
+          - ecs.u1
+          - ecs.e
+  InstancePassword:
+    NoEcho: true
+    Type: String
+    Description:
+      en: Server login password, Length 8-30, must contain three(Capital letters, lowercase letters, numbers, ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ Special symbol in)
+      zh-cn: 服务器登录密码,长度8-30，必须包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ 中的特殊符号）
+    AllowedPattern: '^[a-zA-Z0-9-\(\)\`\~\!\@\#\$\%\^\&\*\_\-\+\=\|\{\}\[\]\:\;\<\>\,\.\?\/]*$'
+    Label:
+      en: Instance Password
+      zh-cn: 实例密码
+    ConstraintDescription:
+      en: Length 8-30, must contain three(Capital letters, lowercase letters, numbers, ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ Special symbol in)
+      zh-cn: 长度8-30，必须包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ 中的特殊符号）
+    MinLength: 8
+    MaxLength: 30
+    AssociationProperty: ALIYUN::ECS::Instance::Password
+  ZoneId:
+    Type: String
+    Label:
+      en: Zone ID
+      zh-cn: 可用区ID
+    AssociationProperty: ALIYUN::ECS::Instance::ZoneId
+    AssociationPropertyMetadata:
+      DefaultValueStrategy: random
+      InstanceChargeType: ${PayType}
+      SystemDiskCategory: cloud_essd
+      InstanceType: ${EcsInstanceType}
+  VpcId:
+    Type: String
+    Label:
+      en: VPC ID
+      zh-cn: 专有网络VPC实例ID
+    AssociationProperty: 'ALIYUN::ECS::VPC::VPCId'
+    Required:
+      Fn::Equals:
+        - ExistingVPC
+        - ${VpcOption}
+    Default: ''
+    AssociationPropertyMetadata:
+      AutoSelectFirst: true
+      Visible:
+        Condition:
+          Fn::Equals:
+            - ExistingVPC
+            - ${VpcOption}
+  VSwitchId:
+    Type: String
+    Label:
+      en: VSwitch ID
+      zh-cn: 交换机实例ID
+    Default: ''
+    AssociationProperty: 'ALIYUN::ECS::VSwitch::VSwitchId'
+    Required:
+      Fn::Equals:
+        - ExistingVPC
+        - ${VpcOption}
+    AssociationPropertyMetadata:
+      AutoSelectFirst: true
+      VpcId: ${VpcId}
+      ZoneId: ${ZoneId}
+      Visible:
+        Condition:
+          Fn::Equals:
+            - ExistingVPC
+            - ${VpcOption}
+Resources:
+  # 新建vpc
+  EcsVpc:
+    Type: ALIYUN::ECS::VPC
+    Condition: CreateVpcConditions
+    Properties:
+      VpcName:
+        Ref: ALIYUN::StackName
+      CidrBlock:
+        Ref: VpcCidrBlock
+  # 新建vswitch
+  EcsVSwitch:
+    Condition: CreateVpcConditions
+    Type: ALIYUN::ECS::VSwitch
+    Properties:
+      VSwitchName:
+        Ref: ALIYUN::StackName
+      VpcId:
+        Ref: EcsVpc
+      ZoneId:
+        Ref: ZoneId
+      CidrBlock:
+        Ref: VSwitchCidrBlock
+  SecurityGroup:
+    Type: ALIYUN::ECS::SecurityGroup
+    Properties:
+      SecurityGroupName:
+        Ref: ALIYUN::StackName
+      VpcId:
+        Fn::If:
+          - CreateVpcConditions
+          - Ref: EcsVpc
+          - Ref: VpcId
+      SecurityGroupIngress:
+        - PortRange: 18083/18083
+          Priority: 1
+          SourceCidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          NicType: internet
+        - PortRange: 1883/1883
+          Priority: 1
+          SourceCidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          NicType: internet
+  InstanceGroup:
+    Type: ALIYUN::ECS::InstanceGroup
+    Properties:
+      # 付费类型
+      InstanceChargeType:
+        Ref: PayType
+      PeriodUnit:
+        Ref: PayPeriodUnit
+      Period:
+        Ref: PayPeriod
+      VpcId:
+        Fn::If:
+          - CreateVpcConditions
+          - Ref: EcsVpc
+          - Ref: VpcId
+      VSwitchId:
+        'Fn::If':
+          - CreateVpcConditions
+          - Ref: EcsVSwitch
+          - Ref: VSwitchId
+      ZoneId:
+        Ref: ZoneId
+      SecurityGroupId:
+        Ref: SecurityGroup
+      ImageId: ecs_image_smart-mqtt
+      Password:
+        Ref: InstancePassword
+      InstanceType:
+        Ref: EcsInstanceType
+      SystemDiskCategory: cloud_essd
+      SystemDiskSize: 200
+      InternetMaxBandwidthOut: 5
+      IoOptimized: optimized
+      MaxAmount: 1
+      DiskMappings:
+        - Category: cloud_essd
+          Size: 200
+      # 数据盘初始化和挂载
+      UserData: |
+        #cloud-config
+        bootcmd:
+          - |
+            #!/bin/bash
+            function init_and_mount_data_disk() {
+                disk_device="/dev/vdb"
+                parted_disk_device="/dev/vdb1"
+                mount_point="/data"
+                # 已初始化的磁盘，跳过初始化，直接挂载
+                if blkid -o value -s TYPE $disk_device &>/dev/null; then
+                  echo "Disk is already initialized."
+                else
+                  echo "Disk is not initialized, initializing..."
+                  cat >> /root/InitDataDisk.sh << "EOF"
+            #!/bin/bash
+            echo "p
+            n
+            p
+
+
+
+            w
+            " |  fdisk -u /dev/vdb
+            EOF
+                  /bin/bash /root/InitDataDisk.sh
+                  rm -f /root/InitDataDisk.sh
+                  mkfs -t ext4 $parted_disk_device
+                fi
+
+                cp /etc/fstab /etc/fstab.bak
+                mkdir $mount_point
+                echo `blkid $parted_disk_device | awk '{print $2}' | sed 's/\\\"//g'` $mount_point ext4 defaults 0 0 >> /etc/fstab
+                mount -a
+            }
+            init_and_mount_data_disk
+  RunInstallCommand:
+    Type: ALIYUN::ECS::RunCommand
+    Properties:
+      InstanceIds:
+        Fn::GetAtt:
+        - InstanceGroup
+        - InstanceIds
+      Type: RunShellScript
+      Sync: true
+      Timeout: 3600
+      CommandContent:
+        Fn::Sub:
+          - |
+            # 创建开机自启动配置和状态检查脚本
+            function create_systemd_config() {
+                file_path="/etc/systemd/system/smart-mqtt.service"
+                if [ -f "$file_path" ]; then
+                    echo "Systemd配置已存在: $file_path"
+                    return 1
+                fi
+                cat > $file_path <<EOF
+            [Unit]
+            Description=Docker Compose Application Service
+            Requires=docker.service
+            After=docker.service
+
+            [Service]
+            Type=oneshot
+            RemainAfterExit=yes
+            WorkingDirectory=/root/application
+            ExecStart=/bin/bash -c '/usr/bin/docker compose -f docker/docker-compose.yml up -d && /usr/local/bin/check-container-status'
+            ExecStop=/usr/bin/docker compose down
+            TimeoutStartSec=0
+
+            [Install]
+            WantedBy=multi-user.target
+            EOF
+
+                # 创建状态检查脚本
+                cat > /usr/local/bin/check-container-status <<'EOF'
+            #!/bin/bash
+            COMPOSE_FILE="docker/docker-compose.yml"
+            MAX_WAIT_TIME=3600
+            CHECK_INTERVAL=10
+
+            if ! command -v docker compose &> /dev/null; then
+                echo "Error: docker compose is not installed"
+                exit 1
+            fi
+
+            SERVICES=$(docker compose -f "$COMPOSE_FILE" config --services 2>/dev/null)
+            if [ -z "$SERVICES" ]; then
+                echo "Error: No services found"
+                exit 1
+            fi
+
+            WAIT_TIME=0
+            TIMEOUT_REACHED=false
+
+            while [ $WAIT_TIME -le $MAX_WAIT_TIME ]; do
+                ALL_HEALTHY=true
+                for SERVICE in $SERVICES; do
+                    CONTAINER_ID=$(docker compose -f "$COMPOSE_FILE" ps -q "$SERVICE")
+
+                    if [ -z "$CONTAINER_ID" ]; then
+                        echo "[$SERVICE] Not running"
+                        ALL_HEALTHY=false
+                        continue
+                    fi
+
+                    INSPECT_OUTPUT=$(docker inspect --format \
+                        '{{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{else}}no-healthcheck{{end}}' \
+                        "$CONTAINER_ID" 2>/dev/null)
+
+                    STATUS=$(echo "$INSPECT_OUTPUT" | awk '{print $1}')
+                    HEALTH_STATUS=$(echo "$INSPECT_OUTPUT" | awk '{print $2}')
+
+                    case "$HEALTH_STATUS" in
+                        "healthy") ;;
+                        "unhealthy"|"starting")
+                            echo "[$SERVICE] Unhealthy: $HEALTH_STATUS"
+                            ALL_HEALTHY=false
+                            ;;
+                        "no-healthcheck")
+                            [ "$STATUS" != "running" ] && ALL_HEALTHY=false
+                            ;;
+                        *)
+                            echo "[$SERVICE] Unknown status: $HEALTH_STATUS"
+                            ALL_HEALTHY=false
+                            ;;
+                    esac
+                done
+
+                $ALL_HEALTHY && exit 0
+                [ $WAIT_TIME -ge $MAX_WAIT_TIME ] && break
+
+                sleep $CHECK_INTERVAL
+                WAIT_TIME=$((WAIT_TIME + CHECK_INTERVAL))
+            done
+
+            echo "Timeout reached! Abnormal services:" >&2
+            docker compose -f "$COMPOSE_FILE" ps --all
+            exit 1
+            EOF
+
+                chmod +x /usr/local/bin/check-container-status
+                systemctl enable smart-mqtt
+                
+            }
+
+            function create_custom_parameter_file() {
+                echo "The custom parameter does not exist. Skip the processing"
+            }
+
+            function mount_data_disk_dir() {
+                # 先计算出docker-compose.yaml的父目录
+                docker_compose_parent_dir=$(dirname "/root/application/docker/docker-compose.yml")
+                # 复制软件目录下目录和文件到数据盘挂载目录，加-n参数已存在则不进行复制
+                cp -rn $docker_compose_parent_dir/* /data
+                # sed替换挂载目录路径为数据盘目录
+                cp $docker_compose_parent_dir/docker-compose.yaml $docker_compose_parent_dir/docker-compose.yaml.bak
+                sed -i 's|\./|/data/|g' $docker_compose_parent_dir/docker-compose.yaml
+                chmod -R 777 /data
+            }
+
+            #用于版本升级
+            echo "当前时间：${CurTime}"
+            create_systemd_config
+            systemctl daemon-reload
+            systemctl stop smart-mqtt
+            create_custom_parameter_file
+            mount_data_disk_dir
+            systemctl start smart-mqtt
+          - RegionId:
+              Ref: ALIYUN::Region
+            CurTime:
+              Ref: CurTime
+Outputs: 
+  smart-mqtt_address:
+    Description:
+      en: smart-mqtt address.
+      zh-cn: smart-mqtt 访问页面。
+    Value:
+      Fn::Sub:
+        - http://${ServerAddress}:18083,http://${ServerAddress}:1883
+        - ServerAddress:
+            Fn::Select:
+              - 0
+              - Fn::GetAtt:
+                  - InstanceGroup
+                  - PublicIps
+Metadata:
+  ALIYUN::ROS::Interface:
+    ParameterGroups:
+      - Parameters:
+          - PayType
+          - PayPeriodUnit
+          - PayPeriod
+        Label:
+          default: 付费类型配置
+      - Parameters:
+          - EcsInstanceType
+          - InstancePassword
+        Label:
+          default: 资源配置
+      - Parameters:
+          - ZoneId
+          - VpcOption
+          - VpcId
+          - VSwitchId
+          - VpcCidrBlock
+          - VSwitchCidrBlock
+        Label:
+          default: 可用区配置

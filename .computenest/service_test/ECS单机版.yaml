@@ -1,0 +1,9 @@
+templateName: ECS单机版
+regionId: cn-hangzhou
+parameters:
+  VpcCidrBlock: "192.168.0.0/16"
+  VpcOption: "NewVPC"
+  PayType: "PostPaid"
+  EcsInstanceType: "$[iact3-auto]"
+  VSwitchCidrBlock: "192.168.1.0/24"
+  InstancePassword: "$[iact3-auto]"
