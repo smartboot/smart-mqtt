@@ -15,8 +15,8 @@ import tech.smartboot.feat.core.server.WebSocketResponse;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.util.function.Consumer;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -51,24 +51,20 @@ class ProxyWriteBuffer implements WriteBuffer {
     }
 
     @Override
-    public void writeLong(long v) throws IOException {
+    public void writeLong(long v) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void write(byte[] b, int off, int len) throws IOException {
+    public void write(byte[] b, int off, int len) {
         outputStream.write(b, off, len);
     }
 
     @Override
-    public void write(byte[] bytes, int offset, int len, Consumer<WriteBuffer> consumer) throws IOException {
-        throw new UnsupportedOperationException();
+    public void write(ByteBuffer byteBuffer, Runnable releaseCallback) throws IOException {
+        throw new UnsupportedEncodingException();
     }
 
-    @Override
-    public void transferFrom(ByteBuffer byteBuffer, Consumer<WriteBuffer> consumer) throws IOException {
-        throw new UnsupportedOperationException();
-    }
 
     @Override
     public void flush() {

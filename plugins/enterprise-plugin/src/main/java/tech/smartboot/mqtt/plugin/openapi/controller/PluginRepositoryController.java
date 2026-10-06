@@ -18,7 +18,6 @@ import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HttpStatus;
-import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.HttpResponse;
@@ -38,7 +37,6 @@ import java.util.ArrayList;
 import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
 
 /**
  * @author 三刀
@@ -104,11 +102,11 @@ public class PluginRepositoryController {
         FileInputStream fis = new FileInputStream(file);
         ByteBuffer buffer = ByteBuffer.allocate(4094);
         buffer.position(buffer.limit());
-        Consumer<FeatOutputStream> consumer = new Consumer<FeatOutputStream>() {
+        Runnable consumer = new Runnable() {
             final AtomicLong readPos = new AtomicLong(0);
 
             @Override
-            public void accept(FeatOutputStream result) {
+            public void run() {
                 try {
                     buffer.compact();
                     int len = fis.getChannel().read(buffer);
@@ -116,16 +114,16 @@ public class PluginRepositoryController {
                     if (len == -1) {
                         asyncResponse.getFuture().completeExceptionally(new IOException("EOF"));
                     } else if (readPos.addAndGet(len) >= response.getContentLength()) {
-                        response.getOutputStream().transferFrom(buffer, bufferOutputStream -> asyncResponse.complete(null));
+                        response.getOutputStream().write(buffer, () -> asyncResponse.complete(null));
                     } else {
-                        response.getOutputStream().transferFrom(buffer, this);
+                        response.getOutputStream().write(buffer, this);
                     }
                 } catch (Throwable throwable) {
                     asyncResponse.getFuture().completeExceptionally(throwable);
                 }
             }
         };
-        consumer.accept(response.getOutputStream());
+        consumer.run();
         return asyncResponse;
     }
 
