@@ -8,12 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.mqtt.broker;
-
-import tech.smartboot.mqtt.plugin.spec.BrokerContext;
-import tech.smartboot.mqtt.plugin.spec.Plugin;
-import tech.smartboot.mqtt.plugin.spec.PluginException;
-import tech.smartboot.mqtt.plugin.spec.PluginRegistry;
+package tech.smartboot.mqtt.plugin.spec;
 
 import java.io.File;
 import java.net.URL;
@@ -27,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author 三刀
  * @version v1.0 4/25/25
  */
-class PluginRegistryImpl implements PluginRegistry {
+public class PluginRegistryImpl implements PluginRegistry {
     private final Map<Integer, PluginUnit> plugins = new ConcurrentHashMap<>();
     private final BrokerContext brokerContext;
     private File baseDir;

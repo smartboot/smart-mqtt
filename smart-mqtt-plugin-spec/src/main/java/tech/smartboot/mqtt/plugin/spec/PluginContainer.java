@@ -8,11 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.mqtt.broker;
-
-import tech.smartboot.mqtt.plugin.spec.BrokerContext;
-import tech.smartboot.mqtt.plugin.spec.Plugin;
-import tech.smartboot.mqtt.plugin.spec.PluginException;
+package tech.smartboot.mqtt.plugin.spec;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -26,7 +22,7 @@ import java.util.ServiceLoader;
  * @author 三刀
  * @version v1.0 4/14/25
  */
-class PluginContainer extends Plugin {
+public class PluginContainer extends Plugin {
     private final ClassLoader classLoader;
     private final Plugin plugin;
 
